@@ -193,4 +193,3 @@ The baseline manifest and verifier provide the source-integrity record for the c
 ## Citation
 
 To be added with the associated article.
-
