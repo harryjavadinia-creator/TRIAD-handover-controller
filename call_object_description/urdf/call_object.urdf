@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<robot name="call_object">
+  <!--
+    CALL sensorized handover object.
+    Frame convention:
+      root link frame / object frame at Sensix sensor center.
+      local +Z = human / grey handle.
+      local -Z = robot / blue receiver handle.
+  -->
+
+  <material name="human_handle_grey"><color rgba="0.72 0.72 0.75 1.0"/></material>
+  <material name="sensor_dark"><color rgba="0.10 0.10 0.12 1.0"/></material>
+  <material name="robot_handle_blue"><color rgba="0.00 0.25 1.00 1.0"/></material>
+
+  <link name="call_object">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.346"/>
+      <inertia ixx="0.0011939025" ixy="0.0" ixz="0.0"
+               iyy="0.0011939025" iyz="0.0"
+               izz="0.0000397634"/>
+    </inertial>
+    <visual name="sensor_body_visual">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.017" length="0.0364"/></geometry>
+      <material name="sensor_dark"/>
+    </visual>
+    <collision name="sensor_body_collision">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.017" length="0.0364"/></geometry>
+    </collision>
+  </link>
+
+  <link name="human_grey_handle">
+    <visual name="human_grey_handle_visual">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.01125" length="0.1374"/></geometry>
+      <material name="human_handle_grey"/>
+    </visual>
+    <collision name="human_grey_handle_collision">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.01125" length="0.1374"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="sensor_to_human_grey_handle" type="fixed">
+    <parent link="call_object"/>
+    <child link="human_grey_handle"/>
+    <origin xyz="0 0 0.0869" rpy="0 0 0"/>
+  </joint>
+
+  <link name="robot_blue_handle">
+    <visual name="robot_blue_handle_visual">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.01125" length="0.1374"/></geometry>
+      <material name="robot_handle_blue"/>
+    </visual>
+    <collision name="robot_blue_handle_collision">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.01125" length="0.1374"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="sensor_to_robot_blue_handle" type="fixed">
+    <parent link="call_object"/>
+    <child link="robot_blue_handle"/>
+    <origin xyz="0 0 -0.0869" rpy="0 0 0"/>
+  </joint>
+</robot>

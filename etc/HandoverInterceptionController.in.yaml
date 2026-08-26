@@ -1,0 +1,648 @@
+# V6.3 UNIFIED STATIC + MOVING HANDOVER
+# Observation classifies the measured object before planning. Moving objects
+# keep the validated V6.2 bounded future-event interception path; stationary
+# objects use the measured current pose as one complete planning event. Both
+# modes share candidate evaluation, commitment, capture, transfer and retreat.
+# Default regression scenario remains canonical YZ moving.
+# start=[0.55, -0.56, 0.15] velocity=[0, 0.08, 0]
+# V5_4_1_R1_VALIDATION_SCENARIO preset=diagonal-XZ-normalized noRetuning=true
+# start=[0.9, 0, 0.3] velocity=[-0.0565685, 0, 0.0565685]
+
+
+
+
+
+#| Scenario       | Initial position `[x,y,z]` |   Linear velocity `[vx,vy,vz]` |
+#| -------------- | -------------------------: | -----------------------------: |
+#| Static nominal |       `[0.55, 0.00, 0.55]` |              `[0.0, 0.0, 0.0]` |
+#| Canonical YZ   |      `[0.55, -0.56, 0.15]` |             `[0.0, 0.08, 0.0]` |
+#| Pure X         |       `[0.92, 0.00, 0.55]` |            `[-0.08, 0.0, 0.0]` |
+#| Diagonal XZ    |       `[0.90, 0.00, 0.30]` | `[-0.0565685, 0.0, 0.0565685]` |
+#| Ground-near    |       `[0.25, 0.62, 0.15]` |            `[0.0, -0.08, 0.0]` |
+
+
+---
+Managed: false
+StepByStep: false
+IdleKeepState: false
+
+StatesLibraries:
+- "@MC_STATES_DEFAULT_RUNTIME_INSTALL_PREFIX@"
+- "@MC_STATES_RUNTIME_INSTALL_PREFIX@"
+
+StatesFiles:
+- "@MC_STATES_DEFAULT_RUNTIME_INSTALL_PREFIX@/data"
+
+VerboseStateFactory: false
+
+toolFrame: "gen3_robotiq_85_base_link"
+objectRobot: "call_object"
+objectFrame: "call_object"
+
+robots:
+  call_object:
+    module:
+      - object
+      - @CMAKE_CURRENT_SOURCE_DIR@/call_object_description
+      - call_object
+    init_pos:
+      translation: [0.90, 0.00, 0.30]
+      rotation: [0.0, 1.5708, 0.0]
+
+object:
+  translation: [0.90, 0.00, 0.30]
+  rpy: [0.0, 1.5708, 0.0]
+
+
+#ground  translation: [0.25, 0.62, 0.15]
+
+# nominal   translation: [0.55, 0.0, 0.55]
+
+# YZ   translation: [0.55, -0.56, 0.15]
+
+
+O_T_H:
+  translation: [0.0, 0.0, -0.0869]
+  rpy: [0.0, 0.0, 0.0]
+
+B_T_M:
+  translation: [0.0, 0.0, 0.0983262]
+  rpy: [-1.57079632679, 0.0, 0.0]
+
+geometry:
+  sensorRadius: 0.017
+  sensorHalfLength: 0.0182
+  handleRadius: 0.01125
+  handleHalfLength: 0.0687
+  safetyMargin: 0.003
+
+environment:
+  groundEnabled: true
+  groundZ: 0.0
+  groundSafetyMargin: 0.015
+  armGroundSafetyMargin: 0.010
+
+# Candidate directions are generated robot-relative around the blue-handle
+# axis. No world-side, above, below, left or right preference is configured.
+capture:
+  candidateCount: 16
+  standoffDistance: 0.120
+  retreatDistance: 0.180
+  sweepSamples: 24
+  backtrackIterations: 9
+  transitSpeed: 0.45
+  angularSpeed: 1.50
+
+# Internal plan-once rollout. Every candidate is solved on a copied robot state
+# before physical motion: simultaneous aligned reach, insertion and closure.
+preview:
+  dt: 0.020
+  maxIterationsPerSegment: 700
+  linearGain: 3.5
+  angularGain: 3.5
+  damping: 0.040
+  postureGain: 0.35
+  jointLimitWeightGain: 0.80
+  jointLimitAvoidanceGain: 0.45
+  jointLimitActivation: 0.65
+  jointLimitVelocityCap: 0.55
+  maxLinearSpeed: 0.70
+  maxAngularSpeed: 2.20
+  positionTolerance: 0.010
+  orientationTolerance: 0.055
+  effortWeight: 0.025
+  rotationWeight: 0.080
+  clearanceTieBand: 0.003
+  costTieBand: 0.15
+  jointLimitMargin: 0.010
+  closureSamples: 120
+  # V5 predictive-static handover: after the static geometry screen, re-run
+  # every survivor through one immutable predictive reach followed by the exact
+  # proven static open-insert/close/confirm/retreat chain.
+  movingInterception: true
+  # Reach and terminal approach use the same phase-specific gates as runtime.
+  movingReachPositionTolerance: 0.012
+  movingReachOrientationTolerance: 0.050
+  movingReachMinimumClearance: 0.012
+  movingPositionTolerance: 0.004
+  movingOrientationTolerance: 0.030
+  movingCenteringTolerance: 0.00065
+  movingMaximumRelativeLinearSpeed: 0.040
+  movingMaximumRelativeAngularSpeed: 0.30
+  movingContactTimingTolerance: 0.75
+  movingMaximumContactLateness: 1.50
+  movingMaximumScheduleIterations: 3
+  movingScheduleGrowth: 1.20
+
+# V5.4.1 measured-terminal prediction binding: after a complete route passes
+# hard certification, the accepted copied velocity-gated terminal duration
+# replaces predictedApproachTime/predictedContactTime/predictedExecutionTime.
+# The pre-binding time remains the protected R1 ranking input, so candidate
+# selection and the physical FSM sequence are unchanged at this checkpoint.
+
+# V5.4.1 complete-plan audit. This cost is intentionally NON-BINDING in this
+# checkpoint: hard reachability/collision/corridor/acquisition/retreat checks
+# remain authoritative, and the protected R1 selector still commits the plan.
+# Every term below is dimensionless before weighting; weights are normalized
+# internally to sum to one. Velocity reserve uses the finite bounded law
+# phi_V=rho^4, so rho=1 remains admissible and contributes exactly 1.0.
+decisionCost:
+  timeReference: 8.0
+  effortReference: 8.0
+  pathReference: 0.50
+  # Scales angular rows of the geometric Jacobian so metres and radians are
+  # comparable in the condition index.
+  characteristicLength: 0.20
+  softClearance: 0.080
+  softJointMargin: 0.20
+  softConditionIndex: 0.10
+  timeWeight: 0.40
+  effortWeight: 0.10
+  pathWeight: 0.10
+  rotationWeight: 0.05
+  clearanceWeight: 0.15
+  jointMarginWeight: 0.08
+  conditioningWeight: 0.07
+  velocityReserveWeight: 0.05
+  metricStride: 10
+
+# V5.4.0: complete grasp candidates that survive the terminal chain are also
+# evaluated through a symmetric bank of smooth world-space transit curves.
+# The ring is sampled around the direct start-to-standoff chord; no direction
+# is labelled or preferred as above/below/left/right.
+transitPlanning:
+  enabled: true
+  routeDirections: 8
+  apexOffsets: [0.08, 0.14]
+  minimumPredictedClearance: 0.020
+  clearancePreferenceBand: 0.010
+  maximumPathStretch: 1.90
+  curveLengthSamples: 32
+
+# Single source of truth shared by copied-state route certification and the
+# physical ExecuteCommittedReach state. This prevents preview/runtime policy
+# drift while preserving the immutable one-event/one-grasp commitment.
+predictiveReachPolicy:
+  maxLinearTrackingLead: 0.035
+  maxAngularTrackingLead: 0.18
+  nearLinearTrackingLead: 0.012
+  nearAngularTrackingLead: 0.07
+  clearanceSlowdownStart: 0.035
+  clearanceHardMargin: 0.016
+  minimumRuntimeClearance: 0.008
+  minimumVelocityScale: 0.25
+  clearanceScaleDropRate: 10.0
+  clearanceScaleRiseRate: 4.0
+  farLinearSpeed: 0.38
+  nearLinearSpeed: 0.16
+  farAngularSpeed: 1.65
+  nearAngularSpeed: 0.75
+  positionTolerance: 0.012
+  orientationTolerance: 0.050
+  taskStiffness: 58.0
+  taskWeight: 6600.0
+  launchTimingTolerance: 0.010
+  scheduleLatenessTolerance: 0.25
+  minimumScheduledDuration: 0.25
+  maximumObjectTranslationDeviation: 0.015
+  maximumObjectRotationDeviation: 0.12
+
+# V4A.0 timing-consistent interception foundation. The copied-state rollout
+# remains the geometric feasibility model. These calibrated parameters map its
+# phase durations to the measured mc_rtc execution time so a future intercept
+# time is not based on the old 4 s optimistic estimate.
+executionTiming:
+  armScale: 1.25
+  effectiveGripperRate: 0.320
+  priorityBlend: 0.20
+  captureLock: 0.15
+  terminalCaptureDwell: 0.08
+  bilateralDwell: 0.10
+  confirmationDwell: 0.25
+  confirmationTimeout: 2.0
+
+# V5.2.5 VELOCITY-GATED TERMINAL CAPTURE (nominal YZ test)
+# - object approach increased to 0.080 m/s with additional runway
+# - observation shortened to 0.90 s while retaining 72 mm of observed travel
+# - object remains at 0.080 m/s; C2 terminal deceleration is 0.85 s for a visibly smoother presentation
+# - predictive reach timing remains fast, with a hard measured lead cap and
+#   the same immutable one-candidate/one-event methodology
+# - copied-state reach now certifies the same 8 mm runtime reserve (plus margin)
+# - insertion and retreat retain monotonic measured-progress anchoring
+# - path-tangent velocity feedforward keeps the fast physical insertion
+# - a measured-speed stopping-distance law activates a short terminal brake
+# - Acquire is admitted only after pose, centering and velocity remain stable
+# - closure is faster in free space and remains geometry-scheduled near contact
+# - the gripper still stays fully open through predictive reach and insertion
+
+# V5 predictive presentation with proven static acquisition. The object
+# approaches with the observed twist, decelerates smoothly and is held at the
+# committed presentation pose. The robot reaches the future standoff once,
+# keeps the gripper fully open through insertion, then the proven Acquire state
+# exclusively owns closure, contact confirmation, attachment and retreat.
+movingObject:
+  simulateMotion: true
+  observationDuration: 0.90
+  minimumObservationTime: 0.70
+  minimumObservationSamples: 350
+  predictionHorizon: 1.0
+  # Perception latency is applied to timestamped object-pose samples only.
+  # It never sleeps the controller thread and it does not retune the future
+  # event-search horizon. Use the helper script to select one condition:
+  # ideal | compensated220 | uncompensated220.
+  perceptionLatency:
+    enabled: false
+    delay: 0.220
+    compensate: true
+    bufferDuration: 1.0
+  velocityFilterTimeConstant: 0.10
+  maximumLinearSpeed: 0.30
+  maximumAngularSpeed: 1.50
+  maximumSimulatedTravel: 0.40
+  simulatedLinearVelocity: [-0.0565685, 0.0, 0.0565685]
+  simulatedAngularVelocity: [0.0, 0.0, 0.0]
+  presentationMode: true
+  presentationDecelerationDuration: 0.85
+  # The presentation time is synchronized exactly. Finger contact is accepted
+  # later anywhere in this bounded post-stop window; no millisecond contact
+  # fixed point is imposed on a stationary object.
+  presentationAcquisitionWindow: 7.00
+  # The gripper remains fully open through reach, hold and insertion. The
+  # complete closure is owned exclusively by the proven Acquire controller.
+  presentationCapturePositionTolerance: 0.012
+  presentationCaptureOrientationTolerance: 0.030
+  presentationCaptureCenterTolerance: 0.00065
+  presentationMaximumLinearSpeed: 0.004
+  presentationMaximumAngularSpeed: 0.08
+
+naturalApproach:
+  worldUp: [0.0, 0.0, 1.0]
+
+padFrame:
+  leftPointInTip: [-0.0252580, -0.000715, 0.01360]
+  rightPointInTip: [0.0252580, -0.000035, 0.01360]
+  captureDepth: 0.006
+
+corridor:
+  safetyMargin: 0.003
+  fingerInset: 0.010
+  maxAngleDeg: 10.0
+  entryDepth: 0.135
+  palmLimit: 0.004
+  axialTolerance: 0.035
+
+gripper:
+  openQ: 0.0
+  closeQ: 0.8
+  closeRate: 1.60
+  minimumCloseRate: 0.200
+  slowDistance: 0.006
+  contactTolerance: 0.0010
+  penetrationTolerance: 0.00025
+  commandLead: 0.180
+  nearContactCommandLead: 0.025
+  contactClosureGuard: 0.080
+  padCenteringTolerance: 0.004
+  targetTipCenterGap: 0.026
+  maxClosure: 1.00
+  # Per-gripper-joint parameters. They no longer overwrite the global arm
+  # posture task. postureWeight is the historical reference used to preserve
+  # the same effective gripper authority under any arm-posture weight.
+  jointWeightNormal: 25.0
+  jointWeightHigh: 2400.0
+  postureStiffnessNormal: 0.5
+  postureStiffnessHigh: 40.0
+  postureWeight: 10.0
+  # V6.4 staged real-robot bridge. Keep disabled in simulation. For the first
+  # hardware preflight set enabled=true but leave commandEnabled=false, so
+  # physical feedback is imported while the Robotiq command remains held.
+  physicalBridge:
+    enabled: true
+    commandEnabled: false
+    requireFeedback: true
+    # Calibrated Kortex motor feedback endpoints. Commissioning measured the
+    # fully-open resting value at approximately 0.87%, not 0.0%.
+    openPercent: 0.87
+    closePercent: 35.0
+    # Independent hard command cap; never exceeded by mc_kortex.
+    maxPercent: 35.0
+
+# SIMULATION
+#physicalBridge:
+#  enabled: false
+#  commandEnabled: false
+#  requireFeedback: false
+#  openPercent: 0.0
+#  closePercent: 35.0
+#  maxPercent: 35.0
+
+#REAL ROBOT
+#physicalBridge:
+#  enabled: true
+#  commandEnabled: true
+#  requireFeedback: true
+#  openPercent: 0.87
+#  closePercent: 35.0
+#  maxPercent: 35.0
+
+
+# Shared by the internal closure preview and the physical Acquire state. The
+# allowed bilateral centering error is deliberately wider while the gripper is
+# open, then tightens continuously over the final approach to contact.
+acquisition:
+  farCenterTolerance: 0.0015
+  nearCenterTolerance: 0.00055
+  centerTightenDistance: 0.010
+
+readyMotion:
+  stiffness: 1.5
+  weight: 1200.0
+  maxJointSpeed: 0.85
+  maxJointAcceleration: 2.20
+
+# V6.2 simulation-only virtual load sharing. The default virtual_sensor source
+# converts the committed admittance displacement into a virtual spring-damper
+# contact load, while the simulated human carries the remaining object weight.
+# This is explicit simulation evidence, not a physical force measurement.
+transfer:
+  simulateKinematicAttachment: true
+  source: virtual_sensor # virtual_sensor | synthetic | force_sensor | disabled
+  sourceRobot: gen3_2f85
+  sensorName: "" # empty auto-selects the only sensor on sourceRobot
+  gravityCompensated: true
+  # Projection axis is object-local and is transformed into the world frame at
+  # every cycle. Adjust after the SENSIX installation convention is confirmed.
+  loadAxisObject: [0.0, 0.0, 1.0]
+  objectMass: 0.346
+  fullSupportForce: 3.39426
+  filterTimeConstant: 0.08
+  syntheticTransferDuration: 1.20 # legacy open-loop regression source only
+  desiredTransferDuration: 1.20
+  virtualContactStiffness: 800.0 # N/m
+  virtualContactDamping: 25.0 # N s/m
+  virtualMaximumLoadScale: 1.20
+  releaseThreshold: 0.85
+  releaseRateTolerance: 0.08
+  releaseDwell: 0.30
+  transferTimeout: 5.00
+  maximumForce: 80.0
+  maximumMoment: 8.0
+  admittanceMass: 1.0
+  admittanceDamping: 35.0
+  admittanceStiffness: 80.0
+  maximumAdmittanceSpeed: 0.030
+  maximumAdmittanceOffset: 0.015
+
+constraints:
+- type: kinematics
+  robot: gen3_2f85
+  damper: [0.1, 0.01, 0.5]
+  velocityPercent: 0.95
+
+collisions: []
+contacts: []
+
+task:
+  stiffness: 12.0
+  weight: 3000.0
+
+configs:
+  HandoverInterceptionController_Initial:
+    jointTol: 0.035
+    jointVelTol: 0.030
+    stableDwell: 0.15
+    maxJointSpeed: 0.85
+    maxJointAcceleration: 2.20
+    maxIter: 40000
+
+    # V6.4.2 bounded hardware commissioning mode. When enabled, Initial freezes
+    # the arm at the measured startup posture, exercises only the physical
+    # Robotiq through the feedback-gated bridge, returns open, and never enters
+    # observation, planning, reach, capture, transfer or retreat.
+    hardwareGripperCommissioning:
+      enabled: false
+      targetPercent: 5.0
+      openTolerancePercent: 1.5
+      targetTolerancePercent: 1.5
+      velocityTolerancePercent: 2.0
+      openDwell: 0.50
+      targetDwell: 0.50
+      holdDuration: 1.00
+      armDriftLimit: 0.020
+      returnOpen: true
+
+  HandoverInterceptionController_ObserveObject:
+    # Final estimated twist classifies STATIC versus non-stationary. A moving
+    # classification additionally requires the validated displacement evidence
+    # gate; insufficient evidence is rejected safely as ambiguous.
+    minimumObservedDisplacement: 0.025
+    stationaryLinearSpeedTolerance: 0.010
+    stationaryAngularSpeedTolerance: 0.050
+    maximumRobotTranslation: 0.003
+    maximumRobotRotation: 0.015
+    settleDwell: 0.20
+    settleTimeout: 2.50
+    settleLinearSpeedTolerance: 0.0025
+    settleAngularSpeedTolerance: 0.015
+    maximumOpenClosure: 0.050
+    gripperClosureRateTolerance: 0.030
+    gripperClosureDriftTolerance: 0.002
+    holdTaskStiffness: 18.0
+    holdTaskWeight: 4200.0
+    logEvery: 100
+    maxIter: 10000
+
+  HandoverInterceptionController_SolveInterception:
+    planningStepsPerCycle: 24
+    maximumFixedPointIterations: 4
+    # V5.4.2: bounded internal spacetime search. A geometrically empty event
+    # does not terminate planning; the stationary controller explores a
+    # scenario-independent center-out lead set and refines timing only after a
+    # complete grasp-route-acquire-retreat action exists.
+    boundedEventSearchEnabled: true
+    maximumEventHypotheses: 15
+    eventSearchLeadStep: 0.45
+    maximumEventSearchWallTime: 5.0
+    attemptedLeadTolerance: 0.02
+    initialPresentationLead: 3.25
+    minimumPresentationLead: 1.8
+    maximumPresentationLead: 8.0
+    timingTolerance: 0.25
+    fixedPointRelaxation: 0.70
+    maximumLeadStep: 0.90
+    secantDenominatorTolerance: 0.05
+    minimumCommitRemainingTime: 1.6
+    # Commit only when ExecuteCommittedReach can enter at least 50 ms before
+    # the immutable reachStart. This reserve is solved before commitment; the
+    # committed event is never retimed during execution.
+    minimumReachEntryLead: 0.050
+    maximumRobotTranslation: 0.003
+    maximumRobotRotation: 0.015
+    holdTaskStiffness: 18.0
+    holdTaskWeight: 4200.0
+    logEvery: 250
+
+  HandoverInterceptionController_ExecuteCommittedReach:
+    # All reach-governor, tracking, tolerance and task parameters are read from
+    # the top-level predictiveReachPolicy shared with copied-state preview.
+    logEvery: 80
+
+  HandoverInterceptionController_PresentationHold:
+    maxLinearTrackingLead: 0.030
+    maxAngularTrackingLead: 0.10
+    posTol: 0.012
+    oriTol: 0.050
+    maximumOpenClosure: 0.050
+    stableDwell: 0.10
+    reserveMargin: 0.10
+    taskStiffness: 40.0
+    taskWeight: 5400.0
+    maximumObjectTranslationDeviation: 0.015
+    maximumObjectRotationDeviation: 0.12
+    logEvery: 100
+
+  HandoverInterceptionController_MovePregrasp:
+    farLinearSpeed: 0.38
+    nearLinearSpeed: 0.14
+    nearDistance: 0.025
+    angularSpeed: 1.50
+    linearAcceleration: 1.60
+    angularAcceleration: 4.50
+    # Spatial target is continuously anchored ahead of measured progress.
+    # Only dimensions outside terminal tolerance participate in shared progress;
+    # an already-aligned orientation cannot pin translation progress at zero.
+    spatialLinearLookAhead: 0.018
+    spatialAngularLookAhead: 0.070
+    minimumLinearLookAhead: 0.004
+    # Also serves as the orientation-progress activation margin above oriTol:
+    # sub-margin corrections are still enforced at terminal capture but cannot
+    # throttle the long translational insertion or trigger its brake.
+    minimumAngularLookAhead: 0.015
+    lookAheadRemainingRatio: 0.55 # legacy; superseded by explicit taper distance
+    lookAheadTaperDistance: 0.012
+    linearFeedforwardRatio: 0.70
+    angularFeedforwardRatio: 0.70
+    # Dynamic terminal capture brake. The fixed 12 mm taper remains a lower
+    # bound; actual braking begins earlier when measured speed requires it.
+    terminalLinearDeceleration: 2.00
+    terminalAngularDeceleration: 4.50
+    terminalBrakeMargin: 0.008
+    terminalLinearSpeedTolerance: 0.040
+    terminalAngularSpeedTolerance: 0.080
+    terminalStableDwell: 0.080
+    terminalVelocityFilter: 0.20
+    maxLinearTrackingLead: 0.028
+    maxAngularTrackingLead: 0.12
+    posTol: 0.003
+    oriTol: 0.025
+    centeringTol: 0.00045
+    maximumOpenClosure: 0.050
+    taskStiffness: 40.0
+    taskWeight: 6000.0
+    progressEps: 0.00005
+    progressLimit: 1500
+    maxIter: 18000
+
+  HandoverInterceptionController_CaptureTransfer:
+    stableDwell: 0.10
+    # Grasp confirmation and force-aware load takeover remain inside one
+    # continuous controller. Cartesian gains, object-relative mouth target,
+    # centering servo, arm posture and gripper priority do not reset at contact.
+    confirmationDwell: 0.25
+    confirmationTimeout: 2.0
+    confirmationLogEvery: 20
+    watchdogTimeout: 20.0
+    # Keep the exact terminal-approach Cartesian authority. Only per-gripper
+    # joint gains are blended; arm posture gains are never switched here.
+    taskStiffness: 40.0
+    taskWeight: 6000.0
+    gapProgressEps: 0.00002
+    gapStallLimit: 1800
+
+    priorityBlendDuration: 0.20
+    lockDwell: 0.15
+    lockTimeout: 4.0
+    lockPosTolerance: 0.004
+    lockOriTolerance: 0.030
+    # This remains a hard lower bound; the active lock threshold is the wider
+    # open-gripper value from the aperture-dependent acquisition tube.
+    lockCenterTolerance: 0.00035
+    lockCenterRateTolerance: 0.003
+    # Abort before a transition becomes a visible arm kick.
+    lockTransientPosLimit: 0.010
+    lockTransientCenterLimit: 0.003
+
+    # Damped measured-offset servo: no command-as-motion integration.
+    centeringGain: 6.0
+    centeringDamping: 1.2
+    maxCenteringSpeed: 0.012
+    maxCenteringAcceleration: 0.06
+    maxCenteringOffset: 0.008
+    centeringDeadband: 0.00012
+    # Hysteresis around the shared aperture-dependent centering tube.
+    closureCenterHysteresis: 0.00012
+    # Slow bounded bias adaptation removes static QP tracking residual without
+    # reintroducing the V3A.7 kick/oscillation.
+    centeringBiasGain: 0.35
+    centeringBiasLeak: 0.08
+    maxCenteringBias: 0.003
+    centeringRecoveryTimeout: 5.0
+    centerRateFilter: 0.15
+
+  HandoverInterceptionController_Retreat:
+    linearSpeed: 0.50
+    angularSpeed: 1.25
+    linearAcceleration: 1.80
+    angularAcceleration: 3.20
+    # Retreat has increasing clearance, so it uses a larger continuous
+    # spatial look-ahead. Active-dimension progress also prevents an already
+    # satisfied retreat orientation from pinning translation progress at zero.
+    spatialLinearLookAhead: 0.050
+    spatialAngularLookAhead: 0.14
+    minimumLinearLookAhead: 0.012
+    minimumAngularLookAhead: 0.050
+    lookAheadRemainingRatio: 0.55 # legacy; superseded by explicit taper distance
+    lookAheadTaperDistance: 0.030
+    linearFeedforwardRatio: 0.80
+    angularFeedforwardRatio: 0.80
+    maxLinearTrackingLead: 0.065
+    maxAngularTrackingLead: 0.20
+    posTol: 0.012
+    oriTol: 0.060
+    taskStiffness: 44.0
+    taskWeight: 6000.0
+    progressEps: 0.00008
+    progressLimit: 1500
+    maxIter: 14000
+
+  HandoverInterceptionController_Completed:
+    safetyCheckEvery: 50
+
+transitions:
+- [HandoverInterceptionController_Initial, OK, HandoverInterceptionController_ObserveObject, Auto]
+- [HandoverInterceptionController_Initial, FAIL, HandoverInterceptionController_Failure, Auto]
+
+- [HandoverInterceptionController_ObserveObject, OK, HandoverInterceptionController_SolveInterception, Auto]
+- [HandoverInterceptionController_ObserveObject, FAIL, HandoverInterceptionController_Failure, Auto]
+
+- [HandoverInterceptionController_SolveInterception, OK, HandoverInterceptionController_ExecuteCommittedReach, Auto]
+- [HandoverInterceptionController_SolveInterception, FAIL, HandoverInterceptionController_Failure, Auto]
+
+- [HandoverInterceptionController_ExecuteCommittedReach, OK, HandoverInterceptionController_PresentationHold, Auto]
+- [HandoverInterceptionController_ExecuteCommittedReach, FAIL, HandoverInterceptionController_Failure, Auto]
+
+- [HandoverInterceptionController_PresentationHold, OK, HandoverInterceptionController_MovePregrasp, Auto]
+- [HandoverInterceptionController_PresentationHold, FAIL, HandoverInterceptionController_Failure, Auto]
+
+- [HandoverInterceptionController_MovePregrasp, OK, HandoverInterceptionController_CaptureTransfer, Auto]
+- [HandoverInterceptionController_MovePregrasp, FAIL, HandoverInterceptionController_Failure, Auto]
+
+- [HandoverInterceptionController_CaptureTransfer, OK, HandoverInterceptionController_Retreat, Auto]
+- [HandoverInterceptionController_CaptureTransfer, FAIL, HandoverInterceptionController_Failure, Auto]
+
+- [HandoverInterceptionController_Retreat, OK, HandoverInterceptionController_Completed, Auto]
+- [HandoverInterceptionController_Retreat, FAIL, HandoverInterceptionController_Failure, Auto]
+
+- [HandoverInterceptionController_Completed, FAIL, HandoverInterceptionController_Failure, Auto]
+
+init: HandoverInterceptionController_Initial
