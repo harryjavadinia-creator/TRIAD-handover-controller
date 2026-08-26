@@ -26,7 +26,8 @@ private:
   enum class Phase
   {
     StartIteration,
-    Planning
+    Planning,
+    SelectGlobal
   };
 
   int planningStepsPerCycle_ = 12;
@@ -56,6 +57,7 @@ private:
   Phase phase_ = Phase::StartIteration;
   bool ready_ = false;
   bool staticMode_ = false;
+  bool globalTimePlanMode_ = false;
   int fixedPointIteration_ = 0;
   int eventHypothesisCount_ = 0;
   int feasibleHypothesisCount_ = 0;
@@ -64,6 +66,7 @@ private:
   double eventSearchStartTime_ = 0.0;
   std::string currentHypothesisSource_ = "initial";
   std::vector<double> boundedEventLeads_;
+  std::map<double, sva::PTransformd> boundedEventPresentationPoses_;
   std::vector<double> attemptedEventLeads_;
   double guessLead_ = 0.0;
   bool havePreviousResidual_ = false;

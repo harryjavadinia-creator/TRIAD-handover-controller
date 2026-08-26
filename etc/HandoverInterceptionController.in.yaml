@@ -140,13 +140,37 @@ preview:
 # The pre-binding time remains the protected R1 ranking input, so candidate
 # selection and the physical FSM sequence are unchanged at this checkpoint.
 
-# V5.4.1 complete-plan audit. This cost is intentionally NON-BINDING in this
-# checkpoint: hard reachability/collision/corridor/acquisition/retreat checks
-# remain authoritative, and the protected R1 selector still commits the plan.
-# Every term below is dimensionless before weighting; weights are normalized
-# internally to sum to one. Velocity reserve uses the finite bounded law
-# phi_V=rho^4, so rho=1 remains admissible and contributes exactly 1.0.
+# V6.7 experimental global binding-cost development mode. Hard reachability,
+# collision, corridor, acquisition, timing-admission and retreat checks remain
+# authoritative. The moving planner freezes a bounded set of event times at
+# one search epoch, evaluates every complete time-grasp-route alternative,
+# reapplies timing admission after the full scan, and commits the exact argmin.
+# Static presentation has one measured event and therefore reduces to the
+# V6.6 complete-plan argmin. Set eventSelectionMode to
+# first_admissible_center_out only when reproducing V6.6 behaviour.
+#
+# IMPORTANT: this is the frozen seven-term binding preference objective
+# (T,E,L,C,Q,K,V), derived from the former non-binding audit's inherited
+# references/weights by (1) removing the unsupported orientation term R
+# from the binding sum -- R remains computed and logged as a diagnostic
+# only, with rotationWeight fixed at 0.0 so it cannot perturb the shared
+# weight-normalization sum below -- and (2) proportionally renormalizing
+# the remaining seven weights to sum to one. These are controller-specific
+# engineering preferences, evaluated through exact finite-set weight-space
+# sensitivity analysis (not literature-derived or claimed optimal); see the
+# objective-calibration audit history for evidence. Physical binding-cost
+# execution remains blocked unless allowPhysicalExecution is deliberately
+# changed. Every term below is dimensionless before weighting; weights are
+# normalized internally to sum to one. Velocity reserve uses the finite
+# bounded law phi_V=rho^4 on joint-velocity utilization only (terminal
+# velocity utilization is excluded from this soft term and continues to
+# gate terminal-timing-audit success/failure separately), so rho=1 remains
+# admissible and contributes exactly 1.0.
 decisionCost:
+  selectionMode: binding_cost
+  eventSelectionMode: global_time_plan
+  tieTolerance: 1.0e-9
+  allowPhysicalExecution: false
   timeReference: 8.0
   effortReference: 8.0
   pathReference: 0.50
@@ -156,14 +180,17 @@ decisionCost:
   softClearance: 0.080
   softJointMargin: 0.20
   softConditionIndex: 0.10
-  timeWeight: 0.40
-  effortWeight: 0.10
-  pathWeight: 0.10
-  rotationWeight: 0.05
-  clearanceWeight: 0.15
-  jointMarginWeight: 0.08
-  conditioningWeight: 0.07
-  velocityReserveWeight: 0.05
+  timeWeight: 0.4210526
+  effortWeight: 0.1052632
+  pathWeight: 0.1052632
+  # Diagnostic-only weight for R; kept at 0.0 so R cannot enter the binding
+  # sum via the shared normalization below. candidate.rotation and R remain
+  # computed and logged for every candidate.
+  rotationWeight: 0.0
+  clearanceWeight: 0.1578947
+  jointMarginWeight: 0.0842105
+  conditioningWeight: 0.0736842
+  velocityReserveWeight: 0.0526316
   metricStride: 10
 
 # V5.4.0: complete grasp candidates that survive the terminal chain are also
@@ -317,9 +344,9 @@ gripper:
   # hardware preflight set enabled=true but leave commandEnabled=false, so
   # physical feedback is imported while the Robotiq command remains held.
   physicalBridge:
-    enabled: true
+    enabled: false
     commandEnabled: false
-    requireFeedback: true
+    requireFeedback: false
     # Calibrated Kortex motor feedback endpoints. Commissioning measured the
     # fully-open resting value at approximately 0.87%, not 0.0%.
     openPercent: 0.87
@@ -453,16 +480,22 @@ configs:
     maxIter: 10000
 
   HandoverInterceptionController_SolveInterception:
-    planningStepsPerCycle: 24
+    # Simulation-only global enumeration batches four times as many copied-
+    # state preview steps per ticker cycle so several fixed future events can
+    # remain timing-admissible after the complete scan. This does not change
+    # the preview integration step, generated actions, constraints or costs.
+    planningStepsPerCycle: 96
     maximumFixedPointIterations: 4
-    # V5.4.2: bounded internal spacetime search. A geometrically empty event
-    # does not terminate planning; the stationary controller explores a
-    # scenario-independent center-out lead set and refines timing only after a
-    # complete grasp-route-acquire-retreat action exists.
+    # V6.7: generate the same scenario-independent bounded lead bank, freeze
+    # every event to the common search epoch, sort it chronologically, and
+    # evaluate the entire set before the global time-grasp-route argmin. The
+    # fixed-point parameters below remain active only when reproducing the
+    # first_admissible_center_out policy.
     boundedEventSearchEnabled: true
     maximumEventHypotheses: 15
     eventSearchLeadStep: 0.45
-    maximumEventSearchWallTime: 5.0
+    # Global mode must finish the entire fixed hypothesis set or fail closed.
+    maximumEventSearchWallTime: 7.0
     attemptedLeadTolerance: 0.02
     initialPresentationLead: 3.25
     minimumPresentationLead: 1.8

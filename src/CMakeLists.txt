@@ -3,6 +3,7 @@ set(controller_SRC
 )
 
 set(controller_HDR
+  FinitePlanSelector.h
   HandoverInterceptionController.h
 )
 

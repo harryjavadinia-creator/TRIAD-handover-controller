@@ -1,4 +1,6 @@
 #include "HandoverInterceptionController.h"
+#include "FiniteEventPlanSelector.h"
+#include "FinitePlanSelector.h"
 
 #include <mc_control/mc_controller.h>
 #include <mc_rbdyn/ForceSensor.h>
@@ -843,6 +845,23 @@ void HandoverInterceptionController::loadHandoverConfig(
   if(config.has("decisionCost"))
   {
     auto cost = config("decisionCost");
+    if(cost.has("selectionMode"))
+    {
+      cost("selectionMode", completePlanSelectionMode_);
+    }
+    if(cost.has("eventSelectionMode"))
+    {
+      cost("eventSelectionMode", completeEventSelectionMode_);
+    }
+    if(cost.has("tieTolerance"))
+    {
+      cost("tieTolerance", decisionCostTieTolerance_);
+    }
+    if(cost.has("allowPhysicalExecution"))
+    {
+      cost("allowPhysicalExecution",
+           decisionBindingPhysicalExecutionAuthorized_);
+    }
     if(cost.has("timeReference"))
     {
       cost("timeReference", decisionTimeReference_);
@@ -903,6 +922,46 @@ void HandoverInterceptionController::loadHandoverConfig(
     }
   }
 
+  const bool selectionModeValid =
+      completePlanSelectionMode_ == "protected_heuristic"
+      || completePlanSelectionMode_ == "binding_cost";
+  const bool eventSelectionModeValid =
+      completeEventSelectionMode_ == "first_admissible_center_out"
+      || completeEventSelectionMode_ == "global_time_plan";
+  const bool eventSelectionCompatible =
+      completeEventSelectionMode_ != "global_time_plan"
+      || completePlanSelectionMode_ == "binding_cost";
+  const bool decisionReferencesValid =
+      std::isfinite(decisionTimeReference_) && decisionTimeReference_ > 0.0
+      && std::isfinite(decisionEffortReference_)
+      && decisionEffortReference_ > 0.0
+      && std::isfinite(decisionPathReference_)
+      && decisionPathReference_ > 0.0
+      && std::isfinite(decisionCharacteristicLength_)
+      && decisionCharacteristicLength_ > 0.0
+      && std::isfinite(decisionSoftClearance_)
+      && std::isfinite(decisionSoftJointMargin_)
+      && decisionSoftJointMargin_ > 0.0
+      && std::isfinite(decisionSoftConditionIndex_)
+      && decisionSoftConditionIndex_ > 0.0
+      && std::isfinite(decisionCostTieTolerance_)
+      && decisionCostTieTolerance_ >= 0.0;
+  const bool decisionWeightsValid =
+      std::isfinite(decisionTimeWeight_) && decisionTimeWeight_ >= 0.0
+      && std::isfinite(decisionEffortWeight_)
+      && decisionEffortWeight_ >= 0.0
+      && std::isfinite(decisionPathWeight_) && decisionPathWeight_ >= 0.0
+      && std::isfinite(decisionRotationWeight_)
+      && decisionRotationWeight_ >= 0.0
+      && std::isfinite(decisionClearanceWeight_)
+      && decisionClearanceWeight_ >= 0.0
+      && std::isfinite(decisionJointMarginWeight_)
+      && decisionJointMarginWeight_ >= 0.0
+      && std::isfinite(decisionConditioningWeight_)
+      && decisionConditioningWeight_ >= 0.0
+      && std::isfinite(decisionVelocityReserveWeight_)
+      && decisionVelocityReserveWeight_ >= 0.0;
+
   decisionTimeReference_ = std::max(1e-6, decisionTimeReference_);
   decisionEffortReference_ = std::max(1e-6, decisionEffortReference_);
   decisionPathReference_ = std::max(1e-6, decisionPathReference_);
@@ -929,6 +988,10 @@ void HandoverInterceptionController::loadHandoverConfig(
       + decisionRotationWeight_ + decisionClearanceWeight_
       + decisionJointMarginWeight_ + decisionConditioningWeight_
       + decisionVelocityReserveWeight_;
+  decisionCostConfigurationValid_ = selectionModeValid
+      && eventSelectionModeValid && eventSelectionCompatible
+      && decisionReferencesValid && decisionWeightsValid
+      && std::isfinite(decisionWeightSum) && decisionWeightSum > 1e-12;
   if(decisionWeightSum > 1e-12)
   {
     decisionTimeWeight_ /= decisionWeightSum;
@@ -940,6 +1003,27 @@ void HandoverInterceptionController::loadHandoverConfig(
     decisionConditioningWeight_ /= decisionWeightSum;
     decisionVelocityReserveWeight_ /= decisionWeightSum;
   }
+  decisionCostTieTolerance_ = std::max(0.0, decisionCostTieTolerance_);
+
+  if(!selectionModeValid)
+  {
+    mc_rtc::log::error(
+        "[PlanSelectionConfiguration] unsupported selectionMode={}; allowed=[protected_heuristic,binding_cost]. Binding selection will fail closed",
+        completePlanSelectionMode_);
+  }
+  if(!eventSelectionModeValid || !eventSelectionCompatible)
+  {
+    mc_rtc::log::error(
+        "[PlanSelectionConfiguration] unsupported eventSelectionMode={} for selectionMode={}; allowed=[first_admissible_center_out,global_time_plan(binding_cost_only)]. Selection will fail closed",
+        completeEventSelectionMode_, completePlanSelectionMode_);
+  }
+  mc_rtc::log::warning(
+      "[PlanSelectionConfiguration] mode={} costConfigurationValid={} tieTolerance={:.3e} allowPhysicalExecution={} weightSumBeforeNormalization={:.6f} eventTimePolicy={} timeTerm={}",
+      completePlanSelectionMode_, decisionCostConfigurationValid_,
+      decisionCostTieTolerance_, decisionBindingPhysicalExecutionAuthorized_,
+      decisionWeightSum, completeEventSelectionMode_,
+      completeEventSelectionMode_ == "global_time_plan"
+          ? "search_to_completion" : "execution_only");
 
   if(config.has("transitPlanning"))
   {
@@ -4232,7 +4316,6 @@ bool HandoverInterceptionController::carriedObjectArmSafe(
 
 bool HandoverInterceptionController::previewAttachedRetreatSafe(
     const rbd::MultiBodyConfig & mbc,
-    const sva::PTransformd & W_T_M,
     const sva::PTransformd & W_T_O_carried,
     HandoverSafetyReport & report) const
 {
@@ -4240,11 +4323,13 @@ bool HandoverInterceptionController::previewAttachedRetreatSafe(
   report.safe = true;
   report.minClearance = std::numeric_limits<double>::infinity();
 
-  const sva::PTransformd W_T_B = basePoseFromMouthPose(W_T_M);
   for(const auto & sample : gripperSamplesB_)
   {
     if(!groundEnabled_) { break; }
-    const Eigen::Vector3d pW = pointToWorld(W_T_B, sample.p_B);
+    // Use the copied closed-gripper link transforms. Reconstructing every
+    // sample from the cached live/open B->M calibration can certify a retreat
+    // geometry that is different from the copied state being evaluated.
+    const Eigen::Vector3d pW = sampleWorldPoint(sample, mbc);
     const double clear = pW.z() - groundZ_
         - (sample.radius + groundSafetyMargin_);
     if(report.groundClearance < -1e8 || clear < report.groundClearance)
@@ -4272,7 +4357,7 @@ bool HandoverInterceptionController::evaluateAttachedRetreatSafety(
     report.minClearance = -1e9;
     return false;
   }
-  return previewAttachedRetreatSafe(robot().mbc(), actualMouthPose(), W_T_O_, report);
+  return previewAttachedRetreatSafe(robot().mbc(), W_T_O_, report);
 }
 
 bool HandoverInterceptionController::filterSafeAttachedRetreatCommand(
@@ -4454,7 +4539,8 @@ void HandoverInterceptionController::setPreviewGripperClosure(
 
 bool HandoverInterceptionController::previewDynamicClosureSafety(
     const rbd::MultiBodyConfig & mbc,
-    HandoverSafetyReport & report) const
+    HandoverSafetyReport & report,
+    bool allowDesignatedPadContact) const
 {
   report = HandoverSafetyReport{};
   report.safe = true;
@@ -4520,11 +4606,13 @@ bool HandoverInterceptionController::previewDynamicClosureSafety(
   report.signedPadCenteringError =
       0.5 * (report.rightPadClearance - report.leftPadClearance);
   report.padCenteringError = std::abs(report.signedPadCenteringError);
+  const double designatedPadAllowance = allowDesignatedPadContact
+      ? gripperContactTolerance_ : gripperPenetrationTolerance_;
   updateWorstClearance(report,
-      report.leftPadClearance + gripperPenetrationTolerance_,
+      report.leftPadClearance + designatedPadAllowance,
       "left_inner_pad", "robot_blue_handle");
   updateWorstClearance(report,
-      report.rightPadClearance + gripperPenetrationTolerance_,
+      report.rightPadClearance + designatedPadAllowance,
       "right_inner_pad", "robot_blue_handle");
   const double minPadClearance = std::min(
       report.leftPadClearance, report.rightPadClearance);
@@ -4553,11 +4641,13 @@ bool HandoverInterceptionController::previewDynamicClosureSafety(
   updateWorstClearance(report, 0.05 * angleClear,
                        "mouth_corridor", "blue_handle_axis_alignment");
 
+  const double designatedPadLowerBound = allowDesignatedPadContact
+      ? -gripperContactTolerance_ : -gripperPenetrationTolerance_;
   report.bilateralPadContact = report.safe
       && report.leftPadClearance <= gripperContactTolerance_
       && report.rightPadClearance <= gripperContactTolerance_
-      && report.leftPadClearance >= -gripperPenetrationTolerance_
-      && report.rightPadClearance >= -gripperPenetrationTolerance_
+      && report.leftPadClearance >= designatedPadLowerBound
+      && report.rightPadClearance >= designatedPadLowerBound
       && report.padCenteringError <= padCenteringTolerance_;
   return report.safe;
 }
@@ -4605,7 +4695,7 @@ HandoverInterceptionController::previewReachStep(
     HandoverSafetyReport finalReport;
     const sva::PTransformd W_T_O_carried = compose(W_T_M, planningM_T_O_);
     const bool finalSafe = attachedRetreat
-        ? previewAttachedRetreatSafe(mbc, W_T_M, W_T_O_carried, finalReport)
+        ? previewAttachedRetreatSafe(mbc, W_T_O_carried, finalReport)
         : previewConfigurationSafe(mbc, W_T_M, requireCorridor, finalReport);
     if(!finalSafe)
     {
@@ -4840,7 +4930,7 @@ HandoverInterceptionController::previewReachStep(
   const sva::PTransformd newMouth = previewMouthPose(mbc);
   const sva::PTransformd W_T_O_carried = compose(newMouth, planningM_T_O_);
   const bool stepSafe = attachedRetreat
-      ? previewAttachedRetreatSafe(mbc, newMouth, W_T_O_carried, report)
+      ? previewAttachedRetreatSafe(mbc, W_T_O_carried, report)
       : previewConfigurationSafe(mbc, newMouth, requireCorridor, report);
   if(!stepSafe)
   {
@@ -4892,7 +4982,27 @@ HandoverInterceptionController::previewClosureStep(
   setPreviewGripperClosure(mbc, closure);
 
   HandoverSafetyReport report;
-  if(!previewDynamicClosureSafety(mbc, report))
+  bool closureSafe = previewDynamicClosureSafety(mbc, report, false);
+  if(!closureSafe)
+  {
+    // Match the e2e194d runtime Closing transition: only the two designated
+    // inner-pad/blue-handle pairs may use the existing contact band, and only
+    // when the copied state already establishes bilateral contact. Every
+    // other contact and geometric constraint remains hard.
+    HandoverSafetyReport designatedContactReport;
+    const bool designatedContactSafe = previewDynamicClosureSafety(
+        mbc, designatedContactReport, true);
+    if(designatedContactSafe && designatedContactReport.bilateralPadContact)
+    {
+      report = designatedContactReport;
+      closureSafe = true;
+      mc_rtc::log::info(
+          "[PreviewContactEntry] designated bilateral pad contact admitted with runtime contact band left={:.4f} right={:.4f} centerErr={:.4f} allOtherConstraintsHard=true",
+          report.leftPadClearance, report.rightPadClearance,
+          report.padCenteringError);
+    }
+  }
+  if(!closureSafe)
   {
     result.reason = "closure/" + report.sample + "/" + report.obstacle;
     result.limitingSample = report.sample;
@@ -4968,11 +5078,11 @@ bool HandoverInterceptionController::previewVelocityGateParityShadow(
     std::string & reason,
     bool verbose) const
 {
-  // Non-binding copied-state timing audit for any complete R1 route. The
-  // constants and progression law below mirror the proven
-  // MovePregrasp runtime policy, including the 0.70 path-tangent velocity
-  // feedforward and its stopping-distance taper. No candidate feasibility,
-  // ranking, commitment, or physical execution depends on this result.
+  // Copied-state terminal timing approximation for a complete route. It keeps
+  // hard feasibility unchanged, but its duration contributes to the plan cost
+  // and can affect the committed action in binding_cost mode. It must not be
+  // described as exact runtime-policy parity: this bounded shadow has its own
+  // constants and numerical integration.
   constexpr double farLinearSpeed = 0.38;
   constexpr double nearLinearSpeed = 0.14;
   constexpr double nearDistance = 0.025;
@@ -5527,7 +5637,12 @@ bool HandoverInterceptionController::verifyPredictiveRouteCandidate(
   //    as ExecuteCommittedReach, then integrates whole-arm IK on that bounded
   //    command. This is a certification model, not a second controller.
   // -----------------------------------------------------------------------
-  rbd::MultiBodyConfig mbc = robot().mbc();
+  // Same frozen decision-state discipline as startNextPlanningCandidate():
+  // this route's local rollout must not seed from a live robot().mbc() that
+  // depends on how many other candidates/routes were already processed in
+  // this search. See resetGlobalTimePlanSearch().
+  rbd::MultiBodyConfig mbc = globalTimePlanFrozenRobotStateValid_
+      ? globalTimePlanFrozenRobotState_ : robot().mbc();
   for(auto & a : mbc.alpha) { std::fill(a.begin(), a.end(), 0.0); }
   for(auto & aD : mbc.alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
   setPreviewGripperClosure(mbc, 0.0);
@@ -5926,17 +6041,18 @@ bool HandoverInterceptionController::verifyPredictiveRouteCandidate(
   }
 
   mc_rtc::log::success(
-      "[MeasuredTerminalPredictionBinding] candidate={} route={} applied={} legacyApproach={:.3f}s measuredApproach={:.3f}s boundApproach={:.3f}s contactDelta={:+.3f}s executionDelta={:+.3f}s hardFeasibilityUnchanged=true protectedRankingUnchanged=true stateSequenceUnchanged=true",
+      "[MeasuredTerminalPredictionBinding] candidate={} route={} applied={} legacyApproach={:.3f}s measuredApproach={:.3f}s boundApproach={:.3f}s contactDelta={:+.3f}s executionDelta={:+.3f}s hardFeasibilityUnchanged=true protectedHeuristicInputUnchanged=true bindingCostInputUpdated={} stateSequenceUnchanged=true",
       candidate.name, candidate.transitRouteName,
       candidate.terminalTimingPredictionBound, legacyApproach,
       candidate.terminalTimingAuditDuration,
       candidate.predictedApproachTime,
       candidate.predictedContactTime - legacyContact,
-      candidate.estimatedTime - legacyExecution);
+      candidate.estimatedTime - legacyExecution,
+      completePlanSelectionMode_ == "binding_cost");
 
   computeCompletePlanAuditCost(candidate);
   mc_rtc::log::success(
-      "[CompletePlanTimingAudit] candidate={} route={} success={} captureReadyDuration={:.3f}s legacyApproach={:.3f}s boundApproach={:.3f}s delta={:+.3f}s final=[dist:{:.4f},angle:{:.4f},v:{:.4f},w:{:.4f},stable:{:.3f}] reason={} completeRoute=true predictionBinding={} hardFeasibilityNonBinding=true protectedRankingUnchanged=true executionUnchanged=true",
+      "[CompletePlanTimingAudit] candidate={} route={} success={} captureReadyDuration={:.3f}s legacyApproach={:.3f}s boundApproach={:.3f}s delta={:+.3f}s final=[dist:{:.4f},angle:{:.4f},v:{:.4f},w:{:.4f},stable:{:.3f}] reason={} completeRoute=true predictionBinding={} hardFeasibilityUnchanged=true selectionMode={} canAffectCommittedSelection={}",
       candidate.name, candidate.transitRouteName,
       candidate.terminalTimingAuditSuccess,
       candidate.terminalTimingAuditDuration, legacyApproach,
@@ -5948,9 +6064,11 @@ bool HandoverInterceptionController::verifyPredictiveRouteCandidate(
       candidate.terminalTimingFinalAngularSpeed,
       candidate.terminalTimingFinalStableTime,
       candidate.terminalTimingAuditReason,
-      candidate.terminalTimingPredictionBound);
+      candidate.terminalTimingPredictionBound,
+      completePlanSelectionMode_,
+      completePlanSelectionMode_ == "binding_cost");
   mc_rtc::log::success(
-      "[CompletePlanCostAudit] candidate={} route={} valid={} J={:.6f} weightsNormalized=true auditTime={:.3f}s effort={:.3f} path={:.3f}m rotation={:.3f} clearance=[reach:{:.4f},retreat:{:.4f}] jointMargin={:.4f} conditionIndex={:.4f} velocityUtil={:.4f} velocityLaw=rho4 finiteBoundary=true terms=[T:{:.4f},E:{:.4f},L:{:.4f},R:{:.4f},C:{:.4f},Q:{:.4f},K:{:.4f},V:{:.4f}] hardFeasibilityUnchanged=true rankingUnchanged=true",
+      "[CompletePlanCost] candidate={} route={} valid={} J={:.6f} weightsNormalized=true auditTime={:.3f}s effort={:.3f} path={:.3f}m rotation={:.3f} clearance=[reach:{:.4f},retreat:{:.4f}] jointMargin={:.4f} conditionIndex={:.4f} velocityUtil={:.4f} velocityLaw=rho4 finiteBoundary=true terms=[T:{:.4f},E:{:.4f},L:{:.4f},R:{:.4f},C:{:.4f},Q:{:.4f},K:{:.4f},V:{:.4f}] hardFeasibilityUnchanged=true selectionMode={} binding={}",
       candidate.name, candidate.transitRouteName,
       candidate.completeCostAuditValid, candidate.completeCostAudit,
       candidate.auditEstimatedTime, candidate.predictedEffort,
@@ -5964,12 +6082,13 @@ bool HandoverInterceptionController::verifyPredictiveRouteCandidate(
       candidate.costTime, candidate.costEffort, candidate.costPath,
       candidate.costRotation, candidate.costClearance,
       candidate.costJointMargin, candidate.costConditioning,
-      candidate.costVelocityReserve);
+      candidate.costVelocityReserve, completePlanSelectionMode_,
+      completePlanSelectionMode_ == "binding_cost");
 
   if(verboseTimingAudit)
   {
     mc_rtc::log::success(
-        "[VelocityGateParityFeedforwardSummary] candidate={} route={} success={} duration={:.3f}s reason={} final=[dist:{:.4f},angle:{:.4f},v:{:.4f},w:{:.4f},stable:{:.3f}] feedforwardParity=true nonBinding=true feasibilityUnchanged=true rankingUnchanged=true executionUnchanged=true",
+        "[VelocityGateTimingApproximationSummary] candidate={} route={} success={} duration={:.3f}s reason={} final=[dist:{:.4f},angle:{:.4f},v:{:.4f},w:{:.4f},stable:{:.3f}] runtimePolicyEquivalent=false hardFeasibilityUnchanged=true feedsBindingCost={}",
         candidate.name, candidate.transitRouteName,
         candidate.terminalTimingAuditSuccess,
         candidate.terminalTimingAuditDuration,
@@ -5978,9 +6097,10 @@ bool HandoverInterceptionController::verifyPredictiveRouteCandidate(
         candidate.terminalTimingFinalOrientationError,
         candidate.terminalTimingFinalLinearSpeed,
         candidate.terminalTimingFinalAngularSpeed,
-        candidate.terminalTimingFinalStableTime);
+        candidate.terminalTimingFinalStableTime,
+        completePlanSelectionMode_ == "binding_cost");
     mc_rtc::log::success(
-        "[VelocityGateParityFeedforwardComparison] candidate={} route={} shadowSuccess={} shadowDuration={:.3f}s legacyDuration={:.3f}s delta={:+.3f}s feedforwardParity=true shadowNonBinding=true",
+        "[VelocityGateTimingApproximationComparison] candidate={} route={} shadowSuccess={} shadowDuration={:.3f}s legacyDuration={:.3f}s delta={:+.3f}s runtimePolicyEquivalent=false",
         candidate.name, candidate.transitRouteName,
         candidate.terminalTimingAuditSuccess,
         candidate.terminalTimingAuditDuration, legacyApproach,
@@ -5988,7 +6108,7 @@ bool HandoverInterceptionController::verifyPredictiveRouteCandidate(
   }
 
   mc_rtc::log::success(
-      "[PredictiveStaticPreview] candidate={} route={} certified runtimePolicyEquivalent=true movingReach=true openInsertion=true fullAcquire=true retreat=true reach={:.3f}s legacyApproach={:.3f}s approach={:.3f}s auditApproach={:.3f}s acquire={:.3f}s contactAfterPresentation={:.3f}s auditContactAfterPresentation={:.3f}s closure={:.3f} reachError=[{:.4f},{:.4f}] reachClear={:.4f} requiredReachClear={:.4f} retreatClear={:.4f} terminalClear={:.4f} overallClear={:.4f} auditJ={:.6f}",
+      "[PredictiveStaticPreview] candidate={} route={} certified runtimePolicyApproximation=true runtimePolicyEquivalent=false movingReach=true openInsertion=true fullAcquire=true retreat=true reach={:.3f}s legacyApproach={:.3f}s approach={:.3f}s auditApproach={:.3f}s acquire={:.3f}s contactAfterPresentation={:.3f}s auditContactAfterPresentation={:.3f}s closure={:.3f} reachError=[{:.4f},{:.4f}] reachClear={:.4f} requiredReachClear={:.4f} retreatClear={:.4f} terminalClear={:.4f} overallClear={:.4f} J={:.6f}",
       candidate.name, candidate.transitRouteName, candidate.predictedReachTime,
       candidate.legacyPredictedApproachTime,
       candidate.predictedApproachTime,
@@ -6197,7 +6317,15 @@ HandoverInterceptionController::beginCapturePlanning(bool commitOnSuccess)
     return capturePlanningStatus_;
   }
 
-  planningStartMouthPose_ = actualMouthPose();
+  // Third frozen-decision-state consumer: in global-time-plan mode this
+  // reference pose is otherwise resampled live once per hypothesis (this
+  // function runs once per event hypothesis), which leaks the same
+  // elapsed-time nuisance variable into candidate geometry itself, upstream
+  // of the two already-frozen preview seed sites. previewMouthPose() is the
+  // existing MBC-parameterized equivalent of actualMouthPose() (same frame
+  // construction, parameterized on an explicit mbc instead of live robot()).
+  planningStartMouthPose_ = globalTimePlanFrozenRobotStateValid_
+      ? previewMouthPose(globalTimePlanFrozenRobotState_) : actualMouthPose();
   const Eigen::Vector3d pH = W_T_H_.translation();
   const Eigen::Vector3d zH = blueHandleAxis();
 
@@ -6228,6 +6356,15 @@ HandoverInterceptionController::beginCapturePlanning(bool commitOnSuccess)
   planningFoundFeasible_ = false;
   planningBestCandidate_ = CaptureCandidate{};
   planningCompletePlanAuditCandidates_.clear();
+  planningCostSelectionValid_ = false;
+  planningCostSelectionCommitAdmissible_ = false;
+  planningGlobalSelectionActive_ = false;
+  planningCostSelectionReason_ = "not_run";
+  planningCompletePlanCount_ = 0;
+  planningCostValidCount_ = 0;
+  planningTimingAdmissibleCount_ = 0;
+  planningMinimumAdmissibleCost_ = 1e9;
+  planningSelectedObjectiveCost_ = 1e9;
   planningMbc_.reset();
   capturePlanningStatus_ = CapturePlanningStatus::Running;
 
@@ -6257,7 +6394,13 @@ bool HandoverInterceptionController::startNextPlanningCandidate()
   planningCurrentCandidate_.rotation = orientationError(
       planningStartMouthPose_, planningCurrentCandidate_.W_T_M_standoff);
 
-  planningMbc_ = std::make_unique<rbd::MultiBodyConfig>(robot().mbc());
+  // In global-time-plan mode every candidate in this search must preview
+  // from the same decision state, not from whatever live robot().mbc()
+  // happens to exist when this candidate's turn arrives (which otherwise
+  // depends on enumeration order/workload). See resetGlobalTimePlanSearch().
+  planningMbc_ = std::make_unique<rbd::MultiBodyConfig>(
+      globalTimePlanFrozenRobotStateValid_
+          ? globalTimePlanFrozenRobotState_ : robot().mbc());
   for(auto & a : planningMbc_->alpha) { std::fill(a.begin(), a.end(), 0.0); }
   for(auto & aD : planningMbc_->alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
   setPreviewGripperClosure(*planningMbc_, 0.0);
@@ -6357,19 +6500,32 @@ void HandoverInterceptionController::computeCompletePlanAuditCost(
   // Hard joint-velocity compliance has already been certified by the copied
   // rollout. This is therefore a soft preference only: keep it finite at the
   // admissible boundary instead of recreating a hidden hard constraint.
-  const double velocityUtilization = clamp01(std::max(
-      candidate.maximumJointVelocityUtilization,
-      candidate.terminalVelocityUtilization));
+  // Frozen seven-term objective: V uses joint-velocity utilization only.
+  // terminalVelocityUtilization is deliberately excluded from this soft
+  // preference term (validated: it never dominated the previous combined
+  // max() across the full diagnostic campaign, including a dedicated
+  // terminal-settling stress test); it remains computed above and continues
+  // to gate terminal-timing-audit success/failure and execution checks
+  // exactly as before, unaffected by this exclusion.
+  const double velocityUtilization = clamp01(
+      candidate.maximumJointVelocityUtilization);
   const double velocityUtilizationSquared = velocityUtilization
                                            * velocityUtilization;
   candidate.costVelocityReserve = velocityUtilizationSquared
                                 * velocityUtilizationSquared;
 
+  // Frozen seven-term binding preference objective (T,E,L,C,Q,K,V). R
+  // (candidate.costRotation, computed above) is retained as a diagnostic
+  // quantity only and is deliberately excluded from this binding sum: it
+  // never independently changed the selected winner across the full
+  // ablation/robustness campaign, so it no longer contributes to candidate
+  // ranking, the global argmin, or winner selection. decisionRotationWeight_
+  // is retained in configuration for provenance/diagnostics only and is
+  // intentionally never referenced below.
   candidate.completeCostAudit =
         decisionTimeWeight_ * candidate.costTime
       + decisionEffortWeight_ * candidate.costEffort
       + decisionPathWeight_ * candidate.costPath
-      + decisionRotationWeight_ * candidate.costRotation
       + decisionClearanceWeight_ * candidate.costClearance
       + decisionJointMarginWeight_ * candidate.costJointMargin
       + decisionConditioningWeight_ * candidate.costConditioning
@@ -6487,6 +6643,499 @@ void HandoverInterceptionController::finishCurrentPlanningCandidate(bool feasibl
   planningMbc_.reset();
 }
 
+bool HandoverInterceptionController::selectPlanningBestForCommit(
+    double remainingToPresentation,
+    double minimumReachEntryLead,
+    double minimumSafeCommitLead)
+{
+  planningCostSelectionValid_ = false;
+  planningCostSelectionCommitAdmissible_ = false;
+  planningGlobalSelectionActive_ = false;
+  planningCostSelectionReason_ = "not_run";
+  planningCompletePlanCount_ = planningCompletePlanAuditCandidates_.size();
+  planningCostValidCount_ = 0;
+  planningTimingAdmissibleCount_ = 0;
+  planningMinimumAdmissibleCost_ = 1e9;
+  planningSelectedObjectiveCost_ = 1e9;
+  selectedGlobalMotionCost_ = 1e9;
+  selectedGlobalScheduleWait_ = 0.0;
+
+  if(!planningFoundFeasible_)
+  {
+    planningCostSelectionReason_ = "no_geometrically_feasible_plan";
+    mc_rtc::log::error(
+        "[PlanSelection] mode={} success=false reason={} no plan may be committed",
+        completePlanSelectionMode_, planningCostSelectionReason_);
+    return false;
+  }
+
+  if(completePlanSelectionMode_ == "protected_heuristic")
+  {
+    planningCostSelectionValid_ = true;
+    planningCostSelectionCommitAdmissible_ = true;
+    planningCostSelectionReason_ = "protected_heuristic_selected";
+    planningSelectedObjectiveCost_ = planningBestCandidate_.completeCostAudit;
+    mc_rtc::log::warning(
+        "[PlanSelection] mode=protected_heuristic candidate={} route={} costBinding=false historicalSelectorPreserved=true",
+        planningBestCandidate_.name,
+        planningBestCandidate_.transitRouteName);
+    return true;
+  }
+
+  if(completePlanSelectionMode_ != "binding_cost"
+     || !decisionCostConfigurationValid_)
+  {
+    planningCostSelectionReason_ = "invalid_binding_cost_configuration";
+    mc_rtc::log::error(
+        "[BindingCostSelection] success=false reason={} mode={} costConfigurationValid={} no fallback permitted",
+        planningCostSelectionReason_, completePlanSelectionMode_,
+        decisionCostConfigurationValid_);
+    return false;
+  }
+
+  if(physicalGripperBridgeEnabled_
+     && !decisionBindingPhysicalExecutionAuthorized_)
+  {
+    planningCostSelectionReason_ = "physical_binding_execution_not_authorized";
+    mc_rtc::log::error(
+        "[BindingCostSelection] success=false reason={} physicalBridgeEnabled=true physicalCommandEnabled={} allowPhysicalExecution=false no fallback permitted",
+        planningCostSelectionReason_, physicalGripperCommandEnabled_);
+    return false;
+  }
+
+  std::vector<call_handover::FinitePlanRecord> records;
+  records.reserve(planningCompletePlanAuditCandidates_.size());
+  for(std::size_t i = 0;
+      i < planningCompletePlanAuditCandidates_.size(); ++i)
+  {
+    const auto & candidate = planningCompletePlanAuditCandidates_[i];
+    call_handover::FinitePlanRecord record;
+    record.sourceIndex = i;
+    record.costValid = candidate.completeCostAuditValid;
+    record.cost = candidate.completeCostAudit;
+    record.predictedPresentationTime = candidate.predictedPresentationTime;
+    record.clearance = candidate.predictiveReachClearance;
+    record.candidateName = candidate.name;
+    record.routeName = candidate.transitRouteName;
+    records.push_back(record);
+  }
+
+  const bool enforceTiming = remainingToPresentation >= 0.0;
+  const auto selection = call_handover::selectFinitePlan(
+      records, decisionCostTieTolerance_, enforceTiming,
+      remainingToPresentation, minimumReachEntryLead,
+      minimumSafeCommitLead);
+  planningCompletePlanCount_ = selection.completePlanCount;
+  planningCostValidCount_ = selection.costValidCount;
+  planningTimingAdmissibleCount_ = selection.timingAdmissibleCount;
+  planningMinimumAdmissibleCost_ = selection.minimumAdmissibleCost;
+  planningCostSelectionReason_ = selection.reason;
+
+  if(!selection.success
+     || selection.selectedRecord >= planningCompletePlanAuditCandidates_.size())
+  {
+    mc_rtc::log::error(
+        "[BindingCostSelection] success=false reason={} completePlans={} costValidPlans={} timingAdmissiblePlans={} no fallback permitted",
+        planningCostSelectionReason_, planningCompletePlanCount_,
+        planningCostValidCount_, planningTimingAdmissibleCount_);
+    return false;
+  }
+
+  planningBestCandidate_ =
+      planningCompletePlanAuditCandidates_[selection.selectedRecord];
+  planningSelectedObjectiveCost_ = planningBestCandidate_.completeCostAudit;
+  selectedGlobalMotionCost_ = planningBestCandidate_.completeCostAudit;
+  planningCostSelectionValid_ = true;
+  planningCostSelectionCommitAdmissible_ = selection.commitAdmissible;
+
+  if(selection.commitAdmissible)
+  {
+    const bool selectedEqualsMinimum =
+        std::isfinite(planningMinimumAdmissibleCost_)
+        && std::abs(planningSelectedObjectiveCost_
+                    - planningMinimumAdmissibleCost_)
+               <= decisionCostTieTolerance_;
+    mc_rtc::log::success(
+        "[BindingCostSelection] success=true commitAdmissible=true completePlans={} costValidPlans={} timingAdmissiblePlans={} candidate={} route={} selectedJ={:.9f} minimumAdmissibleJ={:.9f} selectedWithinMinimumTolerance={} tieTolerance={:.3e} tieBreak=[reachTime,clearance,candidate,route,index]",
+        planningCompletePlanCount_, planningCostValidCount_,
+        planningTimingAdmissibleCount_, planningBestCandidate_.name,
+        planningBestCandidate_.transitRouteName,
+        planningBestCandidate_.completeCostAudit,
+        planningMinimumAdmissibleCost_, selectedEqualsMinimum,
+        decisionCostTieTolerance_);
+    if(!selectedEqualsMinimum)
+    {
+      planningCostSelectionValid_ = false;
+      planningCostSelectionCommitAdmissible_ = false;
+      planningCostSelectionReason_ = "selected_cost_does_not_equal_minimum";
+      return false;
+    }
+  }
+  else
+  {
+    mc_rtc::log::warning(
+        "[BindingCostSelection] success=true commitAdmissible=false reason={} completePlans={} costValidPlans={} timingAdmissiblePlans=0 timingReferenceCandidate={} route={} predictedReach={:.3f}s; candidate may drive event-time refinement but cannot be committed",
+        planningCostSelectionReason_, planningCompletePlanCount_,
+        planningCostValidCount_, planningBestCandidate_.name,
+        planningBestCandidate_.transitRouteName,
+        planningBestCandidate_.predictedPresentationTime);
+  }
+  return true;
+}
+
+void HandoverInterceptionController::resetGlobalTimePlanSearch(
+    double searchEpoch, bool globalTimePlanModeActive)
+{
+  globalEventPlanAlternatives_.clear();
+  globalTimePlanSearchEpoch_ = searchEpoch;
+  if(globalTimePlanModeActive)
+  {
+    globalTimePlanFrozenRobotState_ = robot().mbc();
+    globalTimePlanFrozenRobotStateValid_ = true;
+  }
+  else
+  {
+    globalTimePlanFrozenRobotStateValid_ = false;
+  }
+  planningGlobalSelectionActive_ = false;
+  planningSelectedObjectiveCost_ = 1e9;
+  selectedGlobalMotionCost_ = 1e9;
+  selectedGlobalScheduleWait_ = 0.0;
+  selectedGlobalEventLead_ = 0.0;
+  selectedGlobalEventPresentationTime_ = 0.0;
+  selectedGlobalMinimumReachEntryLead_ = 0.0;
+  selectedGlobalMinimumSafeCommitLead_ = 0.0;
+  selectedGlobalHypothesisIndex_ = 0;
+  globalEvaluatedHypotheses_ = 0;
+  globalConfiguredHypotheses_ = 0;
+  globalScheduleComplete_ = false;
+  selectedGlobalObjectPresentationPose_ = sva::PTransformd::Identity();
+  selectedGlobalPlanningStartMouthPose_ = sva::PTransformd::Identity();
+}
+
+bool HandoverInterceptionController::captureCurrentEventPlanAlternatives(
+    std::size_t hypothesisIndex,
+    double eventLeadFromSearchEpoch,
+    double eventPresentationTime,
+    const sva::PTransformd & W_T_O_presentation)
+{
+  if(!globalTimePlanSelectionEnabled()
+     || completePlanSelectionMode_ != "binding_cost"
+     || !decisionCostConfigurationValid_)
+  {
+    planningCostSelectionReason_ = "invalid_global_time_plan_configuration";
+    mc_rtc::log::error(
+        "[GlobalTimePlanCapture] success=false reason={} mode={} eventSelectionMode={} no fallback permitted",
+        planningCostSelectionReason_, completePlanSelectionMode_,
+        completeEventSelectionMode_);
+    return false;
+  }
+  if(!planningFoundFeasible_
+     || planningCompletePlanAuditCandidates_.empty())
+  {
+    planningCostSelectionReason_ = "no_complete_plans_at_event";
+    return false;
+  }
+  if(!std::isfinite(globalTimePlanSearchEpoch_)
+     || !std::isfinite(eventLeadFromSearchEpoch)
+     || !std::isfinite(eventPresentationTime)
+     || std::abs((eventPresentationTime - globalTimePlanSearchEpoch_)
+                 - eventLeadFromSearchEpoch) > 1e-6)
+  {
+    planningCostSelectionReason_ = "inconsistent_global_event_epoch";
+    mc_rtc::log::error(
+        "[GlobalTimePlanCapture] success=false reason={} hypothesis={} eventLead={:.9f} presentationTime={:.9f} epoch={:.9f}",
+        planningCostSelectionReason_, hypothesisIndex,
+        eventLeadFromSearchEpoch, eventPresentationTime,
+        globalTimePlanSearchEpoch_);
+    return false;
+  }
+
+  const std::size_t before = globalEventPlanAlternatives_.size();
+  std::size_t costInvalidCount = 0;
+  for(const auto & candidate : planningCompletePlanAuditCandidates_)
+  {
+    GlobalEventPlanAlternative alternative;
+    alternative.candidate = candidate;
+    alternative.hypothesisIndex = hypothesisIndex;
+    alternative.eventLeadFromSearchEpoch = eventLeadFromSearchEpoch;
+    alternative.eventPresentationTime = eventPresentationTime;
+    alternative.scheduleWaitBeforeReach = eventLeadFromSearchEpoch
+        - candidate.predictedPresentationTime;
+    alternative.predictedSearchToCompletionTime =
+        alternative.scheduleWaitBeforeReach + candidate.auditEstimatedTime;
+    alternative.globalObjectiveCost =
+        call_handover::extendMotionCostToSearchEpoch(
+            candidate.completeCostAudit, decisionTimeWeight_,
+            decisionTimeReference_, eventLeadFromSearchEpoch,
+            candidate.predictedPresentationTime);
+    alternative.planningStartMouthPose = planningStartMouthPose_;
+    alternative.W_T_O_presentation = W_T_O_presentation;
+
+    const bool valid = candidate.completeCostAuditValid
+        && std::isfinite(alternative.globalObjectiveCost)
+        && std::isfinite(alternative.predictedSearchToCompletionTime);
+    mc_rtc::log::success(
+        "[GlobalPlanCost] hypothesis={} eventLead={:.3f}s presentationTime={:.3f}s candidate={} route={} valid={} motionJ={:.9f} scheduleWait={:+.3f}s searchToCompletion={:.3f}s globalJ={:.9f} timeTerm=search_to_completion hardFeasibilityUnchanged=true",
+        hypothesisIndex, eventLeadFromSearchEpoch, eventPresentationTime,
+        candidate.name, candidate.transitRouteName, valid,
+        candidate.completeCostAudit,
+        alternative.scheduleWaitBeforeReach,
+        alternative.predictedSearchToCompletionTime,
+        alternative.globalObjectiveCost);
+
+    // Exclude only this candidate. A cost-invalid sibling must never remove
+    // an otherwise hard-feasible, cost-valid candidate from the global pool.
+    if(!valid)
+    {
+      ++costInvalidCount;
+      continue;
+    }
+    globalEventPlanAlternatives_.push_back(alternative);
+  }
+
+  const std::size_t completePlansAdded =
+      globalEventPlanAlternatives_.size() - before;
+  if(completePlansAdded == 0)
+  {
+    // Distinguish this from a genuine geometry/IK rejection: every candidate
+    // at this hypothesis was a hard-feasible complete plan, but none had a
+    // valid complete-plan cost. The search still continues to the next
+    // bounded hypothesis exactly as it does after a geometry rejection.
+    mc_rtc::log::warning(
+        "[GlobalTimePlanCostAuditReject] hypothesis={} eventLead={:.3f}s completePlans={} costInvalidPlans={} reason=all_candidates_cost_invalid deferredCommit=true; searching another future event",
+        hypothesisIndex, eventLeadFromSearchEpoch,
+        planningCompletePlanAuditCandidates_.size(), costInvalidCount);
+  }
+
+  mc_rtc::log::success(
+      "[GlobalTimePlanCapture] success=true hypothesis={} eventLead={:.3f}s completePlansAdded={} cumulativeCompletePlans={} deferredCommit=true robotMotion=false",
+      hypothesisIndex, eventLeadFromSearchEpoch, completePlansAdded,
+      globalEventPlanAlternatives_.size());
+  return true;
+}
+
+bool HandoverInterceptionController::selectGlobalTimePlanForCommit(
+    double now,
+    double minimumReachEntryLead,
+    double minimumSafeCommitLead,
+    std::size_t evaluatedHypotheses,
+    std::size_t configuredHypotheses,
+    bool scheduleComplete)
+{
+  planningCostSelectionValid_ = false;
+  planningCostSelectionCommitAdmissible_ = false;
+  planningGlobalSelectionActive_ = false;
+  planningCostSelectionReason_ = "not_run";
+  planningSelectedObjectiveCost_ = 1e9;
+  planningMinimumAdmissibleCost_ = 1e9;
+  globalEvaluatedHypotheses_ = evaluatedHypotheses;
+  globalConfiguredHypotheses_ = configuredHypotheses;
+  globalScheduleComplete_ = scheduleComplete;
+
+  if(!globalTimePlanSelectionEnabled()
+     || completePlanSelectionMode_ != "binding_cost"
+     || !decisionCostConfigurationValid_)
+  {
+    planningCostSelectionReason_ = "invalid_global_time_plan_configuration";
+    mc_rtc::log::error(
+        "[GlobalTimePlanSelection] success=false reason={} no fallback permitted",
+        planningCostSelectionReason_);
+    return false;
+  }
+  if(physicalGripperBridgeEnabled_
+     && !decisionBindingPhysicalExecutionAuthorized_)
+  {
+    planningCostSelectionReason_ = "physical_global_execution_not_authorized";
+    mc_rtc::log::error(
+        "[GlobalTimePlanSelection] success=false reason={} physicalBridgeEnabled=true allowPhysicalExecution=false no fallback permitted",
+        planningCostSelectionReason_);
+    return false;
+  }
+  if(!scheduleComplete || configuredHypotheses == 0
+     || evaluatedHypotheses != configuredHypotheses)
+  {
+    planningCostSelectionReason_ = "incomplete_bounded_event_schedule";
+    mc_rtc::log::error(
+        "[GlobalTimePlanSelection] success=false reason={} scheduleComplete={} evaluatedHypotheses={} configuredHypotheses={} no fallback permitted",
+        planningCostSelectionReason_, scheduleComplete,
+        evaluatedHypotheses, configuredHypotheses);
+    return false;
+  }
+
+  std::vector<call_handover::FiniteEventPlanRecord> records;
+  records.reserve(globalEventPlanAlternatives_.size());
+  for(std::size_t i = 0; i < globalEventPlanAlternatives_.size(); ++i)
+  {
+    const auto & alternative = globalEventPlanAlternatives_[i];
+    call_handover::FiniteEventPlanRecord record;
+    record.sourceIndex = i;
+    record.hypothesisIndex = alternative.hypothesisIndex;
+    record.costValid = alternative.candidate.completeCostAuditValid;
+    record.motionCost = alternative.candidate.completeCostAudit;
+    record.globalCost = alternative.globalObjectiveCost;
+    record.eventLead = alternative.eventLeadFromSearchEpoch;
+    record.eventPresentationTime = alternative.eventPresentationTime;
+    record.predictedPresentationDuration =
+        alternative.candidate.predictedPresentationTime;
+    record.predictedExecutionDuration =
+        alternative.candidate.auditEstimatedTime;
+    record.clearance = alternative.candidate.predictiveReachClearance;
+    record.candidateName = alternative.candidate.name;
+    record.routeName = alternative.candidate.transitRouteName;
+    records.push_back(record);
+  }
+
+  // The timing diagnostics below are captured by selectFiniteEventPlan()
+  // itself, during its own admissibility evaluation, not recomputed here.
+  // This is solely so the final admissible set F_J ∩ F_timing and its
+  // argmin can be reconstructed independently from the log.
+  std::vector<call_handover::FiniteEventPlanTimingDiagnostic>
+      timingDiagnostics;
+  const auto selection = call_handover::selectFiniteEventPlan(
+      records, now, minimumReachEntryLead, minimumSafeCommitLead,
+      decisionCostTieTolerance_, &timingDiagnostics);
+  for(const auto & diagnostic : timingDiagnostics)
+  {
+    mc_rtc::log::info(
+        "[GlobalPlanTimingAdmissibility] hypothesis={} candidate={} route={} costValid={} globalJ={:.9f} eventPresentationTime={:.6f}s now={:.6f}s remaining={:.6f}s minimumSafeCommitLead={:.6f}s predictedPresentationDuration={:.6f}s minimumReachEntryLead={:.6f}s eventWindowAdmissible={} timingAdmissible={}",
+        diagnostic.hypothesisIndex, diagnostic.candidateName,
+        diagnostic.routeName, diagnostic.costValid, diagnostic.globalCost,
+        now + diagnostic.remaining, now, diagnostic.remaining,
+        diagnostic.minimumSafeCommitLead,
+        diagnostic.predictedPresentationDuration,
+        diagnostic.minimumReachEntryLead, diagnostic.eventWindowAdmissible,
+        diagnostic.timingAdmissible);
+  }
+  planningCompletePlanCount_ = selection.completePlanCount;
+  planningCostValidCount_ = selection.costValidCount;
+  planningTimingAdmissibleCount_ = selection.timingAdmissibleCount;
+  planningMinimumAdmissibleCost_ =
+      selection.minimumAdmissibleGlobalCost;
+  planningCostSelectionReason_ = selection.reason;
+
+  if(!selection.success
+     || selection.selectedRecord >= globalEventPlanAlternatives_.size())
+  {
+    mc_rtc::log::error(
+        "[GlobalTimePlanSelection] success=false reason={} scheduleComplete=true evaluatedHypotheses={} configuredHypotheses={} completePlans={} costValidPlans={} timingAdmissiblePlans={} no fallback permitted",
+        planningCostSelectionReason_, evaluatedHypotheses,
+        configuredHypotheses, planningCompletePlanCount_,
+        planningCostValidCount_, planningTimingAdmissibleCount_);
+    return false;
+  }
+
+  const auto & selected =
+      globalEventPlanAlternatives_[selection.selectedRecord];
+  planningBestCandidate_ = selected.candidate;
+  planningFoundFeasible_ = true;
+  planningSelectedObjectiveCost_ = selected.globalObjectiveCost;
+  selectedGlobalMotionCost_ = selected.candidate.completeCostAudit;
+  selectedGlobalScheduleWait_ = selected.scheduleWaitBeforeReach;
+  selectedGlobalEventLead_ = selected.eventLeadFromSearchEpoch;
+  selectedGlobalEventPresentationTime_ = selected.eventPresentationTime;
+  selectedGlobalMinimumReachEntryLead_ = minimumReachEntryLead;
+  selectedGlobalMinimumSafeCommitLead_ = minimumSafeCommitLead;
+  selectedGlobalHypothesisIndex_ = selected.hypothesisIndex;
+  selectedGlobalObjectPresentationPose_ = selected.W_T_O_presentation;
+  selectedGlobalPlanningStartMouthPose_ = selected.planningStartMouthPose;
+  planningCostSelectionValid_ = true;
+  planningCostSelectionCommitAdmissible_ = selection.commitAdmissible;
+  planningGlobalSelectionActive_ = true;
+
+  const bool selectedEqualsMinimum =
+      std::isfinite(planningSelectedObjectiveCost_)
+      && std::isfinite(planningMinimumAdmissibleCost_)
+      && std::abs(planningSelectedObjectiveCost_
+                  - planningMinimumAdmissibleCost_)
+             <= decisionCostTieTolerance_;
+  if(!selectedEqualsMinimum)
+  {
+    planningCostSelectionValid_ = false;
+    planningCostSelectionCommitAdmissible_ = false;
+    planningGlobalSelectionActive_ = false;
+    planningCostSelectionReason_ =
+        "selected_global_cost_does_not_equal_minimum";
+    return false;
+  }
+
+  mc_rtc::log::success(
+      "[GlobalTimePlanSelection] success=true scheduleComplete=true evaluatedHypotheses={} configuredHypotheses={} completePlans={} costValidPlans={} timingAdmissiblePlans={} hypothesis={} eventLead={:.3f}s presentationTime={:.3f}s candidate={} route={} motionJ={:.9f} scheduleWait={:+.3f}s selectedGlobalJ={:.9f} minimumGlobalJ={:.9f} selectedWithinMinimumTolerance=true tieTolerance={:.3e} tieBreak=[completion,event,candidateReach,clearance,candidate,route,hypothesis,index]",
+      evaluatedHypotheses, configuredHypotheses,
+      planningCompletePlanCount_, planningCostValidCount_,
+      planningTimingAdmissibleCount_, selected.hypothesisIndex,
+      selected.eventLeadFromSearchEpoch, selected.eventPresentationTime,
+      selected.candidate.name, selected.candidate.transitRouteName,
+      selected.candidate.completeCostAudit,
+      selected.scheduleWaitBeforeReach,
+      selected.globalObjectiveCost, planningMinimumAdmissibleCost_,
+      decisionCostTieTolerance_);
+  return true;
+}
+
+bool HandoverInterceptionController::commitGlobalTimePlanSelection()
+{
+  if(!planningGlobalSelectionActive_ || !planningCostSelectionValid_
+     || !planningCostSelectionCommitAdmissible_)
+  {
+    mc_rtc::log::error(
+        "[GlobalTimePlanCommitProof] committed=false reason=global_selection_not_admissible detail={} no fallback permitted",
+        planningCostSelectionReason_);
+    return false;
+  }
+
+  const double remaining = selectedGlobalEventPresentationTime_
+                         - controllerTime_;
+  const bool timingAdmissible =
+      remaining + 1e-12 >= selectedGlobalMinimumSafeCommitLead_
+      && planningBestCandidate_.predictedPresentationTime
+             + selectedGlobalMinimumReachEntryLead_
+             <= remaining + 1e-12;
+  if(!timingAdmissible)
+  {
+    planningCostSelectionCommitAdmissible_ = false;
+    planningCostSelectionReason_ = "global_winner_expired_before_commit";
+    mc_rtc::log::error(
+        "[GlobalTimePlanCommitProof] committed=false reason={} remaining={:.6f}s predictedReach={:.6f}s minimumReachEntryLead={:.6f}s minimumSafeCommitLead={:.6f}s no fallback permitted",
+        planningCostSelectionReason_, remaining,
+        planningBestCandidate_.predictedPresentationTime,
+        selectedGlobalMinimumReachEntryLead_,
+        selectedGlobalMinimumSafeCommitLead_);
+    return false;
+  }
+
+  const sva::PTransformd refreshedPresentation =
+      predictPresentationPose(remaining);
+  const double translationDrift =
+      (refreshedPresentation.translation()
+       - selectedGlobalObjectPresentationPose_.translation()).norm();
+  const double rotationDrift = orientationError(
+      refreshedPresentation, selectedGlobalObjectPresentationPose_);
+  if(translationDrift
+         > predictiveReachPolicy_.maximumObjectTranslationDeviation
+     || rotationDrift
+         > predictiveReachPolicy_.maximumObjectRotationDeviation)
+  {
+    planningCostSelectionCommitAdmissible_ = false;
+    planningCostSelectionReason_ = "global_event_prediction_drift";
+    mc_rtc::log::error(
+        "[GlobalTimePlanCommitProof] committed=false reason={} translationDrift={:.6f}/{:.6f} rotationDrift={:.6f}/{:.6f} no fallback permitted",
+        planningCostSelectionReason_, translationDrift,
+        predictiveReachPolicy_.maximumObjectTranslationDeviation,
+        rotationDrift,
+        predictiveReachPolicy_.maximumObjectRotationDeviation);
+    return false;
+  }
+
+  const double residual = planningBestCandidate_.predictedPresentationTime
+                        - remaining;
+  planningStartMouthPose_ = selectedGlobalPlanningStartMouthPose_;
+  commitCandidate(planningBestCandidate_,
+                  selectedGlobalObjectPresentationPose_, true,
+                  selectedGlobalEventPresentationTime_, residual);
+  return committedPlanValid();
+}
+
 HandoverInterceptionController::CapturePlanningStatus
 HandoverInterceptionController::finalizeCapturePlanning()
 {
@@ -6499,7 +7148,7 @@ HandoverInterceptionController::finalizeCapturePlanning()
     return capturePlanningStatus_;
   }
 
-  const CaptureCandidate & best = planningBestCandidate_;
+  const CaptureCandidate protectedBest = planningBestCandidate_;
 
   const CaptureCandidate * auditBest = nullptr;
   size_t auditValidCount = 0;
@@ -6515,38 +7164,60 @@ HandoverInterceptionController::finalizeCapturePlanning()
   }
   if(auditBest)
   {
-    const bool sameAction = auditBest->name == best.name
-        && auditBest->transitRouteName == best.transitRouteName;
+    const bool sameAction = auditBest->name == protectedBest.name
+        && auditBest->transitRouteName == protectedBest.transitRouteName;
     mc_rtc::log::success(
-        "[CompletePlanAuditBest] completeRoutes={} costValidRoutes={} protected=[{}:{} score:{:.6f} selectionTime:{:.3f}] predictedTime={:.3f} audit=[{}:{} J:{:.6f} time:{:.3f}] sameAction={} costNonBinding=true selectionUnchanged=true",
+        "[CompletePlanCostSet] completeRoutes={} costValidRoutes={} protected=[{}:{} score:{:.6f} selectionTime:{:.3f}] predictedTime={:.3f} unconstrainedCostBest=[{}:{} J:{:.6f} time:{:.3f}] sameAction={} configuredMode={} finalTimingAdmissionPending=true",
         planningCompletePlanAuditCandidates_.size(), auditValidCount,
-        best.name, best.transitRouteName, best.score,
-        best.terminalTimingPredictionBound
-            ? best.legacyEstimatedTime : best.estimatedTime,
-        best.estimatedTime,
+        protectedBest.name, protectedBest.transitRouteName,
+        protectedBest.score,
+        protectedBest.terminalTimingPredictionBound
+            ? protectedBest.legacyEstimatedTime
+            : protectedBest.estimatedTime,
+        protectedBest.estimatedTime,
         auditBest->name, auditBest->transitRouteName,
         auditBest->completeCostAudit, auditBest->auditEstimatedTime,
-        sameAction);
+        sameAction, completePlanSelectionMode_);
   }
   else
   {
     mc_rtc::log::warning(
-        "[CompletePlanAuditBest] completeRoutes={} costValidRoutes=0 audit unavailable; legacy selection preserved",
-        planningCompletePlanAuditCandidates_.size());
+        "[CompletePlanCostSet] completeRoutes={} costValidRoutes=0 cost unavailable configuredMode={}",
+        planningCompletePlanAuditCandidates_.size(),
+        completePlanSelectionMode_);
   }
 
-  if(capturePlanningCommitOnSuccess_)
+  // Prepare an unconstrained selection now. The moving-event state calls this
+  // method again with the remaining event time so the binding argmin is taken
+  // only over plans that can still satisfy the final launch reserve. In
+  // global_time_plan mode this local single-hypothesis result is diagnostic
+  // only: a hard-feasible hypothesis must still reach global pooling even
+  // when this local selection is cost-invalid, so only the absence of any
+  // geometrically feasible plan (checked above) fails the hypothesis here.
+  const bool localSelectionSucceeded = selectPlanningBestForCommit();
+  if(!localSelectionSucceeded && !globalTimePlanSelectionEnabled())
   {
-    commitCandidate(best, W_T_O_, false, 0.0, 0.0);
+    capturePlanningStatus_ = CapturePlanningStatus::Failure;
+    return capturePlanningStatus_;
   }
-  else
+
+  if(localSelectionSucceeded)
   {
-    const Eigen::Vector3d po = W_T_O_.translation();
-    mc_rtc::log::success(
-        "[PlanCaptureProbe] BEST {} route={} at presentation object=[{:.3f},{:.3f},{:.3f}] predictedPresentation={:.3f}s predictedContact={:.3f}s predictedExecution={:.3f}s reachClear={:.4f} score={:.4f}",
-        best.name, best.transitRouteName, po.x(), po.y(), po.z(),
-        best.predictedPresentationTime, best.predictedContactTime,
-        best.estimatedTime, best.predictiveReachClearance, best.score);
+    const CaptureCandidate & best = planningBestCandidate_;
+
+    if(capturePlanningCommitOnSuccess_)
+    {
+      commitCandidate(best, W_T_O_, false, 0.0, 0.0);
+    }
+    else
+    {
+      const Eigen::Vector3d po = W_T_O_.translation();
+      mc_rtc::log::success(
+          "[PlanCaptureProbe] BEST {} route={} at presentation object=[{:.3f},{:.3f},{:.3f}] predictedPresentation={:.3f}s predictedContact={:.3f}s predictedExecution={:.3f}s reachClear={:.4f} score={:.4f}",
+          best.name, best.transitRouteName, po.x(), po.y(), po.z(),
+          best.predictedPresentationTime, best.predictedContactTime,
+          best.estimatedTime, best.predictiveReachClearance, best.score);
+    }
   }
 
   capturePlanningStatus_ = CapturePlanningStatus::Success;
@@ -6560,6 +7231,30 @@ void HandoverInterceptionController::commitCandidate(
     double committedPresentationTime,
     double timingResidual)
 {
+  if(completePlanSelectionMode_ == "binding_cost")
+  {
+    const bool selectedEqualsMinimum = best.completeCostAuditValid
+        && planningCostSelectionValid_
+        && planningCostSelectionCommitAdmissible_
+        && std::isfinite(planningSelectedObjectiveCost_)
+        && std::isfinite(planningMinimumAdmissibleCost_)
+        && std::abs(planningSelectedObjectiveCost_
+                    - planningMinimumAdmissibleCost_)
+               <= decisionCostTieTolerance_;
+    if(!selectedEqualsMinimum)
+    {
+      candidateSelected_ = false;
+      mc_rtc::log::error(
+          "[BindingCostCommitProof] committed=false reason=selection_proof_failed candidate={} route={} motionJ={:.9f} selectedJ={:.9f} minimumAdmissibleJ={:.9f} selectionValid={} commitAdmissible={} globalSelection={} no fallback permitted",
+          best.name, best.transitRouteName, best.completeCostAudit,
+          planningSelectedObjectiveCost_,
+          planningMinimumAdmissibleCost_, planningCostSelectionValid_,
+          planningCostSelectionCommitAdmissible_,
+          planningGlobalSelectionActive_);
+      return;
+    }
+  }
+
   candidateSelected_ = true;
   selectedCandidateName_ = best.name;
   selectedCandidateClearance_ = best.minClearance;
@@ -6605,6 +7300,12 @@ void HandoverInterceptionController::commitCandidate(
     if(!validateInterceptionPlan(plan, &invariantReason, true))
     {
       candidateSelected_ = false;
+      if(completePlanSelectionMode_ == "binding_cost")
+      {
+        mc_rtc::log::error(
+            "[BindingCostCommitProof] committed=false reason=interception_plan_validation candidate={} route={} detail={}",
+            best.name, best.transitRouteName, invariantReason);
+      }
       mc_rtc::log::error(
           "[InterceptionCommit] methodology-lock validation failed candidate={} reason={}; no physical motion",
           best.name, invariantReason);
@@ -6653,6 +7354,33 @@ void HandoverInterceptionController::commitCandidate(
     committedContactTime_ = 0.0;
     committedTimingResidual_ = 0.0;
     W_T_O_committedContact_ = W_T_O_reference;
+  }
+
+  if(completePlanSelectionMode_ == "binding_cost"
+     && (!asInterception || interceptionCommitted_))
+  {
+    mc_rtc::log::success(
+        "[BindingCostCommitProof] committed=true candidate={} route={} selectedJ={:.9f} minimumAdmissibleJ={:.9f} selectedWithinMinimumTolerance=true tieTolerance={:.3e} completePlans={} costValidPlans={} timingAdmissiblePlans={} motionJ={:.9f} eventTimePolicy={}",
+        best.name, best.transitRouteName, planningSelectedObjectiveCost_,
+        planningMinimumAdmissibleCost_, decisionCostTieTolerance_,
+        planningCompletePlanCount_, planningCostValidCount_,
+        planningTimingAdmissibleCount_, best.completeCostAudit,
+        planningGlobalSelectionActive_
+            ? "global_time_plan" : "first_admissible_center_out");
+    if(planningGlobalSelectionActive_ && asInterception
+       && interceptionCommitted_)
+    {
+      mc_rtc::log::success(
+          "[GlobalTimePlanCommitProof] committed=true scheduleComplete={} evaluatedHypotheses={} configuredHypotheses={} completePlans={} costValidPlans={} timingAdmissiblePlans={} hypothesis={} eventLead={:.3f}s presentationTime={:.3f}s candidate={} route={} motionJ={:.9f} scheduleWait={:+.3f}s selectedGlobalJ={:.9f} minimumGlobalJ={:.9f} selectedWithinMinimumTolerance=true tieTolerance={:.3e} objective=time_grasp_route noRetiming=true noReplanning=true",
+          globalScheduleComplete_, globalEvaluatedHypotheses_,
+          globalConfiguredHypotheses_, planningCompletePlanCount_,
+          planningCostValidCount_, planningTimingAdmissibleCount_,
+          selectedGlobalHypothesisIndex_, selectedGlobalEventLead_,
+          selectedGlobalEventPresentationTime_, best.name,
+          best.transitRouteName, best.completeCostAudit,
+          selectedGlobalScheduleWait_, planningSelectedObjectiveCost_,
+          planningMinimumAdmissibleCost_, decisionCostTieTolerance_);
+    }
   }
 
   const Eigen::Vector3d ps = W_T_M_standoff_.translation();
@@ -6727,6 +7455,15 @@ bool HandoverInterceptionController::commitPlanningBestAsInterception(
   {
     mc_rtc::log::error(
         "[InterceptionCommit] no feasible planning candidate is available");
+    return false;
+  }
+  if(completePlanSelectionMode_ == "binding_cost"
+     && (!planningCostSelectionValid_
+         || !planningCostSelectionCommitAdmissible_))
+  {
+    mc_rtc::log::error(
+        "[InterceptionCommit] binding-cost selection is not commit-admissible reason={}; no physical motion",
+        planningCostSelectionReason_);
     return false;
   }
   commitCandidate(planningBestCandidate_, W_T_O_presentation, true,

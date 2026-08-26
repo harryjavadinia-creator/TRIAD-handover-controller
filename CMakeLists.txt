@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
 set(CXX_DISABLE_WERROR 1)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(PROJECT_NAME HandoverInterceptionController)
 set(PROJECT_DESCRIPTION "HandoverInterceptionController")
@@ -19,4 +20,3 @@ add_subdirectory(src)
 set(AROBASE "@")
 configure_file(etc/HandoverInterceptionController.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/HandoverInterceptionController.yaml")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/etc/HandoverInterceptionController.yaml" DESTINATION "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc")
-

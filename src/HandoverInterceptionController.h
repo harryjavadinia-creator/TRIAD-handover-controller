@@ -9,6 +9,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <iterator>
@@ -630,6 +631,70 @@ public:
     return planningBestCandidate_.minClearance;
   }
   double planningBestScore() const { return planningBestCandidate_.score; }
+  /**
+   * Finalize the plan selector before a commit. A negative
+   * remainingToPresentation disables the moving-event timing filter (used for
+   * the measured static event). In binding_cost mode this performs the exact
+   * finite-set argmin and fails closed on any invalid complete-plan cost.
+   */
+  bool selectPlanningBestForCommit(
+      double remainingToPresentation = -1.0,
+      double minimumReachEntryLead = 0.0,
+      double minimumSafeCommitLead = 0.0);
+  bool globalTimePlanSelectionEnabled() const
+  {
+    return completeEventSelectionMode_ == "global_time_plan";
+  }
+  /** Reset the deferred finite set at the common moving-event search epoch.
+   * When globalTimePlanModeActive is true, this also freezes a single copy
+   * of the current robot().mbc() (the complete MultiBodyConfig) as the
+   * common preview decision-state for every candidate and route evaluated
+   * during this search, so results no longer depend on which live robot
+   * state happened to exist when a given candidate's turn arrived. */
+  void resetGlobalTimePlanSearch(double searchEpoch,
+                                  bool globalTimePlanModeActive = false);
+  /**
+   * Copy every complete hard-feasible plan from the current event into the
+   * deferred global set. No robot command is issued by this operation.
+   */
+  bool captureCurrentEventPlanAlternatives(
+      std::size_t hypothesisIndex,
+      double eventLeadFromSearchEpoch,
+      double eventPresentationTime,
+      const sva::PTransformd & W_T_O_presentation);
+  /**
+   * Exhaustively minimize over every captured (time, grasp, route) record
+   * after reapplying the final timing gate at the end of the bounded scan.
+   */
+  bool selectGlobalTimePlanForCommit(
+      double now,
+      double minimumReachEntryLead,
+      double minimumSafeCommitLead,
+      std::size_t evaluatedHypotheses,
+      std::size_t configuredHypotheses,
+      bool scheduleComplete);
+  /** Commit the already-proven global winner exactly once. */
+  bool commitGlobalTimePlanSelection();
+  double selectedGlobalEventLead() const
+  {
+    return selectedGlobalEventLead_;
+  }
+  double selectedGlobalObjectiveCost() const
+  {
+    return planningSelectedObjectiveCost_;
+  }
+  double selectedGlobalMotionCost() const
+  {
+    return selectedGlobalMotionCost_;
+  }
+  double selectedGlobalScheduleWait() const
+  {
+    return selectedGlobalScheduleWait_;
+  }
+  const std::string & planningSelectionReason() const
+  {
+    return planningCostSelectionReason_;
+  }
   bool commitPlanningBestAsInterception(
       double committedPresentationTime,
       double timingResidual,
@@ -821,14 +886,15 @@ private:
     double verticalComponent = 0.0;
     double contactClosure = -1.0;
 
-    // Non-binding complete-plan timing audit. The copied terminal controller
-    // uses the exact runtime feedforward, brake, velocity gate and stable dwell
-    // but does not yet change feasibility, ranking, commitment or execution.
+    // Copied terminal timing approximation. It remains outside the hard
+    // feasibility contract, but its accepted duration contributes to the cost
+    // and can therefore affect selection in binding_cost mode.
     bool terminalTimingAuditRan = false;
     bool terminalTimingAuditSuccess = false;
     // Once the copied terminal controller succeeds, its measured duration is
-    // allowed to replace prediction fields only. Hard feasibility and the
-    // protected R1 ranking retain their pre-binding values.
+    // allowed to replace prediction fields. Hard feasibility and the protected
+    // heuristic retain their legacy inputs; binding_cost uses the updated
+    // prediction through completeCostAudit.
     bool terminalTimingPredictionBound = false;
     double legacyPredictedApproachTime = 1e9;
     double legacyPredictedContactTime = 1e9;
@@ -843,8 +909,9 @@ private:
     double auditPredictedContactTime = 1e9;
     double auditEstimatedTime = 1e9;
 
-    // Dimensionless complete-action cost audit. Hard feasibility remains
-    // authoritative; these terms are evaluated only for complete routes.
+    // Dimensionless complete-action cost. Hard feasibility remains
+    // authoritative; these terms are evaluated only for complete routes and
+    // become the binding finite-set objective in binding_cost mode.
     // The velocity reserve is a bounded rho^4 soft preference on [0, 1].
     bool completeCostAuditValid = false;
     double predictiveRetreatClearance = -1e9;
@@ -868,6 +935,19 @@ private:
     std::map<std::string, std::vector<double>> plannedRetreatArmPosture;
     bool previewFeasible = false;
     std::string failureReason = "not_previewed";
+  };
+
+  struct GlobalEventPlanAlternative
+  {
+    CaptureCandidate candidate;
+    std::size_t hypothesisIndex = 0;
+    double eventLeadFromSearchEpoch = 0.0;
+    double eventPresentationTime = 0.0;
+    double scheduleWaitBeforeReach = 0.0;
+    double predictedSearchToCompletionTime = 0.0;
+    double globalObjectiveCost = 1e9;
+    sva::PTransformd planningStartMouthPose = sva::PTransformd::Identity();
+    sva::PTransformd W_T_O_presentation = sva::PTransformd::Identity();
   };
 
   struct PreviewResult
@@ -1036,9 +1116,9 @@ private:
   void setPreviewGripperClosure(rbd::MultiBodyConfig & mbc,
                                 double closure) const;
   bool previewDynamicClosureSafety(const rbd::MultiBodyConfig & mbc,
-                                   HandoverSafetyReport & report) const;
+                                   HandoverSafetyReport & report,
+                                   bool allowDesignatedPadContact = false) const;
   bool previewAttachedRetreatSafe(const rbd::MultiBodyConfig & mbc,
-                                  const sva::PTransformd & W_T_M,
                                   const sva::PTransformd & W_T_O_carried,
                                   HandoverSafetyReport & report) const;
   bool carriedObjectGroundSafe(const sva::PTransformd & W_T_O_carried,
@@ -1156,8 +1236,18 @@ private:
   double previewClearanceTieBand_ = 0.003;
   double previewCostTieBand_ = 0.15;
 
-  // Non-binding dimensionless complete-action cost audit. The physical
-  // references make unlike units comparable; weights are normalized to one.
+  // Dimensionless complete-action cost. In protected_heuristic mode it is
+  // diagnostic; in binding_cost mode its finite-set argmin is the only plan
+  // allowed to reach commitCandidate(). The physical references make unlike
+  // units comparable and the non-negative weights are normalized to one.
+  std::string completePlanSelectionMode_ = "protected_heuristic";
+  // V6.6 retains first_admissible_center_out. V6.7 global_time_plan freezes a
+  // bounded event set at one epoch and minimizes over time, grasp and route.
+  std::string completeEventSelectionMode_ =
+      "first_admissible_center_out";
+  double decisionCostTieTolerance_ = 1e-9;
+  bool decisionBindingPhysicalExecutionAuthorized_ = false;
+  bool decisionCostConfigurationValid_ = true;
   double decisionTimeReference_ = 8.0;
   double decisionEffortReference_ = 8.0;
   double decisionPathReference_ = 0.50;
@@ -1165,14 +1255,19 @@ private:
   double decisionSoftClearance_ = 0.080;
   double decisionSoftJointMargin_ = 0.20;
   double decisionSoftConditionIndex_ = 0.10;
-  double decisionTimeWeight_ = 0.40;
-  double decisionEffortWeight_ = 0.10;
-  double decisionPathWeight_ = 0.10;
-  double decisionRotationWeight_ = 0.05;
-  double decisionClearanceWeight_ = 0.15;
-  double decisionJointMarginWeight_ = 0.08;
-  double decisionConditioningWeight_ = 0.07;
-  double decisionVelocityReserveWeight_ = 0.05;
+  // Frozen seven-term binding preference objective (T,E,L,C,Q,K,V; sum ~1).
+  // decisionRotationWeight_ is retained only for configuration provenance
+  // and diagnostics; it defaults to 0.0 so it cannot perturb the shared
+  // weight-normalization sum below, and computeCompletePlanAuditCost() no
+  // longer references it in the binding cost at all (R is diagnostic-only).
+  double decisionTimeWeight_ = 0.4210526;
+  double decisionEffortWeight_ = 0.1052632;
+  double decisionPathWeight_ = 0.1052632;
+  double decisionRotationWeight_ = 0.0;
+  double decisionClearanceWeight_ = 0.1578947;
+  double decisionJointMarginWeight_ = 0.0842105;
+  double decisionConditioningWeight_ = 0.0736842;
+  double decisionVelocityReserveWeight_ = 0.0526316;
   int decisionMetricStride_ = 10;
 
   double previewJointLimitMargin_ = 0.015;
@@ -1341,6 +1436,40 @@ private:
   CaptureCandidate planningCurrentCandidate_;
   CaptureCandidate planningBestCandidate_;
   std::vector<CaptureCandidate> planningCompletePlanAuditCandidates_;
+  std::vector<GlobalEventPlanAlternative> globalEventPlanAlternatives_;
+  bool planningCostSelectionValid_ = false;
+  bool planningCostSelectionCommitAdmissible_ = false;
+  bool planningGlobalSelectionActive_ = false;
+  std::string planningCostSelectionReason_ = "not_run";
+  std::size_t planningCompletePlanCount_ = 0;
+  std::size_t planningCostValidCount_ = 0;
+  std::size_t planningTimingAdmissibleCount_ = 0;
+  double planningMinimumAdmissibleCost_ = 1e9;
+  double planningSelectedObjectiveCost_ = 1e9;
+  double selectedGlobalMotionCost_ = 1e9;
+  double selectedGlobalScheduleWait_ = 0.0;
+  double selectedGlobalEventLead_ = 0.0;
+  double selectedGlobalEventPresentationTime_ = 0.0;
+  double selectedGlobalMinimumReachEntryLead_ = 0.0;
+  double selectedGlobalMinimumSafeCommitLead_ = 0.0;
+  double globalTimePlanSearchEpoch_ = 0.0;
+  /** Common frozen preview decision-state for the current global-time-plan
+   * search: a single robot().mbc() snapshot captured once at
+   * resetGlobalTimePlanSearch(), reused as the seed for every candidate
+   * (startNextPlanningCandidate()) and every route
+   * (verifyPredictiveRouteCandidate()) preview rollout in that search. Valid
+   * only while globalTimePlanFrozenRobotStateValid_ is true; invalidated and
+   * recaptured on the next resetGlobalTimePlanSearch() call. */
+  rbd::MultiBodyConfig globalTimePlanFrozenRobotState_;
+  bool globalTimePlanFrozenRobotStateValid_ = false;
+  std::size_t selectedGlobalHypothesisIndex_ = 0;
+  std::size_t globalEvaluatedHypotheses_ = 0;
+  std::size_t globalConfiguredHypotheses_ = 0;
+  bool globalScheduleComplete_ = false;
+  sva::PTransformd selectedGlobalObjectPresentationPose_ =
+      sva::PTransformd::Identity();
+  sva::PTransformd selectedGlobalPlanningStartMouthPose_ =
+      sva::PTransformd::Identity();
   PreviewResult planningResult_;
   double planningPhaseStartDuration_ = 0.0;
   bool planningFoundFeasible_ = false;

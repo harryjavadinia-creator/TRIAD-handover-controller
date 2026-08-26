@@ -179,6 +179,14 @@ void HandoverInterceptionController_SolveInterception::buildBoundedEventLeadSche
     addLead(minimumPresentationLead_);
     addLead(maximumPresentationLead_);
   }
+
+  // Global optimization freezes one finite hypothesis set at a common epoch.
+  // Chronological ordering makes the evaluated set and its logs easy to
+  // reproduce; it does not alter the final exhaustive argmin.
+  if(globalTimePlanMode_)
+  {
+    std::sort(boundedEventLeads_.begin(), boundedEventLeads_.end());
+  }
 }
 
 bool HandoverInterceptionController_SolveInterception::leadAlreadyAttempted(
@@ -232,6 +240,8 @@ void HandoverInterceptionController_SolveInterception::start(
   iter_ = 0;
   ready_ = false;
   staticMode_ = ctl.staticObjectModeSelected();
+  globalTimePlanMode_ = !staticMode_
+      && ctl.globalTimePlanSelectionEnabled();
   phase_ = Phase::StartIteration;
   fixedPointIteration_ = 0;
   eventHypothesisCount_ = 0;
@@ -245,6 +255,7 @@ void HandoverInterceptionController_SolveInterception::start(
   maxRobotTranslationObserved_ = 0.0;
   maxRobotRotationObserved_ = 0.0;
   attemptedEventLeads_.clear();
+  boundedEventPresentationPoses_.clear();
   currentHypothesisSource_ = "initial";
 
   ctl.setGripperClosureAuthorized(false);
@@ -259,6 +270,7 @@ void HandoverInterceptionController_SolveInterception::start(
   ctl.clearPlanningObjectSnapshot();
   ctl.startPhaseTiming("interception_planning");
   eventSearchStartTime_ = ctl.controllerTime();
+  ctl.resetGlobalTimePlanSearch(eventSearchStartTime_, globalTimePlanMode_);
 
   if(!ctl.objectMotionEstimateValid())
   {
@@ -297,19 +309,48 @@ void HandoverInterceptionController_SolveInterception::start(
   else
   {
     buildBoundedEventLeadSchedule();
-    mc_rtc::log::warning(
-        "[PresentationSolve] robot stationary, object approaching. Solving one candidate-specific presentation-time fixed point from p=[{:.3f},{:.3f},{:.3f}] v=[{:.4f},{:.4f},{:.4f}] w=[{:.4f},{:.4f},{:.4f}] deceleration={:.3f}s initialLead={:.3f}s tolerance={:.3f}s minimumReachEntryLead={:.3f}s",
-        p.x(), p.y(), p.z(), v.x(), v.y(), v.z(), w.x(), w.y(), w.z(),
-        ctl.presentationDecelerationDuration(), guessLead_, timingTolerance_,
-        minimumReachEntryLead_);
+    if(globalTimePlanMode_ && !boundedEventLeads_.empty())
+    {
+      for(const double lead : boundedEventLeads_)
+      {
+        boundedEventPresentationPoses_.emplace(
+            lead, ctl.predictPresentationPose(lead));
+      }
+      guessLead_ = boundedEventLeads_.front();
+      eventSearchCursor_ = 1;
+      currentHypothesisSource_ = "global_fixed_schedule";
+    }
+    if(globalTimePlanMode_)
+    {
+      mc_rtc::log::warning(
+          "[PresentationSolve] robot stationary, object approaching. Exhaustively evaluating one fixed bounded set of presentation-time, grasp and route alternatives from p=[{:.3f},{:.3f},{:.3f}] v=[{:.4f},{:.4f},{:.4f}] w=[{:.4f},{:.4f},{:.4f}] deceleration={:.3f}s firstChronologicalLead={:.3f}s minimumReachEntryLead={:.3f}s noEarlyCommit=true",
+          p.x(), p.y(), p.z(), v.x(), v.y(), v.z(),
+          w.x(), w.y(), w.z(), ctl.presentationDecelerationDuration(),
+          guessLead_, minimumReachEntryLead_);
+    }
+    else
+    {
+      mc_rtc::log::warning(
+          "[PresentationSolve] robot stationary, object approaching. Solving one candidate-specific presentation-time fixed point from p=[{:.3f},{:.3f},{:.3f}] v=[{:.4f},{:.4f},{:.4f}] w=[{:.4f},{:.4f},{:.4f}] deceleration={:.3f}s initialLead={:.3f}s tolerance={:.3f}s minimumReachEntryLead={:.3f}s",
+          p.x(), p.y(), p.z(), v.x(), v.y(), v.z(),
+          w.x(), w.y(), w.z(), ctl.presentationDecelerationDuration(),
+          guessLead_, timingTolerance_, minimumReachEntryLead_);
+    }
     mc_rtc::log::success(
         "[BoundedCompleteEventSearch] enabled={} hypotheses={} leadRange=[{:.3f},{:.3f}] step={:.3f}s wallTime={:.3f}s timingRefinements={} robotStationary=true completePlanPerEvent=true noRuntimeRetry=true",
         boundedEventSearchEnabled_, maximumEventHypotheses_,
         minimumPresentationLead_, maximumPresentationLead_,
         eventSearchLeadStep_, maximumEventSearchWallTime_,
-        maximumFixedPointIterations_);
+        globalTimePlanMode_ ? 0 : maximumFixedPointIterations_);
     mc_rtc::log::success(
         "[UnifiedPresentationArchitecture] mode=MOVING completePlanPerEvent=true boundedFutureEventSearch=true robotStationary=true sameCandidateBank=true sameExecutionChain=true oneCommit=true");
+    if(globalTimePlanMode_)
+    {
+      mc_rtc::log::success(
+          "[GlobalTimePlanSearchConfiguration] enabled=true fixedSearchEpoch={:.3f}s fixedAbsoluteEvents=true predictionModelFrozen=true configuredHypotheses={} leadRange=[{:.3f},{:.3f}] objective=min_time_grasp_route timeTerm=search_to_completion scheduleMustComplete=true finalTimingReadmission=true robotStationary=true developmentMode=true",
+          eventSearchStartTime_, boundedEventLeads_.size(),
+          minimumPresentationLead_, maximumPresentationLead_);
+    }
   }
 }
 
@@ -450,6 +491,17 @@ bool HandoverInterceptionController_SolveInterception::run(
       return true;
     }
 
+    if(!ctl.selectPlanningBestForCommit())
+    {
+      ctl.endObjectObservation(true);
+      ctl.finishPhaseTiming("interception_planning");
+      mc_rtc::log::error(
+          "[StaticPresentationSearchSummary] committed=false reason=plan_selection_failed detail={} no fallback permitted",
+          ctl.planningSelectionReason());
+      output("FAIL");
+      return true;
+    }
+
     ++feasibleHypothesisCount_;
     const double now = ctl.controllerTime();
     const double predictedReachDuration =
@@ -484,6 +536,58 @@ bool HandoverInterceptionController_SolveInterception::run(
     return true;
   }
 
+  if(globalTimePlanMode_ && phase_ == Phase::SelectGlobal)
+  {
+    const double now = ctl.controllerTime();
+    const double minimumSafeCommitLead = std::max(
+        minimumCommitRemainingTime_,
+        ctl.presentationDecelerationDuration() + 0.25);
+    const bool scheduleComplete =
+        attemptedEventLeads_.size() == boundedEventLeads_.size()
+        && eventSearchCursor_ >= boundedEventLeads_.size();
+    if(!ctl.selectGlobalTimePlanForCommit(
+           now, minimumReachEntryLead_, minimumSafeCommitLead,
+           attemptedEventLeads_.size(), boundedEventLeads_.size(),
+           scheduleComplete))
+    {
+      ctl.endObjectObservation(true);
+      ctl.finishPhaseTiming("interception_planning");
+      mc_rtc::log::error(
+          "[GlobalTimePlanSearchSummary] committed=false reason={} scheduleComplete={} evaluatedHypotheses={} configuredHypotheses={} feasibleHypotheses={} geometryFailures={} elapsed={:.3f}s robotMoved=[{:.4f},{:.4f}] no fallback permitted",
+          ctl.planningSelectionReason(), scheduleComplete,
+          attemptedEventLeads_.size(), boundedEventLeads_.size(),
+          feasibleHypothesisCount_, geometryFailureCount_,
+          now - eventSearchStartTime_, maxRobotTranslationObserved_,
+          maxRobotRotationObserved_);
+      output("FAIL");
+      return true;
+    }
+
+    if(!ctl.commitGlobalTimePlanSelection())
+    {
+      ctl.endObjectObservation(true);
+      ctl.finishPhaseTiming("interception_planning");
+      mc_rtc::log::error(
+          "[GlobalTimePlanSearchSummary] committed=false reason=global_commit_validation_failed detail={} no fallback permitted",
+          ctl.planningSelectionReason());
+      output("FAIL");
+      return true;
+    }
+
+    ctl.finishPhaseTiming("interception_planning");
+    mc_rtc::log::success(
+        "[GlobalTimePlanSearchSummary] committed=true scheduleComplete=true evaluatedHypotheses={} configuredHypotheses={} feasibleHypotheses={} geometryFailures={} selectedLead={:.3f}s selectedMotionJ={:.9f} selectedGlobalJ={:.9f} scheduleWait={:+.3f}s elapsed={:.3f}s robotMoved=[{:.4f},{:.4f}] oneCommit=true globalArgmin=true",
+        attemptedEventLeads_.size(), boundedEventLeads_.size(),
+        feasibleHypothesisCount_, geometryFailureCount_,
+        ctl.selectedGlobalEventLead(), ctl.selectedGlobalMotionCost(),
+        ctl.selectedGlobalObjectiveCost(),
+        ctl.selectedGlobalScheduleWait(),
+        ctl.controllerTime() - eventSearchStartTime_,
+        maxRobotTranslationObserved_, maxRobotRotationObserved_);
+    output("OK");
+    return true;
+  }
+
   if(phase_ == Phase::StartIteration)
   {
     if(!eventSearchBudgetAvailable(ctl.controllerTime()))
@@ -500,10 +604,58 @@ bool HandoverInterceptionController_SolveInterception::run(
     }
 
     iterationStartTime_ = ctl.controllerTime();
-    hypothesizedPresentationTime_ = iterationStartTime_ + guessLead_;
-    planningObjectPresentationPose_ = ctl.predictPresentationPose(guessLead_);
+    hypothesizedPresentationTime_ = globalTimePlanMode_
+        ? eventSearchStartTime_ + guessLead_
+        : iterationStartTime_ + guessLead_;
+    const double predictionHorizon = hypothesizedPresentationTime_
+                                   - iterationStartTime_;
     attemptedEventLeads_.push_back(guessLead_);
     ++eventHypothesisCount_;
+
+    if(globalTimePlanMode_)
+    {
+      const double minimumSafeCommitLead = std::max(
+          minimumCommitRemainingTime_,
+          ctl.presentationDecelerationDuration() + 0.25);
+      if(predictionHorizon + 1e-12 < minimumSafeCommitLead)
+      {
+        mc_rtc::log::warning(
+            "[GlobalEventTimingReject] hypothesis={} eventLead={:.3f}s remaining={:.3f}s minimumSafeCommitLead={:.3f}s reason=expired_before_geometry completePlanEvaluationSkipped=true hardTimingConstraint=true",
+            eventHypothesisCount_, guessLead_, predictionHorizon,
+            minimumSafeCommitLead);
+        double nextLead = 0.0;
+        if(nextBoundedEventLead(nextLead))
+        {
+          scheduleNextHypothesis(nextLead, "global_fixed_schedule");
+        }
+        else
+        {
+          phase_ = Phase::SelectGlobal;
+        }
+        return false;
+      }
+    }
+
+    if(globalTimePlanMode_)
+    {
+      const auto frozen = boundedEventPresentationPoses_.find(guessLead_);
+      if(frozen == boundedEventPresentationPoses_.end())
+      {
+        ctl.endObjectObservation(true);
+        ctl.finishPhaseTiming("interception_planning");
+        mc_rtc::log::error(
+            "[GlobalTimePlanSearchSummary] committed=false reason=missing_frozen_event_prediction lead={:.9f}s no fallback permitted",
+            guessLead_);
+        output("FAIL");
+        return true;
+      }
+      planningObjectPresentationPose_ = frozen->second;
+    }
+    else
+    {
+      planningObjectPresentationPose_ =
+          ctl.predictPresentationPose(predictionHorizon);
+    }
 
     ctl.setPlanningObjectSnapshot(planningObjectPresentationPose_);
     ctl.applyPlanningObjectSnapshot();
@@ -519,11 +671,14 @@ bool HandoverInterceptionController_SolveInterception::run(
           - ctl.presentationDecelerationDuration(),
         po.x(), po.y(), po.z());
     mc_rtc::log::info(
-        "[BoundedEventHypothesis] index={}/{} source={} lead={:.3f}s elapsed={:.3f}s attempted={} robotStationary=true",
-        eventHypothesisCount_, maximumEventHypotheses_,
+        "[BoundedEventHypothesis] index={}/{} source={} lead={:.3f}s absolutePresentationTime={:.3f}s remaining={:.3f}s elapsed={:.3f}s attempted={} fixedSearchEpoch={} robotStationary=true",
+        eventHypothesisCount_, globalTimePlanMode_
+            ? boundedEventLeads_.size()
+            : static_cast<std::size_t>(maximumEventHypotheses_),
         currentHypothesisSource_, guessLead_,
+        hypothesizedPresentationTime_, predictionHorizon,
         iterationStartTime_ - eventSearchStartTime_,
-        attemptedEventLeads_.size());
+        attemptedEventLeads_.size(), globalTimePlanMode_);
 
     if(status == HandoverInterceptionController::CapturePlanningStatus::Failure)
     {
@@ -567,6 +722,20 @@ bool HandoverInterceptionController_SolveInterception::run(
         eventHypothesisCount_, guessLead_, currentHypothesisSource_,
         geometryFailureCount_);
 
+    if(globalTimePlanMode_)
+    {
+      double nextLead = 0.0;
+      if(nextBoundedEventLead(nextLead))
+      {
+        scheduleNextHypothesis(nextLead, "global_fixed_schedule");
+      }
+      else
+      {
+        phase_ = Phase::SelectGlobal;
+      }
+      return false;
+    }
+
     double nextLead = 0.0;
     if(boundedEventSearchEnabled_
        && eventSearchBudgetAvailable(ctl.controllerTime())
@@ -596,10 +765,59 @@ bool HandoverInterceptionController_SolveInterception::run(
     return true;
   }
 
-  ++feasibleHypothesisCount_;
+  if(globalTimePlanMode_)
+  {
+    ++feasibleHypothesisCount_;
+    if(!ctl.captureCurrentEventPlanAlternatives(
+           static_cast<std::size_t>(eventHypothesisCount_), guessLead_,
+           hypothesizedPresentationTime_, planningObjectPresentationPose_))
+    {
+      ctl.endObjectObservation(true);
+      ctl.finishPhaseTiming("interception_planning");
+      mc_rtc::log::error(
+          "[GlobalTimePlanSearchSummary] committed=false reason=event_alternative_capture_failed detail={} hypothesis={} no fallback permitted",
+          ctl.planningSelectionReason(), eventHypothesisCount_);
+      output("FAIL");
+      return true;
+    }
+
+    mc_rtc::log::success(
+        "[GlobalEventEvaluation] hypothesis={} eventLead={:.3f}s presentationTime={:.3f}s completePlan=true remainingAfterEvaluation={:.3f}s deferredCommit=true robotStationary=true",
+        eventHypothesisCount_, guessLead_, hypothesizedPresentationTime_,
+        hypothesizedPresentationTime_ - ctl.controllerTime());
+    double nextLead = 0.0;
+    if(nextBoundedEventLead(nextLead))
+    {
+      scheduleNextHypothesis(nextLead, "global_fixed_schedule");
+    }
+    else
+    {
+      phase_ = Phase::SelectGlobal;
+    }
+    return false;
+  }
+
   const double now = ctl.controllerTime();
   const double planningDuration = now - iterationStartTime_;
   const double remainingToHypothesis = hypothesizedPresentationTime_ - now;
+  const double minimumSafeCommitLead = std::max(
+      minimumCommitRemainingTime_,
+      ctl.presentationDecelerationDuration() + 0.25);
+  if(!ctl.selectPlanningBestForCommit(
+         remainingToHypothesis, minimumReachEntryLead_,
+         minimumSafeCommitLead))
+  {
+    ctl.clearPlanningObjectSnapshot();
+    ctl.endObjectObservation(true);
+    ctl.finishPhaseTiming("interception_planning");
+    mc_rtc::log::error(
+        "[BoundedEventSearchSummary] committed=false reason=plan_selection_failed detail={} hypotheses={} no fallback permitted",
+        ctl.planningSelectionReason(), eventHypothesisCount_);
+    output("FAIL");
+    return true;
+  }
+
+  ++feasibleHypothesisCount_;
   const double predictedPresentationDuration =
       ctl.planningBestPredictedPresentationTime();
   const double residual =
@@ -621,9 +839,6 @@ bool HandoverInterceptionController_SolveInterception::run(
       minimumReachEntryLead_, reachEntrySafe, timingMatched,
       ctl.planningBestPredictedExecutionTime(), ctl.planningBestClearance());
 
-  const double minimumSafeCommitLead = std::max(
-      minimumCommitRemainingTime_,
-      ctl.presentationDecelerationDuration() + 0.25);
   // Exact synchronization does not require a zero residual. A negative
   // residual is executable scheduling slack: ExecuteCommittedReach enters
   // early, waits without motion, and launches at the immutable reachStart.
