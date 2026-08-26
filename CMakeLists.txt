@@ -24,7 +24,8 @@ set(AROBASE "@")
 # path referenced from the generated YAML always points at an installed
 # location, not at this source checkout.
 set(CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/${PROJECT_NAME}/call_object_description")
-install(DIRECTORY call_object_description/ DESTINATION "${CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX}")
+install(FILES call_object_description/README.md DESTINATION "${CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX}")
+install(FILES call_object_description/urdf/call_object.urdf DESTINATION "${CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX}/urdf")
 
 configure_file(etc/HandoverInterceptionController.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/HandoverInterceptionController.yaml")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/etc/HandoverInterceptionController.yaml" DESTINATION "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc")
