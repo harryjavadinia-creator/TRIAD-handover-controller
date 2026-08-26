@@ -1,0 +1,40 @@
+# Example mc_rtc global configuration for running the TRIAD controller
+# implementation (HandoverInterceptionController) in simulation.
+#
+# This file is a template with placeholder values. It is NOT used directly:
+# scripts/run_scenario.sh generates a working copy of it at run time, with
+# MAIN_ROBOT_MODULE_PATH substituted from an environment variable you set
+# yourself. No real paths, IPs, or credentials belong in this file.
+#
+# MainRobot: [family, module-search-path, module-name]
+#
+# The module-search-path must point at a Kinova Gen3 + Robotiq 2F-85 mc_rtc
+# robot-module directory (URDF, convex hulls, RSDF, etc.) named "gen3_2f85".
+# This description package is an external dependency of this repository,
+# reconstructed from pinned upstream packages via
+# scripts/setup_gen3_2f85_module.py -- see docs/robot_module.md. Point
+# MAIN_ROBOT_MODULE_PATH at the resulting directory.
+MainRobot: [env, "${MAIN_ROBOT_MODULE_PATH}", gen3_2f85]
+
+# Only the TRIAD controller implementation is enabled for a simulation
+# reproduction run.
+Enabled: [HandoverInterceptionController]
+
+Timestep: 0.001
+
+# Disable real-hardware bridging by default. Real-robot use requires a
+# separate, explicit Kortex configuration block (robot IP, credentials) that
+# must never be committed to this repository. See docs/real_robot.md.
+# Kortex:
+#   gen3_2f85:
+#     ip: "<robot-ip>"
+#     username: "<username>"
+#     password: "<password>"
+#     physical_gripper: true
+
+GUIServer:
+  Enable: true
+  Timestep: 0.05
+  TCP:
+    Host: '*'
+    Ports: [4242, 4343]

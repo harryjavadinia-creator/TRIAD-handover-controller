@@ -18,5 +18,13 @@ endif()
 add_subdirectory(src)
 
 set(AROBASE "@")
+
+# The handover-object URDF description is bundled with this controller.
+# Install it under the controller's own namespaced runtime directory so the
+# path referenced from the generated YAML always points at an installed
+# location, not at this source checkout.
+set(CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/${PROJECT_NAME}/call_object_description")
+install(DIRECTORY call_object_description/ DESTINATION "${CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX}")
+
 configure_file(etc/HandoverInterceptionController.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/HandoverInterceptionController.yaml")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/etc/HandoverInterceptionController.yaml" DESTINATION "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc")

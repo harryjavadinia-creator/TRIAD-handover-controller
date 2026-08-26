@@ -1,7 +1,6 @@
-# V6.1 clean active controller only. The validated presentation pipeline is
-# retained, while capture, bilateral confirmation and load transfer are
-# compiled as one continuous state. Legacy split Acquire/force-transfer paths
-# are deliberately not compiled.
+# Capture, bilateral confirmation and load transfer are compiled as one
+# continuous state; a split Acquire/force-transfer path is deliberately not
+# compiled.
 add_fsm_state_simple(HandoverInterceptionController_Initial)
 add_fsm_state_simple(HandoverInterceptionController_ObserveObject)
 add_fsm_state_simple(HandoverInterceptionController_SolveInterception)

@@ -9,7 +9,7 @@
 #include <vector>
 
 /**
- * V4A.1.3 observation-only moving-object gate.
+ * Unified static/moving object observation gate.
  *
  * The robot first settles under the exact controller that will hold it during
  * observation. The controlled quantity and the safety gate use the same
@@ -18,9 +18,12 @@
  * baseline is constrained. This avoids model-dependent normalized-open offsets
  * and avoids using the pad-midpoint mouth frame as an arm-stationarity proxy.
  *
- * V4A.1.3 still ends by freezing the simulated object and handing the frozen
- * pose to the proven static pipeline. It validates observation and prediction;
- * it is not yet the committed moving interception controller.
+ * After the observation window, the final estimated object twist classifies
+ * the presentation as static or moving. A static presentation is frozen at its
+ * measured current pose for one complete current-pose planning event. A moving
+ * presentation remains under the estimated motion model and proceeds to the
+ * bounded predictive future-event solver. The physical robot remains at the
+ * observation hold throughout this classification stage.
  */
 struct HandoverInterceptionController_ObserveObject : mc_control::fsm::State
 {

@@ -1,16 +1,11 @@
-# V6.3 UNIFIED STATIC + MOVING HANDOVER
 # Observation classifies the measured object before planning. Moving objects
-# keep the validated V6.2 bounded future-event interception path; stationary
-# objects use the measured current pose as one complete planning event. Both
-# modes share candidate evaluation, commitment, capture, transfer and retreat.
-# Default regression scenario remains canonical YZ moving.
-# start=[0.55, -0.56, 0.15] velocity=[0, 0.08, 0]
-# V5_4_1_R1_VALIDATION_SCENARIO preset=diagonal-XZ-normalized noRetuning=true
-# start=[0.9, 0, 0.3] velocity=[-0.0565685, 0, 0.0565685]
-
-
-
-
+# use a bounded future-event interception path; stationary objects use the
+# measured current pose as one complete planning event. Both modes share
+# candidate evaluation, commitment, capture, transfer and retreat.
+#
+# The object's initial pose and velocity below select one scenario; see
+# scripts/run_scenario.sh for a non-mutating way to switch between the
+# scenarios in the table below without editing this file.
 
 #| Scenario       | Initial position `[x,y,z]` |   Linear velocity `[vx,vy,vz]` |
 #| -------------- | -------------------------: | -----------------------------: |
@@ -19,7 +14,6 @@
 #| Pure X         |       `[0.92, 0.00, 0.55]` |            `[-0.08, 0.0, 0.0]` |
 #| Diagonal XZ    |       `[0.90, 0.00, 0.30]` | `[-0.0565685, 0.0, 0.0565685]` |
 #| Ground-near    |       `[0.25, 0.62, 0.15]` |            `[0.0, -0.08, 0.0]` |
-
 
 ---
 Managed: false
@@ -43,7 +37,7 @@ robots:
   call_object:
     module:
       - object
-      - @CMAKE_CURRENT_SOURCE_DIR@/call_object_description
+      - "@CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX@"
       - call_object
     init_pos:
       translation: [0.90, 0.00, 0.30]
@@ -52,14 +46,6 @@ robots:
 object:
   translation: [0.90, 0.00, 0.30]
   rpy: [0.0, 1.5708, 0.0]
-
-
-#ground  translation: [0.25, 0.62, 0.15]
-
-# nominal   translation: [0.55, 0.0, 0.55]
-
-# YZ   translation: [0.55, -0.56, 0.15]
-
 
 O_T_H:
   translation: [0.0, 0.0, -0.0869]
@@ -116,9 +102,9 @@ preview:
   costTieBand: 0.15
   jointLimitMargin: 0.010
   closureSamples: 120
-  # V5 predictive-static handover: after the static geometry screen, re-run
-  # every survivor through one immutable predictive reach followed by the exact
-  # proven static open-insert/close/confirm/retreat chain.
+  # After the static geometry screen, every survivor is re-evaluated through
+  # one immutable predictive reach followed by the same terminal capture and
+  # retreat contract used by runtime.
   movingInterception: true
   # Reach and terminal approach use the same phase-specific gates as runtime.
   movingReachPositionTolerance: 0.012
@@ -134,38 +120,36 @@ preview:
   movingMaximumScheduleIterations: 3
   movingScheduleGrowth: 1.20
 
-# V5.4.1 measured-terminal prediction binding: after a complete route passes
-# hard certification, the accepted copied velocity-gated terminal duration
-# replaces predictedApproachTime/predictedContactTime/predictedExecutionTime.
-# The pre-binding time remains the protected R1 ranking input, so candidate
-# selection and the physical FSM sequence are unchanged at this checkpoint.
+# After a complete route passes hard certification, the accepted copied
+# velocity-gated terminal duration replaces the terminal timing prediction.
+# The pre-binding time remains available to the alternative protected selector.
 
-# V6.7 experimental global binding-cost development mode. Hard reachability,
-# collision, corridor, acquisition, timing-admission and retreat checks remain
-# authoritative. The moving planner freezes a bounded set of event times at
-# one search epoch, evaluates every complete time-grasp-route alternative,
-# reapplies timing admission after the full scan, and commits the exact argmin.
-# Static presentation has one measured event and therefore reduces to the
-# V6.6 complete-plan argmin. Set eventSelectionMode to
-# first_admissible_center_out only when reproducing V6.6 behaviour.
+# Global binding-cost selection mode. Hard reachability, collision, corridor,
+# acquisition, timing-admission and retreat checks remain authoritative and
+# are evaluated before any cost is compared. The moving planner freezes a
+# bounded set of event times at one search epoch, evaluates every complete
+# time-grasp-route alternative, reapplies timing admission after the full
+# scan, and commits the exact argmin. A static presentation has one measured
+# event and therefore reduces to a single-event complete-plan argmin. Set
+# eventSelectionMode to first_admissible_center_out to select the first
+# timing-admissible candidate in center-out order instead of the global
+# argmin over the full bounded set.
 #
-# IMPORTANT: this is the frozen seven-term binding preference objective
-# (T,E,L,C,Q,K,V), derived from the former non-binding audit's inherited
-# references/weights by (1) removing the unsupported orientation term R
-# from the binding sum -- R remains computed and logged as a diagnostic
-# only, with rotationWeight fixed at 0.0 so it cannot perturb the shared
-# weight-normalization sum below -- and (2) proportionally renormalizing
-# the remaining seven weights to sum to one. These are controller-specific
-# engineering preferences, evaluated through exact finite-set weight-space
-# sensitivity analysis (not literature-derived or claimed optimal); see the
-# objective-calibration audit history for evidence. Physical binding-cost
-# execution remains blocked unless allowPhysicalExecution is deliberately
-# changed. Every term below is dimensionless before weighting; weights are
-# normalized internally to sum to one. Velocity reserve uses the finite
-# bounded law phi_V=rho^4 on joint-velocity utilization only (terminal
-# velocity utilization is excluded from this soft term and continues to
-# gate terminal-timing-audit success/failure separately), so rho=1 remains
-# admissible and contributes exactly 1.0.
+# This is the frozen seven-term binding preference objective (T,E,L,C,Q,K,V).
+# The orientation term R is excluded from the binding sum -- R remains
+# computed and logged as a diagnostic only, with rotationWeight fixed at 0.0
+# so it cannot perturb the shared weight-normalization sum below -- and the
+# remaining seven weights are proportionally renormalized to sum to one.
+# These are controller-specific engineering preferences, evaluated through
+# exact finite-set weight-space sensitivity analysis, not literature-derived
+# or claimed optimal. Physical binding-cost execution remains blocked unless
+# allowPhysicalExecution is deliberately changed. Every term below is
+# dimensionless before weighting; weights are normalized internally to sum
+# to one. Velocity reserve uses the finite bounded law phi_V=rho^4 on
+# joint-velocity utilization only (terminal velocity utilization is excluded
+# from this soft term and continues to gate terminal-timing-audit
+# success/failure separately), so rho=1 remains admissible and contributes
+# exactly 1.0.
 decisionCost:
   selectionMode: binding_cost
   eventSelectionMode: global_time_plan
@@ -184,8 +168,8 @@ decisionCost:
   effortWeight: 0.1052632
   pathWeight: 0.1052632
   # Diagnostic-only weight for R; kept at 0.0 so R cannot enter the binding
-  # sum via the shared normalization below. candidate.rotation and R remain
-  # computed and logged for every candidate.
+  # sum via shared normalization. candidate.rotation and R remain computed and
+  # logged for every candidate.
   rotationWeight: 0.0
   clearanceWeight: 0.1578947
   jointMarginWeight: 0.0842105
@@ -193,7 +177,7 @@ decisionCost:
   velocityReserveWeight: 0.0526316
   metricStride: 10
 
-# V5.4.0: complete grasp candidates that survive the terminal chain are also
+# Complete grasp candidates that survive the terminal chain are also
 # evaluated through a symmetric bank of smooth world-space transit curves.
 # The ring is sampled around the direct start-to-standoff chord; no direction
 # is labelled or preferred as above/below/left/right.
@@ -234,10 +218,9 @@ predictiveReachPolicy:
   maximumObjectTranslationDeviation: 0.015
   maximumObjectRotationDeviation: 0.12
 
-# V4A.0 timing-consistent interception foundation. The copied-state rollout
-# remains the geometric feasibility model. These calibrated parameters map its
-# phase durations to the measured mc_rtc execution time so a future intercept
-# time is not based on the old 4 s optimistic estimate.
+# Calibrated execution-time model. The copied-state rollout remains the
+# geometric feasibility model; these parameters map its phase durations to
+# measured mc_rtc execution timing for future-event scheduling.
 executionTiming:
   armScale: 1.25
   effectiveGripperRate: 0.320
@@ -248,25 +231,11 @@ executionTiming:
   confirmationDwell: 0.25
   confirmationTimeout: 2.0
 
-# V5.2.5 VELOCITY-GATED TERMINAL CAPTURE (nominal YZ test)
-# - object approach increased to 0.080 m/s with additional runway
-# - observation shortened to 0.90 s while retaining 72 mm of observed travel
-# - object remains at 0.080 m/s; C2 terminal deceleration is 0.85 s for a visibly smoother presentation
-# - predictive reach timing remains fast, with a hard measured lead cap and
-#   the same immutable one-candidate/one-event methodology
-# - copied-state reach now certifies the same 8 mm runtime reserve (plus margin)
-# - insertion and retreat retain monotonic measured-progress anchoring
-# - path-tangent velocity feedforward keeps the fast physical insertion
-# - a measured-speed stopping-distance law activates a short terminal brake
-# - Acquire is admitted only after pose, centering and velocity remain stable
-# - closure is faster in free space and remains geometry-scheduled near contact
-# - the gripper still stays fully open through predictive reach and insertion
-
-# V5 predictive presentation with proven static acquisition. The object
-# approaches with the observed twist, decelerates smoothly and is held at the
-# committed presentation pose. The robot reaches the future standoff once,
-# keeps the gripper fully open through insertion, then the proven Acquire state
-# exclusively owns closure, contact confirmation, attachment and retreat.
+# Moving-object presentation and velocity-gated terminal capture. The object
+# is observed, predicted to a future presentation event, smoothly decelerated,
+# and then held while the robot completes the committed terminal approach.
+# CaptureTransfer begins only after pose, centering and velocity gates remain
+# stable, and then continuously owns closure, confirmation and load transfer.
 movingObject:
   simulateMotion: true
   observationDuration: 0.90
@@ -294,8 +263,8 @@ movingObject:
   # later anywhere in this bounded post-stop window; no millisecond contact
   # fixed point is imposed on a stationary object.
   presentationAcquisitionWindow: 7.00
-  # The gripper remains fully open through reach, hold and insertion. The
-  # complete closure is owned exclusively by the proven Acquire controller.
+  # The gripper remains fully open through reach, hold and insertion;
+  # CaptureTransfer owns closure, contact confirmation and load transfer.
   presentationCapturePositionTolerance: 0.012
   presentationCaptureOrientationTolerance: 0.030
   presentationCaptureCenterTolerance: 0.00065
@@ -332,17 +301,16 @@ gripper:
   padCenteringTolerance: 0.004
   targetTipCenterGap: 0.026
   maxClosure: 1.00
-  # Per-gripper-joint parameters. They no longer overwrite the global arm
-  # posture task. postureWeight is the historical reference used to preserve
-  # the same effective gripper authority under any arm-posture weight.
+  # Per-gripper-joint parameters. They do not overwrite the global arm
+  # posture task; postureWeight preserves the intended effective gripper
+  # authority under changes to arm-posture weighting.
   jointWeightNormal: 25.0
   jointWeightHigh: 2400.0
   postureStiffnessNormal: 0.5
   postureStiffnessHigh: 40.0
   postureWeight: 10.0
-  # V6.4 staged real-robot bridge. Keep disabled in simulation. For the first
-  # hardware preflight set enabled=true but leave commandEnabled=false, so
-  # physical feedback is imported while the Robotiq command remains held.
+  # Staged real-robot bridge. Keep disabled in simulation. For hardware
+  # preflight, feedback can be enabled while physical commands remain gated.
   physicalBridge:
     enabled: false
     commandEnabled: false
@@ -354,28 +322,9 @@ gripper:
     # Independent hard command cap; never exceeded by mc_kortex.
     maxPercent: 35.0
 
-# SIMULATION
-#physicalBridge:
-#  enabled: false
-#  commandEnabled: false
-#  requireFeedback: false
-#  openPercent: 0.0
-#  closePercent: 35.0
-#  maxPercent: 35.0
-
-#REAL ROBOT
-#physicalBridge:
-#  enabled: true
-#  commandEnabled: true
-#  requireFeedback: true
-#  openPercent: 0.87
-#  closePercent: 35.0
-#  maxPercent: 35.0
-
-
-# Shared by the internal closure preview and the physical Acquire state. The
-# allowed bilateral centering error is deliberately wider while the gripper is
-# open, then tightens continuously over the final approach to contact.
+# Shared by the internal closure preview and active CaptureTransfer state. The
+# allowed bilateral centering error is wider while the gripper is open and
+# tightens continuously over the final approach to contact.
 acquisition:
   farCenterTolerance: 0.0015
   nearCenterTolerance: 0.00055
@@ -387,7 +336,7 @@ readyMotion:
   maxJointSpeed: 0.85
   maxJointAcceleration: 2.20
 
-# V6.2 simulation-only virtual load sharing. The default virtual_sensor source
+# Simulation-only virtual load sharing. The default virtual_sensor source
 # converts the committed admittance displacement into a virtual spring-damper
 # contact load, while the simulated human carries the remaining object weight.
 # This is explicit simulation evidence, not a physical force measurement.
@@ -442,7 +391,7 @@ configs:
     maxJointAcceleration: 2.20
     maxIter: 40000
 
-    # V6.4.2 bounded hardware commissioning mode. When enabled, Initial freezes
+    # Bounded hardware commissioning mode. When enabled, Initial freezes
     # the arm at the measured startup posture, exercises only the physical
     # Robotiq through the feedback-gated bridge, returns open, and never enters
     # observation, planning, reach, capture, transfer or retreat.
@@ -480,17 +429,16 @@ configs:
     maxIter: 10000
 
   HandoverInterceptionController_SolveInterception:
-    # Simulation-only global enumeration batches four times as many copied-
-    # state preview steps per ticker cycle so several fixed future events can
-    # remain timing-admissible after the complete scan. This does not change
-    # the preview integration step, generated actions, constraints or costs.
+    # Simulation-only global enumeration batches copied-state preview steps per
+    # ticker cycle so several fixed future events can remain timing-admissible
+    # after the complete scan. This does not change preview integration,
+    # generated actions, constraints or costs.
     planningStepsPerCycle: 96
     maximumFixedPointIterations: 4
-    # V6.7: generate the same scenario-independent bounded lead bank, freeze
-    # every event to the common search epoch, sort it chronologically, and
-    # evaluate the entire set before the global time-grasp-route argmin. The
-    # fixed-point parameters below remain active only when reproducing the
-    # first_admissible_center_out policy.
+    # Generate the scenario-independent bounded lead bank, freeze every event
+    # to the common search epoch, sort it chronologically, and evaluate the
+    # entire set before the global time-grasp-route argmin. The fixed-point
+    # parameters below remain active only for first_admissible_center_out.
     boundedEventSearchEnabled: true
     maximumEventHypotheses: 15
     eventSearchLeadStep: 0.45
@@ -551,7 +499,7 @@ configs:
     # sub-margin corrections are still enforced at terminal capture but cannot
     # throttle the long translational insertion or trigger its brake.
     minimumAngularLookAhead: 0.015
-    lookAheadRemainingRatio: 0.55 # legacy; superseded by explicit taper distance
+    lookAheadRemainingRatio: 0.55 # retained compatibility value; explicit taper distance is authoritative
     lookAheadTaperDistance: 0.012
     linearFeedforwardRatio: 0.70
     angularFeedforwardRatio: 0.70
@@ -614,8 +562,8 @@ configs:
     centeringDeadband: 0.00012
     # Hysteresis around the shared aperture-dependent centering tube.
     closureCenterHysteresis: 0.00012
-    # Slow bounded bias adaptation removes static QP tracking residual without
-    # reintroducing the V3A.7 kick/oscillation.
+    # Slow bounded bias adaptation removes static QP tracking residual while
+    # avoiding abrupt command transients.
     centeringBiasGain: 0.35
     centeringBiasLeak: 0.08
     maxCenteringBias: 0.003
@@ -634,7 +582,7 @@ configs:
     spatialAngularLookAhead: 0.14
     minimumLinearLookAhead: 0.012
     minimumAngularLookAhead: 0.050
-    lookAheadRemainingRatio: 0.55 # legacy; superseded by explicit taper distance
+    lookAheadRemainingRatio: 0.55 # retained compatibility value; explicit taper distance is authoritative
     lookAheadTaperDistance: 0.030
     linearFeedforwardRatio: 0.80
     angularFeedforwardRatio: 0.80

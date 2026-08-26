@@ -1,0 +1,50 @@
+# gen3_2f85 mesh content manifest.
+#
+# SHA-256 of every one of the 26 unique mesh files referenced by the
+# gen3_2f85 URDF after the wrist-camera subtree is removed (34 <mesh>
+# references resolve to 26 unique files, since several links reuse the same
+# mesh for visual and collision geometry).
+#
+# Each hash was computed twice and cross-checked:
+#   1. from the actual installed package copy used by the already-validated
+#      robot-module equivalence test (kortex_description meshes from a
+#      local ros2_kortex 0.2.6 build; robotiq_description meshes from the
+#      apt-installed ros-jazzy-robotiq-description 0.0.1 package);
+#   2. independently, by fetching the same package-relative file fresh from
+#      the official upstream Git tag (Kinovarobotics/ros2_kortex tag 0.2.6
+#      for kortex_description/..., PicknikRobotics/ros2_robotiq_gripper tag
+#      0.0.1 for robotiq_description/...).
+# All 26 files matched exactly between the two independently obtained
+# copies.
+#
+# Format: <sha256>  <package>/<package-relative-path>
+# scripts/setup_gen3_2f85_module.py verifies every mesh referenced by the
+# upstream URDF against this exact manifest -- path set and hash -- before
+# rewriting any URI. It fails on a missing file, an unrecognized/extra mesh
+# reference not in this manifest, or a hash mismatch.
+21921d5d1b55736872220d6a689514b8b483ec82045e211e13ac054cb3d1b4d9  kortex_description/arms/gen3/7dof/meshes/base_link.dae
+2e1cc31015cf2a38fbee929767c851d45225bec6f23813b983c0c40f51be438a  kortex_description/arms/gen3/7dof/meshes/bracelet_no_vision_link.dae
+ad293e902a36c9bde1461f05186af5a6c4290bb02108cb00c3e2c88bb315792c  kortex_description/arms/gen3/7dof/meshes/forearm_link.dae
+0a81b11e92608767f0792c3ebec16985d9dcd12ce98d7d0234755c42e12377c6  kortex_description/arms/gen3/7dof/meshes/half_arm_1_link.dae
+1a09150d3cad40d38892a5a715bacd1a6dda4102f0c464ed5a0780247763d39b  kortex_description/arms/gen3/7dof/meshes/half_arm_2_link.dae
+a5dbac7ecb5a02517dd940def2fb6d51376753ed32978ca9b1c9c8f1d9325538  kortex_description/arms/gen3/7dof/meshes/shoulder_link.dae
+bdcfc7e5415bdf83dd50f164101abeb90cdccf0a517adfa7c6411dc0124b4a98  kortex_description/arms/gen3/7dof/meshes/spherical_wrist_1_link.dae
+773099a6940d27267f1bbd31884bdd2dddb78a79a587dfb22a74e81db763bc9a  kortex_description/arms/gen3/7dof/meshes/spherical_wrist_2_link.dae
+f39a50be121122fc1c53c588a762ad1da8a0f64d39bc6f299cbe9b0597e7257b  robotiq_description/meshes/collision/left_finger.stl
+9d90031cd99106a8be63609f8ff78580638d91cc4167bf66c09198329f2e65cf  robotiq_description/meshes/collision/left_finger_tip.stl
+f250a3fea49be4d1bb2383d9980172c59fc44031193ef2293ca540f756f6c1e6  robotiq_description/meshes/collision/left_inner_knuckle.stl
+b7ec787f57a7db5b2b14e64ffbedaac28739e38f14aac8afa8b575bac941feb7  robotiq_description/meshes/collision/left_knuckle.stl
+1d018fa2f0b50aca5941778d78810b211b1abfc8637c7953451d76d4833ba6f8  robotiq_description/meshes/collision/right_finger.stl
+126f1559f2f7dca62449a6ca926c609fbdaa93ca66df805ff7c069bb206e3d10  robotiq_description/meshes/collision/right_finger_tip.stl
+c936d951ede875b91c180bd41d45b22ae23f8a39d9c3e09e29066453a8e863ef  robotiq_description/meshes/collision/right_inner_knuckle.stl
+d151fb38f59748f1e6e627312e2ede96f2c98ba267bf722091665b20c78e7a8d  robotiq_description/meshes/collision/right_knuckle.stl
+ede5cd7d7846c051b88645f33d6bbb5ed9b36bbef404a19a46557639bfab7060  robotiq_description/meshes/collision/robotiq_base.stl
+5fb9e5659c735e48eb55269da431cf61b3b7a6745922c1932a7adefb1db86dc3  robotiq_description/meshes/visual/left_finger.dae
+785ec7a83b4fc6357c211a39bb117833b1cfd4e9bccbef2efc7f35aeb2fdb92e  robotiq_description/meshes/visual/left_finger_tip.dae
+2df009ef28868c90a4904370f5f4995c74ec84e0b8ca1371044e0ea669edcd71  robotiq_description/meshes/visual/left_inner_knuckle.dae
+1b82214363d9548f3562be70e25cd23217a304c72ccd37bc1551cf1a3a64029d  robotiq_description/meshes/visual/left_knuckle.dae
+3b2245b5537eb596d7f8a4c64b12e3aedea46e365fc589019184d3b4200e664f  robotiq_description/meshes/visual/right_finger.dae
+568371d25ddbcee8e432c0610bdcc7afcd1393d48d973eed92168e353eb4edf5  robotiq_description/meshes/visual/right_finger_tip.dae
+4cc6de99e177773ba755805b58b67537c3af24b2fd8f3a1bf4bbced87d6240a5  robotiq_description/meshes/visual/right_inner_knuckle.dae
+532b6f6f8794883ff34995701036ca392461f26127757f92003db127693bc57c  robotiq_description/meshes/visual/right_knuckle.dae
+761a79d586a48d367d60f146ca77ef7d2821ad790f7b1b1c93b061ac59799267  robotiq_description/meshes/visual/robotiq_base.dae

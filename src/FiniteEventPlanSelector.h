@@ -13,15 +13,16 @@ namespace call_handover
 /**
  * One complete hard-feasible (event time, grasp, route) alternative.
  *
- * motionCost is the original eight-term complete-plan cost. globalCost uses
- * the same normalized time weight, but extends its time horizon backwards to
- * the common search epoch:
+ * motionCost is the seven-term complete-plan binding cost (T,E,L,C,Q,K,V);
+ * the orientation quantity R is diagnostic-only and excluded from that sum.
+ * globalCost uses the same normalized time weight, but extends its time
+ * horizon backwards to the common search epoch:
  *
  *   globalCost = motionCost
  *              + w_T * (eventLead - reachDuration) / timeReference.
  *
  * Thus the time contribution represents predicted search-to-completion time;
- * no ninth cost term or additional weight is introduced.
+ * no additional cost term or weight is introduced.
  */
 struct FiniteEventPlanRecord
 {

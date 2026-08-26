@@ -1,11 +1,21 @@
 <?xml version="1.0"?>
 <robot name="call_object">
   <!--
-    CALL sensorized handover object.
+    Sensorized handover-object model used by TRIAD within the CALL project.
+
+    Compatibility note:
+      The runtime identifier remains "call_object" because the validated
+      controller configuration refers to it by that name.
+
     Frame convention:
-      root link frame / object frame at Sensix sensor center.
+      root link frame / object frame at the SENSIX sensor-body center.
       local +Z = human / grey handle.
       local -Z = robot / blue receiver handle.
+
+    Geometry uses primitive cylinders for both visual and collision models.
+    The root-link inertial entry represents the complete rigid assembly;
+    the fixed handle links therefore have no separate inertial entries.
+    See ../README.md for dimensions, model scope and provenance notes.
   -->
 
   <material name="human_handle_grey"><color rgba="0.72 0.72 0.75 1.0"/></material>

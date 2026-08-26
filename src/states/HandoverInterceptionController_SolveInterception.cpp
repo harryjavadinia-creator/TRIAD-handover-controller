@@ -347,7 +347,7 @@ void HandoverInterceptionController_SolveInterception::start(
     if(globalTimePlanMode_)
     {
       mc_rtc::log::success(
-          "[GlobalTimePlanSearchConfiguration] enabled=true fixedSearchEpoch={:.3f}s fixedAbsoluteEvents=true predictionModelFrozen=true configuredHypotheses={} leadRange=[{:.3f},{:.3f}] objective=min_time_grasp_route timeTerm=search_to_completion scheduleMustComplete=true finalTimingReadmission=true robotStationary=true developmentMode=true",
+          "[GlobalTimePlanSearchConfiguration] enabled=true fixedSearchEpoch={:.3f}s fixedAbsoluteEvents=true predictionModelFrozen=true configuredHypotheses={} leadRange=[{:.3f},{:.3f}] objective=min_time_grasp_route timeTerm=search_to_completion scheduleMustComplete=true finalTimingReadmission=true robotStationary=true",
           eventSearchStartTime_, boundedEventLeads_.size(),
           minimumPresentationLead_, maximumPresentationLead_);
     }
