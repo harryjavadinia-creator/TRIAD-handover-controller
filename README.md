@@ -194,6 +194,3 @@ The baseline manifest and verifier provide the source-integrity record for the c
 
 To be added with the associated article.
 
-## License
-
-**License decision pending. Do not make the repository public until the project/institutional licensing decision is resolved.**
