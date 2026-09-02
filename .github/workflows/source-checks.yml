@@ -1,0 +1,40 @@
+name: source-checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  dependency-free-checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install compiler and Python
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3
+
+      - name: Finite selector and runtime-checker tests
+        run: bash tools/run_binding_cost_checks.sh
+
+      - name: Robot-module reconstruction unit tests
+        run: python3 tools/test_setup_gen3_2f85_module.py
+
+      - name: Latency-matrix verifier tests
+        run: python3 tools/test_verify_latency_matrix_cell.py
+
+      - name: Scenario-identity verifier tests
+        run: python3 tools/test_verify_scenario_identity.py
+
+      - name: Scenario override tests
+        run: python3 tools/test_scenario_override_yaml.py
+
+      - name: Verify frozen scientific baseline
+        run: |
+          python3 tools/verify_scientific_baseline.py \
+            SCIENTIFIC_BASELINE.sha256 \
+            --commit scientific-baseline
