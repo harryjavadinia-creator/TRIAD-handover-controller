@@ -138,10 +138,14 @@ def parse_records(text: str) -> tuple[list[Record], float]:
             "no [GlobalPlanTimingAdmissibility] records found; "
             "this replay requires timing-diagnostic logging"
         )
-    if set(costs) != seen:
-        missing = sorted(set(costs) - seen)
+
+    valid_cost_keys = {key for key, cost in costs.items() if bool(cost["valid"])}
+    if valid_cost_keys != seen:
+        missing = sorted(valid_cost_keys - seen)
+        extra = sorted(seen - valid_cost_keys)
         raise ValueError(
-            f"{len(missing)} GlobalPlanCost record(s) have no matching timing record"
+            "timing-record coverage does not match the cost-valid pooled set "
+            f"(missing={len(missing)}, extra={len(extra)})"
         )
 
     selection = SELECTION_RE.search(text)
@@ -274,9 +278,7 @@ def main(argv: list[str] | None = None) -> int:
 
     for planner_time in args.planner_time:
         try:
-            winner, minimum, count = evaluate(
-                records, planner_time, tie_tolerance
-            )
+            winner, minimum, count = evaluate(records, planner_time, tie_tolerance)
         except ValueError as exc:
             print(f"timing frontier replay: FAIL: {exc}", file=sys.stderr)
             return 1
