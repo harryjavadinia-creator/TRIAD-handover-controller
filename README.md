@@ -30,6 +30,10 @@ The shortest path for understanding the implementation is:
 4. [`src/states/HandoverInterceptionController_SolveInterception.cpp`](src/states/HandoverInterceptionController_SolveInterception.cpp) — bounded event generation, complete scan and one-time commit.
 5. [`src/HandoverInterceptionController.cpp`](src/HandoverInterceptionController.cpp) — candidate generation, copied-state preview, feasibility, metrics and execution support.
 
+TRIAD is the public method name; the C++ namespace `call_handover` and the
+controller name `HandoverInterceptionController` are retained historical
+implementation identifiers from the CALL project lineage.
+
 ## What is new in the current research package
 
 Beyond the frozen finite-plan Dataset-B baseline, the project now includes a corrected hardware-timing interpretation and exact serial performance characterization:
@@ -113,12 +117,16 @@ The setup script verifies the pinned upstream URDF and all referenced mesh conte
 
 Available moving-object scenarios:
 
-| Command name | Motion |
-| --- | --- |
-| `near-ground` | near-ground lateral |
-| `longitudinal` | longitudinal / PURE_X |
-| `lateral-low` | lateral low-height / CANONICAL_YZ |
-| `diagonal` | diagonal forward/upward |
+| Command name | Dataset-B label | Motion |
+| --- | --- | --- |
+| `near-ground` | `GROUND_NEAR` | near-ground lateral |
+| `longitudinal` | `PURE_X` | longitudinal |
+| `lateral-low` | `CANONICAL_YZ` | lateral, low height |
+| `diagonal` | `DIAGONAL_XZ` | diagonal forward/upward |
+
+The command names are the `scripts/run_scenario.sh` arguments; the Dataset-B
+labels are the identifiers used in the recorded log artifacts and in the timing
+tables below.
 
 Run one scenario:
 
@@ -158,7 +166,7 @@ For a staged reproduction workflow, see [`docs/reproducibility.md`](docs/reprodu
 
 ## Reported experiment sets
 
-Two historical experiment sets are preserved and must not be mixed:
+Two historical experiment sets are preserved and are reported separately:
 
 - **Dataset B — finite global event-time–grasp–route planning.** Four moving-object simulation scenarios from the scientific baseline. Reproduce with `scripts/run_scenario.sh`.
 - **Dataset A — perception-latency study.** Five scenarios × three latency conditions at the preserved `dataset-a-baseline` source state. Reproduce with `scripts/reproduce_latency_matrix.sh`.
@@ -178,7 +186,7 @@ The exact counterfactual replay of the controller timing rule gives scenario-spe
 | CANONICAL_YZ | 5.139608 |
 | DIAGONAL_XZ | 5.735285 |
 
-The previously quoted `3.976 s` value is the next 1 ms grid point above the exact PURE_X boundary. It must not be presented as a universal hardware timing requirement.
+The previously quoted `3.976 s` value is the next 1 ms grid point above the exact PURE_X boundary; it is specific to PURE_X rather than a universal hardware timing requirement.
 
 The same analysis also derives **winner-preservation bands**, which are stricter than fail-closed feasibility. See [`docs/timing_frontiers.md`](docs/timing_frontiers.md).
 
@@ -222,6 +230,15 @@ Hardware-facing support exists in the codebase, including staged gripper commiss
 ## Scientific baseline
 
 Dataset B is anchored to the frozen `scientific-baseline` source state. `SCIENTIFIC_BASELINE.sha256` and the verifier provide a source-integrity record for that curated snapshot. The repository history also preserves `dataset-a-baseline` for the earlier latency study.
+
+The `src/` tree shipped on this branch is the exact-serial implementation
+synchronized from development commit `82e6eaa`; its hashes are recorded in
+[`docs/source_sync_82e6eaa.sha256`](docs/source_sync_82e6eaa.sha256). Those
+optimizations are implementation-only and leave the complete plan records, the
+control-cycle count and all four committed winners byte-identical to the frozen
+baseline, so the two artifacts describe the same scientific method. Verify the
+frozen snapshot with the tag-based verifier above rather than against the
+working tree.
 
 ## Citation
 

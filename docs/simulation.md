@@ -40,7 +40,7 @@ These are the four moving-object scenarios evaluated in the frozen global finite
 
 The controller configuration also catalogs a stationary `static_nominal` preset (`[0.55, 0.00, 0.55]`, zero velocity). It is not part of Dataset B and is not currently supported by `scripts/run_scenario.sh`.
 
-An earlier perception-latency study used its own scenario/condition set. See `docs/experiments.md`. Do not merge Dataset-A and Dataset-B results.
+An earlier perception-latency study used its own scenario/condition set; see `docs/experiments.md`. Dataset-A and Dataset-B results are reported separately.
 
 ## Expected scientific output
 
@@ -83,7 +83,7 @@ python3 tools/verify_scenario_identity.py <log> --expect-scenario diagonal
 
 It verifies the initial object position and settled velocity against the named scenario and checks the expected completion class. `scripts/run_scenario.sh` runs both the scientific runtime checker and the scenario-identity checker automatically.
 
-## Timing: three quantities that must not be conflated
+## Timing: three distinct quantities
 
 TRIAD's evidence now distinguishes three timing notions:
 

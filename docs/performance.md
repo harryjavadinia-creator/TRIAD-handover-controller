@@ -97,9 +97,9 @@ The controller remains synchronous; these optimizations reduce blocking but do n
 
 ## Relation to timing frontiers
 
-Do not compare every scenario against one universal 3.976 s target. Timing admission is scenario-specific. See [`timing_frontiers.md`](timing_frontiers.md).
+Timing frontiers are scenario-specific; `3.976 s` is the historical PURE_X grid point and is not a universal threshold. See [`timing_frontiers.md`](timing_frontiers.md).
 
-The measured final implementation remains below every scenario's own fail-closed frontier, but measured wall time is outside every frozen simulated winner-preservation band. Timing feasibility and winner preservation must therefore be discussed separately.
+The measured final implementation remains below every scenario's own fail-closed frontier, but measured wall time is outside every frozen simulated winner-preservation band. Timing feasibility and winner preservation are therefore reported separately.
 
 ## Reproducibility status of this study
 

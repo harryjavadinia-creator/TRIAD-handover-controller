@@ -3,6 +3,7 @@
 #include <mc_control/fsm/Controller.h>
 #include <mc_tasks/TransformTask.h>
 
+#include <RBDyn/Jacobian.h>
 #include <RBDyn/MultiBodyConfig.h>
 #include <SpaceVecAlg/SpaceVecAlg>
 
@@ -593,6 +594,29 @@ public:
   sva::PTransformd actualMouthPose() const;
   sva::PTransformd mouthPoseFromBasePose(const sva::PTransformd & W_T_B) const;
   sva::PTransformd basePoseFromMouthPose(const sva::PTransformd & W_T_M) const;
+  /**
+   * Pose-dependent half of basePoseFromMouthPose(). B_T_M is a property of the
+   * live robot, not of W_T_M, so a caller evaluating many mouth poses against
+   * one unchanged robot state may resolve it once and pass it here. The
+   * expression below is character-for-character the tail of
+   * basePoseFromMouthPose(), so both routes produce identical results.
+   */
+  sva::PTransformd basePoseFromMouthPoseWith(
+      const sva::PTransformd & W_T_M,
+      const sva::PTransformd & B_T_M) const;
+  /** Resolve the live mouth->base transform used by basePoseFromMouthPose(). */
+  sva::PTransformd liveMouthToBaseTransform() const;
+  /**
+   * Pose-dependent half of interpolatePose(). The two endpoint quaternions and
+   * their relative-sign resolution depend only on the endpoints, so a caller
+   * sweeping one segment may resolve them once and pass them here.
+   */
+  sva::PTransformd interpolatePoseWith(
+      const Eigen::Vector3d & pA,
+      const Eigen::Vector3d & pB,
+      const Eigen::Quaterniond & qA,
+      const Eigen::Quaterniond & qB,
+      double alpha) const;
 
   double liveMouthGap() const;
   double liveMouthHalfGap() const { return 0.5 * liveMouthGap(); }
@@ -854,6 +878,59 @@ private:
     double radius = 0.0;
     bool hardAgainstBlue = true;
   };
+
+  /**
+   * One rigid node of the exact clearance-acceleration hierarchy.
+   *
+   * Every gripper proxy is expressed in the same fixed base frame (p_B), so a
+   * node's enclosing sphere is a constant of the proxy set: its radius in the
+   * base frame is invariant under the rigid map to world. The node therefore
+   * yields a rigorous lower bound on the clearance of every proxy it contains,
+   * for one obstacle, from a single transformed centre.
+   *
+   * The hierarchy is an acceleration structure only. It never produces a
+   * reported value; it only proves that a scalar clearance evaluation cannot
+   * change the result and may therefore be skipped. Every value written into a
+   * HandoverSafetyReport still comes from the original scalar expression.
+   */
+  struct GripperProxyNode
+  {
+    Eigen::Vector3d centre_B = Eigen::Vector3d::Zero();
+    double radius = 0.0;      // max ||p_B - centre_B|| over contained proxies
+    double maxProxyRadius = 0.0;
+    int count = 0;
+  };
+
+  static constexpr std::size_t maximumProxyNodes_ = 32;
+
+  /**
+   * Compact hot-path mirror of one gripper proxy: exactly the fields the inner
+   * clearance loop reads, laid out contiguously. GripperSample carries two
+   * std::string members and is ~128 bytes, of which the arithmetic needs 32;
+   * iterating it streams four times the memory the computation uses and defeats
+   * any contiguous access. This mirror is built once, alongside the proxy
+   * hierarchy, and is never the source of truth - gripperSamplesB_ remains
+   * authoritative and supplies the names once a limiter has been identified.
+   */
+  struct GripperProxyHot
+  {
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+    double radius = 0.0;
+  };
+
+  // Canonical obstacle identifiers for the inner loop. Index order is the
+  // frozen evaluation order and must not be reordered; the strings are only
+  // materialised once, after the numeric limiter for a query is final.
+  enum ClearanceObstacle
+  {
+    ObstacleGroundPlane = 0,
+    ObstacleSensorCore = 1,
+    ObstacleHumanHandle = 2,
+    ObstacleBlueHandle = 3
+  };
+  static const char * clearanceObstacleName(int obstacle);
 
   struct CaptureCandidate
   {
@@ -1422,6 +1499,32 @@ private:
   double readyPostureWeight_ = 800.0;
 
   std::vector<GripperSample> gripperSamplesB_;
+  // Exact clearance-acceleration hierarchy over gripperSamplesB_. Rebuilt only
+  // by refreshGripperGeometry(); never reconstructed inside a query.
+  std::vector<GripperProxyNode> gripperProxyNodes_;
+  std::vector<int> gripperSampleNode_;   // sample index -> node index
+  // Contiguous hot-path mirrors of gripperSamplesB_, same indexing, rebuilt
+  // only by refreshGripperGeometry() via rebuildGripperProxyHierarchy().
+  std::vector<GripperProxyHot> gripperProxyHot_;
+  std::vector<unsigned char> gripperProxyHardBlue_;
+  void rebuildGripperProxyHierarchy();
+
+  // Preview-loop invariants. The multibody, the tool frame and the joint
+  // velocity limits do not change while a plan is being searched, so the
+  // quantities derived from them are built once by refreshPreviewKinematicCache()
+  // instead of being rebuilt on every IK iteration. Nothing here participates in
+  // the numerics: the cache supplies exactly the values the per-call code
+  // constructed, so the arithmetic and its order are untouched.
+  // Built eagerly by refreshGripperGeometry() and, defensively, on first use.
+  // rbd::Jacobian::jacobian() writes into the object's own storage, so the
+  // cache is mutable and is only ever touched by the serial preview.
+  void refreshPreviewKinematicCache() const;
+  mutable std::vector<unsigned char> previewGripperJoint_;  // joint -> skip flag
+  mutable Eigen::VectorXd previewJointVelocityLower_;
+  mutable Eigen::VectorXd previewJointVelocityUpper_;
+  mutable std::unique_ptr<rbd::Jacobian> previewToolJacobian_;
+  mutable bool previewKinematicCacheValid_ = false;
+  static bool collisionOracleCheckEnabled();
   bool gripperGeometryValid_ = false;
 
   CapturePlanningStatus capturePlanningStatus_ = CapturePlanningStatus::Idle;

@@ -30,6 +30,7 @@ or source commits.
 | Source config | `etc/HandoverInterceptionController.in.yaml` at that commit, per-scenario translation/velocity as in `docs/simulation.md` |
 | Log artifacts | `GLOBAL_{CANONICAL_YZ,DIAGONAL_XZ,GROUND_NEAR,PURE_X}_rep{1,2,3}.log`, not included in this repository |
 | Checker | `tools/check_global_time_plan_log.py` |
+| Scenario labels | `GROUND_NEAR` = `near-ground`, `PURE_X` = `longitudinal`, `CANONICAL_YZ` = `lateral-low`, `DIAGONAL_XZ` = `diagonal` (the `scripts/run_scenario.sh` command names) |
 | Attribution confidence | **Strong circumstantial evidence, not a self-declared record.** The controller does not log its own Git commit hash at runtime, so no run-time artifact directly states its source commit. The evidence for `c07368c`: (1) a same-day, ~16-minute-later build/run log (`v6_7_global.log`) reconstructs its `[CompletePlanCost]` J values *exactly* from the frozen seven-term weight vector documented at this commit, while an earlier same-week run (built before the freeze) reconstructs from a *different* weight vector applied to identical raw per-candidate terms — direct numeric evidence the frozen weights were in effect; (2) no commit exists after `c07368c` that could have produced this weight signature. This is weaker than a self-declared, hash-stamped `RUN_METADATA.txt` (see Dataset A for what that looks like when it does exist). |
 
 ### Scenario manifest

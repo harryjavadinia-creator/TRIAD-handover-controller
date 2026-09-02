@@ -51,7 +51,7 @@ The historical PURE_X replay is reproduced exactly from 198 complete-plan record
 - exact fail-closed boundary: `3.975000 s`
 - the historical `3.976 s` value was the next 1 ms grid point at which zero plans remained
 
-Therefore **3.976 s must not be described as a universal hardware planner deadline**.
+The `3.976 s` value is therefore specific to PURE_X and is not a universal hardware planner deadline.
 
 ## Scenario-specific frontiers
 
@@ -98,13 +98,12 @@ Therefore the counterfactual replay asks a hardware-facing question:
 
 The exact serial implementation can remain below every scenario's fail-closed frontier while still lying outside the frozen simulated winner-preservation band. Thus **timing feasibility** and **winner preservation** are different hardware-transfer properties.
 
-## Claims that should not be used
+## Interpretation
 
-Do not write:
-
-- "3.976 s is the hardware planner deadline."
-- "CANONICAL_YZ at about 4.4 s fails the 3.976 s frontier."
-- "All scenarios share one timing frontier."
+Three statements are not supported by this analysis: that `3.976 s` is the
+hardware planner deadline, that CANONICAL_YZ at about 4.4 s fails that frontier,
+and that the four scenarios share a single frontier. Each is contradicted by the
+per-scenario table above.
 
 Preferred wording:
 

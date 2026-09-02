@@ -120,7 +120,7 @@ The runtime checker independently reconstructs the binding objective from logged
 
 ## What is not promised to be bit-identical across machines
 
-Do not treat the following as cross-machine exact outputs:
+The following are not cross-machine exact outputs:
 
 - wall-clock planning duration;
 - operating-system scheduling behavior;
@@ -154,7 +154,7 @@ When reporting a result, identify:
 6. checker outcome;
 7. any attribution limitation documented in [`experiments.md`](experiments.md).
 
-Do not combine Dataset-A latency results with Dataset-B global finite-plan results as if they were one experiment.
+Dataset-A latency results and Dataset-B global finite-plan results are separate experiments and are reported independently.
 
 ## Publication checklist
 

@@ -21,11 +21,30 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <cstdlib>
 #include <stdexcept>
 
 namespace
 {
 constexpr double PI = 3.14159265358979323846;
+
+// Exact restatement of pointSegmentDistance for callers that already hold the
+// segment's invariant terms. ab and den depend only on the segment endpoints,
+// so a query that tests many points against the same few segments can compute
+// them once instead of once per test. Every remaining subexpression, and their
+// order, is identical to pointSegmentDistance, so the returned value is
+// bit-identical; this is an inlining/hoisting change only. Internal linkage
+// lets it inline into the clearance loops, which a default-visibility member
+// of an exported class cannot do (it is reached through the PLT).
+inline double segmentDistancePrepared(const Eigen::Vector3d & p,
+                                      const Eigen::Vector3d & a,
+                                      const Eigen::Vector3d & ab,
+                                      double den)
+{
+  if(den < 1e-12) { return (p - a).norm(); }
+  const double t = std::max(0.0, std::min(1.0, (p - a).dot(ab) / den));
+  return (p - (a + t * ab)).norm();
+}
 
 inline double clampUnit(double x)
 {
@@ -1757,21 +1776,31 @@ sva::PTransformd HandoverInterceptionController::relativePose(
   return fromWorldPose(R_A_B, p_A_B);
 }
 
+sva::PTransformd HandoverInterceptionController::interpolatePoseWith(
+    const Eigen::Vector3d & pA,
+    const Eigen::Vector3d & pB,
+    const Eigen::Quaterniond & qA,
+    const Eigen::Quaterniond & qB,
+    double alpha) const
+{
+  alpha = std::max(0.0, std::min(1.0, alpha));
+  const Eigen::Vector3d p = (1.0 - alpha) * pA + alpha * pB;
+  const Eigen::Matrix3d R = qA.slerp(alpha, qB).normalized().toRotationMatrix();
+  return fromWorldPose(R, p);
+}
+
 sva::PTransformd HandoverInterceptionController::interpolatePose(
     const sva::PTransformd & A,
     const sva::PTransformd & B,
     double alpha) const
 {
-  alpha = std::max(0.0, std::min(1.0, alpha));
-  const Eigen::Vector3d p = (1.0 - alpha) * A.translation() + alpha * B.translation();
-
   Eigen::Quaterniond qA(worldRotation(A));
   Eigen::Quaterniond qB(worldRotation(B));
   qA.normalize();
   qB.normalize();
   if(qA.dot(qB) < 0.0) { qB.coeffs() *= -1.0; }
-  const Eigen::Matrix3d R = qA.slerp(alpha, qB).normalized().toRotationMatrix();
-  return fromWorldPose(R, p);
+  return interpolatePoseWith(
+      A.translation(), B.translation(), qA, qB, alpha);
 }
 
 sva::PTransformd HandoverInterceptionController::reachCurvePose(
@@ -3296,8 +3325,7 @@ sva::PTransformd HandoverInterceptionController::mouthPoseFromBasePose(
   return compose(W_T_B, B_T_M);
 }
 
-sva::PTransformd HandoverInterceptionController::basePoseFromMouthPose(
-    const sva::PTransformd & W_T_M) const
+sva::PTransformd HandoverInterceptionController::liveMouthToBaseTransform() const
 {
   sva::PTransformd B_T_M = mouthCalibrationValid_ ? B_T_M_control_ : B_T_M_config_;
   Eigen::Vector3d pL, pR;
@@ -3307,6 +3335,13 @@ sva::PTransformd HandoverInterceptionController::basePoseFromMouthPose(
     // inverse so the arm holds the capture frame while the fingers move.
     B_T_M = relativePose(actualBasePose(), actualMouthPose());
   }
+  return B_T_M;
+}
+
+sva::PTransformd HandoverInterceptionController::basePoseFromMouthPoseWith(
+    const sva::PTransformd & W_T_M,
+    const sva::PTransformd & B_T_M) const
+{
   const Eigen::Matrix3d R_W_M = worldRotation(W_T_M);
   const Eigen::Matrix3d R_B_M = worldRotation(B_T_M);
   const Eigen::Vector3d p_B_M = B_T_M.translation();
@@ -3314,6 +3349,12 @@ sva::PTransformd HandoverInterceptionController::basePoseFromMouthPose(
   const Eigen::Matrix3d R_W_B = R_W_M * R_B_M.transpose();
   const Eigen::Vector3d p_W_B = W_T_M.translation() - R_W_B * p_B_M;
   return fromWorldPose(R_W_B, p_W_B);
+}
+
+sva::PTransformd HandoverInterceptionController::basePoseFromMouthPose(
+    const sva::PTransformd & W_T_M) const
+{
+  return basePoseFromMouthPoseWith(W_T_M, liveMouthToBaseTransform());
 }
 
 void HandoverInterceptionController::clearToolTaskReferenceMotion()
@@ -3594,6 +3635,8 @@ bool HandoverInterceptionController::refreshGripperGeometry(bool verbose)
     addFrameLocal("right_inner_pad_contact", rT, rightPadPointTip_, 0.0010, false);
   }
 
+  rebuildGripperProxyHierarchy();
+  refreshPreviewKinematicCache();
   gripperGeometryValid_ = gripperSamplesB_.size() >= 60;
   if(!gripperGeometryValid_)
   {
@@ -3636,16 +3679,50 @@ Eigen::Vector3d HandoverInterceptionController::blueHandleAxis() const
   return -objectAxis();
 }
 
+void HandoverInterceptionController::refreshPreviewKinematicCache() const
+{
+  const auto & mb = robot().mb();
+  // Which joints the preview skips. The frozen test is a prefix match on the
+  // joint name, evaluated once per joint here instead of once per joint per IK
+  // iteration; the set of joints it selects is identical.
+  previewGripperJoint_.assign(mb.joints().size(), 0u);
+  for(std::size_t j = 0; j < mb.joints().size(); ++j)
+  {
+    const std::string & jointName = mb.joint(static_cast<int>(j)).name();
+    previewGripperJoint_[j] =
+        jointName.rfind("gen3_robotiq_85_", 0) == 0 ? 1u : 0u;
+  }
+  // Joint velocity limits are constants of the robot model, so the dof-ordered
+  // vectors the preview clamps against are built once rather than per call.
+  previewJointVelocityLower_ = rbd::dofToVector(mb, robot().vl());
+  previewJointVelocityUpper_ = rbd::dofToVector(mb, robot().vu());
+  // The tool Jacobian's structure depends only on the multibody and the tool
+  // frame; only its numeric evaluation depends on the configuration.
+  previewToolJacobian_ = std::make_unique<rbd::Jacobian>(mb, toolFrame_);
+  previewKinematicCacheValid_ =
+      previewGripperJoint_.size() == mb.joints().size();
+}
+
 double HandoverInterceptionController::pointSegmentDistance(
     const Eigen::Vector3d & p,
     const Eigen::Vector3d & a,
     const Eigen::Vector3d & b) const
 {
   const Eigen::Vector3d ab = b - a;
-  const double den = ab.squaredNorm();
-  if(den < 1e-12) { return (p - a).norm(); }
-  const double t = std::max(0.0, std::min(1.0, (p - a).dot(ab) / den));
-  return (p - (a + t * ab)).norm();
+  return segmentDistancePrepared(p, a, ab, ab.squaredNorm());
+}
+
+const char * HandoverInterceptionController::clearanceObstacleName(int obstacle)
+{
+  switch(obstacle)
+  {
+    case ObstacleGroundPlane: return "ground_plane";
+    case ObstacleSensorCore: return "sensor_core";
+    case ObstacleHumanHandle: return "human_grey_handle";
+    case ObstacleBlueHandle: return "robot_blue_handle";
+    default: break;
+  }
+  return "none";
 }
 
 void HandoverInterceptionController::updateWorstClearance(
@@ -3719,6 +3796,130 @@ bool HandoverInterceptionController::gripperPoseSafe(
       basePoseFromMouthPose(W_T_M), W_T_M, report, requireCorridor);
 }
 
+/**
+ * Group the fixed base-frame proxies into rigid nodes and precompute each
+ * node's enclosing sphere. Invariant for the life of the proxy set, so this
+ * runs only from refreshGripperGeometry() and never inside a query.
+ *
+ * Grouping follows the frames the proxies are generated from, with the two
+ * sides kept separate: a node that spanned both fingers would have to enclose
+ * the whole mouth gap and its bound would be too loose to prove anything.
+ */
+void HandoverInterceptionController::rebuildGripperProxyHierarchy()
+{
+  gripperProxyNodes_.clear();
+  gripperSampleNode_.assign(gripperSamplesB_.size(), -1);
+
+  // Contiguous mirror of exactly what the inner clearance loop reads. Built
+  // before the grouping so it stays valid even if the node-count fallback
+  // below disables hierarchical pruning.
+  gripperProxyHot_.assign(gripperSamplesB_.size(), GripperProxyHot{});
+  gripperProxyHardBlue_.assign(gripperSamplesB_.size(), 1u);
+  for(std::size_t i = 0; i < gripperSamplesB_.size(); ++i)
+  {
+    gripperProxyHot_[i].x = gripperSamplesB_[i].p_B.x();
+    gripperProxyHot_[i].y = gripperSamplesB_[i].p_B.y();
+    gripperProxyHot_[i].z = gripperSamplesB_[i].p_B.z();
+    gripperProxyHot_[i].radius = gripperSamplesB_[i].radius;
+    gripperProxyHardBlue_[i] =
+        gripperSamplesB_[i].hardAgainstBlue ? 1u : 0u;
+  }
+
+  if(gripperSamplesB_.empty()) { return; }
+
+  auto groupKey = [](const std::string & name) -> std::string
+  {
+    if(name.rfind("base", 0) == 0 || name.rfind("palm", 0) == 0)
+    {
+      return "base_palm";
+    }
+    const std::string side = name.rfind("left", 0) == 0 ? "L_" : "R_";
+    if(name.find("inner_pad_contact") != std::string::npos) { return side + "inner_pad"; }
+    if(name.find("pad_shoulder") != std::string::npos) { return side + "pad_shoulder"; }
+    if(name.find("inner_knuckle") != std::string::npos) { return side + "inner_knuckle"; }
+    if(name.find("knuckle") != std::string::npos) { return side + "knuckle"; }
+    if(name.find("tip_body") != std::string::npos) { return side + "tip_body"; }
+    if(name.find("_finger_") != std::string::npos) { return side + "finger"; }
+    return side + "other";
+  };
+
+  std::vector<std::string> keys;
+  for(std::size_t i = 0; i < gripperSamplesB_.size(); ++i)
+  {
+    const std::string key = groupKey(gripperSamplesB_[i].name);
+    int index = -1;
+    for(std::size_t k = 0; k < keys.size(); ++k)
+    {
+      if(keys[k] == key) { index = static_cast<int>(k); break; }
+    }
+    if(index < 0)
+    {
+      if(keys.size() >= maximumProxyNodes_)
+      {
+        // Fail safe: without a usable hierarchy every proxy is evaluated, which
+        // is exactly the frozen behaviour.
+        gripperProxyNodes_.clear();
+        gripperSampleNode_.assign(gripperSamplesB_.size(), -1);
+        mc_rtc::log::warning(
+            "[ProxyHierarchy] more than {} proxy groups; hierarchy disabled, "
+            "falling back to full evaluation", maximumProxyNodes_);
+        return;
+      }
+      index = static_cast<int>(keys.size());
+      keys.push_back(key);
+      gripperProxyNodes_.push_back(GripperProxyNode{});
+    }
+    gripperSampleNode_[i] = index;
+    auto & node = gripperProxyNodes_[static_cast<std::size_t>(index)];
+    node.centre_B += gripperSamplesB_[i].p_B;
+    node.maxProxyRadius = std::max(node.maxProxyRadius, gripperSamplesB_[i].radius);
+    ++node.count;
+  }
+  for(auto & node : gripperProxyNodes_)
+  {
+    if(node.count > 0) { node.centre_B /= static_cast<double>(node.count); }
+  }
+  for(std::size_t i = 0; i < gripperSamplesB_.size(); ++i)
+  {
+    auto & node = gripperProxyNodes_[static_cast<std::size_t>(gripperSampleNode_[i])];
+    node.radius = std::max(
+        node.radius, (gripperSamplesB_[i].p_B - node.centre_B).norm());
+  }
+}
+
+/**
+ * Debug-only equivalence mode. Set TRIAD_COLLISION_ORACLE_CHECK=1 to run the
+ * frozen brute-force evaluation alongside the accelerated one and compare the
+ * complete report contract. Never enable it for performance measurement.
+ */
+bool HandoverInterceptionController::collisionOracleCheckEnabled()
+{
+  static const bool enabled = []()
+  {
+    const char * v = std::getenv("TRIAD_COLLISION_ORACLE_CHECK");
+    return v != nullptr && v[0] == '1';
+  }();
+  return enabled;
+}
+
+namespace
+{
+struct CollisionOracleStats
+{
+  long comparisons = 0;
+  long safeMismatch = 0;
+  long minClearanceMismatch = 0;
+  long groundClearanceMismatch = 0;
+  long sampleMismatch = 0;
+  long obstacleMismatch = 0;
+};
+CollisionOracleStats & collisionOracleStats()
+{
+  static CollisionOracleStats s;
+  return s;
+}
+} // namespace
+
 bool HandoverInterceptionController::gripperBasePoseSafe(
     const sva::PTransformd & W_T_B,
     const sva::PTransformd & W_T_M,
@@ -3749,34 +3950,218 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
   const Eigen::Vector3d blueA = blueCenter - axis * handleHalfLength_;
   const Eigen::Vector3d blueB = blueCenter + axis * handleHalfLength_;
 
-  for(const auto & sample : gripperSamplesB_)
+  // Each query tests every node centre and every surviving proxy against the
+  // same three segments, so the segment-invariant terms are computed once here
+  // rather than inside all ~56 evaluations this query performs.
+  const Eigen::Vector3d sensorAB = sensorB - sensorA;
+  const double sensorDen = sensorAB.squaredNorm();
+  const Eigen::Vector3d humanAB = humanB - humanA;
+  const double humanDen = humanAB.squaredNorm();
+  const Eigen::Vector3d blueAB = blueB - blueA;
+  const double blueDen = blueAB.squaredNorm();
+
+  const bool oracleCheck = collisionOracleCheckEnabled();
+  HandoverSafetyReport oracleReport;
+  if(oracleCheck) { oracleReport = report; }
+
+  // Exact acceleration. Each node centre is transformed ONCE and the resulting
+  // world centre is reused for all four obstacles, giving one transform per
+  // node per query rather than one per node per obstacle. Every bound below is
+  // a rigorous lower bound on the clearance of every proxy in that node against
+  // that obstacle: distance-to-a-segment is 1-Lipschitz and the base-frame
+  // proxy cloud is rigid, so shifting the centre by at most the node radius and
+  // inflating by the largest contained proxy radius can only understate.
+  const std::size_t proxyNodeCount = gripperProxyNodes_.size();
+  const bool useHierarchy = proxyNodeCount > 0
+      && proxyNodeCount <= maximumProxyNodes_
+      && gripperSampleNode_.size() == gripperSamplesB_.size();
+  double lbGround[maximumProxyNodes_];
+  double lbSensor[maximumProxyNodes_];
+  double lbHuman[maximumProxyNodes_];
+  double lbBlue[maximumProxyNodes_];
+  if(useHierarchy)
   {
-    const Eigen::Vector3d pW = pointToWorld(W_T_B, sample.p_B);
+    for(std::size_t k = 0; k < proxyNodeCount; ++k)
+    {
+      const auto & node = gripperProxyNodes_[k];
+      const Eigen::Vector3d cW = pointToWorld(W_T_B, node.centre_B);
+      const double pad = node.radius + node.maxProxyRadius;
+      lbGround[k] = cW.z() - groundZ_ - pad - groundSafetyMargin_;
+      lbSensor[k] = segmentDistancePrepared(cW, sensorA, sensorAB, sensorDen)
+          - (pad + sensorRadius_ + gripperSafetyMargin_);
+      lbHuman[k] = segmentDistancePrepared(cW, humanA, humanAB, humanDen)
+          - (pad + handleRadius_ + gripperSafetyMargin_);
+      lbBlue[k] = segmentDistancePrepared(cW, blueA, blueAB, blueDen)
+          - (pad + handleRadius_ + gripperSafetyMargin_);
+    }
+  }
+
+  // Canonical evaluation order is preserved exactly: proxies 0..n-1, and within
+  // each proxy ground, sensor, human handle, blue handle. A bound is only ever
+  // used to prove that an evaluation cannot change the report; every value the
+  // report receives still comes from the original scalar expression.
+  // The running state is held in locals so the inner loop touches only the
+  // compact mirror. curMin and curGnd carry the report's live values, so every
+  // pruning decision below sees exactly the value the frozen implementation
+  // would have seen at the same point; nothing is deferred that a bound reads.
+  // The limiting proxy and obstacle are tracked as numeric indices and resolved
+  // to names once, after the query's minimum is final - which is exact, because
+  // updateWorstClearance writes those names only when the minimum strictly
+  // improves.
+  const bool hotValid = gripperProxyHot_.size() == gripperSamplesB_.size()
+      && gripperProxyHardBlue_.size() == gripperSamplesB_.size();
+  const Eigen::Vector3d W_T_B_p = W_T_B.translation();
+  const Eigen::Matrix3d W_T_B_R = worldRotation(W_T_B);
+  double curMin = report.minClearance;
+  double curGnd = report.groundClearance;
+  bool curSafe = report.safe;
+  std::size_t bestProxy = 0;
+  int bestObstacle = -1;
+
+  for(std::size_t i = 0; i < gripperSamplesB_.size(); ++i)
+  {
+    const std::size_t node = useHierarchy
+        ? static_cast<std::size_t>(gripperSampleNode_[i]) : 0u;
+    const double px = hotValid ? gripperProxyHot_[i].x : gripperSamplesB_[i].p_B.x();
+    const double py = hotValid ? gripperProxyHot_[i].y : gripperSamplesB_[i].p_B.y();
+    const double pz = hotValid ? gripperProxyHot_[i].z : gripperSamplesB_[i].p_B.z();
+    const double proxyRadius = hotValid
+        ? gripperProxyHot_[i].radius : gripperSamplesB_[i].radius;
+    const bool hardAgainstBlue = hotValid
+        ? gripperProxyHardBlue_[i] != 0u : gripperSamplesB_[i].hardAgainstBlue;
+
+    Eigen::Vector3d pW;
+    bool havePW = false;
+    auto worldPoint = [&]() -> const Eigen::Vector3d &
+    {
+      if(!havePW)
+      {
+        pW = W_T_B_p + W_T_B_R * Eigen::Vector3d(px, py, pz);
+        havePW = true;
+      }
+      return pW;
+    };
 
     if(groundEnabled_)
     {
-      const double groundClear = pW.z() - groundZ_
-          - (sample.radius + groundSafetyMargin_);
-      if(report.groundClearance < -1e8 || groundClear < report.groundClearance)
+      // Ground carries a second, independent running minimum, so it may only be
+      // skipped when the bound dominates both it and the shared minimum, and
+      // only once that separate minimum has left its sentinel value.
+      const bool skipGround = useHierarchy
+          && curGnd >= -1e8
+          && lbGround[node] >= curMin
+          && lbGround[node] >= curGnd;
+      if(!skipGround)
       {
-        report.groundClearance = groundClear;
+        const double groundClear = worldPoint().z() - groundZ_
+            - (proxyRadius + groundSafetyMargin_);
+        if(curGnd < -1e8 || groundClear < curGnd) { curGnd = groundClear; }
+        if(groundClear < curMin)
+        { curMin = groundClear; bestProxy = i; bestObstacle = ObstacleGroundPlane; }
+        if(groundClear < 0.0) { curSafe = false; }
       }
-      updateWorstClearance(report, groundClear, sample.name, "ground_plane");
     }
 
-    const double sensorClear = pointSegmentDistance(pW, sensorA, sensorB)
-        - (sensorRadius_ + sample.radius + gripperSafetyMargin_);
-    updateWorstClearance(report, sensorClear, sample.name, "sensor_core");
-
-    const double humanClear = pointSegmentDistance(pW, humanA, humanB)
-        - (handleRadius_ + sample.radius + gripperSafetyMargin_);
-    updateWorstClearance(report, humanClear, sample.name, "human_grey_handle");
-
-    if(!requireCorridor || sample.hardAgainstBlue)
+    if(!useHierarchy || lbSensor[node] < curMin)
     {
-      const double blueClear = pointSegmentDistance(pW, blueA, blueB)
+      const double sensorClear =
+          segmentDistancePrepared(worldPoint(), sensorA, sensorAB, sensorDen)
+          - (sensorRadius_ + proxyRadius + gripperSafetyMargin_);
+      if(sensorClear < curMin)
+      { curMin = sensorClear; bestProxy = i; bestObstacle = ObstacleSensorCore; }
+      if(sensorClear < 0.0) { curSafe = false; }
+    }
+
+    if(!useHierarchy || lbHuman[node] < curMin)
+    {
+      const double humanClear =
+          segmentDistancePrepared(worldPoint(), humanA, humanAB, humanDen)
+          - (handleRadius_ + proxyRadius + gripperSafetyMargin_);
+      if(humanClear < curMin)
+      { curMin = humanClear; bestProxy = i; bestObstacle = ObstacleHumanHandle; }
+      if(humanClear < 0.0) { curSafe = false; }
+    }
+
+    if(!requireCorridor || hardAgainstBlue)
+    {
+      if(!useHierarchy || lbBlue[node] < curMin)
+      {
+        const double blueClear =
+            segmentDistancePrepared(worldPoint(), blueA, blueAB, blueDen)
+            - (handleRadius_ + proxyRadius + gripperSafetyMargin_);
+        if(blueClear < curMin)
+        { curMin = blueClear; bestProxy = i; bestObstacle = ObstacleBlueHandle; }
+        if(blueClear < 0.0) { curSafe = false; }
+      }
+    }
+  }
+
+  // Publish. The names are written only when this query strictly improved the
+  // minimum, which is exactly when updateWorstClearance would have written them.
+  report.safe = curSafe;
+  report.groundClearance = curGnd;
+  if(bestObstacle >= 0)
+  {
+    report.minClearance = curMin;
+    report.sample = gripperSamplesB_[bestProxy].name;
+    report.obstacle = clearanceObstacleName(bestObstacle);
+  }
+
+  if(oracleCheck)
+  {
+    // Frozen brute force, verbatim, over the same inputs. Debug mode only.
+    for(const auto & sample : gripperSamplesB_)
+    {
+      const Eigen::Vector3d pW = pointToWorld(W_T_B, sample.p_B);
+
+      if(groundEnabled_)
+      {
+        const double groundClear = pW.z() - groundZ_
+            - (sample.radius + groundSafetyMargin_);
+        if(oracleReport.groundClearance < -1e8
+           || groundClear < oracleReport.groundClearance)
+        {
+          oracleReport.groundClearance = groundClear;
+        }
+        updateWorstClearance(oracleReport, groundClear, sample.name, "ground_plane");
+      }
+
+      const double sensorClear = pointSegmentDistance(pW, sensorA, sensorB)
+          - (sensorRadius_ + sample.radius + gripperSafetyMargin_);
+      updateWorstClearance(oracleReport, sensorClear, sample.name, "sensor_core");
+
+      const double humanClear = pointSegmentDistance(pW, humanA, humanB)
           - (handleRadius_ + sample.radius + gripperSafetyMargin_);
-      updateWorstClearance(report, blueClear, sample.name, "robot_blue_handle");
+      updateWorstClearance(oracleReport, humanClear, sample.name, "human_grey_handle");
+
+      if(!requireCorridor || sample.hardAgainstBlue)
+      {
+        const double blueClear = pointSegmentDistance(pW, blueA, blueB)
+            - (handleRadius_ + sample.radius + gripperSafetyMargin_);
+        updateWorstClearance(oracleReport, blueClear, sample.name, "robot_blue_handle");
+      }
+    }
+
+    auto & stats = collisionOracleStats();
+    ++stats.comparisons;
+    bool mismatch = false;
+    if(oracleReport.safe != report.safe) { ++stats.safeMismatch; mismatch = true; }
+    if(oracleReport.minClearance != report.minClearance)
+    { ++stats.minClearanceMismatch; mismatch = true; }
+    if(oracleReport.groundClearance != report.groundClearance)
+    { ++stats.groundClearanceMismatch; mismatch = true; }
+    if(oracleReport.sample != report.sample) { ++stats.sampleMismatch; mismatch = true; }
+    if(oracleReport.obstacle != report.obstacle)
+    { ++stats.obstacleMismatch; mismatch = true; }
+    if(mismatch)
+    {
+      mc_rtc::log::error(
+          "[CollisionOracleMismatch] hierarchy/oracle disagree: safe={}/{} minClearance={:.17g}/{:.17g} groundClearance={:.17g}/{:.17g} sample={}/{} obstacle={}/{}",
+          report.safe, oracleReport.safe,
+          report.minClearance, oracleReport.minClearance,
+          report.groundClearance, oracleReport.groundClearance,
+          report.sample, oracleReport.sample,
+          report.obstacle, oracleReport.obstacle);
     }
   }
 
@@ -3794,12 +4179,27 @@ bool HandoverInterceptionController::sweptGripperPoseSafe(
   report.safe = true;
   report.minClearance = std::numeric_limits<double>::infinity();
 
+  // Everything below is a property of the segment endpoints and of the live
+  // robot, not of the individual interpolated pose, so it is resolved once for
+  // the whole sweep instead of once per pose. The per-pose expressions that
+  // follow are unchanged, and the helpers are the same code the single-pose
+  // entry points now call, so every evaluated pose is identical to before.
+  Eigen::Quaterniond qA(worldRotation(W_T_M_from));
+  Eigen::Quaterniond qB(worldRotation(W_T_M_to));
+  qA.normalize();
+  qB.normalize();
+  if(qA.dot(qB) < 0.0) { qB.coeffs() *= -1.0; }
+  const Eigen::Vector3d pA = W_T_M_from.translation();
+  const Eigen::Vector3d pB = W_T_M_to.translation();
+  const sva::PTransformd B_T_M = liveMouthToBaseTransform();
+
   const int N = std::max(2, sweepSamples_);
   for(int k = 0; k <= N; ++k)
   {
     const double alpha = static_cast<double>(k) / static_cast<double>(N);
-    const sva::PTransformd W_T_M = interpolatePose(W_T_M_from, W_T_M_to, alpha);
-    gripperPoseSafe(W_T_M, report, requireCorridor);
+    const sva::PTransformd W_T_M = interpolatePoseWith(pA, pB, qA, qB, alpha);
+    gripperBasePoseSafe(
+        basePoseFromMouthPoseWith(W_T_M, B_T_M), W_T_M, report, requireCorridor);
   }
 
   return report.safe;
@@ -4673,7 +5073,13 @@ HandoverInterceptionController::previewReachStep(
   }
 
   const auto & mb = robot().mb();
-  rbd::Jacobian jac(mb, toolFrame_);
+  if(!previewKinematicCacheValid_
+     || previewGripperJoint_.size() != mb.joints().size()
+     || !previewToolJacobian_)
+  {
+    refreshPreviewKinematicCache();
+  }
+  rbd::Jacobian & jac = *previewToolJacobian_;
   const sva::PTransformd W_T_B_goal = previewBasePoseFromMouthPose(
       W_T_M_goal, mbc);
   const sva::PTransformd W_T_B = previewBasePose(mbc);
@@ -4766,8 +5172,7 @@ HandoverInterceptionController::previewReachStep(
   for(size_t j = 0; j < mb.joints().size() && j < mbc.q.size()
       && j < ql.size() && j < qu.size(); ++j)
   {
-    const std::string jointName = mb.joint(static_cast<int>(j)).name();
-    if(jointName.rfind("gen3_robotiq_85_", 0) == 0) { continue; }
+    if(previewGripperJoint_[j] != 0u) { continue; }
     const int dofPos = mb.jointPosInDof(static_cast<int>(j));
     const size_t m = std::min(mbc.q[j].size(),
                              std::min(ql[j].size(), qu[j].size()));
@@ -4844,8 +5249,8 @@ HandoverInterceptionController::previewReachStep(
       mb.nrDof(), mb.nrDof()) - Jpinv * J;
   qdot += nullspace * (qPosture + qLimitAvoidance);
 
-  const Eigen::VectorXd vl = rbd::dofToVector(mb, robot().vl());
-  const Eigen::VectorXd vu = rbd::dofToVector(mb, robot().vu());
+  const Eigen::VectorXd & vl = previewJointVelocityLower_;
+  const Eigen::VectorXd & vu = previewJointVelocityUpper_;
   if(vl.size() == qdot.size() && vu.size() == qdot.size())
   {
     for(Eigen::Index i = 0; i < qdot.size(); ++i)
@@ -4861,8 +5266,7 @@ HandoverInterceptionController::previewReachStep(
   for(size_t j = 0; j < mb.joints().size() && j < mbc.q.size()
       && j < ql.size() && j < qu.size(); ++j)
   {
-    const std::string jointName = mb.joint(static_cast<int>(j)).name();
-    if(jointName.rfind("gen3_robotiq_85_", 0) == 0) { continue; }
+    if(previewGripperJoint_[j] != 0u) { continue; }
     const int dofPos = mb.jointPosInDof(static_cast<int>(j));
     const size_t m = std::min(mbc.q[j].size(),
                              std::min(ql[j].size(), qu[j].size()));
@@ -6992,6 +7396,18 @@ bool HandoverInterceptionController::selectGlobalTimePlanForCommit(
   // argmin can be reconstructed independently from the log.
   std::vector<call_handover::FiniteEventPlanTimingDiagnostic>
       timingDiagnostics;
+  if(collisionOracleCheckEnabled())
+  {
+    const auto & stats = collisionOracleStats();
+    const bool clean = stats.safeMismatch == 0 && stats.minClearanceMismatch == 0
+        && stats.groundClearanceMismatch == 0 && stats.sampleMismatch == 0
+        && stats.obstacleMismatch == 0;
+    mc_rtc::log::warning(
+        "[CollisionOracleSummary] result={} comparisons={} safeMismatch={} minClearanceMismatch={} groundClearanceMismatch={} sampleMismatch={} obstacleMismatch={}",
+        clean ? "PASS" : "FAIL", stats.comparisons, stats.safeMismatch,
+        stats.minClearanceMismatch, stats.groundClearanceMismatch,
+        stats.sampleMismatch, stats.obstacleMismatch);
+  }
   const auto selection = call_handover::selectFiniteEventPlan(
       records, now, minimumReachEntryLead, minimumSafeCommitLead,
       decisionCostTieTolerance_, &timingDiagnostics);
