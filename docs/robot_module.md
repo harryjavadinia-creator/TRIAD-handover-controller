@@ -164,21 +164,18 @@ SHA-256, not just `Path.is_file()`). Only once all of that succeeds does it
 build the complete module in a temporary sibling directory and swap it into
 `--output` — so a failed invocation, even with `--force`, leaves an
 existing `--output` untouched. `--output` is also refused if it would
-equal, contain, or lie inside the CALL repository (other than the one
-dedicated `gen3_2f85_module` generated-output location), the *entire*
-upstream `kortex_description` package source tree, or either package share
-directory, so `--force` can never delete something it shouldn't. The
-script downloads nothing — `kortex_description` and `robotiq_description`
-must already be obtained/installed locally (see `README.md`'s quick-start
-sequence). See `scripts/setup_gen3_2f85_module.py` for the exact, auditable
-logic, and `tools/test_setup_gen3_2f85_module.py` for its regression tests.
+equal, contain, or lie inside this repository (other than the one dedicated
+`gen3_2f85_module` generated-output location), the *entire* upstream
+`kortex_description` package source tree, or either package share directory,
+so `--force` can never delete something it shouldn't. The script downloads
+nothing — `kortex_description` and `robotiq_description` must already be
+obtained/installed locally. See `scripts/setup_gen3_2f85_module.py` for the
+exact, auditable logic, and `tools/test_setup_gen3_2f85_module.py` for its
+regression tests.
 
-## Licensing
+## Upstream licensing
 
 `kortex_description` (`0.2.6`) and `robotiq_description` (`0.0.1`) each
-declare the **BSD 3-Clause** license. They are external dependencies,
-obtained and referenced locally by the researcher — this repository's setup
-script does not redistribute their source, meshes, or any derived URDF file.
-Upstream licensing does not by itself determine this repository's own
-license, which remains a separate, unresolved decision — see the "License"
-section of `README.md`.
+declare the **BSD 3-Clause** license. They are external dependencies obtained
+and referenced locally by the researcher; the setup script does not
+redistribute their source, meshes, or a generated robot module.
