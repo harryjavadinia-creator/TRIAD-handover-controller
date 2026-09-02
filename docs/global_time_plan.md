@@ -1,134 +1,117 @@
-# Global time-grasp-route selector
+# Global event-time–grasp–route selector
 
-## What this solves
+## What it solves
 
-For a moving presentation, the controller freezes one bounded set of event
-times **and their predicted object poses** from one motion-estimate snapshot
-at a common search epoch `t0`. For every event it evaluates the same complete
-grasp and route bank on copied robot state. It commits exactly once, after
-the complete finite set has been evaluated, by solving
+For a moving presentation, TRIAD freezes one bounded event schedule and the corresponding predicted object poses from one motion-estimate snapshot at a common search epoch `t0`. Every event is evaluated with the same grasp and route banks on copied robot state.
+
+After the entire configured event schedule has been inspected, the controller reapplies the final timing gate using the current selector time and commits one plan:
 
 \[
-(\tau^*,P^*)=\arg\min_{\tau_k,\;P\in\mathcal F(\tau_k)}
-J_{\mathrm{global}}(\tau_k,P).
+(\tau^*,g^*,r^*)=
+\arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
+J_{\mathrm{global}}(\xi;s_0).
 \]
 
-`F(tau)` contains only complete plans that pass the hard reachability,
-collision, corridor, acquisition, retreat and final timing-admission checks.
-The objective is
+The set notation is defined precisely in [`mathematics.md`](mathematics.md). In particular, final timing admission is selection-time dependent and is separate from the copied-state physical feasibility set.
+
+## Global objective
+
+For one complete plan,
 
 \[
 J_{\mathrm{global}}
 =J_{\mathrm{motion}}
-+w_T\frac{(\tau_k-t_0)-T_{\mathrm{reach}}}{T_{\mathrm{ref}}}.
++w_T\frac{(\tau-t_0)-T_{\mathrm{reach}}}{T_{\mathrm{ref}}}.
 \]
 
-Because `J_motion` already contains `w_T * T_execution / T_ref`, its
-resulting time contribution is
+Because `J_motion` already contains its normalized execution-time term, the combined time contribution represents predicted time from the common search epoch to completion.
 
-\[
-w_T\frac{(\tau_k-t_0)-T_{\mathrm{reach}}+T_{\mathrm{execution}}}
-{T_{\mathrm{ref}}},
-\]
-
-which is predicted time from the common search epoch to completion.
-
-This is exhaustive **discrete finite-set minimization** over a bounded
-approximation of the decision space. It is not a claim of continuous-time
-optimality, gradient-based optimization, or MPC over the event time.
-
-`J_motion` is the frozen seven-term binding preference objective
-(T, E, L, C, Q, K, V) with weights
+The binding seven-term motion objective is `(T,E,L,C,Q,K,V)`:
 
 | Term | Weight |
-| --- | --- |
-| T (time efficiency) | 0.4210526 |
-| E (joint-speed effort) | 0.1052632 |
-| L (route length) | 0.1052632 |
-| C (clearance reserve) | 0.1578947 |
-| Q (joint-limit reserve) | 0.0842105 |
-| K (conditioning reserve) | 0.0736842 |
-| V (velocity reserve) | 0.0526316 |
+| --- | ---: |
+| T | 0.4210526 |
+| E | 0.1052632 |
+| L | 0.1052632 |
+| C | 0.1578947 |
+| Q | 0.0842105 |
+| K | 0.0736842 |
+| V | 0.0526316 |
 
-An eighth term, R (orientation), is computed and logged as a diagnostic only;
-its weight is fixed at 0.0 and it never enters the binding sum. These weights
-are controller-specific engineering values from a finite-set weight-space
-sensitivity analysis; they are not claimed to be literature-derived or
-optimal.
+`R` (orientation) is computed and logged but has binding weight `0.0`.
 
-## Configuration
+These weights are controller-specific engineering preferences supported by a finite-set weight-space sensitivity analysis. They are not claimed to be literature-derived or globally optimal weights.
 
-The default configuration is:
+## Selector policy
+
+The reported configuration is:
 
 ```yaml
 decisionCost:
   selectionMode: binding_cost
   eventSelectionMode: global_time_plan
   allowPhysicalExecution: false
-
-gripper:
-  physicalBridge:
-    enabled: false
-    commandEnabled: false
-    requireFeedback: false
 ```
 
-Available event policies are:
+The event policies retained by the controller are:
 
-- `global_time_plan`: evaluate the complete fixed event set, reapply final
-  timing admission, then minimize over time, grasp and route. This is the
-  policy used to produce the reported results.
-- `first_admissible_center_out`: select the first timing-admissible
-  candidate in center-out order instead of the global argmin, while
-  preserving binding route selection within that single event.
+- `global_time_plan`: evaluate the fixed bounded event set, reapply final timing admission, then select the finite minimum over event time, grasp and route. This is the reported Dataset-B policy.
+- `first_admissible_center_out`: retain the first timing-admissible event in center-out order, with binding route selection within that event. It is an alternative policy and is not the Dataset-B global result.
 
-Global mode is compatible only with `selectionMode: binding_cost`; every
-invalid combination fails closed without falling back to the heuristic.
+Invalid policy combinations fail closed rather than silently falling back.
 
-`planningStepsPerCycle` batches copied-state preview calculations so the
-exhaustive scan does not exceed the candidate events within one control
-cycle in simulation. It does not change preview integration, candidate
-generation, constraints, costs or robot motion.
+## `planningStepsPerCycle`
 
-## Runtime verification requirements
+Copied-state preview work is processed in batches controlled by `planningStepsPerCycle`. In the reported configuration this is `96`.
 
-A valid run must contain:
+In no-sync simulation, the number of planning batches also determines how many controller cycles elapse before the final selector runs. That logical controller time is therefore distinct from the external wall-clock time consumed by the CPU. The distinction is documented in [`simulation.md`](simulation.md) and [`timing_frontiers.md`](timing_frontiers.md).
 
-- `[GlobalTimePlanSearchConfiguration]` with a fixed epoch and finite set;
-- one `[GlobalPlanCost]` for every complete time-grasp-route alternative;
-- one `[GlobalTimePlanSelection]` with a complete schedule and exact minimum;
-- one `[GlobalTimePlanCommitProof] committed=true` for the same alternative;
-- `[Completed]` after grasp, transfer and retreat.
+## Runtime evidence
 
-Validate the log with:
+A valid global run contains:
+
+- `[GlobalTimePlanSearchConfiguration]` describing the frozen event schedule;
+- `[GlobalPlanCost]` records for complete alternatives;
+- `[GlobalPlanTimingAdmissibility]` records capturing the exact final timing gate used by the selector;
+- one `[GlobalTimePlanSelection]`;
+- one matching `[GlobalTimePlanCommitProof] committed=true`;
+- `[Completed]` after capture, transfer and retreat.
+
+Validate a run with:
 
 ```bash
 python3 tools/check_global_time_plan_log.py /path/to/run.log
 ```
 
-The checker rejects incomplete schedules, invalid cost rows, expired sets,
-selection/commit mismatches, non-minimum commitment, incomplete handovers,
-and reconstructs the reported cost from the frozen seven-term weight vector
-independently of the controller's own weights.
+The checker verifies schedule completeness, proper exclusion of invalid cost records, pooled-candidate reconciliation, selection/commit agreement, the frozen objective reconstruction, and—when timing records are present—the exact finite minimum over the cost-valid and final-timing-admissible set.
+
+## Replay timing admission
+
+A completed run can also be replayed counterfactually for an external planner duration:
+
+```bash
+python3 tools/replay_timing_frontier.py /path/to/run.log \
+  --planner-time 3.808 \
+  --planner-time 3.976
+```
+
+The replay derives each plan's analytical timing breakpoint from the exact logged quantities and validates the logged admissibility flags before reporting the scenario fail-closed boundary and admissible-plan counts.
 
 ## Dependency-free checks
 
 ```bash
-python3 tools/verify_scientific_baseline.py SCIENTIFIC_BASELINE.sha256 \
-  --commit scientific-baseline
 bash tools/run_binding_cost_checks.sh
+python3 tools/test_replay_timing_frontier.py
 ```
 
-These cover the within-event selector, the cross-event selector, final
-timing readmission, invalid-cost fail-closed behavior, deterministic ties,
-source integration and synthetic runtime-proof acceptance/rejection.
+These cover both selectors, timing admission, deterministic tie handling, source integration, runtime-proof fixtures and timing-frontier replay logic.
 
-## Reproducing a scenario
+## Reproduce a scenario
 
 ```bash
 scripts/run_scenario.sh diagonal
-python3 tools/check_global_time_plan_log.py results/<timestamp>_diagonal/diagonal.log
+python3 tools/check_global_time_plan_log.py \
+  results/<timestamp>_diagonal/diagonal.log
 ```
 
-See [`simulation.md`](simulation.md) for the full scenario table and expected
-output ranges.
+See [`simulation.md`](simulation.md) for scenario definitions and expected scientific outputs.

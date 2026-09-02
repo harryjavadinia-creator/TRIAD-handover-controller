@@ -1,16 +1,10 @@
 # Scenario-specific timing admissibility
 
-This note documents the corrected interpretation of TRIAD's timing-admission analysis.
+TRIAD's final cross-event selector reapplies timing admission after the full bounded schedule has been inspected. The resulting hardware-facing timing boundary depends on the complete-plan records of the scenario; there is no single universal planner deadline for all four scenarios.
 
-## Why this exists
+## Exact selector rule
 
-An earlier hardware-timing audit reported a value near **3.976 s** and that value was subsequently used too broadly as though it were a universal planner deadline. It is not.
-
-The value belongs to the **PURE_X / longitudinal** scenario only. Each scenario has its own timing-admissibility frontier because event leads and predicted presentation durations differ across complete plans.
-
-## Controller rule
-
-For each complete plan record, the selector evaluates
+For each cost-valid complete plan:
 
 ```text
 remaining = eventPresentationTime - now
@@ -24,14 +18,14 @@ timingAdmissible =
            <= remaining + 1e-12
 ```
 
-For a counterfactual physical-planning duration `T_p`, use
+For a counterfactual physical planner duration `T_p`, the common search epoch gives
 
 ```text
 now(T_p) = planStart + T_p
 remaining(T_p) = eventLead - T_p
 ```
 
-which gives the plan-specific timing breakpoint
+and the plan-specific admissible boundary is
 
 ```text
 T_p,max(p) = eventLead_p + 1e-12
@@ -39,72 +33,103 @@ T_p,max(p) = eventLead_p + 1e-12
                    predictedPresentationDuration_p + minimumReachEntryLead)
 ```
 
-The replay must respect the selector's non-strict comparisons and the `1e-12` epsilon.
+Because the implementation comparisons are non-strict, a plan can remain admissible at its exact analytical boundary; durations greater than the largest record boundary leave the scenario with no timing-admissible plan.
 
-## Validated PURE_X derivation
+## Repository replay
 
-The historical PURE_X replay is reproduced exactly from 198 complete-plan records:
+After reproducing a Dataset-B run:
 
-- logged planning value: `T_p = 1.386 s`
-- timing-admissible plans at that point: 158
-- `T_p = 3.808 s`: one timing-admissible plan remains
-- exact fail-closed boundary: `3.975000 s`
-- the historical `3.976 s` value was the next 1 ms grid point at which zero plans remained
+```bash
+python3 tools/replay_timing_frontier.py <log>
+```
 
-The `3.976 s` value is therefore specific to PURE_X and is not a universal hardware planner deadline.
+The tool:
 
-## Scenario-specific frontiers
+1. joins `[GlobalPlanCost]` and `[GlobalPlanTimingAdmissibility]` records;
+2. verifies one common search epoch and one final selector time;
+3. independently replays every logged timing-admissibility flag;
+4. derives each plan's analytical boundary;
+5. reports the scenario fail-closed boundary;
+6. optionally evaluates requested counterfactual `T_p` values.
 
-The same exact replay was applied independently to the four moving-object Dataset-B scenarios.
+Example:
 
-| Scenario | Record count | Winner-preservation band (s) | Fail-closed frontier (s) |
-| --- | ---: | ---: | ---: |
-| CANONICAL_YZ / lateral-low | 432 | `[0.000000, 1.975000)` | **5.139608** |
-| GROUND_NEAR / near-ground | 283 | `[1.018546, 1.467141)` | **3.900000** |
-| PURE_X / longitudinal | 198 | `[1.293474, 1.675000)` | **3.975000** |
-| DIAGONAL_XZ / diagonal | 233 | `[0.000000, 1.632358)` | **5.735285** |
+```bash
+python3 tools/replay_timing_frontier.py longitudinal.log \
+  --planner-time 3.808 \
+  --planner-time 3.976
+```
 
-Two different concepts must be kept separate:
+The dependency-free replay logic is regression-tested by `tools/test_replay_timing_frontier.py`.
 
-1. **Winner-preservation band** — the range of physical planner durations for which the same plan selected in the frozen simulation remains selected.
-2. **Fail-closed frontier** — the planner duration beyond which no timing-admissible complete plan remains.
+## Historical PURE_X correction
 
-A scenario can change selected plan long before it becomes timing-infeasible.
+The historical PURE_X analysis used 198 complete-plan records. The exact rule reproduced:
 
-## Measured serial wall time versus fail-closed frontier
+- logged logical planner duration: 1.386 s;
+- 158 timing-admissible plans at that logged duration;
+- 1 admissible plan at `T_p = 3.808 s`;
+- analytical boundary: 3.975000 s (to displayed precision);
+- 0 admissible plans at `T_p = 3.976 s`.
 
-A later exact serial-optimization study measured the following state-scoped planner wall durations. These measurements refer to the exact-optimization development lineage and are reported here as timing-analysis evidence; they do not redefine the Dataset-B scientific baseline.
+Thus `3.976 s` is a PURE_X-specific 1-ms grid point immediately above the boundary, not a universal hardware requirement.
 
-| Scenario | Baseline wall (s) | Final wall (s) | Fail-closed frontier (s) | Final margin (s) |
+## Scenario-specific fail-closed boundaries
+
+| Scenario | Complete records | Boundary (s) |
+| --- | ---: | ---: |
+| GROUND_NEAR | 283 | **3.900000** |
+| PURE_X | 198 | **3.975000** |
+| CANONICAL_YZ | 432 | **5.139608** |
+| DIAGONAL_XZ | 233 | **5.735285** |
+
+These values are the scenario-specific supremum of planner duration for which at least one timing-admissible plan remains under the exact selector rule.
+
+## Winner preservation is a different property
+
+The frozen simulated winner is preserved only over a narrower planner-time region:
+
+| Scenario | Reported winner-preservation band (s) |
+| --- | ---: |
+| CANONICAL_YZ | `[0.000000, 1.975000)` |
+| GROUND_NEAR | `[1.018546, 1.467141)` |
+| PURE_X | `[1.293474, 1.675000)` |
+| DIAGONAL_XZ | `[0.000000, 1.632358)` |
+
+The key distinction is structural:
+
+- **fail-closed boundary**: whether any timing-admissible complete plan remains;
+- **winner preservation**: whether the same plan selected in the frozen no-sync simulation remains the minimum after timing admission changes.
+
+A scenario can change winner well before its admissible set becomes empty. For GROUND_NEAR and PURE_X, the preserved-winner region does not begin at zero; a sufficiently faster counterfactual planner can make additional, lower-cost plans admissible.
+
+At an exact breakpoint, the selector's non-strict inequalities and deterministic tie semantics govern the endpoint. The tabulated bands report the transition intervals from the preserved analysis; record-level equality questions should be checked with the replay and selector logs rather than rounded values alone.
+
+## Measured serial wall time
+
+The correctly scoped exact-serial performance campaign measured:
+
+| Scenario | Baseline wall (s) | Final wall (s) | Boundary (s) | Final margin (s) |
 | --- | ---: | ---: | ---: | ---: |
 | CANONICAL_YZ | 4.3488 | 3.9724 | 5.139608 | +1.1672 |
 | GROUND_NEAR | 3.3151 | 3.0717 | 3.900000 | +0.8283 |
 | PURE_X | 3.3930 | 3.1615 | 3.975000 | +0.8135 |
 | DIAGONAL_XZ | 2.7966 | 2.6199 | 5.735285 | +3.1154 |
 
-All four measured final times remain inside their own fail-closed frontiers.
+All four final wall-time medians lie inside their own fail-closed boundary. The measured wall durations nevertheless lie outside all four frozen winner-preservation bands.
 
-The most timing-critical pair is GROUND_NEAR / PURE_X: GROUND_NEAR has the lowest absolute fail-closed frontier, while PURE_X has the smallest relative final margin.
+CANONICAL_YZ at approximately 4.35–4.40 s was therefore not timing-infeasible under its own scenario boundary.
 
-CANONICAL_YZ was **not** failing timing admission at approximately 4.35--4.40 s; its own fail-closed frontier is about 5.14 s.
+## Hardware-transfer interpretation
 
-## Important hardware-transfer interpretation
+No-sync simulation advances logical controller time by control cycles. A physical object continues to move while real CPU computation consumes wall time.
 
-The no-sync simulation advances controller logical time according to control cycles. Physical hardware does not freeze while the planner consumes wall time.
+The counterfactual replay therefore asks:
 
-Therefore the counterfactual replay asks a hardware-facing question:
+> Given the exact complete-plan records, which alternatives would still pass the controller's timing gate if real planner wall time elapsed before the final selection?
 
-> If the physical world continues to advance while complete-plan evaluation consumes real wall-clock time, which complete plans remain timing-admissible and which plan would be selected?
+This is a hardware-facing analysis of the selector rule. It is not itself a physical-robot experiment.
 
-The exact serial implementation can remain below every scenario's fail-closed frontier while still lying outside the frozen simulated winner-preservation band. Thus **timing feasibility** and **winner preservation** are different hardware-transfer properties.
+## Recommended interpretation
 
-## Interpretation
-
-Three statements are not supported by this analysis: that `3.976 s` is the
-hardware planner deadline, that CANONICAL_YZ at about 4.4 s fails that frontier,
-and that the four scenarios share a single frontier. Each is contradicted by the
-per-scenario table above.
-
-Preferred wording:
-
-> Timing admissibility is scenario-specific. Each interception scenario has its own fail-closed frontier, derived from its own complete-plan records under the controller's exact admission rule. The previously cited 3.976 s value is the PURE_X frontier, not a universal planner deadline. Serial acceleration increases timing margin in all four moving-object scenarios, while preserving the frozen simulated winner is a stricter and separate timing requirement.
+Timing admissibility is scenario-specific. The historical `3.976 s` value is specific to PURE_X, while each scenario has its own fail-closed boundary. Serial acceleration increases timing margin in all four scenarios. Preservation of the frozen simulated winner is stricter and must be reported separately from timing feasibility.

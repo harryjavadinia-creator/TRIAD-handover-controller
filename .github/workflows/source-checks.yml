@@ -21,6 +21,9 @@ jobs:
       - name: Finite selector and runtime-checker tests
         run: bash tools/run_binding_cost_checks.sh
 
+      - name: Timing-frontier replay tests
+        run: python3 tools/test_replay_timing_frontier.py
+
       - name: Robot-module reconstruction unit tests
         run: python3 tools/test_setup_gen3_2f85_module.py
 
@@ -33,8 +36,38 @@ jobs:
       - name: Scenario override tests
         run: python3 tools/test_scenario_override_yaml.py
 
+      - name: Documentation local-link check
+        run: python3 tools/check_markdown_links.py
+
+      - name: Python syntax check
+        run: |
+          python3 -m py_compile \
+            tools/check_binding_cost_log.py \
+            tools/check_binding_cost_source.py \
+            tools/check_global_time_plan_log.py \
+            tools/check_latency_log.py \
+            tools/check_markdown_links.py \
+            tools/derive_cmake_install_paths.py \
+            tools/replay_timing_frontier.py \
+            tools/verify_latency_matrix_cell.py \
+            tools/verify_scenario_identity.py \
+            tools/verify_scientific_baseline.py \
+            scripts/setup_gen3_2f85_module.py
+
+      - name: Shell syntax check
+        run: |
+          bash -n scripts/run_scenario.sh
+          bash -n scripts/reproduce_latency_matrix.sh
+          bash -n tools/check_collision_hierarchy_oracle.sh
+          bash -n tools/clean_stale_fsm_install.sh
+          bash -n tools/run_binding_cost_checks.sh
+          bash -n tools/run_binding_cost_unit_tests.sh
+
       - name: Verify frozen scientific baseline
         run: |
           python3 tools/verify_scientific_baseline.py \
             SCIENTIFIC_BASELINE.sha256 \
             --commit scientific-baseline
+
+      - name: Verify exact-serial source synchronization
+        run: sha256sum -c docs/source_sync_82e6eaa.sha256

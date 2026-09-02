@@ -1,26 +1,39 @@
 # Reproducibility guide
 
-This repository is organized so that the scientific method, the experiment provenance, and the runtime verification tools can be inspected separately.
+TRIAD separates four reproducibility targets:
 
-## Reproducibility levels
+1. source-level selector and checker behavior;
+2. build/install reproducibility;
+3. robot-model reconstruction;
+4. experiment reproduction.
 
-### Level 1 — source-only checks
+The frozen scientific tags preserve historical evidence, while the current publication source contains the audited exact-serial implementation.
 
-These checks do not require mc_rtc or the robot module:
+## Level 1: dependency-free checks
+
+These checks require only a C++ compiler, Python 3 and Git:
 
 ```bash
 bash tools/run_binding_cost_checks.sh
+python3 tools/test_replay_timing_frontier.py
 python3 tools/test_setup_gen3_2f85_module.py
 python3 tools/test_verify_latency_matrix_cell.py
 python3 tools/test_verify_scenario_identity.py
 python3 tools/test_scenario_override_yaml.py
-python3 tools/verify_scientific_baseline.py SCIENTIFIC_BASELINE.sha256 \
+python3 tools/check_markdown_links.py
+
+python3 tools/verify_scientific_baseline.py \
+  SCIENTIFIC_BASELINE.sha256 \
   --commit scientific-baseline
+
+sha256sum -c docs/source_sync_82e6eaa.sha256
 ```
 
-They cover selector unit tests, source-level cost checks, runtime-checker fixtures, scenario-identity fixtures, robot-module reconstruction checks and frozen-baseline integrity.
+They cover the within-event and cross-event selectors, binding-cost source integration and runtime-checker fixtures, timing-frontier replay logic, robot-module reconstruction safety/validation, latency-cell and scenario-identity verification, scenario-override generation, local documentation links, frozen scientific-baseline integrity and byte identity of the source synchronized from `82e6eaa`.
 
-### Level 2 — clean build and install
+The GitHub Actions workflow runs this dependency-free layer automatically.
+
+## Level 2: clean build and install
 
 With a working mc_rtc installation:
 
@@ -35,11 +48,11 @@ cmake --build build -j"$(nproc)"
 cmake --install build
 ```
 
-The controller installs into the runtime directories associated with the mc_rtc installation used at configure time. See [`troubleshooting.md`](troubleshooting.md).
+The controller installs into the runtime locations associated with the mc_rtc installation used at configure time. See [`troubleshooting.md`](troubleshooting.md).
 
-### Level 3 — robot-model reconstruction
+## Level 3: reconstruct the robot module
 
-Reconstruct the verified Kinova Gen3 + Robotiq 2F-85 module from pinned upstream description packages:
+The Kinova Gen3 + Robotiq 2F-85 mc_rtc module is reconstructed from pinned upstream artifacts rather than redistributed:
 
 ```bash
 python3 scripts/setup_gen3_2f85_module.py \
@@ -51,17 +64,24 @@ python3 scripts/setup_gen3_2f85_module.py \
 export MAIN_ROBOT_MODULE_PATH=/path/to/gen3_2f85_module
 ```
 
-The reconstruction script verifies the pinned upstream URDF and referenced mesh contents before producing the mc_rtc module. See [`robot_module.md`](robot_module.md).
+The setup tool validates the pinned URDF, expected structural transformations and all referenced mesh contents before producing the module. See [`robot_module.md`](robot_module.md).
 
-### Level 4 — Dataset-B scenario reproduction
+## Level 4: reproduce Dataset B
 
-Run one of the four moving-object scenarios:
+| Command | Dataset-B label |
+| --- | --- |
+| `near-ground` | `GROUND_NEAR` |
+| `longitudinal` | `PURE_X` |
+| `lateral-low` | `CANONICAL_YZ` |
+| `diagonal` | `DIAGONAL_XZ` |
+
+Run one:
 
 ```bash
 scripts/run_scenario.sh longitudinal
 ```
 
-A valid reproduction ends with:
+A successful reproduction ends with:
 
 ```text
 HANDOVER_COMPLETED=true
@@ -69,22 +89,13 @@ RUNTIME_CHECKER_RESULT=PASS
 SCENARIO_IDENTITY_RESULT=PASS
 ```
 
-The wrapper preserves the runtime log, exact temporary scenario override and checker outputs in the result directory.
+The wrapper preserves the run log, exact temporary scenario override and checker outputs in `results/`.
 
-Available names are:
+The most recent publication synchronization was revalidated on all four scenarios; see [`release_validation.md`](release_validation.md).
 
-```text
-near-ground
-longitudinal
-lateral-low
-diagonal
-```
+## Level 5: reproduce Dataset A
 
-See [`simulation.md`](simulation.md) for the exact scenario table and expected deterministic outputs.
-
-### Level 5 — Dataset-A latency reproduction
-
-The historical latency study is a separate experiment and uses the preserved `dataset-a-baseline` source state.
+Dataset A is the earlier perception-latency study and is intentionally separate from Dataset B. Its historical source state is preserved as `dataset-a-baseline`.
 
 Example:
 
@@ -95,78 +106,80 @@ scripts/reproduce_latency_matrix.sh \
   --mc-rtc-prefix /path/to/your/mc_rtc/install
 ```
 
-To generate all 15 scenario/condition configurations without building or running:
+Generate all 15 scenario/condition configurations without building or running:
 
 ```bash
 scripts/reproduce_latency_matrix.sh --all --dry-run
 ```
 
-See [`experiments.md`](experiments.md) for provenance and expected outcome classes.
+See [`experiments.md`](experiments.md) for source attribution and expected outcome classes.
 
-## What is deterministic
+## Reproduce timing-admission analysis
 
-Given the same scientific source and configuration, the following are treated as deterministic scientific outputs:
+Any Dataset-B run containing the final timing-diagnostic records can be analysed directly:
 
-- event-hypothesis set;
+```bash
+python3 tools/replay_timing_frontier.py \
+  results/<run>/longitudinal.log \
+  --planner-time 3.808 \
+  --planner-time 3.976
+```
+
+The tool first verifies the logged timing flags against the selector inequalities, then derives the analytical fail-closed boundary and reports the admissible set at requested counterfactual planner durations.
+
+See [`timing_frontiers.md`](timing_frontiers.md).
+
+## Deterministic scientific outputs
+
+Given the same scientific source/configuration, the reproducibility contract covers:
+
+- generated event schedule;
 - complete-plan identities;
 - selected event lead;
-- selected grasp;
-- selected route;
-- finite objective values;
-- minimum-cost timing-admissible selection;
-- winner fingerprint.
+- selected grasp and route;
+- objective values;
+- timing-admissible set at the logged selector time;
+- committed winner fingerprint.
 
-The runtime checker independently reconstructs the binding objective from logged terms and verifies that the committed plan is the exact minimum over the logged cost-valid and timing-admissible finite set.
+The runtime checker independently reconstructs the binding objective and, where timing-diagnostic records are available, verifies the finite argmin over the final admissible set.
 
-## What is not promised to be bit-identical across machines
+## Machine-dependent outputs
 
 The following are not cross-machine exact outputs:
 
-- wall-clock planning duration;
-- operating-system scheduling behavior;
-- control-cycle wall-time distribution;
+- external wall-clock planning duration;
+- operating-system scheduling;
+- wall-time distribution of control cycles;
 - GUI timing;
 - physical sensor behavior;
 - hardware interaction timing.
 
-Timing results must therefore be accompanied by the timing metric, measurement window and machine/runtime context.
+Performance claims therefore state the timing metric, measurement window and runtime context separately from deterministic scientific outputs.
 
-## Timing-analysis reproducibility
+## Evidence rules
 
-The scenario-specific timing-frontier analysis is defined analytically from complete-plan records and the exact selector rule. See [`timing_frontiers.md`](timing_frontiers.md).
+A reported result should identify:
 
-The important distinction is:
-
-- **scientific/logical simulation time** used by the controller during the no-sync run;
-- **external planner wall time** that would elapse while the physical world continues to move.
-
-The hardware-facing counterfactual replay substitutes real planner duration into the exact timing-admission inequality; it does not change the controller's policy.
-
-## Evidence and provenance rules
-
-When reporting a result, identify:
-
-1. source commit or named baseline;
+1. source commit/tag or named baseline;
 2. scenario and condition;
-3. whether the evidence is Dataset A or Dataset B;
-4. timing metric, if any;
-5. whether the result is simulation or physical hardware;
-6. checker outcome;
+3. Dataset A or Dataset B;
+4. timing metric, when timing is discussed;
+5. simulation versus physical hardware;
+6. checker result;
 7. any attribution limitation documented in [`experiments.md`](experiments.md).
 
-Dataset-A latency results and Dataset-B global finite-plan results are separate experiments and are reported independently.
+## Release checklist
 
-## Publication checklist
+Before tagging a paper-associated release:
 
-Before tagging a paper-associated release, verify:
-
-- clean working tree;
-- source-only regression suite passes;
-- scientific-baseline manifest verifies;
+- working tree clean;
+- dependency-free suite passes;
+- local Markdown links pass;
+- frozen scientific-baseline manifest verifies;
+- exact-serial source-sync manifest verifies;
 - fresh configure/build/install succeeds;
-- robot-module reconstruction test passes;
-- all four Dataset-B wrappers complete with both runtime and identity checkers passing;
-- any promoted performance implementation has its own exact-equivalence evidence;
-- README, mathematics, simulation, experiments and timing documents agree on terminology;
-- no claim describes `3.976 s` as a universal planner deadline;
-- no claim describes simulation support as end-to-end physical-robot validation.
+- robot-module reconstruction tests pass;
+- all four Dataset-B scenario wrappers pass both runtime and identity checks if controller/config/runtime behavior changed;
+- timing-frontier replay tests pass;
+- README, mathematics, architecture, simulation, experiments and timing documents use consistent terminology;
+- hardware-facing statements remain clearly separated from physical-robot validation.

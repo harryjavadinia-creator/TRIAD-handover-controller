@@ -1,111 +1,187 @@
 # Mathematical formulation
 
-[global_time_plan.md](global_time_plan.md) / [binding_cost.md](binding_cost.md) additionally include
-exact internal configuration field names, to help reproduction; this
-document states the model itself.
+This page states the decision problem. [`global_time_plan.md`](global_time_plan.md)
+and [`binding_cost.md`](binding_cost.md) connect the notation to the exact
+controller fields and selector behavior.
 
 ## Decision object
 
 A complete plan is
 
-```
-xi = (tau, g, r)
-```
+\[
+\xi=(\tau,g,r),
+\]
 
-where `tau` is a future event time, `g` a grasp orientation, and `r` a
-transit route.
+where `tau` is a future presentation event, `g` is a receiver grasp
+orientation, and `r` is a transit route.
 
-## Finite approximation
+## Bounded finite approximation
 
-The continuous decision space is approximated by a bounded finite product
+The continuous decision space is approximated by the finite product
 
-```
-X_h = T_h x G_h x R_h
-```
+\[
+\mathcal X_h=\mathcal T_h\times\mathcal G_h\times\mathcal R_h.
+\]
 
-- `T_h`: 14 event-lead hypotheses from a bounded center-out schedule.
-- `G_h`: 32 grasp-orientation candidates — 16 angular samples around the
-  object handle x 2 handle-axis orientations. The two handle-axis
-  orientations are alternative gripper-frame conventions around the same
-  single receiver grasp point; they are not two physical ends of the
-  object, and not an attempt to grasp the giver-occupied side. They can
-  still produce materially different wrist/approach poses at the same
-  point, so they are not geometric duplication.
-- `R_h`: 17 routes (one direct route plus 16 ring routes).
+For the reported moving-object campaign:
+
+- `T_h`: 14 bounded event-lead hypotheses in a deterministic center-out
+  schedule;
+- `G_h`: 32 grasp candidates = 16 angular samples × 2 handle-axis
+  orientations;
+- `R_h`: 17 routes = 1 direct route + 16 ring routes.
 
 The upper combinatorial bound before feasibility pruning is
-`14 x 32 x 17 = 7616`; this is not the number of plans actually scored.
 
-## Hard feasibility
+\[
+14\times32\times17=7616.
+\]
 
-```
-F_h(s0) = { xi in X_h : all hard checks pass }
-```
+This is an upper bound on generated combinations, not the number of plans
+that survive complete evaluation.
 
-evaluated from one frozen decision state `s0` (robot and object state at the
-search epoch `t0`), so every hypothesis is compared from the same snapshot.
-Hard checks include IK/reachability, collision, joint position and velocity
-limits, acquisition/open-gripper geometry, terminal/capture settling, timing
-admissibility, and complete receiver-action and retreat feasibility. Invalid
-candidates are excluded from `F_h(s0)` before any cost is compared — the
-cost never substitutes for a hard-feasibility check.
+The two handle-axis orientations are alternative gripper-frame conventions
+around the same receiver grasp point. They are not two physical ends of the
+handover object.
 
-## Seven-term objective
+## Hard physical feasibility
 
-```
-J_motion = wT*T + wE*E + wL*L + wC*C + wQ*Q + wK*K + wV*V
-```
+Let `s0` denote the frozen robot/object decision state at the common search
+epoch. Define
+
+\[
+\mathcal F_h(s_0)
+=\{\xi\in\mathcal X_h:\text{all copied-state hard physical checks pass}\}.
+\]
+
+The hard checks include reachability/IK, collision and ground clearance,
+joint position/velocity limits, corridor and acquisition geometry, terminal
+capture conditions, and complete receiver-action/retreat feasibility.
+
+The objective never replaces these checks.
+
+## Cost-valid set
+
+A hard-feasible plan is ranked only if every required objective quantity is
+finite and valid:
+
+\[
+\mathcal F_J(s_0)
+=\{\xi\in\mathcal F_h(s_0):J_{\mathrm{global}}(\xi;s_0)
+\text{ is finite and valid}\}.
+\]
+
+Invalid/non-finite records are excluded from the global pooled set rather than
+being assigned a favorable fallback cost.
+
+## Seven-term motion objective
+
+\[
+J_{\mathrm{motion}}
+=w_TT+w_EE+w_LL+w_CC+w_QQ+w_KK+w_VV.
+\]
 
 | Term | Meaning | Weight |
-| --- | --- | --- |
-| T | time efficiency (`t_complete / 8`) | 0.4210526 |
-| E | cumulative squared joint-speed effort proxy — not physical energy | 0.1052632 |
-| L | geometric route efficiency (`path_length / 0.50`) — not a measure of human predictability | 0.1052632 |
-| C | clearance reserve (soft barrier) | 0.1578947 |
-| Q | joint-limit reserve (soft barrier) | 0.0842105 |
-| K | metric-scaled kinematic conditioning reserve — not exactly Yoshikawa's manipulability index | 0.0736842 |
-| V | joint-velocity-utilization reserve, `[clamp[0,1](u)]^4` — not terminal velocity | 0.0526316 |
+| --- | --- | ---: |
+| `T` | time efficiency (`t_complete / 8`) | 0.4210526 |
+| `E` | cumulative squared joint-speed effort proxy; not physical energy | 0.1052632 |
+| `L` | geometric route efficiency (`path_length / 0.50`) | 0.1052632 |
+| `C` | clearance reserve soft barrier | 0.1578947 |
+| `Q` | joint-limit reserve soft barrier | 0.0842105 |
+| `K` | metric-scaled kinematic-conditioning reserve | 0.0736842 |
+| `V` | joint-velocity-utilization reserve, `clamp01(u)^4` | 0.0526316 |
 
-An eighth term, R (orientation), is computed and logged for every candidate
-but excluded from the binding sum (weight fixed at 0.0); it is diagnostic
-only.
+An eighth logged quantity, `R` (orientation), is diagnostic only. Its binding
+weight is fixed at zero.
 
-`C`, `Q` and `K` are each a three-branch soft barrier: 0 in the comfortable
-region, a `-ln(...)` soft-log penalty in an intermediate region, and a large
-defensive value (`1e6`) below a threshold that hard feasibility has already
-rejected — the defensive branch is insurance, not the mechanism that
-enforces hard feasibility, which happens earlier in `F_h(s0)`.
+`C`, `Q` and `K` use soft-barrier terms in their preference regions. Hard
+feasibility has already rejected physically invalid plans before these terms
+are compared.
 
-## Global schedule-wait contribution
+## Cross-event time contribution
 
-Comparing candidates across different event times requires accounting for
-the wait until each candidate's event:
+To compare plans belonging to different event times, the same normalized time
+weight is extended back to the common search epoch:
 
-```
-J_global = J_motion + wT * scheduleWait / T_ref      (T_ref = 8 s)
-```
+\[
+J_{\mathrm{global}}
+=J_{\mathrm{motion}}
++w_T\frac{\mathrm{scheduleWait}}{T_{\mathrm{ref}}},
+\qquad T_{\mathrm{ref}}=8\text{ s}.
+\]
 
-`J_global` is never reduced to only `t_complete / T_ref` when comparing
-hypotheses — see [global_time_plan.md](global_time_plan.md) for the full derivation.
+In the implementation,
+
+\[
+\mathrm{scheduleWait}
+=(\tau-t_0)-T_{\mathrm{reach}},
+\]
+
+so the full time contribution represents predicted search-to-completion time.
+No additional independent weight is introduced.
+
+## Final timing-admissible set
+
+The final timing gate is evaluated **after the complete bounded event schedule
+has been inspected**. Let `t_sel` be the final selector time (`now` in
+`FiniteEventPlanSelector`). For each cost-valid complete plan,
+
+\[
+\mathrm{remaining}(\xi,t_{\mathrm{sel}})
+=t_{\mathrm{event}}(\xi)-t_{\mathrm{sel}}.
+\]
+
+With the implementation epsilon \(\varepsilon=10^{-12}\), the two required
+inequalities are
+
+\[
+\mathrm{remaining}+\varepsilon
+\ge L_{\mathrm{safe}}
+\]
+
+and
+
+\[
+T_{\mathrm{presentation}}+L_{\mathrm{reach}}
+\le \mathrm{remaining}+\varepsilon.
+\]
+
+Define
+
+\[
+\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})
+=\{\xi\in\mathcal F_J(s_0):\text{both inequalities hold}\}.
+\]
+
+This distinction matters: physical/geometric feasibility is evaluated from
+the frozen decision state, while final timing admissibility depends on the
+time at which the completed search is committed.
 
 ## Exact finite argmin
 
-```
-xi*_h = argmin_{xi in F_h(s0)} J_global(xi; s0)
+The reported moving-object policy selects
+
+\[
+\xi_h^*
+=\arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
+J_{\mathrm{global}}(\xi;s_0).
+\]
+
+The minimum is exhaustive over the bounded generated finite set. It is not a
+claim of continuous-space global optimality and is not solved by gradient
+descent, MPC over event time, or an unrestricted continuous optimizer.
+
+Numerical ties within the configured cost tolerance are resolved
+deterministically by the selector's fixed secondary ordering.
+
+## WHAT/WHEN vs HOW
+
+```text
+finite planner: Observe -> Predict -> Generate -> Preview -> Feasibility
+                -> Final timing admission -> finite argmin -> Commit
+
+mc_rtc FSM/QP:  execute the committed references
 ```
 
-This is the exact minimum over the bounded finite approximation. It is not a
-claim of continuous-space global optimality, and it is not solved by
-gradient-based optimization, MPC, or an unrestricted search.
-
-## Architecture: WHAT/WHEN vs HOW
-
-```
-Observe -> Predict -> Generate(tau,g,r) -> Preview -> Hard feasibility
-  -> Soft ranking -> Exact finite argmin -> Commit -> mc_rtc execution
-```
-
-The finite planner (left of "Commit") decides *what* and *when*: event time,
-grasp, route. mc_rtc's FSM and QP layer (right of "Commit") decides *how*:
-joint-level tracking of the committed plan. The QP is never asked to choose
-the event time or solve the argmin; it executes the selected references.
+The finite planner decides event time, grasp and route. The mc_rtc QP tracks
+the committed plan; it does not solve the high-level argmin.

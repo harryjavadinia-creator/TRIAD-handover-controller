@@ -4,61 +4,52 @@
 
 *A predictive finite complete-plan selection framework for human-to-robot handover in mc_rtc, developed within the CALL research project.*
 
-TRIAD observes a moving object, predicts a bounded set of future presentation events, evaluates complete **event-time–grasp–route** alternatives on copied robot state, rejects alternatives that violate hard feasibility constraints, and commits the minimum-cost timing-admissible finite plan once for the mc_rtc FSM/QP layer to execute.
+TRIAD predicts a bounded set of future object-presentation events, evaluates complete **event-time–grasp–route** alternatives on copied robot state, rejects alternatives that violate hard physical feasibility, reapplies timing admission at final selection time, and commits one minimum-cost admissible finite plan for the mc_rtc FSM/QP layer to execute.
 
-The planner decides **what and when**: event time, grasp and route. The mc_rtc task/QP layer decides **how** to track the committed plan.
+The planner decides **what and when**: event time, grasp and route. The mc_rtc task/QP layer decides **how** to track the committed references.
 
-> **Evidence status:** the reported end-to-end results in this repository are simulation results. Hardware-facing support exists, but a validated end-to-end physical-robot handover campaign is not yet reported. See [`docs/real_robot.md`](docs/real_robot.md).
+> **Evidence status:** the reported end-to-end results are simulation results. Hardware-facing support exists, but no validated end-to-end physical-robot handover campaign is reported. See [`docs/real_robot.md`](docs/real_robot.md).
 
-## Scientific core
+## Scientific formulation
 
-For moving-object handover, TRIAD solves the bounded discrete problem
+For a frozen decision state `s0`, TRIAD generates a bounded finite plan set `X_h`. Copied-state hard physical checks define `F_h(s0)`; finite objective construction gives the cost-valid subset `F_J(s0)`. After the complete bounded schedule has been evaluated, the selector reapplies timing admission at final selector time `t_sel` and chooses
 
 \[
 (\tau^*,g^*,r^*)=
-\arg\min_{(\tau,g,r)\in\mathcal F_h(s_0)}
-J_{\mathrm{global}}(\tau,g,r;s_0).
+\arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
+J_{\mathrm{global}}(\xi;s_0).
 \]
 
-This is **exhaustive minimization over a finite bounded approximation**. It is not continuous-time global optimization, gradient descent, or MPC over event time. Hard reachability, collision, acquisition, retreat and timing checks are applied before soft-cost ranking.
+This is **exhaustive minimization over the generated bounded finite approximation**. It is not continuous-space global optimization, gradient descent, or MPC over event time.
 
-The shortest path for understanding the implementation is:
+The finite approximation used in the reported moving-object campaign contains 14 event-time hypotheses, 32 grasp candidates and 17 transit routes, for an upper pre-pruning combinatorial bound of `14 × 32 × 17 = 7616`.
 
-1. [`docs/mathematics.md`](docs/mathematics.md) — decision variables, feasible set and objective.
-2. [`src/FiniteEventPlanSelector.h`](src/FiniteEventPlanSelector.h) — exact finite argmin across event time, grasp and route.
-3. [`src/FinitePlanSelector.h`](src/FinitePlanSelector.h) — within-event complete-plan selection and timing admission.
-4. [`src/states/HandoverInterceptionController_SolveInterception.cpp`](src/states/HandoverInterceptionController_SolveInterception.cpp) — bounded event generation, complete scan and one-time commit.
-5. [`src/HandoverInterceptionController.cpp`](src/HandoverInterceptionController.cpp) — candidate generation, copied-state preview, feasibility, metrics and execution support.
+See [`docs/mathematics.md`](docs/mathematics.md) for the full set definitions, objective and final timing gate.
 
-TRIAD is the public method name; the C++ namespace `call_handover` and the
-controller name `HandoverInterceptionController` are retained historical
-implementation identifiers from the CALL project lineage.
+## Implementation map
 
-## What is new in the current research package
+The shortest path through the code is:
 
-Beyond the frozen finite-plan Dataset-B baseline, the project now includes a corrected hardware-timing interpretation and exact serial performance characterization:
+1. [`src/FiniteEventPlanSelector.h`](src/FiniteEventPlanSelector.h) — final cross-event timing admission and finite argmin.
+2. [`src/FinitePlanSelector.h`](src/FinitePlanSelector.h) — within-event selection/refinement logic.
+3. [`src/states/HandoverInterceptionController_SolveInterception.cpp`](src/states/HandoverInterceptionController_SolveInterception.cpp) — bounded event generation, complete scan and one-time global selection.
+4. [`src/HandoverInterceptionController.cpp`](src/HandoverInterceptionController.cpp) — candidate generation, copied-state preview, hard feasibility, metrics and commit support.
+5. [`src/states/`](src/states/) — mc_rtc execution FSM.
 
-- timing admissibility is **scenario-specific** rather than governed by one universal planner deadline;
-- the historical `3.976 s` value belongs to PURE_X / longitudinal, not CANONICAL_YZ;
-- the four derived fail-closed frontiers are approximately 3.900 s, 3.975 s, 5.140 s and 5.735 s for GROUND_NEAR, PURE_X, CANONICAL_YZ and DIAGONAL_XZ respectively;
-- winner preservation is a stricter, separate timing property from remaining timing-admissible;
-- exact serial implementation optimizations reduce wall time while preserving complete scientific records and collision-oracle results.
-
-See [`docs/timing_frontiers.md`](docs/timing_frontiers.md) and [`docs/performance.md`](docs/performance.md).
+TRIAD is the public method name. The C++ namespace `call_handover`, controller name `HandoverInterceptionController`, and object identifier `call_object` are retained implementation identifiers from the CALL project lineage.
 
 ## Repository layout
 
 ```text
-src/                     TRIAD controller and active FSM implementation
+src/                     controller and active FSM implementation
 etc/                     controller configuration template
-call_object_description/ handover-object URDF
-configs/                 safe example configuration and robot-model hashes
+call_object_description/ handover-object URDF and model notes
+configs/                 simulation template and robot-model hashes
 scripts/                 scenario and historical-experiment reproduction
-tools/                   runtime checkers, baseline verifier and regression tests
-docs/                    method, experiments, timing, simulation and hardware notes
+tools/                   selectors/checkers/regression and replay utilities
+docs/                    method, provenance, timing, simulation and hardware notes
+.github/workflows/        dependency-free CI
 ```
-
-External software and robot-description packages are not copied into the repository; they are referenced or reconstructed from pinned upstream artifacts.
 
 ## Requirements
 
@@ -75,11 +66,11 @@ Verified development environment:
 | SpaceVecAlg | 1.2.9 |
 | Tasks | 1.8.3 |
 | TVM | 0.9.3 |
-| Python | 3.12, standard library only for repository checkers/tests |
+| Python | 3.12 |
 
 A working mc_rtc installation and its normal dependency chain are required. Building mc_rtc itself is outside the scope of this repository.
 
-Simulation also requires a Kinova Gen3 + Robotiq 2F-85 mc_rtc robot module. The repository reconstructs the verified module from pinned upstream `kortex_description` 0.2.6 and `robotiq_description` 0.0.1 assets; see [`docs/robot_module.md`](docs/robot_module.md).
+Simulation also requires a Kinova Gen3 + Robotiq 2F-85 mc_rtc robot module. The verified module is reconstructed from pinned upstream `kortex_description` 0.2.6 and `robotiq_description` 0.0.1 artifacts; see [`docs/robot_module.md`](docs/robot_module.md).
 
 ## Clone and build
 
@@ -97,7 +88,7 @@ cmake --build build -j"$(nproc)"
 cmake --install build
 ```
 
-The controller installs into the runtime directories of the mc_rtc installation it was configured against. `-DCMAKE_INSTALL_PREFIX` does not isolate an mc_rtc controller installation; see [`docs/troubleshooting.md`](docs/troubleshooting.md).
+The controller installs into the runtime directories of the mc_rtc installation used at configure time. See [`docs/troubleshooting.md`](docs/troubleshooting.md).
 
 ## Reconstruct the robot module
 
@@ -111,22 +102,16 @@ python3 scripts/setup_gen3_2f85_module.py \
 export MAIN_ROBOT_MODULE_PATH=/path/to/gen3_2f85_module
 ```
 
-The setup script verifies the pinned upstream URDF and all referenced mesh contents before generating the mc_rtc module. Details and hashes are documented in [`docs/robot_module.md`](docs/robot_module.md).
+The setup script checks the pinned upstream URDF and every referenced mesh against content hashes before producing the mc_rtc module.
 
 ## Reproduce Dataset B
 
-Available moving-object scenarios:
-
-| Command name | Dataset-B label | Motion |
+| Command | Dataset-B label | Motion |
 | --- | --- | --- |
 | `near-ground` | `GROUND_NEAR` | near-ground lateral |
 | `longitudinal` | `PURE_X` | longitudinal |
 | `lateral-low` | `CANONICAL_YZ` | lateral, low height |
 | `diagonal` | `DIAGONAL_XZ` | diagonal forward/upward |
-
-The command names are the `scripts/run_scenario.sh` arguments; the Dataset-B
-labels are the identifiers used in the recorded log artifacts and in the timing
-tables below.
 
 Run one scenario:
 
@@ -142,104 +127,113 @@ RUNTIME_CHECKER_RESULT=PASS
 SCENARIO_IDENTITY_RESULT=PASS
 ```
 
-The output directory contains the complete runtime log, exact scenario override and independent checker outputs. The scientific checker verifies that the committed alternative is the minimum of the cost-valid, timing-admissible finite set and independently reconstructs the frozen objective from logged terms.
-
-For the full scenario table, expected values and tolerance policy, see [`docs/simulation.md`](docs/simulation.md).
+The wrapper preserves the log, temporary scenario override and checker outputs under `results/`. See [`docs/simulation.md`](docs/simulation.md) for the reference winner fingerprints and additional metrics.
 
 ## Dependency-free verification
 
-These checks do not require mc_rtc or the robot module:
-
 ```bash
 bash tools/run_binding_cost_checks.sh
+python3 tools/test_replay_timing_frontier.py
 python3 tools/test_setup_gen3_2f85_module.py
 python3 tools/test_verify_latency_matrix_cell.py
 python3 tools/test_verify_scenario_identity.py
 python3 tools/test_scenario_override_yaml.py
-python3 tools/verify_scientific_baseline.py SCIENTIFIC_BASELINE.sha256 \
+python3 tools/check_markdown_links.py
+
+python3 tools/verify_scientific_baseline.py \
+  SCIENTIFIC_BASELINE.sha256 \
   --commit scientific-baseline
+
+sha256sum -c docs/source_sync_82e6eaa.sha256
 ```
 
-The last command verifies the frozen scientific baseline directly from Git blob content rather than from the current working tree.
+These checks are also represented in the repository's GitHub Actions workflow. The full staged reproduction procedure is in [`docs/reproducibility.md`](docs/reproducibility.md).
 
-For a staged reproduction workflow, see [`docs/reproducibility.md`](docs/reproducibility.md).
+## Experiment sets
 
-## Reported experiment sets
+Two historical experiment sets are preserved and reported separately:
 
-Two historical experiment sets are preserved and are reported separately:
+- **Dataset B — finite global event-time–grasp–route planning:** four moving-object simulation scenarios anchored to the frozen scientific baseline.
+- **Dataset A — perception-latency study:** five scenarios × three latency conditions at the preserved `dataset-a-baseline` source state.
 
-- **Dataset B — finite global event-time–grasp–route planning.** Four moving-object simulation scenarios from the scientific baseline. Reproduce with `scripts/run_scenario.sh`.
-- **Dataset A — perception-latency study.** Five scenarios × three latency conditions at the preserved `dataset-a-baseline` source state. Reproduce with `scripts/reproduce_latency_matrix.sh`.
+See [`docs/experiments.md`](docs/experiments.md) for provenance, source attribution and evidence limitations.
 
-The complete attribution, limitations and historical evidence classification are in [`docs/experiments.md`](docs/experiments.md).
+## Timing interpretation
 
-## Correct timing interpretation
+Final timing admission is scenario-specific. The analytical fail-closed boundaries derived from each scenario's complete-plan records are:
 
-There is no single experimentally established universal planner deadline for all four moving-object scenarios.
-
-The exact counterfactual replay of the controller timing rule gives scenario-specific fail-closed frontiers:
-
-| Scenario | Fail-closed frontier (s) |
+| Scenario | Boundary (s) |
 | --- | ---: |
 | GROUND_NEAR | 3.900000 |
 | PURE_X | 3.975000 |
 | CANONICAL_YZ | 5.139608 |
 | DIAGONAL_XZ | 5.735285 |
 
-The previously quoted `3.976 s` value is the next 1 ms grid point above the exact PURE_X boundary; it is specific to PURE_X rather than a universal hardware timing requirement.
+The historical `3.976 s` figure is the next 1-ms PURE_X grid point above its exact boundary; it is not a universal hardware planner deadline.
 
-The same analysis also derives **winner-preservation bands**, which are stricter than fail-closed feasibility. See [`docs/timing_frontiers.md`](docs/timing_frontiers.md).
+Winner preservation is a separate and stricter property. See [`docs/timing_frontiers.md`](docs/timing_frontiers.md).
+
+Reproduce the timing gate from a run log with:
+
+```bash
+python3 tools/replay_timing_frontier.py <log> --planner-time 3.976
+```
+
+## Exact serial implementation
+
+The current publication source includes exact implementation-only serial accelerations synchronized from audited development commit `82e6eaa`.
+
+The synchronized files are pinned by [`docs/source_sync_82e6eaa.sha256`](docs/source_sync_82e6eaa.sha256). The performance study reports **8,168,732 collision-oracle comparisons with zero mismatches** and unchanged complete-plan records, logical planning cycles, selector time and committed winners.
+
+See [`docs/performance.md`](docs/performance.md).
 
 ## Active FSM
 
-The compiled release FSM is:
-
 ```text
 Initial
-  → ObserveObject
-  → SolveInterception
-  → ExecuteCommittedReach
-  → PresentationHold
-  → MovePregrasp
-  → CaptureTransfer
-  → Retreat
-  → Completed
+  -> ObserveObject
+  -> SolveInterception
+  -> ExecuteCommittedReach
+  -> PresentationHold
+  -> MovePregrasp
+  -> CaptureTransfer
+  -> Retreat
+  -> Completed
 ```
 
-Any failure enters `Failure`. Capture, bilateral grasp confirmation and load transfer are handled continuously by `CaptureTransfer` in the compiled release.
+Any rejected/unsafe execution path enters `Failure`.
 
 ## Documentation
 
-- [`docs/architecture.md`](docs/architecture.md) — pipeline and component responsibilities.
-- [`docs/mathematics.md`](docs/mathematics.md) — finite decision problem and objective.
-- [`docs/global_time_plan.md`](docs/global_time_plan.md) — detailed cross-event selector notes.
-- [`docs/binding_cost.md`](docs/binding_cost.md) — detailed within-event selector notes.
-- [`docs/simulation.md`](docs/simulation.md) — reported scenarios and expected outputs.
-- [`docs/experiments.md`](docs/experiments.md) — provenance for Dataset A and Dataset B.
-- [`docs/timing_frontiers.md`](docs/timing_frontiers.md) — exact scenario-specific timing replay and frontiers.
+- [`docs/architecture.md`](docs/architecture.md) — component boundaries and selection/execution pipeline.
+- [`docs/mathematics.md`](docs/mathematics.md) — finite sets, objective and final timing-admission formulation.
+- [`docs/global_time_plan.md`](docs/global_time_plan.md) — cross-event global selector.
+- [`docs/binding_cost.md`](docs/binding_cost.md) — within-event selector.
+- [`docs/simulation.md`](docs/simulation.md) — Dataset-B reproduction and reference outputs.
+- [`docs/experiments.md`](docs/experiments.md) — Dataset-A/B provenance.
+- [`docs/timing_frontiers.md`](docs/timing_frontiers.md) — scenario-specific timing replay and interpretation.
 - [`docs/performance.md`](docs/performance.md) — exact serial acceleration and equivalence evidence.
-- [`docs/reproducibility.md`](docs/reproducibility.md) — staged reproducibility workflow and release checklist.
-- [`docs/robot_module.md`](docs/robot_module.md) — Gen3 + 2F-85 model reconstruction and verification.
+- [`docs/reproducibility.md`](docs/reproducibility.md) — staged reproduction workflow.
+- [`docs/release_validation.md`](docs/release_validation.md) — validation of the synchronized publication state.
+- [`docs/robot_module.md`](docs/robot_module.md) — Gen3 + 2F-85 model reconstruction.
 - [`docs/real_robot.md`](docs/real_robot.md) — hardware support and unvalidated gaps.
 - [`docs/troubleshooting.md`](docs/troubleshooting.md) — build/runtime caveats.
 
+## Scientific baseline and publication source
+
+Dataset B remains anchored to the frozen `scientific-baseline` tag. `SCIENTIFIC_BASELINE.sha256` verifies that historical source snapshot directly from Git blobs.
+
+The source shipped on the current publication branch contains the exact implementation-only serial delta synchronized from `82e6eaa`. The two states therefore serve different purposes:
+
+- **scientific-baseline:** provenance anchor for the frozen Dataset-B campaign;
+- **current publication source:** tested equivalent implementation with lower serial wall time.
+
+The publication synchronization and four-scenario revalidation are recorded in [`docs/release_validation.md`](docs/release_validation.md).
+
 ## Real-robot status
 
-Hardware-facing support exists in the codebase, including staged gripper commissioning and physical force/gripper interfaces, but **there is currently no validated end-to-end real-robot handover result in this repository**. Do not treat configuration support as hardware validation. Read [`docs/real_robot.md`](docs/real_robot.md) before any physical attempt.
-
-## Scientific baseline
-
-Dataset B is anchored to the frozen `scientific-baseline` source state. `SCIENTIFIC_BASELINE.sha256` and the verifier provide a source-integrity record for that curated snapshot. The repository history also preserves `dataset-a-baseline` for the earlier latency study.
-
-The `src/` tree shipped on this branch is the exact-serial implementation
-synchronized from development commit `82e6eaa`; its hashes are recorded in
-[`docs/source_sync_82e6eaa.sha256`](docs/source_sync_82e6eaa.sha256). Those
-optimizations are implementation-only and leave the complete plan records, the
-control-cycle count and all four committed winners byte-identical to the frozen
-baseline, so the two artifacts describe the same scientific method. Verify the
-frozen snapshot with the tag-based verifier above rather than against the
-working tree.
+Hardware-facing configuration and staged gripper commissioning support exist, but there is currently **no validated end-to-end physical-robot handover result** in this repository. Configuration support is not evidence of hardware validation. Read [`docs/real_robot.md`](docs/real_robot.md) before any physical attempt.
 
 ## Citation
 
-The paper citation will be added when the associated article metadata is finalized. Until then, cite the repository by title and exact release/tag or commit used for reproduction.
+The associated paper citation will be added when article metadata is finalized. Until then, cite the repository title together with the exact release/tag or commit used for reproduction.
