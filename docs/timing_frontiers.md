@@ -89,21 +89,37 @@ These values are the scenario-specific supremum of planner duration for which at
 
 The frozen simulated winner is preserved only over a narrower planner-time region:
 
-| Scenario | Reported winner-preservation band (s) |
+| Scenario | Winner-preservation band (s) |
 | --- | ---: |
-| CANONICAL_YZ | `[0.000000, 1.975000)` |
-| GROUND_NEAR | `[1.018546, 1.467141)` |
-| PURE_X | `[1.293474, 1.675000)` |
-| DIAGONAL_XZ | `[0.000000, 1.632358)` |
+| CANONICAL_YZ | `[0.000000, 1.975000]` |
+| GROUND_NEAR | `(1.018546, 1.467141]` |
+| PURE_X | `(1.293474, 1.675000]` |
+| DIAGONAL_XZ | `[0.000000, 1.632358]` |
+
+The endpoint conventions follow the selector's non-strict comparisons and are
+reproducible with `tools/replay_timing_frontier.py --planner-time`:
+
+- The **upper breakpoint is included**. A plan remains timing-admissible at its
+  own analytical boundary, so the frozen winner is still selected exactly at the
+  upper value and changes only above it. For PURE_X, `T_p = 1.675000` still
+  selects `J_global = 0.686806299`, while `T_p = 1.675100` selects
+  `0.701565964`.
+- For GROUND_NEAR and PURE_X the **lower breakpoint is excluded**: at exactly
+  that duration an earlier, lower-cost plan is still admissible and still wins,
+  so the frozen-winner region begins strictly above it. For PURE_X,
+  `T_p = 1.293474` selects `0.668496246`, and the frozen winner
+  `0.686806299` takes over immediately above that value. For CANONICAL_YZ and
+  DIAGONAL_XZ the frozen winner is already selected at `T_p = 0`, so those bands
+  are closed at the lower end.
 
 The key distinction is structural:
 
 - **fail-closed boundary**: whether any timing-admissible complete plan remains;
 - **winner preservation**: whether the same plan selected in the frozen no-sync simulation remains the minimum after timing admission changes.
 
-A scenario can change winner well before its admissible set becomes empty. For GROUND_NEAR and PURE_X, the preserved-winner region does not begin at zero; a sufficiently faster counterfactual planner can make additional, lower-cost plans admissible.
+A scenario can change winner well before its admissible set becomes empty. For GROUND_NEAR and PURE_X the preserved-winner region does not begin at zero: a sufficiently faster counterfactual planner keeps additional, lower-cost plans admissible, so those scenarios leave the frozen result by planning faster as well as by planning slower.
 
-At an exact breakpoint, the selector's non-strict inequalities and deterministic tie semantics govern the endpoint. The tabulated bands report the transition intervals from the preserved analysis; record-level equality questions should be checked with the replay and selector logs rather than rounded values alone.
+At an exact breakpoint the selector's non-strict inequalities and deterministic tie semantics govern the endpoint, which is why the bands above are half-open on the side where an adjacent plan still wins. Where the counterfactual minimum falls inside the configured cost tie set, the replay reports `UNRESOLVED_TIE_SET` rather than guessing: the log does not carry every secondary-order field the deterministic tie break uses.
 
 ## Measured serial wall time
 

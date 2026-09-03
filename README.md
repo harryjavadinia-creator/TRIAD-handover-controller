@@ -36,6 +36,8 @@ This is **exhaustive minimization over the generated bounded finite approximatio
 
 The finite approximation used in the reported moving-object campaign contains 14 event-time hypotheses, 32 grasp candidates and 17 transit routes, for an upper pre-pruning combinatorial bound of `14 × 32 × 17 = 7616`.
 
+The controller configuration sets `maximumEventHypotheses: 15` as an upper cap on the bounded lead bank; the reported Dataset-B campaign generated 14 hypotheses within that cap, which is the value logged as `configuredHypotheses` and used in the bound above.
+
 See [`docs/mathematics.md`](docs/mathematics.md) for the full set definitions, objective and final timing gate.
 
 ## Implementation map

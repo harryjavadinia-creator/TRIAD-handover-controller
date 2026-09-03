@@ -16,7 +16,27 @@ Only the exact implementation delta was synchronized from `82e6eaa`:
 - `src/HandoverInterceptionController.h`
 - `tools/check_collision_hierarchy_oracle.sh`
 
-The clean build and four-scenario Dataset-B rerun reported below were performed at synchronization commit `123be4a`. Subsequent publication-review commits through `d492176` changed only documentation, CI and dependency-free analysis/checking utilities; they did **not** modify the synchronized controller source, FSM source, controller configuration, robot/object geometry, scientific baseline manifest or source-sync manifest. GitHub Actions passed again at `d492176` with the expanded publication checks.
+One further, deliberate difference exists outside that set.
+`src/states/HandoverInterceptionController_SolveInterception.cpp` omits a
+`developmentMode=true` token from the `[GlobalTimePlanSearchConfiguration]`
+log line that the development tree carries. The difference is a single literal
+inside one `mc_rtc::log::success` format string: it changes no placeholder, no
+argument, no computation, no selection, and no checker input
+(`tools/check_global_time_plan_log.py` requires only `enabled=true`, and the
+token appears nowhere else in this repository). It is a publication log-label
+choice and is intentionally not reverted, because editing the audited planner
+source for cosmetic identity would be a worse trade than documenting the
+difference.
+
+The clean build and four-scenario Dataset-B rerun reported below were performed at synchronization commit `123be4a`. Every publication-review commit after it — through `48ba86b` and including the present documentation/test pass — changed only documentation, CI and dependency-free analysis/checking utilities. None modified the synchronized controller source, FSM source, controller configuration, robot/object geometry, scientific baseline manifest or source-sync manifest.
+
+This can be checked directly:
+
+```bash
+git diff --name-only 123be4a..HEAD -- src etc configs call_object_description
+```
+
+which lists no files.
 
 This distinction is deliberate: the scenario rerun evidence is attributed to the exact commit at which it was generated rather than silently re-labelling historical validation as a later branch-head result.
 
@@ -51,7 +71,11 @@ The later repository-wide publication pass added dependency-free checks for:
 - shell-script syntax;
 - exact-serial source-sync SHA-256 verification in CI.
 
-Those expanded checks all passed at review commit `d492176`. The compare range `123be4a..d492176` contains no modification to the synchronized controller implementation or FSM/configuration source.
+Those expanded checks passed at review commit `d492176` and again in the present
+pass, which corrected the winner-preservation interval endpoints in
+[`timing_frontiers.md`](timing_frontiers.md) and extended the timing-replay
+regression tests. No controller, FSM, configuration or geometry source was
+touched in any of these commits.
 
 ## Four-scenario Dataset-B revalidation at `123be4a`
 
