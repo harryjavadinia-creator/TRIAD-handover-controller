@@ -1,0 +1,29 @@
+# TRIAD exact-serial source synchronization manifest
+#
+# The implementation files listed below were synchronized directly from the
+# audited development commit 82e6eaa in the CALL development repository
+# (harryjavadinia-creator/CALL-handover-controller), which is the head of the
+# exact serial optimization lineage:
+#
+#   32196b5  exactly accelerate gripper clearance certification
+#   430cc19  reduce exact narrow-phase clearance overhead
+#   1cb735e  hoist pose-invariant work out of the swept clearance loop
+#   d8966e5  reduce exact hierarchy bound overhead
+#   82e6eaa  reduce exact IK preview overhead
+#
+# Each optimization is implementation-only: the complete plan-record stream,
+# the control-cycle count, the selection time and all four committed winners
+# are byte-identical to the pre-optimization source, and the brute-force
+# collision oracle reports zero mismatches over 8,168,732 comparisons.
+#
+# This publication commit is not the same commit as 82e6eaa. It is a curated
+# publication commit whose implementation files are byte-identical to that
+# audited development state.
+#
+# Verify with:
+#   sha256sum -c docs/source_sync_82e6eaa.sha256
+#
+# Columns: <sha256>  <path>
+d28be5055869b566b08d431b3f7d23e249c74180c999fcf786933ad24f314f94  src/HandoverInterceptionController.cpp
+0364ce1b26d0ae7a1ed5ba9a94e18894e8e0502f8558abdbe976947b926ae184  src/HandoverInterceptionController.h
+7b5f241b9525be1743aa6d2aeee995da9449548bf4b13ab15c9c290287e33e9d  tools/check_collision_hierarchy_oracle.sh

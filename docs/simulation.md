@@ -1,9 +1,14 @@
 # Simulation reproduction
 
-## Build, install, verify
+## Scope
 
-See the top-level `README.md` for the verified build/install commands and
-required environment. After installing:
+Dataset B is the four-scenario moving-object campaign for the finite global event-time–grasp–route selector. It is simulation evidence: `allowPhysicalExecution: false`.
+
+Dataset A is an earlier, separate perception-latency study. Its numbers and source attribution are documented in [`experiments.md`](experiments.md).
+
+## Build and install
+
+Use the verified build procedure in the top-level [`README.md`](../README.md). After installation, the dependency-free scientific checks can still be run from the source checkout:
 
 ```bash
 bash tools/run_binding_cost_checks.sh
@@ -11,137 +16,105 @@ python3 tools/verify_scientific_baseline.py SCIENTIFIC_BASELINE.sha256 \
   --commit scientific-baseline
 ```
 
-## Scenario selection without editing tracked files
+## Scenario selection without tracked-file edits
 
-`scripts/run_scenario.sh` selects a scenario by writing a small YAML
-fragment to a **temporary** `$HOME/.config/mc_rtc/controllers/
-HandoverInterceptionController.yaml`, for the duration of one run only. This
-is mc_rtc's own per-controller user-configuration mechanism (a deep merge on
-top of the installed default), pointed at an isolated temporary `$HOME` so
-that:
+`scripts/run_scenario.sh` writes a small controller-override YAML file under a temporary `HOME`. mc_rtc merges that fragment over the installed default configuration for the duration of the run.
 
-- no tracked file is ever modified;
-- your real, persistent `~/.config/mc_rtc/` is never read or written;
-- the tree's `git status` stays clean before and after every run.
+This mechanism means:
+
+- tracked source/configuration files are not edited;
+- the user's persistent `~/.config/mc_rtc/` is not read or written;
+- the exact temporary override is preserved with the result.
 
 ```bash
-export MAIN_ROBOT_MODULE_PATH=/path/to/your/gen3_2f85/module/directory
+export MAIN_ROBOT_MODULE_PATH=/path/to/gen3_2f85_module
 scripts/run_scenario.sh <name> [output-dir]
 ```
 
-See `docs/robot_module.md` for how to reconstruct the `gen3_2f85` module
-directory (`scripts/setup_gen3_2f85_module.py`) from pinned upstream
-packages, and for the equivalence evidence against the frozen module that
-produced the results tabulated below.
+The default result directory is `results/<timestamp>_<name>/`.
 
-The selected scenario, and its object translation/velocity, are printed
-before the run starts. The log and the exact override fragment used are
-preserved under `output-dir` (default: `results/<timestamp>_<name>/`).
+## Dataset-B scenarios
 
-## Available scenarios
-
-| Name | Human description | Initial position `[x,y,z]` | Linear velocity `[vx,vy,vz]` |
+| Command | Internal label | Initial position `[x,y,z]` | Linear velocity `[vx,vy,vz]` |
 | --- | --- | --- | --- |
-| `near-ground` | Near-ground lateral motion | `[0.25, 0.62, 0.15]` | `[0.0, -0.08, 0.0]` |
-| `longitudinal` | Longitudinal motion | `[0.92, 0.00, 0.55]` | `[-0.08, 0.0, 0.0]` |
-| `lateral-low` | Lateral low-height motion | `[0.55, -0.56, 0.15]` | `[0.0, 0.08, 0.0]` |
-| `diagonal` | Diagonal forward/upward motion | `[0.90, 0.00, 0.30]` | `[-0.0565685, 0.0, 0.0565685]` |
+| `near-ground` | `GROUND_NEAR` | `[0.25, 0.62, 0.15]` | `[0.0, -0.08, 0.0]` |
+| `longitudinal` | `PURE_X` | `[0.92, 0.00, 0.55]` | `[-0.08, 0.0, 0.0]` |
+| `lateral-low` | `CANONICAL_YZ` | `[0.55, -0.56, 0.15]` | `[0.0, 0.08, 0.0]` |
+| `diagonal` | `DIAGONAL_XZ` | `[0.90, 0.00, 0.30]` | `[-0.0565685, 0.0, 0.0565685]` |
 
-These are the four scenarios evaluated in the frozen global finite
-time-grasp-route campaign at the scientific baseline commit (see
-`docs/experiments.md`). The controller's configuration template also
-catalogs a fifth preset, "Static nominal" (`[0.55, 0.00, 0.55]`, zero
-velocity — a stationary object) — it is **not** part of that campaign
-(there is no arrival-time residual to search over for a stationary object)
-and is **not** currently supported by `scripts/run_scenario.sh`. Do not
-treat "four scenarios" as the complete set of presets in the configuration
-template; it is the complete set of *moving-object* scenarios in the
-reported campaign.
+The controller also contains a `static_nominal` preset. It is not part of Dataset B and is not exposed by `run_scenario.sh`.
 
-Separately, an earlier perception-latency compensation study used its own,
-different scenario/condition set — see `docs/experiments.md`. Its results
-must not be merged with, or presented as part of, the four-scenario global
-campaign above.
+## Frozen Dataset-B outputs
 
-## Expected output
+The original scientific campaign is anchored to the frozen `scientific-baseline` provenance described in [`experiments.md`](experiments.md). The following deterministic selection quantities are the reference values:
 
-All values below are from the frozen scientific baseline (`GLOBAL_*_rep1`
-runs). Deterministic quantities (selected event lead, selected grasp/route,
-objective values) should match exactly given the same source and
-configuration; timing quantities (predicted/actual completion time,
-planning-phase elapsed time) can vary slightly run to run and machine to
-machine — they are not promised to exact floating-point equality.
+| Scenario | Event lead (s) | Grasp | Route | `J_global` |
+| --- | ---: | --- | --- | ---: |
+| near-ground | 4.600 | `axisP_side_45deg` | `ring80mm_0of8` | 0.822892544 |
+| longitudinal | 3.700 | `axisP_side_337deg` | `direct` | 0.686806299 |
+| lateral-low | 4.150 | `axisN_side_337deg` | `direct` | 0.700830630 |
+| diagonal | 4.600 | `axisP_side_337deg` | `ring140mm_2of8` | 0.684634405 |
 
-| Scenario | Predicted completion (s) | Actual completion (s) | Selected event lead (s) | Path length (m) | Min. reach clearance (m) | Joint-velocity utilization | Planning-phase elapsed (s, no-sync sim) |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| near-ground | 9.801 | 8.469 | 4.60 | 0.631 | 0.079 | 1.00 | ≈1.36 |
-| longitudinal | 8.703 | 7.289 | 3.70 | 0.275 | 0.080 | 1.00 | ≈1.39 |
-| lateral-low | 8.803 | 7.435 | 4.15 | 0.398 | 0.082 | 1.00 | ≈0.88 |
-| diagonal | 9.620 | 8.224 | 4.60 | 0.405 | 0.081 | ≈0.690 | ≈1.39 |
+Additional reference metrics from the frozen campaign are:
 
-"Planning-phase elapsed" is wall-clock time for the no-sync simulation
-planning phase, not a CPU benchmark — it has not been separately
-CPU-benchmarked.
+| Scenario | Predicted completion (s) | Actual completion (s) | Path length (m) | Min. reach clearance (m) | Joint-velocity utilization | Logical planning elapsed (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| near-ground | 9.801 | 8.469 | 0.631 | 0.079 | 1.00 | ≈1.36 |
+| longitudinal | 8.703 | 7.289 | 0.275 | 0.080 | 1.00 | ≈1.39 |
+| lateral-low | 8.803 | 7.435 | 0.398 | 0.082 | 1.00 | ≈0.88 |
+| diagonal | 9.620 | 8.224 | 0.405 | 0.081 | ≈0.690 | ≈1.39 |
 
-Representative runtime evidence for the diagonal scenario: 14 event
-hypotheses, 233 complete/cost-valid/timing-admissible plans (cumulative
-across the whole bounded search, not per hypothesis), selected event lead
-4.600 s, `J_motion ≈ 0.596089263`, `J_global ≈ 0.684634405`.
+The exact-serial source currently shipped in this repository was revalidated against the four deterministic winner fingerprints above. See [`release_validation.md`](release_validation.md).
 
-## Independent verification
+## Runtime verification
 
-```bash
-python3 tools/check_global_time_plan_log.py <log>
+A successful wrapper run reports:
+
+```text
+HANDOVER_COMPLETED=true
+RUNTIME_CHECKER_RESULT=PASS
+SCENARIO_IDENTITY_RESULT=PASS
 ```
 
-Expected output: `global time-grasp-route runtime log proof: PASS`.
+`tools/check_global_time_plan_log.py` verifies the global selector/runtime proof. Among other checks it:
 
-**What it verifies**: schedule completeness (every configured event
-hypothesis evaluated); exactly one selection/commit pair; per-hypothesis
-reconciliation of pooled vs. cost-invalid vs. geometry-rejected candidates;
-that the reported minimum is not lower than any logged valid cost; that the
-committed candidate is the exact argmin over the cost-valid and
-timing-admissible set; selection/commit numeric and identity agreement
-within tolerance; full-handover completion; and, independently from a
-hard-coded copy of the frozen seven-term weight vector, that every logged
-cost reconstructs from `(T,E,L,C,Q,K,V)` and that `V` matches
-`clamp01(velocityUtil)^4`.
+- confirms the configured bounded schedule was fully evaluated;
+- reconciles valid, invalid and geometry-rejected alternatives;
+- verifies selection/commit identity;
+- independently reconstructs the frozen seven-term objective;
+- uses `[GlobalPlanTimingAdmissibility]` records, when present, to verify the exact argmin over the cost-valid and final-timing-admissible set.
 
-**What it does not verify**: wall-clock/CPU planning performance; grasp or
-route geometric correctness (it trusts the logged candidate names); real
-robot behavior; or that the run used a particular scenario (it has no
-scenario-identity check).
+It does not independently prove collision geometry, real-robot behavior or scenario identity.
 
-### Scenario identity
-
-`check_global_time_plan_log.py` verifies selector/runtime consistency but
-not which scenario produced the log. `tools/verify_scenario_identity.py` is
-a separate, narrower check for that:
+Scenario identity is checked separately:
 
 ```bash
 python3 tools/verify_scenario_identity.py <log> --expect-scenario diagonal
 ```
 
-It confirms the log's own recorded initial object position (from the
-`[ObserveObject] ... p0=...` line) and settled velocity (from the *last*
-`[ObserveObject] t=.../... ... v=...` sample line) both match the named
-scenario's configuration — position within a tolerance derived from the
-log's own numeric display precision, velocity within a scenario-identity
-tolerance covering both display rounding and the small settled-velocity
-estimation variation observed across validated runs (not a physical-
-accuracy claim) — and that the completion class (completed vs.
-fail-safe) matches what was expected. `SCENARIO_IDENTITY_RESULT=PASS`
-requires both the position and velocity checks to pass, reported separately
-as `position_ok`/`velocity_ok` alongside `observed_position`/
-`observed_velocity`. `scripts/run_scenario.sh` runs both checkers
-automatically and reports `RUNTIME_CHECKER_RESULT` and
-`SCENARIO_IDENTITY_RESULT` as separate fields.
+The identity checker compares the logged initial object position and settled velocity with the named scenario and checks the expected completion class.
 
-## Simulation-scope caveats
+## Three timing quantities
 
-- `allowPhysicalExecution` is `false` for all reported results — physical
-  execution was disabled for these runs.
-- The virtual force sensor (`decisionCost` / `physicalBridge` configuration)
-  is a simulation source, not a physical force measurement.
-- The copied-state preview used during candidate evaluation is a predictive
-  approximation, not exact QP-rollout parity.
+The repository distinguishes:
+
+1. **logical/controller planning elapsed** — no-sync simulation time associated with the number of `SolveInterception` cycles;
+2. **external planner wall time** — real elapsed computation time;
+3. **scenario-specific timing boundary** — a counterfactual planner duration derived from the exact final timing-admission rule.
+
+The first is not a CPU benchmark. The second is machine-dependent. The third is computed from complete-plan timing records and the selector rule.
+
+Replay a run with:
+
+```bash
+python3 tools/replay_timing_frontier.py <log> --planner-time 3.976
+```
+
+See [`timing_frontiers.md`](timing_frontiers.md).
+
+## Simulation limitations
+
+- Dataset-B runs use `allowPhysicalExecution: false`.
+- The virtual load-transfer source is not a physical force measurement.
+- Copied-state preview is a predictive approximation, not exact QP-rollout parity.
+- Hardware-facing timing replay is a counterfactual analysis, not an end-to-end physical experiment.
