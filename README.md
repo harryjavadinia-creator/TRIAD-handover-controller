@@ -10,6 +10,18 @@ The planner decides **what and when**: event time, grasp and route. The mc_rtc t
 
 > **Evidence status:** the reported end-to-end results are simulation results. Hardware-facing support exists, but no validated end-to-end physical-robot handover campaign is reported. See [`docs/real_robot.md`](docs/real_robot.md).
 
+## At a glance
+
+For a first review of the project, the important points are:
+
+- **Method:** deterministic exhaustive selection over a bounded finite set of event-time, grasp and route alternatives; no continuous optimization solver is claimed.
+- **Decision rule:** hard physical feasibility first, valid finite objective second, final timing admission at selector time, then the minimum `J_global` over the remaining finite set.
+- **Reported Dataset B:** four moving-object simulation scenarios, each with a deterministic event/grasp/route winner and independent runtime-log verification.
+- **Timing result:** planner timing admissibility is scenario-specific; the historical `3.976 s` value is PURE_X-specific rather than a universal deadline.
+- **Current publication source:** the audited exact-serial implementation preserves the tested scientific records/winners while reducing measured planning wall time; the frozen `scientific-baseline` remains the provenance anchor for the original Dataset-B campaign.
+
+A supervisor/reviewer who wants the shortest technical path can read, in order: [`docs/mathematics.md`](docs/mathematics.md), [`docs/simulation.md`](docs/simulation.md), [`docs/timing_frontiers.md`](docs/timing_frontiers.md), and [`docs/release_validation.md`](docs/release_validation.md).
+
 ## Scientific formulation
 
 For a frozen decision state `s0`, TRIAD generates a bounded finite plan set `X_h`. Copied-state hard physical checks define `F_h(s0)`; finite objective construction gives the cost-valid subset `F_J(s0)`. After the complete bounded schedule has been evaluated, the selector reapplies timing admission at final selector time `t_sel` and chooses
