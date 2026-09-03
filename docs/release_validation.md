@@ -16,7 +16,11 @@ Only the exact implementation delta was synchronized from `82e6eaa`:
 - `src/HandoverInterceptionController.h`
 - `tools/check_collision_hierarchy_oracle.sh`
 
-## Source and build checks
+The clean build and four-scenario Dataset-B rerun reported below were performed at synchronization commit `123be4a`. Subsequent publication-review commits through `d492176` changed only documentation, CI and dependency-free analysis/checking utilities; they did **not** modify the synchronized controller source, FSM source, controller configuration, robot/object geometry, scientific baseline manifest or source-sync manifest. GitHub Actions passed again at `d492176` with the expanded publication checks.
+
+This distinction is deliberate: the scenario rerun evidence is attributed to the exact commit at which it was generated rather than silently re-labelling historical validation as a later branch-head result.
+
+## Source and build checks at `123be4a`
 
 The synchronized publication worktree passed:
 
@@ -37,9 +41,21 @@ The synchronized publication worktree passed:
 
 GitHub Actions `source-checks` also passed at publication synchronization commit `123be4a`.
 
-## Four-scenario Dataset-B revalidation
+## Expanded publication checks after synchronization
 
-All four scenarios were rerun after source synchronization. Each run satisfied:
+The later repository-wide publication pass added dependency-free checks for:
+
+- analytical timing-frontier replay;
+- repository-local Markdown links;
+- Python syntax;
+- shell-script syntax;
+- exact-serial source-sync SHA-256 verification in CI.
+
+Those expanded checks all passed at review commit `d492176`. The compare range `123be4a..d492176` contains no modification to the synchronized controller implementation or FSM/configuration source.
+
+## Four-scenario Dataset-B revalidation at `123be4a`
+
+All four scenarios were rerun after exact source synchronization. Each run satisfied:
 
 ```text
 HANDOVER_COMPLETED=true
@@ -60,8 +76,10 @@ These match the frozen scientific winner fingerprints.
 
 ## Scope of this validation
 
-The validation establishes source synchronization, buildability, deterministic simulation selection and runtime-checker consistency for the publication state.
+The validation establishes source synchronization, buildability, deterministic simulation selection and runtime-checker consistency for the synchronized publication implementation.
 
-It does not establish end-to-end physical-robot validation. Hardware status and remaining calibration/safety gaps are documented in [`real_robot.md`](real_robot.md).
+The later documentation/tools-only publication pass establishes consistency and dependency-free validation of the repository presentation around that implementation; it is not presented as a second four-scenario simulation campaign.
+
+This validation does **not** establish end-to-end physical-robot validation. Hardware status and remaining calibration/safety gaps are documented in [`real_robot.md`](real_robot.md).
 
 Generated run directories are intentionally excluded by `.gitignore`; the repository records the reproducible commands, expected deterministic fingerprints, source manifests and checker implementations rather than committing machine-specific runtime logs.
