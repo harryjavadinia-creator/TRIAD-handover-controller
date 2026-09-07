@@ -434,6 +434,13 @@ configs:
     # after the complete scan. This does not change preview integration,
     # generated actions, constraints or costs.
     planningStepsPerCycle: 96
+    # Bounded work units of predictive route certification executed in one
+    # ticker cycle. A work unit is one complete reach rollout iteration,
+    # terminal approach step, capture dwell step, closure sweep step or retreat
+    # step. This redistributes already-defined route work across cycles; it
+    # does not change preview integration, sampling, feasibility, the candidate
+    # banks, the objective or the timing policy.
+    routeWorkUnitsPerCycle: 128
     maximumFixedPointIterations: 4
     # Generate the scenario-independent bounded lead bank, freeze every event
     # to the common search epoch, sort it chronologically, and evaluate the

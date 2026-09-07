@@ -16,7 +16,11 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <atomic>
+#include <chrono>
+#include <cstdint>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -606,6 +610,16 @@ public:
       const sva::PTransformd & B_T_M) const;
   /** Resolve the live mouth->base transform used by basePoseFromMouthPose(). */
   sva::PTransformd liveMouthToBaseTransform() const;
+  /** Mouth-to-base transform derived from a frozen robot state.
+   *
+   * The copied-state counterpart of liveMouthToBaseTransform(): identical
+   * construction, parameterized on an explicit MultiBodyConfig instead of the
+   * live robot. Deriving it from the same frozen state s0 as the rest of the
+   * search is what makes every event hypothesis use one common value, instead
+   * of resampling the QP solution's cycle-to-cycle jitter per hypothesis.
+   */
+  bool frozenMouthToBaseTransform(const rbd::MultiBodyConfig & mbc,
+                                  sva::PTransformd & B_T_M) const;
   /**
    * Pose-dependent half of interpolatePose(). The two endpoint quaternions and
    * their relative-sign resolution depend only on the endpoints, so a caller
@@ -622,8 +636,83 @@ public:
   double liveMouthHalfGap() const { return 0.5 * liveMouthGap(); }
 
   bool prepareCaptureSelection();
+
+  /** The bounded event bank, frozen at the decision epoch.
+   *
+   * The leads and their presentation poses are generated once, before any
+   * geometry runs, and never regenerated. Order is the deterministic
+   * enumeration order and is significant. minimumSafeCommitLead is carried here
+   * rather than recomputed so the search never needs the deceleration model at
+   * step time.
+   */
+  struct FrozenEventBank
+  {
+    double searchEpoch = 0.0;
+    std::vector<double> leads;
+    std::vector<sva::PTransformd> presentationPoses;
+    std::size_t configuredHypotheses = 0;
+    int maximumHypotheses = 0;
+    double maximumSearchWallTime = 0.0;
+    double minimumSafeCommitLead = 0.0;
+    std::string source = "global_fixed_schedule";
+  };
+
+  enum class FiniteSearchStatus
+  {
+    Running,
+    Complete,
+    Failed
+  };
+
+  /** Progress of one complete finite TRIAD search over the frozen bank.
+   *
+   * This is the orchestration the SolveInterception state used to carry: which
+   * hypothesis is being evaluated, how far the bank has advanced, and the
+   * counters the evidence logs report. Holding it here is what makes the whole
+   * search callable without the FSM.
+   */
+  struct FiniteTriadSearchState
+  {
+    FrozenEventBank bank;
+    std::size_t cursor = 0;
+    bool hypothesisActive = false;
+    int evaluatedHypotheses = 0;
+    int feasibleHypotheses = 0;
+    int geometryFailures = 0;
+    double currentLead = 0.0;
+    double currentPresentationTime = 0.0;
+    sva::PTransformd currentPresentationPose = sva::PTransformd::Identity();
+    std::string failureReason;
+    bool active = false;
+  };
+
+  /** Complete finite TRIAD search over one frozen event bank.
+   *
+   * beginFiniteTriadSearch() takes the frozen bank; stepFiniteTriadSearch()
+   * advances the search by one bounded unit of work and returns Running until
+   * the bank is exhausted. The admission instant is an explicit input rather
+   * than a clock read, so the same search can be driven by the control thread
+   * against its own clock (reference mode, which reproduces the existing
+   * elapsed-time hypothesis pruning exactly) or, later, by a worker with the
+   * pruning disabled. Nothing inside reads the controller clock.
+   */
+  void beginFiniteTriadSearch(const FrozenEventBank & bank);
+  FiniteSearchStatus stepFiniteTriadSearch(double admissionNow,
+                                           int previewSteps,
+                                           int routeWorkUnits);
+  const FiniteTriadSearchState & finiteSearchState() const
+  {
+    return finiteSearch_;
+  }
+  /** Controller-side preparation that must happen before the frozen search.
+   * These are the mutations beginCapturePlanning() used to perform once per
+   * hypothesis; none of them belongs inside a relocatable search. */
+  void prepareCapturePlanningSession();
+  CapturePlanningStatus beginCapturePlanningCore();
+
   CapturePlanningStatus beginCapturePlanning(bool commitOnSuccess = true);
-  CapturePlanningStatus stepCapturePlanning(int maxInternalSteps);
+  CapturePlanningStatus stepCapturePlanning(int maxInternalSteps,
+                                            int routeWorkUnits);
   CapturePlanningStatus capturePlanningStatus() const { return capturePlanningStatus_; }
 
   // V4A.2 candidate/time interception solve. A future object pose is injected
@@ -633,28 +722,28 @@ public:
   void setPlanningObjectSnapshot(const sva::PTransformd & W_T_O_snapshot);
   void applyPlanningObjectSnapshot();
   void clearPlanningObjectSnapshot();
-  bool planningBestCandidateAvailable() const { return planningFoundFeasible_; }
+  bool planningBestCandidateAvailable() const { return plannerContext_.planningFoundFeasible; }
   const std::string & planningBestCandidateName() const
   {
-    return planningBestCandidate_.name;
+    return plannerContext_.planningBestCandidate.name;
   }
   double planningBestPredictedPresentationTime() const
   {
-    return planningBestCandidate_.predictedPresentationTime;
+    return plannerContext_.planningBestCandidate.predictedPresentationTime;
   }
   double planningBestPredictedContactTime() const
   {
-    return planningBestCandidate_.predictedContactTime;
+    return plannerContext_.planningBestCandidate.predictedContactTime;
   }
   double planningBestPredictedExecutionTime() const
   {
-    return planningBestCandidate_.estimatedTime;
+    return plannerContext_.planningBestCandidate.estimatedTime;
   }
   double planningBestClearance() const
   {
-    return planningBestCandidate_.minClearance;
+    return plannerContext_.planningBestCandidate.minClearance;
   }
-  double planningBestScore() const { return planningBestCandidate_.score; }
+  double planningBestScore() const { return plannerContext_.planningBestCandidate.score; }
   /**
    * Finalize the plan selector before a commit. A negative
    * remainingToPresentation disables the moving-event timing filter (used for
@@ -1027,6 +1116,126 @@ private:
     sva::PTransformd W_T_O_presentation = sva::PTransformd::Identity();
   };
 
+
+
+
+  /** Deterministic output of one complete frozen finite TRIAD search.
+   *
+   * This is the exact hand-off the planner produces from one frozen decision
+   * epoch: every hard-feasible, cost-valid alternative in source order, with
+   * the frozen poses each was certified against. It deliberately carries no
+   * receipt-time timing admission - remaining, admissibility and the argmin are
+   * applied by the control thread against the clock at result receipt, which is
+   * what keeps the decision reproducible from the set alone.
+   */
+  struct FrozenPlanSet
+  {
+    double searchEpoch = 0.0;
+    std::size_t evaluatedHypotheses = 0;
+    std::size_t configuredHypotheses = 0;
+    bool scheduleComplete = false;
+    // Source order is the deterministic enumeration order and is significant:
+    // it is the tie-break of last resort in the finite selector.
+    std::vector<GlobalEventPlanAlternative> alternatives;
+  };
+
+public:
+  /** One background planning job.
+   *
+   * Exactly one worker, exactly one in-flight request, one result per planning
+   * generation. The control thread never blocks on it: it polls an atomic state
+   * and, on Ready, reads a result the worker finished writing before it
+   * published. A single result buffer is the smallest correct arrangement here,
+   * because there is never more than one job in flight and the control thread
+   * reads the buffer only after an acquire load paired with the worker's
+   * release store.
+   */
+  enum class PlannerJobState
+  {
+    Idle = 0,
+    Running = 1,
+    Ready = 2,
+    Failed = 3
+  };
+
+  ~HandoverInterceptionController() override;
+
+  void submitFiniteTriadSearch(const FrozenEventBank & bank,
+                               double requestControllerTime,
+                               int previewSteps,
+                               int routeWorkUnits);
+  PlannerJobState plannerJobState() const
+  {
+    return static_cast<PlannerJobState>(
+        plannerJobState_.load(std::memory_order_acquire));
+  }
+  const FrozenPlanSet & plannerResult() const { return plannerResult_; }
+  const std::string & plannerFailureReason() const
+  {
+    return plannerFailureReason_;
+  }
+  std::uint64_t plannerRequestGeneration() const
+  {
+    return plannerRequestGeneration_.load(std::memory_order_acquire);
+  }
+  std::uint64_t plannerResultGeneration() const
+  {
+    return plannerResultGeneration_.load(std::memory_order_acquire);
+  }
+  double plannerWorkerWallDuration() const { return plannerWorkerWallDuration_; }
+  double plannerRequestControllerTime() const
+  {
+    return plannerRequestControllerTime_;
+  }
+  /** Cancel and join. Never called from the control callback. */
+  void shutdownPlannerWorker();
+  /** Development-only: hold a completed result back for N control cycles, so a
+   * late delivery is exercised without touching any timing parameter. */
+  void setPlannerPublishDelayCycles(int cycles)
+  {
+    plannerPublishDelayCycles_ = std::max(0, cycles);
+  }
+  int plannerPublishDelayCycles() const { return plannerPublishDelayCycles_; }
+  int & plannerPublishHeldCycles() { return plannerPublishHeldCycles_; }
+  /** Development-only: bump the request generation after submitting, so the
+   * worker's result carries a generation the control thread no longer expects.
+   * The rejection path is otherwise unreachable, because submitting joins the
+   * previous worker before starting a new one. */
+  void setPlannerForceStaleGeneration(bool force)
+  {
+    plannerForceStaleGeneration_ = force;
+  }
+  /** Verbose per-record planner evidence. Enabled by default; suppressing it
+   * removes the high-volume streams (one group of records per complete plan)
+   * without touching any computation, selection or commit behaviour. */
+  void setPlannerEvidenceLogging(bool enabled)
+  {
+    plannerEvidenceLogging_ = enabled;
+  }
+  bool plannerEvidenceLogging() const { return plannerEvidenceLogging_; }
+  /** Development-only: make the next worker job throw. */
+  void setPlannerInjectFailure(bool inject) { plannerInjectFailure_ = inject; }
+
+private:
+  std::thread plannerThread_;
+  std::atomic<int> plannerJobState_{0};
+  std::atomic<std::uint64_t> plannerRequestGeneration_{0};
+  std::atomic<std::uint64_t> plannerResultGeneration_{0};
+  std::atomic<bool> plannerCancel_{false};
+  FrozenPlanSet plannerResult_;
+  std::string plannerFailureReason_;
+  double plannerRequestControllerTime_ = 0.0;
+  double plannerWorkerWallDuration_ = 0.0;
+  std::chrono::steady_clock::time_point plannerWorkerStartWall_;
+  int plannerPublishDelayCycles_ = 0;
+  int plannerPublishHeldCycles_ = 0;
+  bool plannerInjectFailure_ = false;
+  bool plannerForceStaleGeneration_ = false;
+  bool plannerEvidenceLogging_ = true;
+  void runPlannerWorker(std::uint64_t generation, int previewSteps,
+                        int routeWorkUnits);
+
+
   struct PreviewResult
   {
     bool feasible = false;
@@ -1055,6 +1264,25 @@ private:
     Failed
   };
 
+  // Phases and outcomes of a resumable predictive route rollout. See the
+  // rollout state block below for the suspension contract.
+  enum class RouteStepPhase
+  {
+    Idle,
+    Reach,
+    Approach,
+    Dwell,
+    Closure,
+    Retreat,
+    Finalize
+  };
+  enum class RouteStepOutcome
+  {
+    Running,
+    Feasible,
+    Infeasible
+  };
+
   enum class PlanningPhase
   {
     ReachStandoff,
@@ -1074,6 +1302,21 @@ private:
                             const sva::PTransformd & W_T_M_to,
                             HandoverSafetyReport & report,
                             bool requireCorridor) const;
+  /** Swept clearance on an explicit mouth-to-base transform.
+   *
+   * The runtime entry point above resolves that transform from the live robot
+   * (liveMouthToBaseTransform()). The copied-state planner must not: it passes
+   * the transform frozen with the rest of the decision state, so the swept
+   * certification depends only on the snapshot. Both entry points evaluate the
+   * identical per-pose expressions.
+   */
+  bool sweptGripperPoseSafeWith(const sva::PTransformd & W_T_M_from,
+                                const sva::PTransformd & W_T_M_to,
+                                const sva::PTransformd & B_T_M,
+                                const sva::PTransformd & W_T_O,
+                                const sva::PTransformd & W_T_H,
+                                HandoverSafetyReport & report,
+                                bool requireCorridor) const;
 
   bool gripperPoseSafe(const sva::PTransformd & W_T_M,
                        HandoverSafetyReport & report,
@@ -1083,9 +1326,21 @@ private:
                            const sva::PTransformd & W_T_M,
                            HandoverSafetyReport & report,
                            bool requireCorridor) const;
+  /** Clearance against an explicit object/handle world, so the planner never
+   * reads the controller's live world members. */
+  bool gripperBasePoseSafeWith(const sva::PTransformd & W_T_B,
+                               const sva::PTransformd & W_T_M,
+                               const sva::PTransformd & W_T_O,
+                               const sva::PTransformd & W_T_H,
+                               HandoverSafetyReport & report,
+                               bool requireCorridor) const;
 
   bool graspCorridorSafe(const sva::PTransformd & W_T_M,
                          HandoverSafetyReport & report) const;
+  bool graspCorridorSafeWith(const sva::PTransformd & W_T_M,
+                             const sva::PTransformd & W_T_O,
+                             const sva::PTransformd & W_T_H,
+                             HandoverSafetyReport & report) const;
 
   bool wholeRobotGroundSafe(HandoverSafetyReport & report) const;
   bool wholeRobotGroundSafe(const rbd::MultiBodyConfig & mbc,
@@ -1111,6 +1366,8 @@ private:
                            bool attachedRetreat,
                            PreviewResult & result,
                            bool collectDecisionMetrics = false) const;
+  bool previewTerminalCaptureDwellStep(rbd::MultiBodyConfig & mbc,
+                                      PreviewResult & result) const;
   bool previewTerminalCaptureDwell(rbd::MultiBodyConfig & mbc,
                                    double duration,
                                    PreviewResult & result) const;
@@ -1140,6 +1397,17 @@ private:
       const sva::PTransformd & W_T_O_presentation,
       const std::string & routeName,
       const Eigen::Vector3d & curveOffsetWorld);
+  RouteStepOutcome beginPredictiveRouteCandidate(
+      const CaptureCandidate & candidate,
+      const PreviewResult & staticResult,
+      const sva::PTransformd & W_T_O_presentation,
+      const std::string & routeName,
+      const Eigen::Vector3d & curveOffsetWorld);
+  RouteStepOutcome stepPredictiveRouteCandidate(int workUnits);
+  RouteStepOutcome finalizePredictiveRouteCandidate();
+  RouteStepOutcome routeStepFail(const std::string & reason);
+  void routeStepRestorePlanningWorld();
+  void routeStepSetVirtualObject(const sva::PTransformd & W_T_O_virtual);
   std::vector<std::pair<std::string, Eigen::Vector3d>> transitRouteBank(
       const sva::PTransformd & start,
       const sva::PTransformd & standoff) const;
@@ -1185,11 +1453,26 @@ private:
   bool previewPadCenters(const rbd::MultiBodyConfig & mbc,
                          Eigen::Vector3d & pL_W,
                          Eigen::Vector3d & pR_W) const;
-  sva::PTransformd previewBasePose(const rbd::MultiBodyConfig & mbc) const;
-  sva::PTransformd previewMouthPose(const rbd::MultiBodyConfig & mbc) const;
-  sva::PTransformd previewBasePoseFromMouthPose(
+  /** Copied-state kinematics for the scientific preview.
+   *
+   * These report failure instead of falling back to live robot state. The
+   * planner is a copied-state certification model: if it cannot resolve its
+   * own tool body or pad frames from the model and the supplied
+   * MultiBodyConfig, the correct behaviour is a deterministic planner failure,
+   * not a silent substitution of whatever pose the live robot happens to hold.
+   * The removed fallbacks (actualBasePose() in previewBasePose(), and
+   * livePadCenters()/actualBasePose()/actualMouthPose() reached through
+   * mouthPoseFromBasePose() in previewMouthPose()) were the only live-state
+   * reads on the preview path.
+   */
+  bool previewBasePose(const rbd::MultiBodyConfig & mbc,
+                       sva::PTransformd & W_T_B) const;
+  bool previewMouthPose(const rbd::MultiBodyConfig & mbc,
+                        sva::PTransformd & W_T_M) const;
+  bool previewBasePoseFromMouthPose(
       const sva::PTransformd & W_T_M,
-      const rbd::MultiBodyConfig & mbc) const;
+      const rbd::MultiBodyConfig & mbc,
+      sva::PTransformd & W_T_B) const;
   void setPreviewGripperClosure(rbd::MultiBodyConfig & mbc,
                                 double closure) const;
   bool previewDynamicClosureSafety(const rbd::MultiBodyConfig & mbc,
@@ -1207,15 +1490,18 @@ private:
                             HandoverSafetyReport & report) const;
   std::map<std::string, std::vector<double>> armPostureFromMbc(
       const rbd::MultiBodyConfig & mbc) const;
-  Eigen::Vector3d sampleWorldPoint(const GripperSample & sample,
-                                   const rbd::MultiBodyConfig & mbc) const;
+  bool sampleWorldPoint(const GripperSample & sample,
+                        const rbd::MultiBodyConfig & mbc,
+                        Eigen::Vector3d & pW) const;
 
   bool startNextPlanningCandidate();
   void updateAttachedObjectPose();
   void updateSimulatedObjectMotion();
   void updateObjectMotionEstimate();
   void updateForceTransferMeasurement();
-  void finishCurrentPlanningCandidate(bool feasible);
+  // Returns true when transit-route certification is still pending, i.e. the
+  // candidate has not been finalised yet and the planner must resume it.
+  bool finishCurrentPlanningCandidate(bool feasible);
   CapturePlanningStatus finalizeCapturePlanning();
   double predictedExecutionTime(const PreviewResult & result) const;
   void computeCompletePlanAuditCost(CaptureCandidate & candidate) const;
@@ -1238,6 +1524,15 @@ private:
                                   const Eigen::Vector3d & baseOutward) const;
 
   Eigen::Vector3d objectAxis() const;
+  /** Object/handle axes taken from an explicit world pose, so the planner can
+   * use its own world while the runtime keeps the controller's. */
+  Eigen::Vector3d objectAxisFrom(const sva::PTransformd & W_T_O) const;
+  Eigen::Vector3d plannerObjectAxis() const
+  {
+    return objectAxisFrom(plannerContext_.W_T_O);
+  }
+  Eigen::Vector3d plannerHandleAxis() const { return -plannerObjectAxis(); }
+  void applyPlanningObjectSnapshotToPlanner();
   Eigen::Vector3d blueHandleAxis() const;
 
   void updateWorstClearance(HandoverSafetyReport & report,
@@ -1509,6 +1804,301 @@ private:
   std::vector<unsigned char> gripperProxyHardBlue_;
   void rebuildGripperProxyHierarchy();
 
+  // Resumable transit-route certification.
+  //
+  // The 17-route bank used to be certified as one atomic burst inside a single
+  // planner step, so one control cycle was charged the whole bank. The bank is
+  // now advanced one route per planner step. Route generation, route order,
+  // per-route certification, the audit-record insertion order, the best-route
+  // fold and its comparison arithmetic are unchanged; only the point at which
+  // the fold may be suspended is new.
+  //
+  // Suspension is safe at a route boundary because verifyPredictiveRouteCandidate
+  // is world-state neutral across a complete call: every return path either
+  // precedes the first world mutation or restores W_T_O_, W_T_H_ and
+  // planningM_T_O_ before returning.
+  //
+  // W_T_O_ advances between control cycles, so the presentation anchor the
+  // original code captured once per bank is snapshotted here to keep every
+  // route in a bank evaluated against the identical object pose.
+  /** Immutable planner configuration, mirrored from the controller.
+   *
+   * Every configuration value, calibrated geometry constant and fixed threshold
+   * the scientific search reads. It is a mirror rather than the primary copy
+   * because some of it is calibrated at runtime - the gripper samples, the
+   * collision proxy hierarchy and the mouth control frame - and must track those
+   * updates. refreshPlannerConfig() is called wherever a source changes and
+   * again at every search freeze, so the planner and the runtime always observe
+   * identical values. A worker snapshots this once and never reads the
+   * controller again while it runs.
+   */
+  struct PlannerConfig
+  {
+    double acquisitionCenterTightenDistance = 0.010;
+    double acquisitionFarCenterTolerance = 0.0015;
+    double acquisitionNearCenterTolerance = 0.00065;
+    double armGroundSafetyMargin = 0.010;
+    int candidateCount = 12;
+    double candidateRetreatDistance = 0.180;
+    double candidateStandoffDistance = 0.120;
+    double captureDepth = 0.006;
+    std::string completeEventSelectionMode = "first_admissible_center_out";
+    std::string completePlanSelectionMode = "protected_heuristic";
+    double corridorAxialTolerance = 0.035;
+    double corridorEntryDepth = 0.135;
+    double corridorFingerInset = 0.010;
+    double corridorMaxAngleRad = 0.17453292519943295;
+    double corridorPalmLimit = 0.004;
+    double corridorSafetyMargin = 0.003;
+    double decisionCharacteristicLength = 0.20;
+    double decisionClearanceWeight = 0.1578947;
+    double decisionConditioningWeight = 0.0736842;
+    bool decisionCostConfigurationValid = true;
+    double decisionCostTieTolerance = 1e-9;
+    double decisionEffortReference = 8.0;
+    double decisionEffortWeight = 0.1052632;
+    double decisionJointMarginWeight = 0.0842105;
+    int decisionMetricStride = 10;
+    double decisionPathReference = 0.50;
+    double decisionPathWeight = 0.1052632;
+    double decisionSoftClearance = 0.080;
+    double decisionSoftConditionIndex = 0.10;
+    double decisionSoftJointMargin = 0.20;
+    double decisionTimeReference = 8.0;
+    double decisionTimeWeight = 0.4210526;
+    double decisionVelocityReserveWeight = 0.0526316;
+    ForceTransferPolicy forceTransferPolicy;
+    double gripperCloseQ = 0.8;
+    double gripperCloseRate = 0.35;
+    double gripperContactTolerance = 0.0015;
+    bool gripperGeometryValid = false;
+    double gripperMaxClosure = 1.00;
+    double gripperOpenQ = 0.0;
+    double gripperPenetrationTolerance = 0.0005;
+    std::vector<unsigned char> gripperProxyHardBlue;
+    std::vector<GripperProxyHot> gripperProxyHot;
+    std::vector<GripperProxyNode> gripperProxyNodes;
+    double gripperSafetyMargin = 0.003;
+    std::vector<int> gripperSampleNode;
+    std::vector<GripperSample> gripperSamplesB;
+    bool groundEnabled = true;
+    double groundSafetyMargin = 0.015;
+    double groundZ = 0.0;
+    double handleHalfLength = 0.0687;
+    double handleRadius = 0.01125;
+    Eigen::Vector3d leftPadPointTip = Eigen::Vector3d(-0.0252580, -0.000715, 0.01360);
+    bool mouthCalibrationValid = false;
+    std::string objectFrameName = "call_object";
+    std::string objectRobotName = "call_object";
+    double padCenteringTolerance = 0.004;
+    double perceptionLatencyBufferDuration = 1.0;
+    double perceptionLatencySeconds = 0.220;
+    bool physicalGripperCommandEnabled = false;
+    PredictiveReachPolicy predictiveReachPolicy;
+    double presentationAcquisitionWindow = 10.00;
+    double presentationDecelerationDuration = 1.50;
+    double previewAngularGain = 3.5;
+    int previewClosureSamples = 100;
+    double previewDamping = 0.04;
+    double previewDt = 0.010;
+    double previewEffortWeight = 0.025;
+    double previewJointLimitActivation = 0.65;
+    double previewJointLimitAvoidanceGain = 0.45;
+    double previewJointLimitMargin = 0.015;
+    double previewJointLimitVelocityCap = 0.55;
+    double previewJointLimitWeightGain = 0.8;
+    double previewLinearGain = 3.5;
+    double previewMaxAngularSpeed = 1.20;
+    int previewMaxIterationsPerSegment = 1400;
+    double previewMaxLinearSpeed = 0.40;
+    double previewOrientationTolerance = 0.055;
+    double previewPositionTolerance = 0.010;
+    double previewPostureGain = 0.35;
+    double previewRotationWeight = 0.08;
+    std::map<std::string, std::vector<double>> readyPosture;
+    Eigen::Vector3d rightPadPointTip = Eigen::Vector3d(0.0252580, -0.000035, 0.01360);
+    double sensorHalfLength = 0.0182;
+    double sensorRadius = 0.017;
+    bool simulateMovingObject = true;
+    int sweepSamples = 20;
+    double timingArmScale = 1.50;
+    double timingBilateralDwell = 0.12;
+    double timingCaptureLock = 0.25;
+    double timingConfirmationDwell = 0.25;
+    double timingConfirmationTimeout = 2.0;
+    double timingEffectiveGripperRate = 0.120;
+    double timingPriorityBlend = 0.40;
+    double timingTerminalCaptureDwell = 0.08;
+    std::string toolFrame = "gen3_robotiq_85_base_link";
+    double transitClearancePreferenceBand = 0.010;
+    int transitCurveLengthSamples = 32;
+    double transitMaximumPathStretch = 1.90;
+    double transitMinimumPredictedClearance = 0.020;
+    bool transitPlanningEnabled = true;
+    std::vector<double> transitRouteApexOffsets = {0.08, 0.14};
+    int transitRouteDirections = 8;
+    Eigen::Vector3d worldUp = Eigen::Vector3d::UnitZ();
+  };
+
+  PlannerConfig plannerConfig_;
+  void refreshPlannerConfig();
+
+  /** Mutable state owned by one finite TRIAD search.
+   *
+   * Everything here is scratch for a single search from a single frozen epoch:
+   * the copied rollout configurations, the preview kinematic caches (rbd::Jacobian
+   * is stateful and must never be shared), the resumable route-step machine, the
+   * route-certification fold and the record accumulators. None of it is
+   * controller, execution, commit or FSM state, and none of it outlives the
+   * search. Isolating it here is what makes the planner relocatable: a worker
+   * would own one of these outright instead of sharing controller members.
+   */
+  struct PlannerContext
+  {
+    std::vector<GlobalEventPlanAlternative> globalEventPlanAlternatives;
+    CaptureCandidate planningBestCandidate;
+    int planningCandidateCount = 0;
+    int planningCandidateIndex = 0;
+    int planningClosureIndex = 0;
+    std::vector<CaptureCandidate> planningCompletePlanAuditCandidates;
+    std::size_t planningCompletePlanCount = 0;
+    std::size_t planningCostValidCount = 0;
+    CaptureCandidate planningCurrentCandidate;
+    bool planningFoundFeasible = false;
+    std::unique_ptr<rbd::MultiBodyConfig> planningMbc;
+    double planningPhaseStartDuration = 0.0;
+    PlanningPhase planningPhase = PlanningPhase::ReachStandoff;
+    PreviewResult planningResult;
+    int planningSegmentIteration = 0;
+    // The planner's own world. The search used to hijack the controller's
+    // W_T_O_/W_T_H_/planningM_T_O_ and restore them; those members are read by
+    // control-thread logging every cycle, so a search running off-thread would
+    // race them. The search now mutates only these.
+    // True while a hypothesis presentation world is established in this
+    // context. Replaces the controller's planningObjectSnapshotActive_ flag
+    // for the search, which no longer routes through that snapshot.
+    bool plannerWorldActive = false;
+    sva::PTransformd W_T_O = sva::PTransformd::Identity();
+    sva::PTransformd W_T_H = sva::PTransformd::Identity();
+    sva::PTransformd planningM_T_O = sva::PTransformd::Identity();
+    sva::PTransformd planningStartMouthPose = sva::PTransformd::Identity();
+    bool planningStartMouthPoseValid = false;
+    std::size_t planningTimingAdmissibleCount = 0;
+    std::vector<unsigned char> previewGripperJoint;  // joint -> skip flag
+    Eigen::VectorXd previewJointVelocityLower;
+    Eigen::VectorXd previewJointVelocityUpper;
+    bool previewKinematicCacheValid = false;
+    int previewToolBodyIndex = -1;
+    std::unique_ptr<rbd::Jacobian> previewToolJacobian;
+    bool routeCertificationActive = false;
+    std::vector<std::pair<std::string, Eigen::Vector3d>> routeCertificationBank;
+    CaptureCandidate routeCertificationBest;
+    bool routeCertificationFound = false;
+    std::size_t routeCertificationIndex = 0;
+    std::string routeCertificationLastFailure;
+    bool routeCertificationMovingRequested = false;
+    sva::PTransformd routeCertificationPresentation = sva::PTransformd::Identity();
+    CaptureCandidate routeStepCandidate;
+    double routeStepClearanceScale = 1.0;
+    int routeStepClosureIndex = 0;
+    sva::PTransformd routeStepCommandReference = sva::PTransformd::Identity();
+    int routeStepDwellIndex = 0;
+    int routeStepDwellSteps = 0;
+    rbd::MultiBodyConfig routeStepMbc;
+    double routeStepPhaseStart = 0.0;
+    RouteStepPhase routeStepPhase = RouteStepPhase::Idle;
+    InterceptionPlan routeStepPlan;
+    sva::PTransformd routeStepPresentationAnchor = sva::PTransformd::Identity();
+    int routeStepReachIndex = 0;
+    int routeStepReachIteration = 0;
+    double routeStepReachOrientationError = 0.0;
+    double routeStepReachPositionError = 0.0;
+    PreviewResult routeStepReachResult;
+    int routeStepReachSteps = 0;
+    sva::PTransformd routeStepRetreatAttachment = sva::PTransformd::Identity();
+    int routeStepRetreatIteration = 0;
+    PreviewResult routeStepRetreatResult;
+    sva::PTransformd routeStepSavedHandle = sva::PTransformd::Identity();
+    sva::PTransformd routeStepSavedObject = sva::PTransformd::Identity();
+    sva::PTransformd routeStepSavedPlanningAttachment = sva::PTransformd::Identity();
+    int routeStepSegmentIteration = 0;
+    PreviewResult routeStepTerminalResult;
+    rbd::MultiBodyConfig routeStepTimingAuditStartMbc;
+    bool routeStepTransitPostureSaved = false;
+  };
+
+  /** Immutable inputs frozen at the decision epoch.
+   *
+   * These are the values the copied-state rollout must read instead of the live
+   * controller, because they are exactly the ones that change while a search is
+   * running. Immutable configuration (preview dt, banks, thresholds, weights,
+   * geometry, tie tolerances) is category-A shareable read-only data and still
+   * lives on the controller; moving it here is mechanical and carries no
+   * semantic content.
+   */
+  struct PlanningSnapshot
+  {
+    bool frozenRobotStateValid = false;
+    rbd::MultiBodyConfig frozenRobotState;
+    double searchEpoch = 0.0;
+    bool mouthToBaseTransformValid = false;
+    sva::PTransformd mouthToBaseTransform = sva::PTransformd::Identity();
+    // Planner-owned copy of the multibody. It is immutable for the controller's
+    // lifetime, but mc_rtc owns its instance and mutates the Robot around it
+    // every cycle, and RBDyn makes no thread-safety guarantee, so the planner
+    // works from its own copy rather than sharing that instance.
+    bool modelValid = false;
+    rbd::MultiBody model;
+  };
+
+  /** The multibody the copied-state planner evaluates against. */
+  const rbd::MultiBody & plannerModel() const
+  {
+    return planningSnapshot_.modelValid ? planningSnapshot_.model : robot().mb();
+  }
+  void refreshPlannerModel();
+
+  FiniteTriadSearchState finiteSearch_;
+  mutable PlannerContext plannerContext_;
+  PlanningSnapshot planningSnapshot_;
+
+
+  // Mouth-to-base transform frozen with the rest of the decision state. The
+  // swept clearance certification used to read this from the live robot on
+  // every sweep; the planner now uses this frozen copy.
+  bool stepTransitRouteCertification(int routeWorkUnits);
+  void routeCertificationAcceptRouteResult(bool feasible);
+  void completeCurrentPlanningCandidate(bool feasible,
+                                        bool movingVerificationRequested);
+
+  // Sub-route resumability.
+  //
+  // One predictive route rollout used to run to completion inside a single
+  // planner step, so a control cycle was charged a whole route. The rollout is
+  // now advanced in bounded work units. The arithmetic, the operation order,
+  // the collision sample order, the early-failure points, the failure reasons
+  // and the candidate fields are unchanged; only the points at which the
+  // rollout may be suspended are new.
+  //
+  // A suspension is only ever taken at a boundary that carries no partial
+  // arithmetic: after a complete reach rollout iteration, a complete terminal
+  // approach segment step, a complete capture dwell step, a complete closure
+  // sweep step or a complete retreat step. Never inside previewReachStep(),
+  // previewClosureStep() or a swept gripper clearance query.
+  //
+  // At a suspension the controller world transforms are restored to the saved
+  // controller state, so a cycle that observes them between work units sees
+  // what it would have seen before the route started. That is sound because
+  // the simulated object pose is recomputed closed-form each cycle rather than
+  // integrated. On resume the virtual world is re-established from the stored
+  // frozen presentation anchor; the reach phase needs no re-establishment
+  // because every reach iteration sets its own virtual object before the first
+  // world-dependent read and interceptionReferenceAt() is a pure function of
+  // the frozen plan.
+  //
+  // The copied multibody state is carried across suspensions and is never
+  // re-seeded from the live robot().mbc().
+
   // Preview-loop invariants. The multibody, the tool frame and the joint
   // velocity limits do not change while a plan is being searched, so the
   // quantities derived from them are built once by refreshPreviewKinematicCache()
@@ -1519,34 +2109,28 @@ private:
   // rbd::Jacobian::jacobian() writes into the object's own storage, so the
   // cache is mutable and is only ever touched by the serial preview.
   void refreshPreviewKinematicCache() const;
-  mutable std::vector<unsigned char> previewGripperJoint_;  // joint -> skip flag
-  mutable Eigen::VectorXd previewJointVelocityLower_;
-  mutable Eigen::VectorXd previewJointVelocityUpper_;
-  mutable std::unique_ptr<rbd::Jacobian> previewToolJacobian_;
-  mutable bool previewKinematicCacheValid_ = false;
+  // Tool body index is a model constant; resolving it once here removes the
+  // per-call lookup that previously carried a live-robot fallback.
   static bool collisionOracleCheckEnabled();
   bool gripperGeometryValid_ = false;
 
   CapturePlanningStatus capturePlanningStatus_ = CapturePlanningStatus::Idle;
-  PlanningPhase planningPhase_ = PlanningPhase::ReachStandoff;
-  int planningCandidateIndex_ = 0;
-  int planningCandidateCount_ = 0;
-  int planningSegmentIteration_ = 0;
-  int planningClosureIndex_ = 0;
   Eigen::Vector3d planningBaseOutward_ = Eigen::Vector3d::UnitY();
-  sva::PTransformd planningStartMouthPose_ = sva::PTransformd::Identity();
-  std::unique_ptr<rbd::MultiBodyConfig> planningMbc_;
-  CaptureCandidate planningCurrentCandidate_;
-  CaptureCandidate planningBestCandidate_;
-  std::vector<CaptureCandidate> planningCompletePlanAuditCandidates_;
-  std::vector<GlobalEventPlanAlternative> globalEventPlanAlternatives_;
+
+  /** Build the frozen plan set from the completed search, and emit it at full
+   * double precision for equivalence checking. Called once, at selector entry,
+   * after the search has finished and after the selector's now has been taken,
+   * so it cannot perturb the planner's own elapsed time or the commit clock. */
+
+  FrozenPlanSet buildFrozenPlanSet(std::size_t evaluatedHypotheses,
+                                   std::size_t configuredHypotheses,
+                                   bool scheduleComplete) const;
+  void logFrozenPlanSet(const FrozenPlanSet & planSet) const;
+
   bool planningCostSelectionValid_ = false;
   bool planningCostSelectionCommitAdmissible_ = false;
   bool planningGlobalSelectionActive_ = false;
   std::string planningCostSelectionReason_ = "not_run";
-  std::size_t planningCompletePlanCount_ = 0;
-  std::size_t planningCostValidCount_ = 0;
-  std::size_t planningTimingAdmissibleCount_ = 0;
   double planningMinimumAdmissibleCost_ = 1e9;
   double planningSelectedObjectiveCost_ = 1e9;
   double selectedGlobalMotionCost_ = 1e9;
@@ -1555,16 +2139,13 @@ private:
   double selectedGlobalEventPresentationTime_ = 0.0;
   double selectedGlobalMinimumReachEntryLead_ = 0.0;
   double selectedGlobalMinimumSafeCommitLead_ = 0.0;
-  double globalTimePlanSearchEpoch_ = 0.0;
   /** Common frozen preview decision-state for the current global-time-plan
    * search: a single robot().mbc() snapshot captured once at
    * resetGlobalTimePlanSearch(), reused as the seed for every candidate
    * (startNextPlanningCandidate()) and every route
    * (verifyPredictiveRouteCandidate()) preview rollout in that search. Valid
-   * only while globalTimePlanFrozenRobotStateValid_ is true; invalidated and
+   * only while planningSnapshot_.frozenRobotStateValid is true; invalidated and
    * recaptured on the next resetGlobalTimePlanSearch() call. */
-  rbd::MultiBodyConfig globalTimePlanFrozenRobotState_;
-  bool globalTimePlanFrozenRobotStateValid_ = false;
   std::size_t selectedGlobalHypothesisIndex_ = 0;
   std::size_t globalEvaluatedHypotheses_ = 0;
   std::size_t globalConfiguredHypotheses_ = 0;
@@ -1573,9 +2154,6 @@ private:
       sva::PTransformd::Identity();
   sva::PTransformd selectedGlobalPlanningStartMouthPose_ =
       sva::PTransformd::Identity();
-  PreviewResult planningResult_;
-  double planningPhaseStartDuration_ = 0.0;
-  bool planningFoundFeasible_ = false;
   bool capturePlanningCommitOnSuccess_ = true;
   bool planningObjectSnapshotActive_ = false;
   sva::PTransformd W_T_O_planningSnapshot_ = sva::PTransformd::Identity();

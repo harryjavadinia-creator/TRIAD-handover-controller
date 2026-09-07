@@ -49,8 +49,12 @@ def main() -> int:
             "controller does not use the global finite-event selector")
     require(
         re.search(
-            r"planningBestCandidate_\s*=\s*\n?\s*"
-            r"planningCompletePlanAuditCandidates_\[selection\.selectedRecord\]",
+            # The planner's search state moved into PlannerContext; the
+            # assertion is unchanged - the committed candidate is still written
+            # from the audit candidate list at the selected record index.
+            r"plannerContext_\.planningBestCandidate\s*=\s*\n?\s*"
+            r"plannerContext_\.planningCompletePlanAuditCandidates"
+            r"\[selection\.selectedRecord\]",
             controller,
         ) is not None,
         "minimum-cost selector does not write the committed candidate",
@@ -67,7 +71,10 @@ def main() -> int:
             "static event does not finalize the binding selector")
     require("planningCostSelectionCommitAdmissible_" in header,
             "commit-admission state is not represented in the controller")
-    require("globalEventPlanAlternatives_" in header,
+    # The accumulator moved into PlannerContext with the rest of the search
+    # state; the assertion that the complete cross-event plan set is retained
+    # is unchanged.
+    require("globalEventPlanAlternatives" in header,
             "controller does not retain the complete cross-event plan set")
     require(
         "eventSearchStartTime_ + guessLead_" in solve,
@@ -78,8 +85,12 @@ def main() -> int:
         and "predictionModelFrozen=true" in solve,
         "global event poses are not frozen from one prediction snapshot",
     )
+    # The hypothesis counters moved into the extracted finite search; the
+    # assertion that the global commit requires complete hypothesis coverage is
+    # unchanged, and is now expressed against the search state.
     require(
-        "attemptedEventLeads_.size() == boundedEventLeads_.size()" in solve,
+        "evaluated == configured" in solve
+        and "search.cursor >= search.bank.leads.size()" in solve,
         "global commit does not require complete hypothesis coverage",
     )
     require(
@@ -110,7 +121,12 @@ def main() -> int:
         "bool HandoverInterceptionController::previewAttachedRetreatSafe(",
         "bool HandoverInterceptionController::evaluateAttachedRetreatSafety(",
     )
-    require("sampleWorldPoint(sample, mbc)" in retreat,
+    # The assertion is that the retreat preview samples world points from the
+    # copied MultiBodyConfig rather than the live robot. sampleWorldPoint()
+    # gained an out-parameter when its live-robot fallback was removed, so the
+    # anchor tracks the signature; the copied-state argument it pins is
+    # unchanged.
+    require("sampleWorldPoint(sample, mbc, pW)" in retreat,
             "retreat preview does not use copied closed-gripper transforms")
     require("basePoseFromMouthPose" not in retreat,
             "retreat preview still reconstructs cached live/open geometry")

@@ -13,6 +13,26 @@ void HandoverInterceptionController_SolveInterception::configure(
   {
     config("planningStepsPerCycle", planningStepsPerCycle_);
   }
+  if(config.has("routeWorkUnitsPerCycle"))
+  {
+    config("routeWorkUnitsPerCycle", routeWorkUnitsPerCycle_);
+  }
+  if(config.has("plannerPublishDelayCycles"))
+  {
+    config("plannerPublishDelayCycles", plannerPublishDelayCycles_);
+  }
+  if(config.has("plannerEvidenceLogging"))
+  {
+    config("plannerEvidenceLogging", plannerEvidenceLogging_);
+  }
+  if(config.has("plannerInjectFailure"))
+  {
+    config("plannerInjectFailure", plannerInjectFailure_);
+  }
+  if(config.has("plannerForceStaleGeneration"))
+  {
+    config("plannerForceStaleGeneration", plannerForceStaleGeneration_);
+  }
   if(config.has("maximumFixedPointIterations"))
   {
     config("maximumFixedPointIterations", maximumFixedPointIterations_);
@@ -104,6 +124,7 @@ void HandoverInterceptionController_SolveInterception::configure(
   if(config.has("logEvery")) { config("logEvery", logEvery_); }
 
   planningStepsPerCycle_ = std::max(1, planningStepsPerCycle_);
+  routeWorkUnitsPerCycle_ = std::max(1, routeWorkUnitsPerCycle_);
   maximumFixedPointIterations_ = std::max(1, maximumFixedPointIterations_);
   maximumEventHypotheses_ = std::max(1, maximumEventHypotheses_);
   eventSearchLeadStep_ = std::max(0.05, eventSearchLeadStep_);
@@ -346,6 +367,37 @@ void HandoverInterceptionController_SolveInterception::start(
         "[UnifiedPresentationArchitecture] mode=MOVING completePlanPerEvent=true boundedFutureEventSearch=true robotStationary=true sameCandidateBank=true sameExecutionChain=true oneCommit=true");
     if(globalTimePlanMode_)
     {
+      // Freeze the bounded event bank and hand the complete finite search to
+      // the controller. Ordering, leads and presentation poses are exactly the
+      // ones generated above; minimumSafeCommitLead is constant for the search
+      // because both of its operands are.
+      HandoverInterceptionController::FrozenEventBank bank;
+      bank.searchEpoch = eventSearchStartTime_;
+      bank.configuredHypotheses = boundedEventLeads_.size();
+      bank.maximumHypotheses = maximumEventHypotheses_;
+      bank.maximumSearchWallTime = maximumEventSearchWallTime_;
+      bank.minimumSafeCommitLead = std::max(
+          minimumCommitRemainingTime_,
+          ctl.presentationDecelerationDuration() + 0.25);
+      bank.source = "global_fixed_schedule";
+      for(const double lead : boundedEventLeads_)
+      {
+        bank.leads.push_back(lead);
+        bank.presentationPoses.push_back(
+            boundedEventPresentationPoses_.at(lead));
+      }
+      ctl.setPlannerEvidenceLogging(plannerEvidenceLogging_);
+      ctl.setPlannerPublishDelayCycles(plannerPublishDelayCycles_);
+      ctl.setPlannerInjectFailure(plannerInjectFailure_);
+      ctl.setPlannerForceStaleGeneration(plannerForceStaleGeneration_);
+      // Submit one planning generation to the worker and return. The control
+      // thread does not wait for it.
+      ctl.submitFiniteTriadSearch(bank, eventSearchStartTime_,
+                                  planningStepsPerCycle_,
+                                  routeWorkUnitsPerCycle_);
+    }
+    if(globalTimePlanMode_)
+    {
       mc_rtc::log::success(
           "[GlobalTimePlanSearchConfiguration] enabled=true fixedSearchEpoch={:.3f}s fixedAbsoluteEvents=true predictionModelFrozen=true configuredHypotheses={} leadRange=[{:.3f},{:.3f}] objective=min_time_grasp_route timeTerm=search_to_completion scheduleMustComplete=true finalTimingReadmission=true robotStationary=true",
           eventSearchStartTime_, boundedEventLeads_.size(),
@@ -462,7 +514,8 @@ bool HandoverInterceptionController_SolveInterception::run(
 
     ctl.setPlanningObjectSnapshot(planningObjectPresentationPose_);
     ctl.applyPlanningObjectSnapshot();
-    const auto status = ctl.stepCapturePlanning(planningStepsPerCycle_);
+    const auto status = ctl.stepCapturePlanning(planningStepsPerCycle_,
+                                                        routeWorkUnitsPerCycle_);
     ctl.clearPlanningObjectSnapshot();
 
     if(status == HandoverInterceptionController::CapturePlanningStatus::Running)
@@ -542,21 +595,23 @@ bool HandoverInterceptionController_SolveInterception::run(
     const double minimumSafeCommitLead = std::max(
         minimumCommitRemainingTime_,
         ctl.presentationDecelerationDuration() + 0.25);
-    const bool scheduleComplete =
-        attemptedEventLeads_.size() == boundedEventLeads_.size()
-        && eventSearchCursor_ >= boundedEventLeads_.size();
+    const auto & search = ctl.finiteSearchState();
+    const std::size_t evaluated =
+        static_cast<std::size_t>(search.evaluatedHypotheses);
+    const std::size_t configured = search.bank.configuredHypotheses;
+    const bool scheduleComplete = evaluated == configured
+        && search.cursor >= search.bank.leads.size();
     if(!ctl.selectGlobalTimePlanForCommit(
            now, minimumReachEntryLead_, minimumSafeCommitLead,
-           attemptedEventLeads_.size(), boundedEventLeads_.size(),
-           scheduleComplete))
+           evaluated, configured, scheduleComplete))
     {
       ctl.endObjectObservation(true);
       ctl.finishPhaseTiming("interception_planning");
       mc_rtc::log::error(
           "[GlobalTimePlanSearchSummary] committed=false reason={} scheduleComplete={} evaluatedHypotheses={} configuredHypotheses={} feasibleHypotheses={} geometryFailures={} elapsed={:.3f}s robotMoved=[{:.4f},{:.4f}] no fallback permitted",
           ctl.planningSelectionReason(), scheduleComplete,
-          attemptedEventLeads_.size(), boundedEventLeads_.size(),
-          feasibleHypothesisCount_, geometryFailureCount_,
+          evaluated, configured,
+          search.feasibleHypotheses, search.geometryFailures,
           now - eventSearchStartTime_, maxRobotTranslationObserved_,
           maxRobotRotationObserved_);
       output("FAIL");
@@ -577,8 +632,8 @@ bool HandoverInterceptionController_SolveInterception::run(
     ctl.finishPhaseTiming("interception_planning");
     mc_rtc::log::success(
         "[GlobalTimePlanSearchSummary] committed=true scheduleComplete=true evaluatedHypotheses={} configuredHypotheses={} feasibleHypotheses={} geometryFailures={} selectedLead={:.3f}s selectedMotionJ={:.9f} selectedGlobalJ={:.9f} scheduleWait={:+.3f}s elapsed={:.3f}s robotMoved=[{:.4f},{:.4f}] oneCommit=true globalArgmin=true",
-        attemptedEventLeads_.size(), boundedEventLeads_.size(),
-        feasibleHypothesisCount_, geometryFailureCount_,
+        evaluated, configured,
+        search.feasibleHypotheses, search.geometryFailures,
         ctl.selectedGlobalEventLead(), ctl.selectedGlobalMotionCost(),
         ctl.selectedGlobalObjectiveCost(),
         ctl.selectedGlobalScheduleWait(),
@@ -586,6 +641,62 @@ bool HandoverInterceptionController_SolveInterception::run(
         maxRobotTranslationObserved_, maxRobotRotationObserved_);
     output("OK");
     return true;
+  }
+
+  if(globalTimePlanMode_)
+  {
+    // Poll the worker. This is the whole planning cost the control thread now
+    // pays per cycle: one acquire load and, once, a pointer-free read of the
+    // finished plan set.
+    const auto job = ctl.plannerJobState();
+    if(job == HandoverInterceptionController::PlannerJobState::Running)
+    {
+      return false;
+    }
+    const auto & search = ctl.finiteSearchState();
+    if(job == HandoverInterceptionController::PlannerJobState::Failed)
+    {
+      ctl.endObjectObservation(true);
+      ctl.finishPhaseTiming("interception_planning");
+      mc_rtc::log::error(
+          "[PlannerWorkerSummary] committed=false reason={} generation={} hypotheses={} feasible={} geometryFailures={} workerWall={:.6f}s no fallback permitted",
+          ctl.plannerFailureReason(), ctl.plannerRequestGeneration(),
+          search.evaluatedHypotheses, search.feasibleHypotheses,
+          search.geometryFailures, ctl.plannerWorkerWallDuration());
+      output("FAIL");
+      return true;
+    }
+    if(job == HandoverInterceptionController::PlannerJobState::Ready)
+    {
+      // Development-only late-delivery hook: hold a finished result back so the
+      // fail-closed path can be exercised without touching timing parameters.
+      if(ctl.plannerPublishHeldCycles() < ctl.plannerPublishDelayCycles())
+      {
+        ++ctl.plannerPublishHeldCycles();
+        return false;
+      }
+      // Reject anything that does not belong to the generation in flight.
+      if(ctl.plannerResultGeneration() != ctl.plannerRequestGeneration())
+      {
+        ctl.endObjectObservation(true);
+        ctl.finishPhaseTiming("interception_planning");
+        mc_rtc::log::error(
+            "[PlannerWorkerSummary] committed=false reason=stale_generation resultGeneration={} requestGeneration={} no fallback permitted",
+            ctl.plannerResultGeneration(), ctl.plannerRequestGeneration());
+        output("FAIL");
+        return true;
+      }
+      mc_rtc::log::success(
+          "[PlannerWorkerResult] generation={} records={} requestControllerTime={:.6f}s resultControllerTime={:.6f}s workerWall={:.6f}s controllerElapsed={:.6f}s evaluatedHypotheses={} feasibleHypotheses={} nonBlocking=true",
+          ctl.plannerResultGeneration(), ctl.plannerResult().alternatives.size(),
+          ctl.plannerRequestControllerTime(), ctl.controllerTime(),
+          ctl.plannerWorkerWallDuration(),
+          ctl.controllerTime() - ctl.plannerRequestControllerTime(),
+          search.evaluatedHypotheses, search.feasibleHypotheses);
+      phase_ = Phase::SelectGlobal;
+      return false;
+    }
+    return false;
   }
 
   if(phase_ == Phase::StartIteration)
@@ -697,7 +808,8 @@ bool HandoverInterceptionController_SolveInterception::run(
 
   ctl.setPlanningObjectSnapshot(planningObjectPresentationPose_);
   ctl.applyPlanningObjectSnapshot();
-  const auto status = ctl.stepCapturePlanning(planningStepsPerCycle_);
+  const auto status = ctl.stepCapturePlanning(planningStepsPerCycle_,
+                                                        routeWorkUnitsPerCycle_);
   ctl.clearPlanningObjectSnapshot();
 
   if(status == HandoverInterceptionController::CapturePlanningStatus::Running)
@@ -959,6 +1071,11 @@ void HandoverInterceptionController_SolveInterception::teardown(
     mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<HandoverInterceptionController &>(ctl_);
+  // The planning job cannot outlive the state that owns it. Cancel and join
+  // here, outside the control callback, so no worker is still touching
+  // controller state while the rest of the teardown runs. The worker checks the
+  // cancel flag at every bounded work unit, so this returns promptly.
+  ctl.shutdownPlannerWorker();
   ctl.clearPlanningObjectSnapshot();
   mc_rtc::log::info(
       "[PresentationSolve] teardown mode={} committed={}",

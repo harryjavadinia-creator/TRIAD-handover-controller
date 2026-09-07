@@ -1,0 +1,48 @@
+# TRIAD asynchronous-planner source synchronization manifest
+#
+# The implementation files listed below were synchronized directly from the
+# frozen scientific development state f56add3 in the TRIAD development
+# repository. That state is the head of the following lineage, in which the
+# complete finite search was progressively isolated from the mc_rtc control
+# callback and finally moved onto one background worker:
+#
+#   route certification made resumable (one route per cycle)
+#   predictive route rollout made resumable (bounded work units)
+#   live-robot reads removed from the copied-state rollout
+#   planner data boundary: PlanningSnapshot, PlannerContext, FrozenPlanSet
+#   planner configuration frozen behind PlannerConfig
+#   complete finite search isolated from the FSM
+#   search given its own planner-owned world
+#   search moved onto one background worker
+#   commit freshness recorded; verbose evidence made switchable
+#   perception-latency configuration read corrected
+#
+# No scientific parameter was changed at any point in that lineage: the preview
+# integration step, the event, grasp and route banks, hard feasibility,
+# J_global, the objective weights, the timing thresholds, the tie rules and the
+# one-commit / no-replanning semantics are untouched throughout. The only
+# configuration addition is routeWorkUnitsPerCycle, a work-unit scheduling
+# budget that redistributes already-defined route work across control cycles.
+#
+# Equivalence evidence: the frozen plan sets of three of the four Dataset-B
+# scenarios are byte-identical between the control-thread and worker builds at
+# 17 significant digits; the fourth is a strict superset that additionally
+# enumerates one event hypothesis which the wall-clock-dependent elapsed-lead
+# prune had skipped before its geometry ran.
+#
+# This publication commit is not the same commit as f56add3. It is a curated
+# publication commit whose implementation files are byte-identical to that
+# frozen development state.
+#
+# Verify with:
+#   sha256sum -c docs/source_sync_f56add3.sha256
+#
+# Columns: <sha256>  <path>
+4dd833ec5c0fc21d1eb5c4e6f36dbb8115992cfcf37fc30bc9a500b13d639b2a  etc/HandoverInterceptionController.in.yaml
+541209e6a6ee6b237afbb9f6612363447db80e378167950ecf9d9f610e41cc60  src/HandoverInterceptionController.cpp
+9355c7debe6a1dd733b78ac0f828cff97178cdd6ef1bcca76b33a77bdc8d5d02  src/HandoverInterceptionController.h
+ac61fa37e2e58a89c8efc54abb8286e84e8104a37b100aa882ce7c18f0bfe839  src/states/HandoverInterceptionController_SolveInterception.cpp
+ae13b8210916e718c629e4ae53fc86d534c9b11c6f3d64070dce4333ab8c5dac  src/states/HandoverInterceptionController_SolveInterception.h
+b97edae13359dfb567f88c640f79f46c9a60144b87a282a589e41a4594386c50  tools/check_binding_cost_source.py
+1df527b9e9268be51df28ae6ebb25021aaed8abb093286e26e4d72ba7754ee27  tools/check_planner_core_purity.py
+ad70f3673585cac0a4f8b3d933d200a3bb22c9434e24fbda5917d5e1577b3bd7  tools/test_check_planner_core_purity.py

@@ -31,6 +31,17 @@ private:
   };
 
   int planningStepsPerCycle_ = 12;
+  // Bounded work units of predictive route certification per control cycle.
+  // This controls only how much already-defined route work is executed in one
+  // callback. It does not touch any scientific quantity: preview dt, the route,
+  // grasp and event banks, collision sampling, IK iterations, hard feasibility,
+  // the objective and the timing policy are all independent of it.
+  int routeWorkUnitsPerCycle_ = 1;
+  // Development-only worker fault-injection hooks. All default to inert.
+  int plannerPublishDelayCycles_ = 0;
+  bool plannerInjectFailure_ = false;
+  bool plannerForceStaleGeneration_ = false;
+  bool plannerEvidenceLogging_ = true;
   int maximumFixedPointIterations_ = 4;
   bool boundedEventSearchEnabled_ = true;
   int maximumEventHypotheses_ = 15;
