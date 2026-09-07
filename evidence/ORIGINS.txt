@@ -1,0 +1,62 @@
+# Origin of every published evidence file.
+#
+# <archive-root> is the campaign evidence archive on the machine that ran the
+# experiments. Only the path INSIDE that archive is meaningful for provenance;
+# the machine-specific root is deliberately not published.
+#
+# published path  <-  <archive-root>/...
+
+async/diagonal/frozen_plan_set_prethread_sha.txt                  <-  async/diagonal/frozen_plan_set_prethread_sha.txt
+async/diagonal/frozen_plan_set_sha.txt                            <-  async/diagonal/frozen_plan_set_sha.txt
+async/diagonal/frozen_plan_set.txt                                <-  async/diagonal/frozen_plan_set.txt
+async/diagonal/perf_analysis_clean_machine.txt                    <-  final_clean_validation/perf4/diagonal/perf_analysis.txt
+async/diagonal/timing_frontier_replay.txt                         <-  async/diagonal/timing_frontier_replay.txt
+async/diagonal/worker_timing.txt                                  <-  async/diagonal/worker_timing.txt
+async/lateral-low/frozen_plan_set_prethread_sha.txt               <-  async/lateral-low/frozen_plan_set_prethread_sha.txt
+async/lateral-low/frozen_plan_set_sha.txt                         <-  async/lateral-low/frozen_plan_set_sha.txt
+async/lateral-low/frozen_plan_set.txt                             <-  async/lateral-low/frozen_plan_set.txt
+async/lateral-low/perf_analysis_clean_machine.txt                 <-  final_clean_validation/perf4/lateral-low/perf_analysis.txt
+async/lateral-low/timing_frontier_replay.txt                      <-  async/lateral-low/timing_frontier_replay.txt
+async/lateral-low/worker_timing.txt                               <-  async/lateral-low/worker_timing.txt
+async/longitudinal/frozen_plan_set_prethread_sha.txt              <-  async/longitudinal/frozen_plan_set_prethread_sha.txt
+async/longitudinal/frozen_plan_set_sha.txt                        <-  async/longitudinal/frozen_plan_set_sha.txt
+async/longitudinal/frozen_plan_set.txt                            <-  async/longitudinal/frozen_plan_set.txt
+async/longitudinal/perf_analysis_clean_machine.txt                <-  final_clean_validation/perf4/longitudinal/perf_analysis.txt
+async/longitudinal/timing_frontier_replay.txt                     <-  async/longitudinal/timing_frontier_replay.txt
+async/longitudinal/worker_timing.txt                              <-  async/longitudinal/worker_timing.txt
+async/near-ground/frozen_plan_set_prethread_sha.txt               <-  async/near-ground/frozen_plan_set_prethread_sha.txt
+async/near-ground/frozen_plan_set_prethread.txt                   <-  async/near-ground/frozen_plan_set_prethread.txt
+async/near-ground/frozen_plan_set_sha.txt                         <-  async/near-ground/frozen_plan_set_sha.txt
+async/near-ground/frozen_plan_set.txt                             <-  async/near-ground/frozen_plan_set.txt
+async/near-ground/normalized/CompletePlanCost_async.txt           <-  async/near-ground/normalized/CompletePlanCost_async.txt
+async/near-ground/normalized/GlobalPlanCost_async.txt             <-  async/near-ground/normalized/GlobalPlanCost_async.txt
+async/near-ground/normalized/hashes_async.txt                     <-  async/near-ground/normalized/hashes_async.txt
+async/near-ground/normalized/PlanCapture_async.txt                <-  async/near-ground/normalized/PlanCapture_async.txt
+async/near-ground/normalized/TimingAdmissibility_frozen_async.txt  <-  async/near-ground/normalized/TimingAdmissibility_frozen_async.txt
+async/near-ground/normalized/TransitRoute_async.txt               <-  async/near-ground/normalized/TransitRoute_async.txt
+async/near-ground/perf_analysis_clean_machine.txt                 <-  final_clean_validation/perf4/near-ground/perf_analysis.txt
+async/near-ground/timing_frontier_replay.txt                      <-  async/near-ground/timing_frontier_replay.txt
+async/near-ground/worker_timing.txt                               <-  async/near-ground/worker_timing.txt
+async/perf_analysis_control_thread_reference.txt                  <-  latency_control_prethread/canonical_yz_compensated220/perf_analysis.txt
+feasibility_reference/aggregate_metrics.json                      <-  reference_feasibility/aggregate_metrics.json
+feasibility_reference/ground_clearance.json                       <-  reference_feasibility/ground_clearance.json
+feasibility_reference/LOW_HEIGHT_AUDIT.md                         <-  reference_feasibility/LOW_HEIGHT_AUDIT.md
+feasibility_reference/README_METHOD.md                            <-  reference_feasibility/README_METHOD.md
+feasibility_reference/reference_vs_triad.csv                      <-  reference_feasibility/reference_vs_triad.csv
+feasibility_reference/TIMING_REJECTION_AUDIT.md                   <-  reference_feasibility/TIMING_REJECTION_AUDIT.md
+generalization/generate_scenarios.py                              <-  scenario_generalization/generate_scenarios.py
+generalization/held_out_scenarios.csv                             <-  scenario_generalization/held_out_scenarios.csv
+generalization/held_out_scenarios.csv.sha256                      <-  scenario_generalization/held_out_scenarios.csv.sha256
+generalization/OPERATING_ENVELOPE.md                              <-  scenario_generalization/OPERATING_ENVELOPE.md
+generalization/outcomes.json                                      <-  scenario_generalization/outcomes.json
+generalization/REPEATABILITY_RULE.md                              <-  scenario_generalization/REPEATABILITY_RULE.md
+generalization/ROBUSTNESS_ANCHOR_RULE.md                          <-  scenario_generalization/ROBUSTNESS_ANCHOR_RULE.md
+latency/FINAL_LATENCY_REPORT.md                                   <-  latency_ablation_fixed/FINAL_LATENCY_REPORT.md
+latency/sweep_rows.json                                           <-  latency_ablation_fixed/sweep_rows.json
+README.md                                                         <-  (written for this publication)
+robustness/generate_perturbations.py                              <-  robustness/generate_perturbations.py   [DERIVED: paths replaced by CLI arguments; original sha256 5fa16a1786af2694dabb02e9fa685587fae39d793c8d2a84dd6c904b6ee52c86]
+robustness/outcomes.json                                          <-  robustness/outcomes.json
+robustness/perturbations.csv                                      <-  robustness/perturbations.csv
+robustness/perturbations.csv.sha256                               <-  robustness/perturbations.csv.sha256
+safety/planner_core_purity_mutations.txt                          <-  planner_core_purity_mutations.txt
+safety/planner_core_purity.txt                                    <-  planner_core_purity.txt

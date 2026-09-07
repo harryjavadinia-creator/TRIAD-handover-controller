@@ -1,0 +1,167 @@
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0126
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0187
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=direct curveOffset=[0.000,0.000,0.000] pathLength=0.650m reachClear=0.0751m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_68deg route=direct infeasible reason=predictive_static/reach_tracking reachClear=0.0837
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_0of8 infeasible reason=predictive_static/reach_tracking reachClear=0.0999
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_1of8 infeasible reason=predictive_static/reach_tracking reachClear=0.0994
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_2of8 infeasible reason=predictive_static/reach_tracking reachClear=0.0837
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0192
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_4of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0125
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0070
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0073
+[success] [TransitRoute] SELECTED candidate=axisP_side_68deg route=ring80mm_7of8 curveOffset=[-0.034,-0.046,0.056] pathLength=0.697m reachClear=0.0773m completePlan=true
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0070
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0067
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_7of8 infeasible reason=predictive_static/static_acquire/closure/pad_pair/blue_handle_acquisition_tube reachClear=0.0829
+[success] [TransitRoute] SELECTED candidate=axisN_side_293deg route=direct curveOffset=[0.000,0.000,0.000] pathLength=0.672m reachClear=0.0798m completePlan=true
+[info] [TransitRoute] candidate=axisN_side_315deg route=ring140mm_0of8 infeasible reason=predictive_static/reach_tracking reachClear=0.1080
+[success] [TransitRoute] SELECTED candidate=axisN_side_315deg route=direct curveOffset=[0.000,0.000,0.000] pathLength=0.650m reachClear=0.0813m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0113
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0170
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=direct curveOffset=[0.000,0.000,0.000] pathLength=0.647m reachClear=0.0744m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_68deg route=direct infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0815
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_0of8 infeasible reason=predictive_static/reach_tracking reachClear=0.0972
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_1of8 infeasible reason=predictive_static/reach_tracking reachClear=0.0971
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_2of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0834
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0184
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_4of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0112
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0073
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0075
+[success] [TransitRoute] SELECTED candidate=axisP_side_68deg route=ring80mm_7of8 curveOffset=[-0.034,-0.046,0.056] pathLength=0.694m reachClear=0.0758m completePlan=true
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0078
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0078
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_7of8 infeasible reason=predictive_static/reach_tracking reachClear=0.0829
+[success] [TransitRoute] SELECTED candidate=axisN_side_293deg route=direct curveOffset=[0.000,0.000,0.000] pathLength=0.669m reachClear=0.0797m completePlan=true
+[info] [TransitRoute] candidate=axisN_side_315deg route=ring140mm_0of8 infeasible reason=predictive_static/reach_tracking reachClear=0.1106
+[success] [TransitRoute] SELECTED candidate=axisN_side_315deg route=direct curveOffset=[0.000,0.000,0.000] pathLength=0.647m reachClear=0.0809m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0074
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0090
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=ring80mm_6of8 curveOffset=[-0.031,-0.074,-0.000] pathLength=0.661m reachClear=0.0738m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_0of8 infeasible reason=predictive_static/reach_tracking reachClear=0.0846
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_1of8 infeasible reason=predictive_static/reach_tracking reachClear=0.0900
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0140
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_4of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0049
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0060
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0065
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_5of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0150
+[success] [TransitRoute] SELECTED candidate=axisP_side_68deg route=ring80mm_2of8 curveOffset=[0.036,0.072,0.000] pathLength=0.682m reachClear=0.0820m completePlan=true
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring80mm_0of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0796
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0074
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0064
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_7of8 infeasible reason=predictive_static/reach_tracking reachClear=0.0829
+[success] [TransitRoute] SELECTED candidate=axisN_side_293deg route=direct curveOffset=[0.000,0.000,0.000] pathLength=0.657m reachClear=0.0778m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0055
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0057
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=ring80mm_7of8 curveOffset=[-0.027,-0.050,0.056] pathLength=0.652m reachClear=0.0821m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_1of8 infeasible reason=predictive_static/reach_tracking reachClear=0.0845
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0097
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_4of8 infeasible reason=predictive_static/reach_command/right_tip_body_2/sensor_core reachClear=-0.0009
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_5of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0148
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0076
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0051
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0075
+[success] [TransitRoute] SELECTED candidate=axisP_side_68deg route=ring80mm_0of8 curveOffset=[-0.011,0.005,0.079] pathLength=0.671m reachClear=0.0817m completePlan=true
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring80mm_0of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0797
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring80mm_6of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0782
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring80mm_7of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0779
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_0of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0796
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0088
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0060
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_5of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0197
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_6of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0730
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_7of8 infeasible reason=predictive_static/static_acquire/closure/pad_pair/blue_handle_acquisition_tube reachClear=0.0829
+[success] [TransitRoute] SELECTED candidate=axisN_side_293deg route=direct curveOffset=[0.000,0.000,0.000] pathLength=0.646m reachClear=0.0760m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_4of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0166
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0075
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0075
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=ring80mm_7of8 curveOffset=[-0.025,-0.051,0.056] pathLength=0.644m reachClear=0.0806m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0081
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0079
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_5of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0070
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0049
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0039
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0073
+[success] [TransitRoute] SELECTED candidate=axisP_side_68deg route=ring80mm_0of8 curveOffset=[-0.012,0.005,0.079] pathLength=0.662m reachClear=0.0779m completePlan=true
+[info] [TransitRoute] candidate=axisN_side_293deg route=direct infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0736
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring80mm_0of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0798
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring80mm_4of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0146
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring80mm_5of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0488
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring80mm_6of8 infeasible reason=predictive_static/static_acquire/closure/pad_pair/blue_handle_acquisition_tube reachClear=0.0784
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring80mm_7of8 infeasible reason=predictive_static/static_acquire/closure/pad_pair/blue_handle_acquisition_tube reachClear=0.0777
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_0of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0795
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0171
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0075
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_5of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0146
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_6of8 infeasible reason=predictive_static/static_acquire/closure/right_pad_shoulder_low/robot_blue_handle reachClear=0.0740
+[info] [TransitRoute] candidate=axisN_side_293deg route=ring140mm_7of8 infeasible reason=predictive_static/static_acquire/closure/pad_pair/blue_handle_acquisition_tube reachClear=0.0817
+[success] [TransitRoute] SELECTED candidate=axisN_side_293deg route=ring80mm_2of8 curveOffset=[0.030,0.074,0.000] pathLength=0.662m reachClear=0.0781m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0187
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_4of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0070
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0080
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0064
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_5of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0178
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=ring80mm_7of8 curveOffset=[-0.024,-0.052,0.056] pathLength=0.638m reachClear=0.0763m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0066
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0073
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0077
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0039
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0066
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0069
+[success] [TransitRoute] SELECTED candidate=axisP_side_68deg route=ring80mm_1of8 curveOffset=[0.010,0.056,0.056] pathLength=0.655m reachClear=0.0809m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0121
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0069
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_5of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0174
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0065
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0074
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0070
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=ring80mm_0of8 curveOffset=[-0.012,0.003,0.079] pathLength=0.634m reachClear=0.0827m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0069
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0075
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_5of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0062
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0065
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0058
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0064
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=ring80mm_0of8 curveOffset=[-0.013,0.003,0.079] pathLength=0.631m reachClear=0.0790m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0058
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0075
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0066
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0072
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0078
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0063
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=ring80mm_0of8 curveOffset=[-0.015,0.003,0.079] pathLength=0.629m reachClear=0.0733m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0015
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_4of8 infeasible reason=predictive_static/reach_command/right_finger_1/human_grey_handle reachClear=-0.0005
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0066
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_6of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0124
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0132
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0069
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0056
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_6of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0085
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=ring140mm_1of8 curveOffset=[-0.005,0.101,0.097] pathLength=0.679m reachClear=0.0822m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_3of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0072
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_4of8 infeasible reason=predictive_static/reach_command/right_finger_4/human_grey_handle reachClear=-0.0011
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0070
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_6of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0074
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0050
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0076
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_6of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0062
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=ring80mm_1of8 curveOffset=[-0.007,0.058,0.055] pathLength=0.629m reachClear=0.0732m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_4of8 infeasible reason=predictive_static/reach_command/right_finger_5/human_grey_handle reachClear=-0.0000
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_5of8 infeasible reason=predictive_static/reach_command/right_finger_2/human_grey_handle reachClear=-0.0003
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring80mm_6of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0044
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_0of8 infeasible reason=predictive_static/static_acquire/closure/left_pad_shoulder_low/robot_blue_handle reachClear=0.0672
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_4of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0064
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0065
+[info] [TransitRoute] candidate=axisP_side_45deg route=ring140mm_6of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0067
+[success] [TransitRoute] SELECTED candidate=axisP_side_45deg route=ring140mm_1of8 curveOffset=[-0.019,0.101,0.096] pathLength=0.681m reachClear=0.0819m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_5of8 infeasible reason=predictive_static/reach_command/right_tip_body_5/human_grey_handle reachClear=-0.0002
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_6of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0045
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring80mm_7of8 infeasible reason=predictive_static/robust_transit_clearance_reserve reachClear=0.0049
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_4of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0074
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_5of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0074
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_6of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0068
+[info] [TransitRoute] candidate=axisP_side_68deg route=ring140mm_7of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0071
+[success] [TransitRoute] SELECTED candidate=axisP_side_68deg route=direct curveOffset=[0.000,0.000,0.000] pathLength=0.623m reachClear=0.0456m completePlan=true
+[info] [TransitRoute] candidate=axisP_side_247deg route=ring140mm_2of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0070
+[info] [TransitRoute] candidate=axisP_side_247deg route=ring140mm_3of8 infeasible reason=predictive_static/runtime_clearance_reserve reachClear=0.0065
+[success] [TransitRoute] SELECTED candidate=axisP_side_247deg route=ring80mm_5of8 curveOffset=[0.040,-0.043,-0.055] pathLength=0.708m reachClear=0.0769m completePlan=true

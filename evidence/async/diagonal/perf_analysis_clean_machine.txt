@@ -1,0 +1,13 @@
+iterations        : 22195
+ControllerRun     : >1 ms 3  >2 ms 0  >5 ms 0  >10 ms 0   max 1.851 ms
+GlobalRun         : >1 ms 9  >10 ms 5  >50 ms 0  >100 ms 0   max 40.491 ms
+planning cycles   : 2124  (elapsed 2.124 s)
+in-planning ControllerRun: median 0.018  p90 0.040  p95 0.047  p99 0.049  max 1.206 ms
+in-planning counts: >1 ms 1  >2 ms 0  >5 ms 0  >10 ms 0
+--- largest GlobalRun cycles: Log share ---
+  t=11.956  GlobalRun=  40.491 ms  Log=  40.435 ms ( 99.9%)  remainder=0.056 ms
+  t=16.960  GlobalRun=  40.351 ms  Log=  40.294 ms ( 99.9%)  remainder=0.057 ms
+  t=21.964  GlobalRun=  40.211 ms  Log=  40.187 ms ( 99.9%)  remainder=0.024 ms
+  t=1.949  GlobalRun=  39.628 ms  Log=  39.570 ms ( 99.9%)  remainder=0.059 ms
+  t=6.953  GlobalRun=  39.552 ms  Log=  39.529 ms ( 99.9%)  remainder=0.022 ms
+max GlobalRun excluding Log: 1.869 ms
