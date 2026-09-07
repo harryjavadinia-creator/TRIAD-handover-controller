@@ -44,6 +44,41 @@ The two handle-axis orientations are alternative gripper-frame conventions
 around the same receiver grasp point. They are not two physical ends of the
 handover object.
 
+## Object estimation and prediction
+
+The object estimate is a latency-compensated measurement. When a perception
+delay is configured, the measurement used is the buffer value at `t - tau`,
+interpolated between the bracketing samples and clamped at the buffer ends, and
+the estimate is then propagated forward by the measured age of that sample using
+the filtered twist:
+
+\[
+\hat p(t)=p_{\mathrm{meas}}(t-\tau)+\mathrm{age}\cdot\hat v(t),
+\qquad
+\hat R(t)=\mathrm{Exp}\!\left(\mathrm{age}\cdot\hat\omega(t)\right)R_{\mathrm{meas}}(t-\tau).
+\]
+
+The twist estimate is a first-order low-pass filter of finite differences of the
+measurement stream, gated against implausible raw values.
+
+Prediction to a candidate event uses the same constant-twist law composed with a
+**prescribed** C²-continuous quintic terminal deceleration of fixed duration
+`D`, ending exactly at the hypothesised presentation instant, after which the
+object is modelled as stationary. Because the integral of the quintic smoothstep
+complement is exactly one half, the predicted presentation pose at lead `h` is
+
+\[
+\Pi(h)=\mathrm{Prop}\!\left(W\_T\_O(t_0),\; h-\tfrac12\min(h,D),\; \hat v,\hat\omega\right).
+\]
+
+The prediction model is **deterministic**. There is no covariance, no filter
+bank, no learned model and no representation of uncertainty anywhere in the
+pipeline, and the deceleration profile is **prescribed identically for every
+hypothesis** rather than inferred from the partner's motion. Uncertainty is
+handled discretely instead — by a bounded-twist sanity gate on the raw estimate,
+by the commit-time prediction-freshness bound, and by the fail-closed runtime
+guards.
+
 ## Hard physical feasibility
 
 Let `s0` denote the frozen robot/object decision state at the common search
