@@ -26,10 +26,15 @@ python3 tools/verify_scientific_baseline.py \
   SCIENTIFIC_BASELINE.sha256 \
   --commit scientific-baseline
 
-sha256sum -c docs/source_sync_82e6eaa.sha256
+sha256sum -c docs/source_sync_f56add3.sha256
+
+cd evidence && sha256sum -c MANIFEST.sha256 && cd ..
+python3 tools/check_evidence_manifest.py
 ```
 
-They cover the within-event and cross-event selectors, binding-cost source integration and runtime-checker fixtures, timing-frontier replay logic, robot-module reconstruction safety/validation, latency-cell and scenario-identity verification, scenario-override generation, local documentation links, frozen scientific-baseline integrity and byte identity of the source synchronized from `82e6eaa`.
+They cover the within-event and cross-event selectors, binding-cost source integration and runtime-checker fixtures, timing-frontier replay logic, robot-module reconstruction safety/validation, latency-cell and scenario-identity verification, scenario-override generation, local documentation links, frozen scientific-baseline integrity, byte identity of the source synchronized from the frozen scientific state `f56add3`, and the integrity and internal consistency of the published evidence package.
+
+`docs/source_sync_82e6eaa.sha256` is retained as the historical record of the exact-serial state and verifies against the `csi-2026-release` tag, **not** against this branch.
 
 The GitHub Actions workflow runs this dependency-free layer automatically.
 
@@ -65,6 +70,22 @@ export MAIN_ROBOT_MODULE_PATH=/path/to/gen3_2f85_module
 ```
 
 The setup tool validates the pinned URDF, expected structural transformations and all referenced mesh contents before producing the module. See [`robot_module.md`](robot_module.md).
+
+## Level 3b: check the published evidence without running anything
+
+The reduced evidence package can be checked on any machine, with no robot, no
+simulator and no build:
+
+```bash
+cd evidence && sha256sum -c MANIFEST.sha256 && cd ..
+python3 tools/check_evidence_manifest.py
+```
+
+This verifies that every published record hashes to its archived digest, that
+the two predeclared input sets still hash to their pre-execution values, that
+each published frozen plan set matches its recorded digest, and that the
+headline outcome counts quoted in `evidence/README.md` are exactly what the raw
+per-run records contain. See [`../evidence/README.md`](../evidence/README.md).
 
 ## Level 4: reproduce Dataset B
 
@@ -176,7 +197,8 @@ Before tagging a paper-associated release:
 - dependency-free suite passes;
 - local Markdown links pass;
 - frozen scientific-baseline manifest verifies;
-- exact-serial source-sync manifest verifies;
+- the `f56add3` source-sync manifest verifies;
+- the evidence manifest and the evidence consistency checker pass;
 - fresh configure/build/install succeeds;
 - robot-module reconstruction tests pass;
 - all four Dataset-B scenario wrappers pass both runtime and identity checks if controller/config/runtime behavior changed;

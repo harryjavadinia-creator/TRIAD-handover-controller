@@ -69,5 +69,15 @@ jobs:
             SCIENTIFIC_BASELINE.sha256 \
             --commit scientific-baseline
 
-      - name: Verify exact-serial source synchronization
-        run: sha256sum -c docs/source_sync_82e6eaa.sha256
+      - name: Verify frozen source synchronization
+        run: sha256sum -c docs/source_sync_f56add3.sha256
+
+      - name: Verify published evidence package
+        run: |
+          cd evidence && sha256sum -c MANIFEST.sha256 && cd ..
+          python3 tools/check_evidence_manifest.py
+
+      - name: Planner core purity guard
+        run: |
+          python3 tools/test_check_planner_core_purity.py
+          python3 tools/check_planner_core_purity.py

@@ -98,3 +98,75 @@ See [`timing_frontiers.md`](timing_frontiers.md).
 The exact optimized implementation was synchronized from development commit `82e6eaa`. The three imported implementation files and their SHA-256 digests are recorded in [`source_sync_82e6eaa.sha256`](source_sync_82e6eaa.sha256).
 
 A clean configure/build and all four Dataset-B reproduction runs were revalidated after synchronization. See [`release_validation.md`](release_validation.md).
+
+---
+
+## Control-loop cost of planning (asynchronous planner)
+
+The study above measures the *serial* wall time of the search. This section
+measures something different: what the search costs the **1 kHz control
+callback** while it runs. Both are reported because they are not the same
+quantity.
+
+On the source state published on this branch, the complete finite search runs on
+one background worker. Matched before/after measurement on the four canonical
+scenarios, of the in-planning `ControllerRun` statistic:
+
+| scenario | median before → after [ms] | p90 before → after [ms] | max before → after [ms] | cycles > 1 ms before → after |
+| --- | --- | --- | --- | ---: |
+| lateral-low | 0.642 → 0.020 | 3.357 → 0.073 | 6.168 → 1.172 | 1362 → 1 |
+| near-ground | 0.542 → 0.019 | 3.180 → 0.044 | 12.201 → 0.992 | 928 → 0 |
+| longitudinal | 0.597 → 0.042 | 3.365 → 0.079 | 4.917 → 1.014 | 756 → 1 |
+| diagonal | 0.631 → 0.048 | 3.175 → 0.082 | 5.016 → 1.088 | 424 → 1 |
+
+After the change at most one cycle per run exceeds 1 ms, and it is the
+result-receipt cycle — the selector plus the commit — not planning. No cycle
+exceeds 2 ms. `GlobalRun` above 50 ms and above 100 ms is zero in all four
+scenarios; the largest `GlobalRun` outliers are 99 per cent or more logging.
+
+**Provenance and its limits.** The "after" column is independently reproduced by
+the clean-machine profiles published as
+`evidence/async/<scenario>/perf_analysis_clean_machine.txt`. Of the "before"
+state, one raw profile survives in the archive and is published as
+`evidence/async/perf_analysis_control_thread_reference.txt` (in-planning
+`ControllerRun` p90 3.409 ms, 1374 cycles above 1 ms); the complete
+four-scenario before/after table above is the measurement preserved in the
+development record of the change.
+
+**What must not be claimed.** This is an empirical tail measurement on four
+scenarios on one machine. It is **not** a hard real-time guarantee, **not** a
+worst-case execution-time bound and **not** a formal schedulability proof. Wall
+time remains machine-dependent and is excluded from the deterministic
+reproducibility contract.
+
+## Scientific equivalence of the asynchronous planner
+
+Frozen plan sets, at 17 significant digits:
+
+| scenario | control-thread records | worker records | relation |
+| --- | ---: | ---: | --- |
+| lateral-low | 432 | 432 | identical hash |
+| longitudinal | 198 | 198 | identical hash |
+| diagonal | 233 | 233 | identical hash |
+| near-ground | 229 | 283 | strict superset — all 229 byte-identical |
+
+The near-ground difference has a single, identified cause. In control-thread
+mode a per-hypothesis prune skipped an event hypothesis **before its geometry
+ran** once the elapsed wall time exceeded `L − 1.6 s`; the gate removes whole
+hypotheses, that is all 32 × 17 of their combinations. On the worker the
+admission instant is pinned to the search epoch, so the condition reduces to
+`lead ≥ 1.6 s` while the minimum configured lead is 1.8 s — it can never fire.
+
+The defensible statement is:
+
+> the same frozen scientific evaluation, with the wall-clock-dependent premature
+> enumeration truncation removed and the admission instant moved earlier.
+
+Do **not** write "scientifically equivalent" without that qualification, do
+**not** claim the two modes produce the same plan set, and do **not** say the
+additional records were previously rejected on scientific grounds — they were
+never enumerated. Conversely, the control-thread prune was itself logically
+sound: time only advances, so a hypothesis already below the safe commit lead
+could not have been committed later in that same run either.
+
+The published records are under [`../evidence/async/`](../evidence/async/).

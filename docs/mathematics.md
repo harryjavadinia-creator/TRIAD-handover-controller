@@ -94,6 +94,17 @@ J_{\mathrm{motion}}
 An eighth logged quantity, `R` (orientation), is diagnostic only. Its binding
 weight is fixed at zero.
 
+These seven weights are frozen controller-specific engineering preference
+values. They are not literature-derived, are not claimed optimal, and **no
+weight-space sensitivity result is reported in this repository**. The values are
+the ratios `8 : 2 : 2 : 3 : 1.6 : 1.4 : 1` over 19 and sum to exactly 1.
+
+`E` is a cumulative squared joint-speed effort proxy and is **not** physical
+energy; `K` is a project-specific condition-index reserve and is **not** exactly
+Yoshikawa's manipulability index. A separately logged terminal velocity
+utilisation does **not** enter `V`, and does **not** gate the terminal timing
+audit — it is computed after that audit returns.
+
 `C`, `Q` and `K` use soft-barrier terms in their preference regions. Hard
 feasibility has already rejected physically invalid plans before these terms
 are compared.
@@ -170,6 +181,16 @@ J_{\mathrm{global}}(\xi;s_0).
 The minimum is exhaustive over the bounded generated finite set. It is not a
 claim of continuous-space global optimality and is not solved by gradient
 descent, MPC over event time, or an unrestricted continuous optimizer.
+
+The bank carries **no completeness guarantee**. An outcome of "no feasible plan"
+or "no timing-admissible plan" therefore never proves that no physically
+feasible handover existed; it states only that no element of the generated
+finite set satisfied the checks.
+
+Every cardinality and spacing in the bank — 14 event instants, 32 grasps, 17
+route generators, 25 swept samples per commanded segment — is a frozen
+engineering discretisation. None is derived from a convergence argument and no
+resolution-sensitivity study has been performed.
 
 Numerical ties within the configured cost tolerance are resolved
 deterministically by the selector's fixed secondary ordering.

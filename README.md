@@ -18,9 +18,10 @@ For a first review of the project, the important points are:
 - **Decision rule:** hard physical feasibility first, valid finite objective second, final timing admission at selector time, then the minimum `J_global` over the remaining finite set.
 - **Reported Dataset B:** four moving-object simulation scenarios, each with a deterministic event/grasp/route winner and independent runtime-log verification.
 - **Timing result:** planner timing admissibility is scenario-specific; the historical `3.976 s` value is PURE_X-specific rather than a universal deadline.
-- **Current publication source:** the audited exact-serial implementation preserves the tested scientific records/winners while reducing measured planning wall time; the frozen `scientific-baseline` remains the provenance anchor for the original Dataset-B campaign.
+- **Current publication source:** the frozen asynchronous-planner state. The complete finite search runs on one background worker, off the 1 kHz control callback, with the frozen scientific evaluation unchanged; see [`docs/provenance.md`](docs/provenance.md) for which source state each reported number belongs to.
+- **Evidence:** four canonical scenarios, a 62-scenario predeclared held-out envelope, 66 predeclared perturbations, a corrected perception-latency ablation, repeated-run determinism and fault-injection safety evidence — all published in reduced form under [`evidence/`](evidence/).
 
-A supervisor/reviewer who wants the shortest technical path can read, in order: [`docs/mathematics.md`](docs/mathematics.md), [`docs/simulation.md`](docs/simulation.md), [`docs/timing_frontiers.md`](docs/timing_frontiers.md), and [`docs/release_validation.md`](docs/release_validation.md).
+A supervisor/reviewer who wants the shortest technical path can read, in order: [`docs/mathematics.md`](docs/mathematics.md), [`docs/provenance.md`](docs/provenance.md), [`evidence/README.md`](evidence/README.md), [`docs/simulation.md`](docs/simulation.md) and [`docs/timing_frontiers.md`](docs/timing_frontiers.md).
 
 ## Scientific formulation
 
@@ -39,6 +40,8 @@ The finite approximation used in the reported moving-object campaign contains 14
 The controller configuration sets `maximumEventHypotheses: 15` as an upper cap on the bounded lead bank; the reported Dataset-B campaign generated 14 hypotheses within that cap, which is the value logged as `configuredHypotheses` and used in the bound above.
 
 See [`docs/mathematics.md`](docs/mathematics.md) for the full set definitions, objective and final timing gate.
+
+The seven objective weights are frozen controller-specific engineering preference values. They are not literature-derived, are not claimed optimal, and **no weight-space sensitivity result is reported in this repository**.
 
 ## Implementation map
 
@@ -158,19 +161,50 @@ python3 tools/verify_scientific_baseline.py \
   SCIENTIFIC_BASELINE.sha256 \
   --commit scientific-baseline
 
-sha256sum -c docs/source_sync_82e6eaa.sha256
+sha256sum -c docs/source_sync_f56add3.sha256
+
+cd evidence && sha256sum -c MANIFEST.sha256 && cd ..
+python3 tools/check_evidence_manifest.py
 ```
 
 These checks are also represented in the repository's GitHub Actions workflow. The full staged reproduction procedure is in [`docs/reproducibility.md`](docs/reproducibility.md).
 
 ## Experiment sets
 
-Two historical experiment sets are preserved and reported separately:
+Results in this repository come from several campaigns on several source states. **Every reported number belongs to exactly one of them**, and [`docs/provenance.md`](docs/provenance.md) is the canonical mapping.
 
-- **Dataset B — finite global event-time–grasp–route planning:** four moving-object simulation scenarios anchored to the frozen scientific baseline.
-- **Dataset A — perception-latency study:** five scenarios × three latency conditions at the preserved `dataset-a-baseline` source state.
+| campaign | what it establishes | source state |
+| --- | --- | --- |
+| **Dataset A** — perception-latency matrix | historical latency study, 5 scenarios × 3 conditions | `dataset-a-baseline` |
+| **Dataset B** — finite event-time/grasp/route planning | the four deterministic winners | `scientific-baseline` |
+| **Exact-serial study** | serial wall-time reduction with audited equivalence | `csi-2026-release` |
+| **Held-out generalization** — 62 predeclared scenarios | behaviour outside the development scenarios | asynchronous planner |
+| **Local robustness** — 66 predeclared perturbations | behaviour under bounded state perturbation | asynchronous planner |
+| **Asynchronous planner** — control-loop timing, corrected latency, determinism, fault injection | runtime behaviour of the frozen state published here | **this branch** |
 
-See [`docs/experiments.md`](docs/experiments.md) for provenance, source attribution and evidence limitations.
+See [`docs/experiments.md`](docs/experiments.md) for source attribution and evidence limitations, and [`evidence/`](evidence/) for the published primary records.
+
+### Current evidence, in one place
+
+- **62 predeclared held-out scenarios** (generated from a fixed seed and hashed before execution): 36 completed, 2 committed then failed in execution, 3 with no physically feasible plan, 18 with no timing-admissible plan, 3 rejected by the commit-freshness gate. Of the 38 scenarios the planner committed to, **36 completed**. Completion rises with object height across the tested bands.
+- **66 predeclared perturbations** about six pre-registered anchors: 40 completed, 14 safely rejected, 12 execution failures after commitment — eight of which belong to a single anchor whose unperturbed case already sits on the 8 mm dynamic clearance reserve. That anchor is reported, not removed.
+- **Perception latency**: with the corrected configuration read, the measured measurement age tracks the configured delay exactly; uncompensated state-estimation error follows `e = v·tau`; forward compensation removes that bias to within 2.4 mm at 0.60 s.
+- **Control-loop timing**: with the search on a background worker, at most one control cycle per run exceeds 1 ms during planning and none exceeds 2 ms, against 424–1362 cycles above 1 ms beforehand. This is an empirical tail measurement, not a hard real-time guarantee.
+- **Determinism**: repeated runs of the same scenario produce one frozen plan-set hash. Where a repeated run selects a different winner, the frozen plan set is identical and the difference tracks the result-receipt instant crossing a timing-admission boundary — the designed semantics.
+- **Fail-closed behaviour**: exercised by fault injection, not argued. Every rejection path leaves the robot stationary.
+
+### Limitations
+
+- The candidate bank — 14 event times, 32 grasps, 17 routes — is a **frozen engineering discretisation**. No resolution or convergence study has been performed.
+- Exactness applies to the minimisation **over that bank**. There is no continuous-space optimality and no completeness guarantee, so an outcome of "no feasible plan" or "no timing-admissible plan" never proves that no physical solution exists.
+- The 18 timing rejections in the held-out campaign **remain unresolved** with respect to the true physical feasible domain.
+- There is **no arbitrary environment perception, no self-collision checking and no human-body geometry**. The obstacle set is a ground plane plus three capsules derived from the object's own pose, and the mc_rtc QP carries no collision constraint.
+- Collision certification is **sampled** (25 interpolated poses per commanded segment), not continuous.
+- Prediction is **deterministic**; no uncertainty is represented.
+- The plan is **committed once**; there is no replanning, retiming or reselection.
+- The load-transfer source is a **virtual sensor** by default, so transfer results are evidence about the admittance policy, not physical load sharing.
+- One object geometry at one orientation; no object-independence or orientation generalization is claimed.
+- **No physical-robot and no human-subject validation.**
 
 ## Timing interpretation
 
@@ -193,13 +227,19 @@ Reproduce the timing gate from a run log with:
 python3 tools/replay_timing_frontier.py <log> --planner-time 3.976
 ```
 
-## Exact serial implementation
+## Asynchronous planner
 
-The current publication source includes exact implementation-only serial accelerations synchronized from audited development commit `82e6eaa`.
+The source published on this branch runs the complete finite search on **one background worker**, off the 1 kHz mc_rtc control callback. The control thread performs a single atomic load per cycle and never waits: no mutex, condition variable, future or join is reachable from the callback.
 
-The synchronized files are pinned by [`docs/source_sync_82e6eaa.sha256`](docs/source_sync_82e6eaa.sha256). The performance study reports **8,168,732 collision-oracle comparisons with zero mismatches** and unchanged complete-plan records, logical planning cycles, selector time and committed winners.
+The synchronized implementation files are pinned by [`docs/source_sync_f56add3.sha256`](docs/source_sync_f56add3.sha256).
 
-See [`docs/performance.md`](docs/performance.md).
+**No scientific parameter changed.** The preview integration step, the event, grasp and route banks, hard feasibility, the objective and its weights, the timing thresholds, the tie rules and the one-commit / no-replanning semantics are identical to the previously published state. The only configuration addition is `routeWorkUnitsPerCycle`, a work-unit scheduling budget.
+
+Frozen plan sets are byte-identical between the control-thread and worker builds in three of the four canonical scenarios. The fourth is a **strict superset**: all 229 control-thread records are byte-identical at 17 significant digits, and 54 further records are enumerated because pinning the admission instant to the search epoch removes a wall-clock-dependent prune that had skipped one event hypothesis before its geometry ran.
+
+The defensible statement is *"the same frozen scientific evaluation, with the wall-clock-dependent premature enumeration truncation removed and the admission instant moved earlier."* It is **not** a claim that the two modes produce the same plan set, and the additional records were never rejected on scientific grounds — they were never enumerated. The control-thread prune was itself logically sound.
+
+The earlier exact-serial study remains valid for its own source state; see [`docs/performance.md`](docs/performance.md) and [`docs/provenance.md`](docs/provenance.md).
 
 ## Active FSM
 
@@ -219,6 +259,8 @@ Any rejected/unsafe execution path enters `Failure`.
 
 ## Documentation
 
+- [`docs/provenance.md`](docs/provenance.md) — **which source state every reported number belongs to.**
+- [`evidence/README.md`](evidence/README.md) — the published primary records and how to check them.
 - [`docs/architecture.md`](docs/architecture.md) — component boundaries and selection/execution pipeline.
 - [`docs/mathematics.md`](docs/mathematics.md) — finite sets, objective and final timing-admission formulation.
 - [`docs/global_time_plan.md`](docs/global_time_plan.md) — cross-event global selector.
@@ -237,12 +279,15 @@ Any rejected/unsafe execution path enters `Failure`.
 
 Dataset B remains anchored to the frozen `scientific-baseline` tag. `SCIENTIFIC_BASELINE.sha256` verifies that historical source snapshot directly from Git blobs.
 
-The source shipped on the current publication branch contains the exact implementation-only serial delta synchronized from `82e6eaa`. The two states therefore serve different purposes:
+The source shipped on this branch is the frozen asynchronous-planner state, pinned by [`docs/source_sync_f56add3.sha256`](docs/source_sync_f56add3.sha256). The states serve different purposes:
 
-- **scientific-baseline:** provenance anchor for the frozen Dataset-B campaign;
-- **current publication source:** tested equivalent implementation with lower serial wall time.
+- **`scientific-baseline`:** provenance anchor for the frozen Dataset-B campaign;
+- **`csi-2026-release`:** the exact-serial publication release, and the state against which [`docs/source_sync_82e6eaa.sha256`](docs/source_sync_82e6eaa.sha256) verifies;
+- **this branch:** the frozen asynchronous-planner state, with the evidence published under [`evidence/`](evidence/).
 
-The publication synchronization and four-scenario revalidation are recorded in [`docs/release_validation.md`](docs/release_validation.md).
+`docs/source_sync_82e6eaa.sha256` is retained as the historical record of the exact-serial state. It verifies against the `csi-2026-release` tag, **not** against this branch, and is no longer part of the automated checks.
+
+The publication synchronization and four-scenario revalidation of the earlier state are recorded in [`docs/release_validation.md`](docs/release_validation.md).
 
 ## Real-robot status
 

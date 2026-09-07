@@ -40,7 +40,7 @@ The binding seven-term motion objective is `(T,E,L,C,Q,K,V)`:
 
 `R` (orientation) is computed and logged but has binding weight `0.0`.
 
-These weights are controller-specific engineering preferences supported by a finite-set weight-space sensitivity analysis. They are not claimed to be literature-derived or globally optimal weights.
+These weights are frozen controller-specific engineering preference values. They are not literature-derived, are not claimed optimal, and **no weight-space sensitivity result is reported in this repository**. See [`provenance.md`](provenance.md) for the corresponding discrepancy note in the frozen configuration comments.
 
 ## Selector policy
 
