@@ -2,18 +2,22 @@
 
 ## Pipeline
 
-```text
-Observe
-  -> Predict
-  -> Generate bounded (event time, grasp, route) alternatives
-  -> Copied-state preview
-  -> Hard physical feasibility
-  -> Cost-valid complete-plan records
-  -> Final timing admission at selection time
-  -> Exact finite argmin
-  -> Commit once
-  -> committed task-space reference + runtime governor
-  -> mc_rtc task/QP realization
+```mermaid
+flowchart TD
+  observe["Observe and freeze decision state"] --> worker["Worker: enumerate and preview complete plans"]
+  worker --> records["Hard-feasible, cost-valid records"]
+  records --> gate{"Live timing admission"}
+  gate -->|none admissible| failure["Failure"]
+  gate -->|admissible set| select["Finite minimum with tie convention"]
+  select --> fresh{"Commit timing and prediction freshness"}
+  fresh -->|reject| failure
+  fresh -->|accept| commit["Commit once"]
+  commit --> execute["Govern committed motion references"]
+  execute --> qp["mc_rtc task and joint realization"]
+  qp --> monitor{"Execution guards"}
+  monitor -->|violation| failure
+  monitor -->|continue| execute
+  monitor -->|retreat complete| done["Completed"]
 ```
 
 TRIAD does more than choose **what** and **when**. It selects the event time,
@@ -55,7 +59,42 @@ controller time `now` at final selection. A complete plan must therefore pass:
 See [`mathematics.md`](mathematics.md) for the corresponding sets and
 [`timing_frontiers.md`](timing_frontiers.md) for the hardware-facing replay.
 
-## Controller structure
+## Algorithm
+
+```text
+On observation completion:
+    Freeze the decision state and bounded event schedule.
+    Submit one worker generation.
+
+In the worker:
+    For every generated event:
+        Predict the presentation pose.
+        For each grasp and its generated routes:
+            Preview reach, approach, dwell, closure, and attached retreat.
+            Retain complete records that pass the modeled hard checks.
+            Construct the motion objective and common-epoch time contribution.
+    Publish the result with its generation identity.
+
+On result receipt in the control thread:
+    Verify generation and result consistency.
+    Exclude invalid-cost records; apply current timing admission.
+    If no admissible record remains: enter Failure.
+    Select the finite minimum using the numerical tie convention.
+    Recheck winner timing and refreshed prediction at commitment.
+    If either check fails: enter Failure.
+    Commit the selected event, grasp, and route once.
+
+During execution:
+    Generate and govern the committed task-space reference.
+    Send task, posture, and gripper targets to the mc_rtc layer.
+    Enforce phase-specific runtime guards.
+    Enter Completed after retreat, or Failure on a guard violation.
+```
+
+This is structural pseudocode. Equations, tie ordering, and copied-state
+qualifications are given in [Mathematics](mathematics.md) and below.
+
+## Implementation map
 
 - `src/HandoverInterceptionController.{h,cpp}` contains candidate generation,
   copied-state preview, feasibility tests, objective construction and commit
@@ -78,17 +117,17 @@ the CALL project lineage.
 
 ## Active FSM
 
-```text
-Initial
-  -> ObserveObject
-  -> SolveInterception
-  -> ExecuteCommittedReach
-  -> PresentationHold
-  -> MovePregrasp
-  -> CaptureTransfer
-  -> Retreat
-  -> Completed
-```
+| State | Role |
+| --- | --- |
+| Initial | Prepare the arm and gripper |
+| ObserveObject | Estimate object motion and classify the observation |
+| SolveInterception | Freeze, enumerate, select, and admit a plan |
+| ExecuteCommittedReach | Follow the selected transit reference |
+| PresentationHold | Maintain the presentation relationship |
+| MovePregrasp | Enter the receiver capture corridor |
+| CaptureTransfer | Close, confirm bilateral contact, and transfer |
+| Retreat | Execute the checked attached-object retreat |
+| Completed | Record successful completion |
 
 Any rejected or unsafe execution path enters `Failure`. `CaptureTransfer`
 owns closure, bilateral confirmation and load transfer continuously in the
@@ -143,7 +182,7 @@ admission is still applied once when the result is received. See
 [`corrections_of_record.md`](corrections_of_record.md) for the precise historical
 comparison.
 
-## Copied-state discipline, stated in its narrow form
+## Copied-state scope
 
 Candidate certification is built primarily from a copied `MultiBodyConfig`
 taken once at the search epoch, together with a planner-owned robot model and a

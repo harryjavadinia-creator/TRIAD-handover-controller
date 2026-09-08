@@ -52,6 +52,7 @@ jobs:
             tools/check_latency_log.py \
             tools/check_markdown_links.py \
             tools/check_publication_claims.py \
+            tools/plot_results.py \
             tools/derive_cmake_install_paths.py \
             tools/replay_timing_frontier.py \
             tools/verify_latency_matrix_cell.py \

@@ -17,3 +17,6 @@ __pycache__/
 # Reconstructed gen3_2f85 mc_rtc robot module (scripts/setup_gen3_2f85_module.py)
 # -- built from external upstream packages, never tracked here.
 /gen3_2f85_module/
+
+# Optional environment used only to regenerate published figures
+/.venv-figures/

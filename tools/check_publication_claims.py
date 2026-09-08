@@ -18,6 +18,9 @@ FILES = [
     "docs/provenance.md",
     "docs/release_validation.md",
     "docs/reproducibility.md",
+    "docs/quickstart.md",
+    "docs/results.md",
+    "docs/related_work.md",
     "docs/corrections_of_record.md",
     "evidence/README.md",
 ]
