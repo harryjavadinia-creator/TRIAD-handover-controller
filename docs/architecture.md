@@ -114,45 +114,52 @@ valid log from being mistaken for evidence from the wrong scenario.
 
 The complete finite search runs on one background worker. The control thread
 freezes a snapshot, submits one planning generation and returns; on later cycles
-it polls an atomic state and never waits. When a result appears it applies
-current timing admission, takes the exact finite argmin and commits once, or
-fails closed.
+ordinary result polling is an atomic-state check and is nonblocking. When a
+result appears it applies current timing admission, takes the exact finite
+argmin and commits once, or fails closed.
 
 The handoff is a single result buffer with release/acquire publication. There is
 never more than one job in flight; the worker writes the result and its
 generation before the release store, and the control thread reads them only
-after the paired acquire load. **No mutex, condition variable, future or join is
-reachable from the 1 kHz callback.** Generation identity is carried on the
-result and checked on arrival, an exception inside the worker is caught at the
-thread boundary, and the worker is cancelled and joined in the planning state's
-teardown, in `reset()` and in the destructor; `detach()` appears nowhere.
+after the paired acquire load. Generation identity is carried on the result and
+checked on arrival, an exception inside the worker is caught at the thread
+boundary, and `detach()` appears nowhere.
 
-The worker pins the admission instant to the frozen search epoch, so no
-hypothesis is skipped because the worker took time to compute. That is the
-intended asynchronous semantics: enumerate the complete frozen bank, then apply
-current timing admission once, at result receipt.
+Worker lifecycle is more nuanced than ordinary polling. The planning state's
+`teardown()` can call `shutdownPlannerWorker()`, which cancels and joins the
+worker; the same shutdown path is also used from `reset()` and the destructor.
+Therefore an absolute statement that no `join()` is reachable from the
+controller call path is not made here. No bounded join latency, WCET, hard-real-
+time guarantee or formal schedulability result is established.
+
+The worker pins the planning-time admission reference used during frozen-bank
+enumeration to the frozen search epoch, so a hypothesis is not skipped merely
+because worker computation consumed wall time. Current selector-time timing
+admission is still applied once when the result is received. See
+[`corrections_of_record.md`](corrections_of_record.md) for the precise historical
+comparison.
 
 ## Copied-state discipline, stated in its narrow form
 
-Candidate certification runs on a copied `MultiBodyConfig` taken once at the
-search epoch, together with a planner-owned robot model and a planner-owned
-object/handle world. The repository ships a static guard,
-`tools/check_planner_core_purity.py`, with a mutation test that reintroduces
-nine different live-state reads and requires all nine to be caught.
+Candidate certification is built primarily from a copied `MultiBodyConfig`
+taken once at the search epoch, together with a planner-owned robot model and a
+planner-owned object/handle world. The repository ships a static guard,
+`tools/check_planner_core_purity.py`, with mutation tests for several classes of
+live-state access.
 
-The property that guard establishes must be stated narrowly:
+The defensible property is narrower than full copied-state purity:
 
-> The copied-state planner reads no live robot **pose or configuration** after
-> the snapshot; every kinematic quantity it decides from comes from the frozen
-> `MultiBodyConfig`. It does still read three categories of model-constant live
-> data — joint position limits, joint velocity limits, and the open-gripper
-> mouth half-gap — through accessors the guard does not cover.
+> Most candidate kinematics use the frozen copied state. Residual live
+> fingertip-frame reads determine the gripper aperture used by corridor checks,
+> and joint position/velocity limits are obtained through live model accessors.
+> The static guard does not cover those paths.
 
-The first two are constants of the robot model. The third is held constant
-during planning by three independent interlocks: the gripper is commanded fully
-open every cycle while planning, a closure-authority interlock clamps any
-positive command to zero, and the observation stage already fails the run if the
-aperture drifts. Repeated runs produce bit-identical frozen plan sets.
+The limit values are properties of the robot model, while the aperture path is
+computed from live frame positions even though planning interlocks command the
+gripper open. Those interlocks and stable repeated plan hashes are useful
+engineering checks, but they do not establish full copied-state purity or race
+freedom. The residual live-read issues remain documented and unfixed in the
+frozen scientific source.
 
-**Do not write "the planner is copied-state pure" or "the planner reads no live
-state" without that qualification.**
+See [`corrections_of_record.md`](corrections_of_record.md) for the correction of
+record and [`provenance.md`](provenance.md) for the frozen-source policy.
