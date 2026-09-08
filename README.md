@@ -7,11 +7,13 @@
 TRIAD predicts a bounded set of future object-presentation events, evaluates
 complete **event-time–grasp–route** alternatives, rejects candidates that violate
 its modeled hard feasibility checks, reapplies timing admission at selector time,
-and commits one minimum-cost admissible finite plan for the mc_rtc FSM/QP layer
-to realize.
+and commits one minimum-cost admissible finite plan for execution.
 
-The planner decides **what and when**: event time, grasp and route. The mc_rtc
-task/QP layer decides **how** to track the committed references.
+TRIAD does more than choose the handover event: it selects the **event time,
+grasp and transit route**, then generates and safety-governs the committed
+task-space motion references along that route. The downstream mc_rtc task/QP
+layer realizes those per-cycle references at the robot/joint level; it does not
+choose the event, grasp, route or high-level objective.
 
 > **Validation scope:** all reported end-to-end handover results are simulation
 > results. Hardware-facing support exists, but no validated end-to-end physical
