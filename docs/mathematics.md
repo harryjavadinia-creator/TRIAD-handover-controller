@@ -65,8 +65,11 @@ modelled as stationary. Because the integral of the quintic smoothstep
 complement is one half, the predicted presentation pose at lead `h` is
 
 $$
-\Pi(h)=\mathrm{Prop}\!\left(\mathrm{W\_T\_O}(t_0),\; h-\tfrac12\min(h,D),\; \hat v,\hat\omega\right).
+\Pi(h)=\mathrm{Prop}\!\left({}^{W}T_{O}(t_0),\; h-\tfrac12\min(h,D),\; \hat v,\hat\omega\right).
 $$
+
+Here ${}^{W}T_{O}(t_0)$ denotes the object pose expressed in the world frame at
+the common search epoch.
 
 The prediction model is **deterministic**. There is no covariance, learned
 prediction model or probability distribution over future states. The terminal
@@ -236,14 +239,19 @@ swept-volume proof.
 Numerical ties within the configured tolerance are resolved deterministically by
 fixed secondary ordering.
 
-## WHAT/WHEN vs HOW
+## Planner/execution boundary
+
+TRIAD does more than choose a plan label. It selects the event time, grasp and
+transit route, constructs the committed task-space reference along that route,
+and applies the controller's live execution-side reference governor and
+fail-closed safety logic. The downstream mc_rtc task/QP layer realizes the
+per-cycle task-space, posture and gripper references at the robot/joint level.
+It does not choose the event time, grasp, route or high-level TRIAD objective.
 
 ```text
-finite planner: Observe -> Predict -> Generate -> Preview -> Feasibility
-                -> Final timing admission -> finite argmin -> Commit
+TRIAD: Observe -> Predict -> Generate -> Preview -> Feasibility
+       -> Final timing admission -> finite argmin -> Commit
+       -> committed task-space reference + runtime governor
 
-mc_rtc FSM/QP:  execute the committed references
+mc_rtc task/QP: realize the commanded task/posture/gripper references
 ```
-
-The finite planner decides event time, grasp and route. The mc_rtc QP tracks the
-committed plan; it does not solve the high-level argmin.
