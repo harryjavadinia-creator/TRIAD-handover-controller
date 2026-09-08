@@ -17,7 +17,7 @@ For a first review of the project, the important points are:
 - **Method:** deterministic exhaustive selection over a bounded finite set of event-time, grasp and route alternatives; no continuous optimization solver is claimed.
 - **Decision rule:** hard physical feasibility first, valid finite objective second, final timing admission at selector time, then the minimum `J_global` over the remaining finite set.
 - **Reported Dataset B:** four moving-object simulation scenarios, each with a deterministic event/grasp/route winner and independent runtime-log verification.
-- **Timing result:** planner timing admissibility is scenario-specific; the historical `3.976 s` value is PURE_X-specific rather than a universal deadline.
+- **Timing result:** planner timing admissibility is scenario-specific.
 - **Current publication source:** the audited exact-serial implementation preserves the tested scientific records/winners while reducing measured planning wall time; the frozen `scientific-baseline` remains the provenance anchor for the original Dataset-B campaign.
 
 A supervisor/reviewer who wants the shortest technical path can read, in order: [`docs/mathematics.md`](docs/mathematics.md), [`docs/simulation.md`](docs/simulation.md), [`docs/timing_frontiers.md`](docs/timing_frontiers.md), and [`docs/release_validation.md`](docs/release_validation.md).
