@@ -135,13 +135,24 @@ $$
 | `K` | metric-scaled kinematic-conditioning reserve | 0.0736842 |
 | `V` | joint-velocity-utilization reserve, `clamp01(u)^4` | 0.0526316 |
 
-An eighth logged quantity, `R` (orientation), is diagnostic only. Its binding
-weight is zero.
+### Orientation treatment
 
-These seven weights are frozen controller-specific engineering preference
-values. They are not literature-derived, are not claimed optimal, and **no
-weight-space sensitivity result is reported in this repository**. The values are
-ratios `8 : 2 : 2 : 3 : 1.6 : 1.4 : 1` over 19 and sum to 1.
+Orientation is **not removed from the planning problem**. Each grasp candidate
+contains an orientation, the copied-state preview/IK must realize the required
+pose, and terminal/corridor feasibility includes orientation/alignment checks.
+Thus an orientation-infeasible candidate is rejected before ranking.
+
+A separate residual orientation quantity `R` is nevertheless computed and
+logged for diagnostics. In the reported binding selector its soft-ranking weight
+is `w_R = 0`: among plans that already satisfy the required orientation
+constraints, TRIAD does not add a further preference for making that residual
+orientation error smaller. This is a frozen engineering design choice, not a
+claim that zero orientation weight is theoretically optimal; no objective-weight
+sensitivity study is reported.
+
+The seven **binding** weights are frozen controller-specific engineering
+preference values. They are not literature-derived and are not claimed optimal.
+The values are ratios `8 : 2 : 2 : 3 : 1.6 : 1.4 : 1` over 19 and sum to 1.
 
 `E` is a squared joint-speed effort proxy and is not physical energy; `K` is a
 project-specific conditioning reserve and is not exactly Yoshikawa's
@@ -150,44 +161,66 @@ manipulability index. A separately logged terminal velocity utilisation does
 after that audit returns. Its non-diagnostic role is limited to the cost-validity
 finiteness contract documented in source/provenance.
 
-`C`, `Q` and `K` are preference terms. Hard feasibility has already rejected
-plans that violate the modeled hard constraints before those terms are compared.
+**Hard feasibility comes first; soft ranking comes second.** In particular,
+`C`, `Q`, `K` and `V` do not replace collision, joint-limit, conditioning or
+velocity checks. They discriminate among already admissible plans by rewarding
+larger geometric/kinematic reserves, while `T`, `E` and `L` express efficiency
+preferences.
 
 ## Cross-event time contribution
 
-To compare plans belonging to different event times, the same normalized time
-weight is extended to the common search epoch:
+The within-event motion objective already contains the complete-plan execution
+time term
+
+$$
+T=\frac{T_{\mathrm{exec}}}{T_{\mathrm{ref}}},
+\qquad T_{\mathrm{ref}}=8\text{ s}.
+$$
+
+Plans associated with different future event times also differ in how long the
+controller must wait from the common search epoch before the planned
+presentation motion begins. Let `h` be the event lead from the search epoch and
+let $T_{\mathrm{pres}}$ be the candidate's predicted presentation duration. The
+implemented pre-reach wait is
+
+$$
+T_{\mathrm{wait}}=h-T_{\mathrm{pres}}.
+$$
+
+The cross-event objective therefore extends the **same time preference** to the
+common search epoch:
 
 $$
 J_{\mathrm{global}}
 =J_{\mathrm{motion}}
-+w_T\frac{\mathrm{scheduleWait}}{T_{\mathrm{ref}}},
-\qquad T_{\mathrm{ref}}=8\text{ s}.
++w_T\frac{T_{\mathrm{wait}}}{T_{\mathrm{ref}}}.
 $$
 
-In the implementation,
+Because `J_motion` already contains $w_T T_{\mathrm{exec}}/T_{\mathrm{ref}}$,
+the total time-dependent contribution is
 
 $$
-\mathrm{scheduleWait}
-=(\tau-t_0)-T_{\mathrm{reach}},
+w_T\frac{T_{\mathrm{wait}}+T_{\mathrm{exec}}}{T_{\mathrm{ref}}},
 $$
 
-so the full time contribution represents predicted search-to-completion time.
-No independent eighth binding weight is introduced.
+which ranks alternatives by predicted search-to-completion time using one time
+weight. The wait term is therefore **not an independent eighth objective and not
+a second time weight**; it puts plans from different event hypotheses onto the
+same temporal origin.
 
 ## Final timing-admissible set
 
-The final timing gate is evaluated after the bounded event schedule has been
-inspected. Let `t_sel` be the final selector time. For each cost-valid complete
-plan,
+Cost ranking alone cannot guarantee that a plan is still executable when the
+finite search finishes. The selector therefore applies a separate **hard timing
+gate** after the complete bounded event schedule has been inspected. Let
+`t_sel` be the actual selector time. For each cost-valid complete plan,
 
 $$
 \mathrm{remaining}(\xi,t_{\mathrm{sel}})
 =t_{\mathrm{event}}(\xi)-t_{\mathrm{sel}}.
 $$
 
-With implementation epsilon $\varepsilon=10^{-12}$, the required
-inequalities are
+With implementation epsilon $\varepsilon=10^{-12}$, two conditions must hold:
 
 $$
 \mathrm{remaining}+\varepsilon \ge L_{\mathrm{safe}}
@@ -196,20 +229,27 @@ $$
 and
 
 $$
-T_{\mathrm{presentation}}+L_{\mathrm{reach}}
+T_{\mathrm{pres}}+L_{\mathrm{reach}}
 \le \mathrm{remaining}+\varepsilon.
 $$
+
+The first requires a minimum safe lead before commitment. The second requires
+enough remaining time for that candidate's predicted presentation duration plus
+the configured minimum reach-entry lead. These are **admission constraints, not
+additional cost terms**.
 
 Define
 
 $$
 \mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})
-=\{\xi\in\mathcal F_J(s_0):\text{both inequalities hold}\}.
+=\{\xi\in\mathcal F_J(s_0):\text{both timing inequalities hold}\}.
 $$
 
-This distinction matters: modeled geometric/kinematic feasibility is evaluated
-against the frozen planning problem (subject to the implementation live-read
-qualification above), while final timing admission depends on selector time.
+This separation is deliberate: geometric/kinematic feasibility and cost are
+evaluated on the frozen planning problem, while timing admission is checked
+against the clock at the moment the completed search is ready to commit. A plan
+that was attractive at the search epoch can therefore be rejected if it has
+become stale by selector time.
 
 ## Exact finite argmin
 
