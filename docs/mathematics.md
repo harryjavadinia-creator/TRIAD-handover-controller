@@ -65,7 +65,7 @@ modelled as stationary. Because the integral of the quintic smoothstep
 complement is one half, the predicted presentation pose at lead `h` is
 
 $$
-\Pi(h)=\mathrm{Prop}\!\left(W_T_O(t_0),\; h-\tfrac12\min(h,D),\; \hat v,\hat\omega\right).
+\Pi(h)=\mathrm{Prop}\!\left(\mathrm{W\_T\_O}(t_0),\; h-\tfrac12\min(h,D),\; \hat v,\hat\omega\right).
 $$
 
 The prediction model is **deterministic**. There is no covariance, learned
@@ -183,7 +183,7 @@ $$
 =t_{\mathrm{event}}(\xi)-t_{\mathrm{sel}}.
 $$
 
-With implementation epsilon \(\varepsilon=10^{-12}\), the required
+With implementation epsilon $\varepsilon=10^{-12}$, the required
 inequalities are
 
 $$
