@@ -8,9 +8,9 @@ controller fields and selector behavior.
 
 A complete plan is
 
-\[
+$$
 \xi=(\tau,g,r),
-\]
+$$
 
 where `tau` is a future presentation event, `g` is a receiver grasp
 orientation, and `r` is a transit route.
@@ -19,9 +19,9 @@ orientation, and `r` is a transit route.
 
 The continuous decision space is approximated by the finite product
 
-\[
+$$
 \mathcal X_h=\mathcal T_h\times\mathcal G_h\times\mathcal R_h.
-\]
+$$
 
 For the reported moving-object campaign:
 
@@ -33,9 +33,9 @@ For the reported moving-object campaign:
 
 The upper combinatorial bound before feasibility pruning is
 
-\[
+$$
 14\times32\times17=7616.
-\]
+$$
 
 This is an upper bound on generated combinations, not the number of plans that
 survive complete evaluation.
@@ -49,11 +49,11 @@ The object estimate is a latency-compensated measurement. When a perception
 delay is configured, the selected buffered measurement is propagated forward by
 its measured age using the filtered twist:
 
-\[
+$$
 \hat p(t)=p_{\mathrm{meas}}(t-\tau)+\mathrm{age}\cdot\hat v(t),
 \qquad
 \hat R(t)=\mathrm{Exp}\!\left(\mathrm{age}\cdot\hat\omega(t)\right)R_{\mathrm{meas}}(t-\tau).
-\]
+$$
 
 The twist estimate is a first-order low-pass filter of finite differences of the
 measurement stream, gated against implausible raw values.
@@ -64,9 +64,9 @@ Prediction to a candidate event uses the same constant-twist law composed with a
 modelled as stationary. Because the integral of the quintic smoothstep
 complement is one half, the predicted presentation pose at lead `h` is
 
-\[
+$$
 \Pi(h)=\mathrm{Prop}\!\left(W\_T\_O(t_0),\; h-\tfrac12\min(h,D),\; \hat v,\hat\omega\right).
-\]
+$$
 
 The prediction model is **deterministic**. There is no covariance, learned
 prediction model or probability distribution over future states. The terminal
@@ -79,10 +79,10 @@ Let `s0` denote the common search epoch. In the intended finite formulation,
 TRIAD evaluates hard feasibility relative to a frozen decision snapshot and its
 modeled environment:
 
-\[
+$$
 \mathcal F_h(s_0)
 =\{\xi\in\mathcal X_h:\text{the modeled hard checks pass}\}.
-\]
+$$
 
 Most candidate kinematics are evaluated from the copied `MultiBodyConfig` taken
 at that epoch. The implementation has two residual live-access qualifications:
@@ -106,21 +106,21 @@ The objective never replaces these checks.
 A hard-feasible plan is ranked only if every required objective quantity is
 finite and valid:
 
-\[
+$$
 \mathcal F_J(s_0)
 =\{\xi\in\mathcal F_h(s_0):J_{\mathrm{global}}(\xi;s_0)
 \text{ is finite and valid}\}.
-\]
+$$
 
 Invalid/non-finite records are excluded rather than assigned a favorable
 fallback cost.
 
 ## Seven-term motion objective
 
-\[
+$$
 J_{\mathrm{motion}}
 =w_TT+w_EE+w_LL+w_CC+w_QQ+w_KK+w_VV.
-\]
+$$
 
 | Term | Meaning | Weight |
 | --- | --- | ---: |
@@ -155,19 +155,19 @@ plans that violate the modeled hard constraints before those terms are compared.
 To compare plans belonging to different event times, the same normalized time
 weight is extended to the common search epoch:
 
-\[
+$$
 J_{\mathrm{global}}
 =J_{\mathrm{motion}}
 +w_T\frac{\mathrm{scheduleWait}}{T_{\mathrm{ref}}},
 \qquad T_{\mathrm{ref}}=8\text{ s}.
-\]
+$$
 
 In the implementation,
 
-\[
+$$
 \mathrm{scheduleWait}
 =(\tau-t_0)-T_{\mathrm{reach}},
-\]
+$$
 
 so the full time contribution represents predicted search-to-completion time.
 No independent eighth binding weight is introduced.
@@ -178,31 +178,31 @@ The final timing gate is evaluated after the bounded event schedule has been
 inspected. Let `t_sel` be the final selector time. For each cost-valid complete
 plan,
 
-\[
+$$
 \mathrm{remaining}(\xi,t_{\mathrm{sel}})
 =t_{\mathrm{event}}(\xi)-t_{\mathrm{sel}}.
-\]
+$$
 
 With implementation epsilon \(\varepsilon=10^{-12}\), the required
 inequalities are
 
-\[
+$$
 \mathrm{remaining}+\varepsilon \ge L_{\mathrm{safe}}
-\]
+$$
 
 and
 
-\[
+$$
 T_{\mathrm{presentation}}+L_{\mathrm{reach}}
 \le \mathrm{remaining}+\varepsilon.
-\]
+$$
 
 Define
 
-\[
+$$
 \mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})
 =\{\xi\in\mathcal F_J(s_0):\text{both inequalities hold}\}.
-\]
+$$
 
 This distinction matters: modeled geometric/kinematic feasibility is evaluated
 against the frozen planning problem (subject to the implementation live-read
@@ -212,11 +212,11 @@ qualification above), while final timing admission depends on selector time.
 
 The reported moving-object policy selects
 
-\[
+$$
 \xi_h^*
 =\arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
 J_{\mathrm{global}}(\xi;s_0).
-\]
+$$
 
 The minimum is exhaustive over the bounded generated finite set. It is not a
 claim of continuous-space global optimality and is not solved by gradient

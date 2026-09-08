@@ -6,11 +6,11 @@ For a moving presentation, TRIAD freezes one bounded event schedule and the corr
 
 After the entire configured event schedule has been inspected, the controller reapplies the final timing gate using the current selector time and commits one plan:
 
-\[
+$$
 (\tau^*,g^*,r^*)=
 \arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
 J_{\mathrm{global}}(\xi;s_0).
-\]
+$$
 
 The set notation is defined precisely in [`mathematics.md`](mathematics.md). In particular, final timing admission is selection-time dependent and is separate from the copied-state physical feasibility set.
 
@@ -18,11 +18,11 @@ The set notation is defined precisely in [`mathematics.md`](mathematics.md). In 
 
 For one complete plan,
 
-\[
+$$
 J_{\mathrm{global}}
 =J_{\mathrm{motion}}
 +w_T\frac{(\tau-t_0)-T_{\mathrm{reach}}}{T_{\mathrm{ref}}}.
-\]
+$$
 
 Because `J_motion` already contains its normalized execution-time term, the combined time contribution represents predicted time from the common search epoch to completion.
 

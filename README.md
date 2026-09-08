@@ -55,11 +55,11 @@ objective construction gives the cost-valid subset `F_J(s0)`. After the bounded
 schedule has been evaluated, the selector reapplies timing admission at final
 selection time `t_sel` and chooses
 
-\[
+$$
 (\tau^*,g^*,r^*)=
 \arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
 J_{\mathrm{global}}(\xi;s_0).
-\]
+$$
 
 This is **exact finite selection over the generated bounded approximation**. It
 is not gradient descent, continuous-space global optimization or MPC over event
