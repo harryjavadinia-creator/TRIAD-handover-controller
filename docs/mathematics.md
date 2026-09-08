@@ -36,12 +36,12 @@ This is the generated finite bank, not the number of plans that survive complete
 
 ## Object estimation and prediction
 
-A delayed object measurement is propagated forward by its measured age using the filtered linear and angular velocity estimates:
+Let `a` denote the age of the delayed object measurement. TRIAD propagates that measurement to the current estimation time using the filtered linear and angular velocity estimates:
 
 $$
-\hat p(t)=p_{\mathrm{meas}}(t-\tau)+\mathrm{age}\cdot\hat v(t),
+\hat p(t)=p_{\mathrm{meas}}(t-a)+a\,\hat v(t),
 \qquad
-\hat R(t)=\mathrm{Exp}\!\left(\mathrm{age}\cdot\hat\omega(t)\right)R_{\mathrm{meas}}(t-\tau).
+\hat R(t)=\mathrm{Exp}\!\left(a\,\hat\omega(t)\right)R_{\mathrm{meas}}(t-a).
 $$
 
 For each candidate event, TRIAD then applies a prescribed smooth terminal deceleration. With stop duration `D`, the predicted presentation pose at lead `h` is
