@@ -91,10 +91,12 @@ check(
     norm("FSM teardown can reach worker cancellation and `join()`")
     in norm_files["README.md"],
 )
+architecture = norm_files["docs/architecture.md"]
 check(
     "architecture qualifies live aperture",
-    norm("Residual live fingertip-frame reads")
-    in norm_files["docs/architecture.md"],
+    "residual live" in architecture
+    and "fingertip-frame reads" in architecture
+    and "aperture" in architecture,
 )
 check(
     "evidence README makes full 66-case result primary",
