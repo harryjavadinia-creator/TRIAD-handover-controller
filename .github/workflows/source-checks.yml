@@ -39,14 +39,19 @@ jobs:
       - name: Documentation local-link check
         run: python3 tools/check_markdown_links.py
 
+      - name: Publication-claim regression guard
+        run: python3 tools/check_publication_claims.py
+
       - name: Python syntax check
         run: |
           python3 -m py_compile \
             tools/check_binding_cost_log.py \
             tools/check_binding_cost_source.py \
+            tools/check_evidence_manifest.py \
             tools/check_global_time_plan_log.py \
             tools/check_latency_log.py \
             tools/check_markdown_links.py \
+            tools/check_publication_claims.py \
             tools/derive_cmake_install_paths.py \
             tools/replay_timing_frontier.py \
             tools/verify_latency_matrix_cell.py \
