@@ -56,7 +56,7 @@ schedule has been evaluated, the selector reapplies timing admission at final
 selection time `t_sel` and chooses
 
 $$
-(\tau^*,g^*,r^*)=
+(\tau^{\ast},g^{\ast},r^{\ast})=
 \arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
 J_{\mathrm{global}}(\xi;s_0).
 $$

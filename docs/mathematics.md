@@ -65,7 +65,7 @@ modelled as stationary. Because the integral of the quintic smoothstep
 complement is one half, the predicted presentation pose at lead `h` is
 
 $$
-\Pi(h)=\mathrm{Prop}\!\left(W\_T\_O(t_0),\; h-\tfrac12\min(h,D),\; \hat v,\hat\omega\right).
+\Pi(h)=\mathrm{Prop}\!\left(W_T_O(t_0),\; h-\tfrac12\min(h,D),\; \hat v,\hat\omega\right).
 $$
 
 The prediction model is **deterministic**. There is no covariance, learned
@@ -213,7 +213,7 @@ qualification above), while final timing admission depends on selector time.
 The reported moving-object policy selects
 
 $$
-\xi_h^*
+\xi_h^{\ast}
 =\arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
 J_{\mathrm{global}}(\xi;s_0).
 $$

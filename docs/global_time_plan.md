@@ -7,7 +7,7 @@ For a moving presentation, TRIAD freezes one bounded event schedule and the corr
 After the entire configured event schedule has been inspected, the controller reapplies the final timing gate using the current selector time and commits one plan:
 
 $$
-(\tau^*,g^*,r^*)=
+(\tau^{\ast},g^{\ast},r^{\ast})=
 \arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
 J_{\mathrm{global}}(\xi;s_0).
 $$
