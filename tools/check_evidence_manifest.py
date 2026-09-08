@@ -8,7 +8,9 @@ Checks, in order:
    their campaigns were executed;
 3. the published frozen plan sets hash to the digests recorded alongside them;
 4. the headline outcome counts quoted in evidence/README.md are exactly what the
-   raw per-run records contain.
+   raw per-run records contain;
+5. selected publication-facing interpretation guards remain in their corrected
+   form.
 
 Exit status is 0 only if every check passes.
 """
@@ -111,8 +113,8 @@ for row in gen:
 expected = {
     "A_PLAN_FOUND_AND_COMPLETED": "A — plan found and completed",
     "B_PLAN_FOUND_BUT_EXECUTION_FAILED": "B — committed, then execution failed",
-    "C_NO_PHYSICALLY_FEASIBLE_PLAN": "C — no physically feasible plan",
-    "D_NO_TIMING_ADMISSIBLE_PLAN": "D — no timing-admissible plan",
+    "C_NO_PHYSICALLY_FEASIBLE_PLAN": "C — no physically feasible TRIAD plan",
+    "D_NO_TIMING_ADMISSIBLE_PLAN": "D — no timing-admissible TRIAD plan",
     "E_COMMIT_FRESHNESS_REJECTED": "E — commit freshness rejected",
 }
 check("held-out record count is 62", len(gen) == 62, str(len(gen)))
@@ -132,14 +134,35 @@ check("perturbation record count is 66", len(rob) == 66, str(len(rob)))
 r_completed = [r for r in rob if r["completed"]]
 r_committed = [r for r in rob if r["committed"]]
 r_execfail = [r for r in rob if r["committed"] and not r["completed"]]
+r_rejected = [r for r in rob if not r["committed"]]
 check("perturbations completed 40", len(r_completed) == 40, str(len(r_completed)))
 check("perturbations execution failure after commitment 12", len(r_execfail) == 12, str(len(r_execfail)))
-check("perturbations safely rejected 14", len(rob) - len(r_committed) == 14,
-      str(len(rob) - len(r_committed)))
-h002 = [r for r in r_execfail if r["anchor_id"] == "H002"]
-check("eight of the twelve execution failures belong to anchor H002", len(h002) == 8, str(len(h002)))
+check("perturbations safely rejected 14", len(r_rejected) == 14, str(len(r_rejected)))
+
+h002_all = [r for r in rob if r.get("anchor_id") == "H002"]
+h002_completed = [r for r in h002_all if r["completed"]]
+h002_failed = [r for r in h002_all if not r["completed"]]
+h002_execfail = [r for r in r_execfail if r.get("anchor_id") == "H002"]
+check("H002 family contains 11 perturbations", len(h002_all) == 11, str(len(h002_all)))
+check("H002 family contains 3 completions", len(h002_completed) == 3, str(len(h002_completed)))
+check("H002 family contains 8 failures", len(h002_failed) == 8, str(len(h002_failed)))
+check("eight of the twelve execution failures belong to H002", len(h002_execfail) == 8, str(len(h002_execfail)))
 check("every perturbation run used ideal sensing",
       all(r.get("mode") == "IDEAL" and float(r.get("configured_delay_s") or 0) == 0.0 for r in rob))
+
+print("5. publication interpretation guards")
+check("README makes the full 66-case robustness result primary",
+      "The left-hand column is the primary result" in readme)
+check("README labels the H002 exclusion secondary and post-hoc",
+      "secondary, post-hoc diagnostic" in readme)
+check("README does not claim feasible-set coverage",
+      "does **not** call them feasible-set coverage" in readme)
+check("README records 0.60 s uncompensated AMBIGUOUS classification",
+      "classification is `AMBIGUOUS`" in readme and "0.0241 m" in readme and "0.0760 m/s" in readme)
+check("README states near-ground normalization by sourceIndex",
+      "sourceIndex" in readme and "full raw records and full set hashes are **not** identical" in readme)
+check("README scopes the <2 ms statement to in-planning ControllerRun",
+      "restricted to the in-planning" in readme and "No hard-real-time/WCET claim" in readme)
 
 print()
 if failures:
