@@ -30,7 +30,14 @@ for rel in FILES:
         sys.exit(1)
     texts[rel] = path.read_text(encoding="utf-8")
 
-joined = "\n".join(texts.values())
+
+def norm(text):
+    """Case-fold and collapse whitespace for robust prose checks."""
+    return " ".join(text.casefold().split())
+
+
+joined = norm("\n".join(texts.values()))
+norm_files = {rel: norm(text) for rel, text in texts.items()}
 failures = []
 checks = 0
 
@@ -55,7 +62,7 @@ forbidden = {
     "async clean-machine reproduction overclaim": "after\" column is independently reproduced by",
 }
 for label, phrase in forbidden.items():
-    check(label + " absent", phrase.lower() not in joined.lower())
+    check(label + " absent", norm(phrase) not in joined)
 
 # Required corrected claims.
 required = {
@@ -76,30 +83,33 @@ required = {
     "historical/current validation is separated": "historical exact-serial runtime revalidation",
 }
 for label, phrase in required.items():
-    check(label, phrase.lower() in joined.lower())
+    check(label, norm(phrase) in joined)
 
 # File-specific guards to avoid a correction existing only somewhere unrelated.
 check(
     "README qualifies callback lifecycle",
-    "FSM teardown can reach worker cancellation and `join()`" in texts["README.md"],
+    norm("FSM teardown can reach worker cancellation and `join()`")
+    in norm_files["README.md"],
 )
 check(
     "architecture qualifies live aperture",
-    "Residual live\nfingertip-frame reads" in texts["docs/architecture.md"]
-    or "Residual live fingertip-frame reads" in texts["docs/architecture.md"],
+    norm("Residual live fingertip-frame reads")
+    in norm_files["docs/architecture.md"],
 )
 check(
     "evidence README makes full 66-case result primary",
-    "The left-hand column is the primary result" in texts["evidence/README.md"],
+    norm("The left-hand column is the primary result")
+    in norm_files["evidence/README.md"],
 )
 check(
     "release validation denies current-head runtime relabeling",
-    "not current asynchronous-head\nruntime validation" in texts["docs/release_validation.md"]
-    or "not current asynchronous-head runtime validation" in texts["docs/release_validation.md"],
+    norm("not current asynchronous-head runtime validation")
+    in norm_files["docs/release_validation.md"],
 )
 check(
     "performance scopes <2 ms to in-planning ControllerRun",
-    "applies only to the in-planning `ControllerRun` sample" in texts["docs/performance.md"],
+    norm("applies only to the in-planning `ControllerRun` sample")
+    in norm_files["docs/performance.md"],
 )
 
 print()
