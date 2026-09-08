@@ -1,13 +1,17 @@
 # Reproducibility guide
 
-TRIAD separates four reproducibility targets:
+TRIAD separates five reproducibility targets:
 
-1. source-level selector and checker behavior;
-2. build/install reproducibility;
-3. robot-model reconstruction;
-4. experiment reproduction.
+1. source-level selector/checker behavior;
+2. integrity of the frozen/public source snapshots;
+3. build/install reproducibility;
+4. robot-model reconstruction;
+5. experiment/runtime reproduction, with explicit source-state provenance.
 
-The frozen scientific tags preserve historical evidence, while the current publication source contains the audited exact-serial implementation.
+Historical tags preserve historical experiments. The current publication branch
+contains the frozen asynchronous implementation synchronized from `f56add3`.
+Those facts must not be collapsed into a claim that every historical run was
+executed at the current branch head.
 
 ## Level 1: dependency-free checks
 
@@ -32,11 +36,20 @@ cd evidence && sha256sum -c MANIFEST.sha256 && cd ..
 python3 tools/check_evidence_manifest.py
 ```
 
-They cover the within-event and cross-event selectors, binding-cost source integration and runtime-checker fixtures, timing-frontier replay logic, robot-module reconstruction safety/validation, latency-cell and scenario-identity verification, scenario-override generation, local documentation links, frozen scientific-baseline integrity, byte identity of the source synchronized from the frozen scientific state `f56add3`, and the integrity and internal consistency of the published evidence package.
+They cover the within-event/cross-event selectors, binding-cost source
+integration and checker fixtures, timing-frontier replay logic, robot-module
+reconstruction tests, latency-cell and scenario-identity verification,
+scenario-override generation, local documentation links, frozen
+scientific-baseline integrity, source synchronization from `f56add3`, and the
+integrity/internal consistency of the reduced evidence package.
 
-`docs/source_sync_82e6eaa.sha256` is retained as the historical record of the exact-serial state and verifies against the `csi-2026-release` tag, **not** against this branch.
+`docs/source_sync_82e6eaa.sha256` is retained as the historical exact-serial
+record and verifies against `csi-2026-release`, **not** against the current
+asynchronous branch.
 
-The GitHub Actions workflow runs this dependency-free layer automatically.
+The GitHub Actions workflow runs the dependency-free layer automatically.
+Passing these checks is not physical validation and is not a substitute for a
+runtime campaign.
 
 ## Level 2: clean build and install
 
@@ -53,11 +66,18 @@ cmake --build build -j"$(nproc)"
 cmake --install build
 ```
 
-The controller installs into the runtime locations associated with the mc_rtc installation used at configure time. See [`troubleshooting.md`](troubleshooting.md).
+The controller installs into the runtime locations associated with the mc_rtc
+installation used at configure time. See [`troubleshooting.md`](troubleshooting.md).
+
+The publication pass recorded a clean configure/build for the current
+asynchronous branch. That establishes buildability in the tested environment;
+it does not by itself establish a fresh current-head simulation or hardware
+runtime campaign.
 
 ## Level 3: reconstruct the robot module
 
-The Kinova Gen3 + Robotiq 2F-85 mc_rtc module is reconstructed from pinned upstream artifacts rather than redistributed:
+The Kinova Gen3 + Robotiq 2F-85 mc_rtc module is reconstructed from pinned
+upstream artifacts rather than redistributed:
 
 ```bash
 python3 scripts/setup_gen3_2f85_module.py \
@@ -69,25 +89,26 @@ python3 scripts/setup_gen3_2f85_module.py \
 export MAIN_ROBOT_MODULE_PATH=/path/to/gen3_2f85_module
 ```
 
-The setup tool validates the pinned URDF, expected structural transformations and all referenced mesh contents before producing the module. See [`robot_module.md`](robot_module.md).
+The setup tool validates the pinned URDF, expected structural transformations
+and referenced mesh contents before producing the module. See
+[`robot_module.md`](robot_module.md).
 
-## Level 3b: check the published evidence without running anything
-
-The reduced evidence package can be checked on any machine, with no robot, no
-simulator and no build:
+## Level 3b: check the published evidence without running the simulator
 
 ```bash
 cd evidence && sha256sum -c MANIFEST.sha256 && cd ..
 python3 tools/check_evidence_manifest.py
 ```
 
-This verifies that every published record hashes to its archived digest, that
-the two predeclared input sets still hash to their pre-execution values, that
-each published frozen plan set matches its recorded digest, and that the
-headline outcome counts quoted in `evidence/README.md` are exactly what the raw
-per-run records contain. See [`../evidence/README.md`](../evidence/README.md).
+This verifies the reduced evidence digests, pre-execution hashes for the two
+predeclared input sets, published plan-set hashes and headline counts derived
+from raw records. The checker also guards several corrected publication
+interpretations such as H002's post-hoc diagnostic status and near-ground
+`sourceIndex` normalization.
 
-## Level 4: reproduce Dataset B
+See [`../evidence/README.md`](../evidence/README.md).
+
+## Level 4: historical Dataset-B reproduction
 
 | Command | Dataset-B label |
 | --- | --- |
@@ -96,27 +117,27 @@ per-run records contain. See [`../evidence/README.md`](../evidence/README.md).
 | `lateral-low` | `CANONICAL_YZ` |
 | `diagonal` | `DIAGONAL_XZ` |
 
-Run one:
+Example:
 
 ```bash
 scripts/run_scenario.sh longitudinal
 ```
 
-A successful reproduction ends with:
+The historical exact-serial four-scenario revalidation documented in
+[`release_validation.md`](release_validation.md) belongs to the historical
+synchronized state around `123be4a` / `a006912`. It must not be silently
+relabelled as a new runtime validation of the current asynchronous branch.
 
-```text
-HANDOVER_COMPLETED=true
-RUNTIME_CHECKER_RESULT=PASS
-SCENARIO_IDENTITY_RESULT=PASS
-```
+When running the current branch yourself, preserve the exact branch/commit,
+scenario override, runtime environment and checker output as a **new local run**.
+Do not compare machine-dependent wall-clock numbers as if they were deterministic
+cross-machine outputs.
 
-The wrapper preserves the run log, exact temporary scenario override and checker outputs in `results/`.
+## Level 5: historical Dataset-A reproduction
 
-The most recent publication synchronization was revalidated on all four scenarios; see [`release_validation.md`](release_validation.md).
-
-## Level 5: reproduce Dataset A
-
-Dataset A is the earlier perception-latency study and is intentionally separate from Dataset B. Its historical source state is preserved as `dataset-a-baseline`.
+Dataset A is the earlier perception-latency study and is intentionally separate
+from Dataset B. Its historical source state is preserved as
+`dataset-a-baseline`.
 
 Example:
 
@@ -127,17 +148,19 @@ scripts/reproduce_latency_matrix.sh \
   --mc-rtc-prefix /path/to/your/mc_rtc/install
 ```
 
-Generate all 15 scenario/condition configurations without building or running:
+Generate all 15 scenario/condition configurations without building/running:
 
 ```bash
 scripts/reproduce_latency_matrix.sh --all --dry-run
 ```
 
-See [`experiments.md`](experiments.md) for source attribution and expected outcome classes.
+See [`experiments.md`](experiments.md) for attribution and expected historical
+outcome classes.
 
 ## Reproduce timing-admission analysis
 
-Any Dataset-B run containing the final timing-diagnostic records can be analysed directly:
+A Dataset-B-style log containing final timing-diagnostic records can be analysed
+with:
 
 ```bash
 python3 tools/replay_timing_frontier.py \
@@ -146,23 +169,29 @@ python3 tools/replay_timing_frontier.py \
   --planner-time 3.976
 ```
 
-The tool first verifies the logged timing flags against the selector inequalities, then derives the analytical fail-closed boundary and reports the admissible set at requested counterfactual planner durations.
+The tool verifies logged timing flags against selector inequalities, derives the
+scenario-specific analytical fail-closed boundary and reports the admissible set
+at requested counterfactual planner durations.
 
 See [`timing_frontiers.md`](timing_frontiers.md).
 
 ## Deterministic scientific outputs
 
-Given the same scientific source/configuration, the reproducibility contract covers:
+Given the same scientific source/configuration and the same relevant timing
+inputs, the deterministic contract covers quantities such as:
 
 - generated event schedule;
-- complete-plan identities;
-- selected event lead;
-- selected grasp and route;
+- complete-plan scientific payload identities;
+- selected event lead/grasp/route;
 - objective values;
-- timing-admissible set at the logged selector time;
+- timing-admissible set at the specified selector time;
 - committed winner fingerprint.
 
-The runtime checker independently reconstructs the binding objective and, where timing-diagnostic records are available, verifies the finite argmin over the final admissible set.
+For the asynchronous near-ground historical comparison, raw records differ by a
+`sourceIndex` field and 54 additional payloads are enumerated; see
+[`performance.md`](performance.md) and
+[`corrections_of_record.md`](corrections_of_record.md). Do not call the full raw
+sets byte-identical.
 
 ## Machine-dependent outputs
 
@@ -171,37 +200,47 @@ The following are not cross-machine exact outputs:
 - external wall-clock planning duration;
 - operating-system scheduling;
 - wall-time distribution of control cycles;
-- GUI timing;
+- GUI/logging timing;
 - physical sensor behavior;
 - hardware interaction timing.
 
-Performance claims therefore state the timing metric, measurement window and runtime context separately from deterministic scientific outputs.
+Performance claims must state the timing metric, measurement window and runtime
+context separately from deterministic scientific outputs. The published
+`<2 ms` asynchronous observation applies only to the specific in-planning
+`ControllerRun` samples documented in [`performance.md`](performance.md), not to
+whole-run controller/global maxima and not as WCET.
 
 ## Evidence rules
 
 A reported result should identify:
 
-1. source commit/tag or named baseline;
+1. source commit/tag or record-specific run state;
 2. scenario and condition;
-3. Dataset A or Dataset B;
+3. campaign/dataset;
 4. timing metric, when timing is discussed;
 5. simulation versus physical hardware;
-6. checker result;
-7. any attribution limitation documented in [`experiments.md`](experiments.md).
+6. checker/evidence source;
+7. any attribution limitation documented in [`provenance.md`](provenance.md),
+   [`experiments.md`](experiments.md) or
+   [`corrections_of_record.md`](corrections_of_record.md).
 
 ## Release checklist
 
 Before tagging a paper-associated release:
 
-- working tree clean;
+- publication branch/commit identified and working tree clean;
 - dependency-free suite passes;
 - local Markdown links pass;
 - frozen scientific-baseline manifest verifies;
-- the `f56add3` source-sync manifest verifies;
-- the evidence manifest and the evidence consistency checker pass;
-- fresh configure/build/install succeeds;
+- `f56add3` source-sync manifest verifies;
+- evidence manifest and evidence consistency checker pass;
+- fresh configure/build succeeds in the declared environment;
 - robot-module reconstruction tests pass;
-- all four Dataset-B scenario wrappers pass both runtime and identity checks if controller/config/runtime behavior changed;
+- any new runtime campaign is labelled with its actual source/config/runtime
+  provenance rather than inferred from historical revalidation;
 - timing-frontier replay tests pass;
-- README, mathematics, architecture, simulation, experiments and timing documents use consistent terminology;
-- hardware-facing statements remain clearly separated from physical-robot validation.
+- README, mathematics, architecture, provenance, performance, evidence and
+  validation documents use consistent terminology;
+- simulation/hardware scope remains explicit;
+- no hard-real-time, continuous-space globality, feasible-space coverage,
+  physical-human validation or full copied-state-purity claim is introduced.
