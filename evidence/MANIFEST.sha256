@@ -1,11 +1,10 @@
 # TRIAD reduced evidence package — integrity manifest
 #
-# Every file below is byte-identical to its archived original, with one
-# clearly-labelled exception: robustness/generate_perturbations.py is a
-# published variant of the campaign script in which two hard-coded archive
-# paths were replaced by command-line arguments. It reproduces
-# perturbations.csv byte for byte, and that file still hashes to its
-# pre-registered value.
+# Primary evidence files are byte-identical to archived originals except for
+# the explicitly published path-portable robustness generator. README.md is
+# publication-authored interpretation/documentation rather than an archived
+# experiment artefact; its current digest is included so the complete reduced
+# package remains integrity-checkable.
 #
 # Origins are recorded in ORIGINS.txt alongside this manifest.
 #
@@ -61,7 +60,7 @@ f9ae714e91a294081da693e555678a1559d78e5aa101208c3e40b38e0791f7c1  generalization
 356b27159029a6c585fa1a6444fc372e5ff5bbdbb129afd3838c3fc8eeaea901  generalization/ROBUSTNESS_ANCHOR_RULE.md
 1f9e62b16fa50df0ce8850174ff9c0bef002cd7b4fe194361697fc36b7e6f649  latency/FINAL_LATENCY_REPORT.md
 762d65c0eebbe9e7561a3c8ef9fccc35f03fadf752e0c6704a6e13271ecdb7b3  latency/sweep_rows.json
-a8988659fae5cbab65b1ac2e18fdc14ac21598cacf5a458702c1d51c38834d10  README.md
+7fd83477741a2d18adcf9c549d64b5e6854ea76345e8a91660186f5af3f043d2  README.md
 f9bef68ee9486d6190c83dc24d98ad36c53f623f54ac7901d39b067726fc8e3b  robustness/generate_perturbations.py
 50a12ec5cd8b7edb75f809ae6e6fa57c66fda00404d116093c9f035e4ab039f3  robustness/outcomes.json
 c58b7c9a390888f6becb380ab76f15a5ed8b182d70613b6acdeafa65ef89d006  robustness/perturbations.csv
