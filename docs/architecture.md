@@ -12,23 +12,27 @@ Observe
   -> Final timing admission at selection time
   -> Exact finite argmin
   -> Commit once
-  -> mc_rtc FSM/QP execution
+  -> committed task-space reference + runtime governor
+  -> mc_rtc task/QP realization
 ```
 
-TRIAD separates high-level plan selection from low-level execution. The finite
-planner chooses **what** and **when**: the event time, grasp orientation and
-transit route. The mc_rtc FSM/QP layer determines **how** to track the
-committed references. The QP does not choose the event time or minimize the
-high-level objective.
+TRIAD does more than choose **what** and **when**. It selects the event time,
+grasp orientation and transit route, then constructs the committed task-space
+reference along that route and applies the controller's live execution-side
+reference governor and fail-closed safety logic. The downstream mc_rtc task/QP
+layer realizes those per-cycle task-space, posture and gripper references at the
+robot/joint level. The QP does not choose the event time, grasp, route or
+high-level TRIAD objective.
 
 The interface is narrow and worth stating exactly. Per control cycle TRIAD
 supplies one `TransformTask` target pose, a body-frame reference velocity, a
 zero reference acceleration, an arm-posture target and a six-joint gripper
 target. It also configures one kinematics constraint, **no collision constraint
-and no contacts**. No event time, grasp, route or objective value ever crosses
-that boundary. Joint limits are therefore enforced twice and independently —
-constructively inside TRIAD's own differential-IK step scaling, and again by the
-QP — whereas collision safety is enforced **once, by TRIAD alone**.
+and no contacts**. No event time, grasp, route or objective value crosses into
+the QP as a decision variable. Joint limits are therefore enforced twice and
+independently — constructively inside TRIAD's own differential-IK step scaling,
+and again by the QP — whereas collision safety is enforced **once, by TRIAD
+alone**, through the planner/runtime checks implemented in this controller.
 
 mc_rtc's internal QP formulation is not reproduced in this repository and no QP
 equation is claimed from it.
