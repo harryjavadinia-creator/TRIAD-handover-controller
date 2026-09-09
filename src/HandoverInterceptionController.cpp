@@ -315,6 +315,9 @@ void HandoverInterceptionController::reset(const mc_control::ControllerResetData
   physicalGripperFeedbackWarningLogged_ = false;
   gripperClosureAuthorized_ = false;
   gripperAuthorityViolationLogged_ = false;
+  // A reset while a search is in flight cancels and joins it first, so no
+  // worker can touch state that reset() is about to reinitialise.
+  shutdownPlannerWorker();
   controllerTime_ = 0.0;
   objectObservationActive_ = false;
   simulatedObjectMotionActive_ = false;
@@ -1696,11 +1699,11 @@ void HandoverInterceptionController::loadHandoverConfig(
 double HandoverInterceptionController::acquisitionCenterTolerance(
     double minPadClearance) const
 {
-  const double nearTol = std::max(0.0, acquisitionNearCenterTolerance_);
-  const double farTol = std::max(nearTol, acquisitionFarCenterTolerance_);
-  const double nearDistance = gripperContactTolerance_;
+  const double nearTol = std::max(0.0, plannerConfig_.acquisitionNearCenterTolerance);
+  const double farTol = std::max(nearTol, plannerConfig_.acquisitionFarCenterTolerance);
+  const double nearDistance = plannerConfig_.gripperContactTolerance;
   const double farDistance = std::max(
-      nearDistance + 1e-6, acquisitionCenterTightenDistance_);
+      nearDistance + 1e-6, plannerConfig_.acquisitionCenterTightenDistance);
   const double alpha = std::max(0.0, std::min(1.0,
       (minPadClearance - nearDistance) / (farDistance - nearDistance)));
   return nearTol + alpha * (farTol - nearTol);
@@ -1838,7 +1841,7 @@ double HandoverInterceptionController::reachCurveLength(
     const sva::PTransformd & standoff,
     const Eigen::Vector3d & curveOffsetWorld) const
 {
-  const int samples = std::max(4, transitCurveLengthSamples_);
+  const int samples = std::max(4, plannerConfig_.transitCurveLengthSamples);
   double length = 0.0;
   Eigen::Vector3d previous = start.translation();
   for(int k = 1; k <= samples; ++k)
@@ -1859,13 +1862,13 @@ HandoverInterceptionController::transitRouteBank(
 {
   std::vector<std::pair<std::string, Eigen::Vector3d>> routes;
   routes.emplace_back("direct", Eigen::Vector3d::Zero());
-  if(!transitPlanningEnabled_) { return routes; }
+  if(!plannerConfig_.transitPlanningEnabled) { return routes; }
 
   Eigen::Vector3d chord = standoff.translation() - start.translation();
   if(chord.norm() < 1e-6) { return routes; }
   chord.normalize();
 
-  Eigen::Vector3d e1 = worldUp_ - chord * chord.dot(worldUp_);
+  Eigen::Vector3d e1 = plannerConfig_.worldUp - chord * chord.dot(plannerConfig_.worldUp);
   if(e1.norm() < 1e-6)
   {
     e1 = Eigen::Vector3d::UnitX()
@@ -1881,8 +1884,8 @@ HandoverInterceptionController::transitRouteBank(
   if(e2.norm() < 1e-6) { return routes; }
   e2.normalize();
 
-  const int directions = std::max(4, transitRouteDirections_);
-  for(double radius : transitRouteApexOffsets_)
+  const int directions = std::max(4, plannerConfig_.transitRouteDirections);
+  for(double radius : plannerConfig_.transitRouteApexOffsets)
   {
     radius = std::max(0.0, radius);
     if(radius <= 1e-9) { continue; }
@@ -2008,29 +2011,29 @@ HandoverInterceptionController::makeInterceptionPlan(
   plan.reachCurveOffsetWorld = candidate.reachCurveOffsetWorld;
   plan.presentationMode = presentationMode_;
   plan.presentationTime = presentationTime;
-  plan.reachDuration = std::max(2.0 * previewDt_, reachDuration);
-  plan.approachDuration = std::max(2.0 * previewDt_, approachDuration);
-  plan.acquireDuration = std::max(2.0 * previewDt_, acquireDuration);
-  plan.confirmationDuration = timingBilateralDwell_
-                            + timingConfirmationTimeout_;
-  plan.forceTransferDuration = forceTransferPolicy_.desiredTransferDuration
-                             + forceTransferPolicy_.releaseDwell;
-  plan.forceTransferTimeout = forceTransferPolicy_.transferTimeout;
-  plan.forceTransferFullSupportForce = forceTransferPolicy_.fullSupportForce;
-  plan.forceTransferReleaseThreshold = forceTransferPolicy_.releaseThreshold;
-  plan.forceTransferReleaseRateTolerance = forceTransferPolicy_.releaseRateTolerance;
-  plan.forceTransferReleaseDwell = forceTransferPolicy_.releaseDwell;
-  plan.forceTransferMaximumForce = forceTransferPolicy_.maximumForce;
-  plan.forceTransferMaximumMoment = forceTransferPolicy_.maximumMoment;
-  plan.forceTransferAdmittanceMass = forceTransferPolicy_.admittanceMass;
-  plan.forceTransferAdmittanceDamping = forceTransferPolicy_.admittanceDamping;
-  plan.forceTransferAdmittanceStiffness = forceTransferPolicy_.admittanceStiffness;
-  plan.forceTransferMaximumAdmittanceSpeed = forceTransferPolicy_.maximumAdmittanceSpeed;
-  plan.forceTransferMaximumAdmittanceOffset = forceTransferPolicy_.maximumAdmittanceOffset;
-  plan.forceTransferVirtualContactStiffness = forceTransferPolicy_.virtualContactStiffness;
-  plan.forceTransferVirtualContactDamping = forceTransferPolicy_.virtualContactDamping;
-  plan.forceTransferVirtualMaximumLoadScale = forceTransferPolicy_.virtualMaximumLoadScale;
-  plan.forceTransferSource = forceTransferPolicy_.source;
+  plan.reachDuration = std::max(2.0 * plannerConfig_.previewDt, reachDuration);
+  plan.approachDuration = std::max(2.0 * plannerConfig_.previewDt, approachDuration);
+  plan.acquireDuration = std::max(2.0 * plannerConfig_.previewDt, acquireDuration);
+  plan.confirmationDuration = plannerConfig_.timingBilateralDwell
+                            + plannerConfig_.timingConfirmationTimeout;
+  plan.forceTransferDuration = plannerConfig_.forceTransferPolicy.desiredTransferDuration
+                             + plannerConfig_.forceTransferPolicy.releaseDwell;
+  plan.forceTransferTimeout = plannerConfig_.forceTransferPolicy.transferTimeout;
+  plan.forceTransferFullSupportForce = plannerConfig_.forceTransferPolicy.fullSupportForce;
+  plan.forceTransferReleaseThreshold = plannerConfig_.forceTransferPolicy.releaseThreshold;
+  plan.forceTransferReleaseRateTolerance = plannerConfig_.forceTransferPolicy.releaseRateTolerance;
+  plan.forceTransferReleaseDwell = plannerConfig_.forceTransferPolicy.releaseDwell;
+  plan.forceTransferMaximumForce = plannerConfig_.forceTransferPolicy.maximumForce;
+  plan.forceTransferMaximumMoment = plannerConfig_.forceTransferPolicy.maximumMoment;
+  plan.forceTransferAdmittanceMass = plannerConfig_.forceTransferPolicy.admittanceMass;
+  plan.forceTransferAdmittanceDamping = plannerConfig_.forceTransferPolicy.admittanceDamping;
+  plan.forceTransferAdmittanceStiffness = plannerConfig_.forceTransferPolicy.admittanceStiffness;
+  plan.forceTransferMaximumAdmittanceSpeed = plannerConfig_.forceTransferPolicy.maximumAdmittanceSpeed;
+  plan.forceTransferMaximumAdmittanceOffset = plannerConfig_.forceTransferPolicy.maximumAdmittanceOffset;
+  plan.forceTransferVirtualContactStiffness = plannerConfig_.forceTransferPolicy.virtualContactStiffness;
+  plan.forceTransferVirtualContactDamping = plannerConfig_.forceTransferPolicy.virtualContactDamping;
+  plan.forceTransferVirtualMaximumLoadScale = plannerConfig_.forceTransferPolicy.virtualMaximumLoadScale;
+  plan.forceTransferSource = plannerConfig_.forceTransferPolicy.source;
   plan.retreatDuration = std::max(0.0, retreatDuration);
   plan.contactClosure = std::max(0.0, candidate.contactClosure);
 
@@ -2041,7 +2044,7 @@ HandoverInterceptionController::makeInterceptionPlan(
   const double minimumStaticWindow = plan.acquireDuration
       + plan.confirmationDuration + 1.0;
   plan.acquisitionWindowDuration = plan.presentationMode
-      ? std::max(presentationAcquisitionWindow_, minimumStaticWindow) : 0.0;
+      ? std::max(plannerConfig_.presentationAcquisitionWindow, minimumStaticWindow) : 0.0;
 
   if(plan.presentationMode)
   {
@@ -2061,7 +2064,7 @@ HandoverInterceptionController::makeInterceptionPlan(
     }
     else
     {
-      plan.decelerationDuration = presentationDecelerationDuration_;
+      plan.decelerationDuration = plannerConfig_.presentationDecelerationDuration;
       plan.decelerationStartTime = plan.presentationTime
                                  - plan.decelerationDuration;
     }
@@ -2083,7 +2086,7 @@ HandoverInterceptionController::makeInterceptionPlan(
 
   plan.objectAtPresentation = W_T_O_presentation;
   plan.objectAtContact = W_T_O_presentation;
-  plan.mouthAtReachStart = planningStartMouthPose_;
+  plan.mouthAtReachStart = plannerContext_.planningStartMouthPose;
   plan.O_T_M_standoff = relativePose(
       W_T_O_presentation, candidate.W_T_M_standoff);
   plan.O_T_M_capture = relativePose(
@@ -2279,19 +2282,19 @@ HandoverInterceptionController::interceptionReferenceAt(
     {
       const double closureElapsed = absoluteTime - plan.acquireStartTime;
       reference.gripperClosure = std::min(
-          plan.contactClosure, timingEffectiveGripperRate_ * closureElapsed);
+          plan.contactClosure, plannerConfig_.timingEffectiveGripperRate * closureElapsed);
     }
   }
   else
   {
     const double closureDuration = plan.contactClosure > 0.0
-        ? plan.contactClosure / std::max(1e-6, timingEffectiveGripperRate_)
+        ? plan.contactClosure / std::max(1e-6, plannerConfig_.timingEffectiveGripperRate)
         : 0.0;
     const double closureStartTime = plan.contactTime - closureDuration;
     if(absoluteTime > closureStartTime && closureDuration > 0.0)
     {
       reference.gripperClosure = std::min(
-          plan.contactClosure, timingEffectiveGripperRate_
+          plan.contactClosure, plannerConfig_.timingEffectiveGripperRate
             * (absoluteTime - closureStartTime));
     }
   }
@@ -2616,15 +2619,15 @@ bool HandoverInterceptionController::validateInterceptionPlan(
   if(verbose)
   {
     const auto reach = interceptionReferenceAt(
-        plan, plan.reachStartTime, previewDt_);
+        plan, plan.reachStartTime, plannerConfig_.previewDt);
     const auto decel = interceptionReferenceAt(
-        plan, plan.decelerationStartTime, previewDt_);
+        plan, plan.decelerationStartTime, plannerConfig_.previewDt);
     const auto presentation = interceptionReferenceAt(
-        plan, plan.presentationTime, previewDt_);
+        plan, plan.presentationTime, plannerConfig_.previewDt);
     const auto acquire = interceptionReferenceAt(
-        plan, plan.acquireStartTime, previewDt_);
+        plan, plan.acquireStartTime, plannerConfig_.previewDt);
     const auto contact = interceptionReferenceAt(
-        plan, plan.contactTime, previewDt_);
+        plan, plan.contactTime, plannerConfig_.previewDt);
     const Eigen::Vector3d pr = reach.objectPose.translation();
     const Eigen::Vector3d pd = decel.objectPose.translation();
     const Eigen::Vector3d pp = presentation.objectPose.translation();
@@ -2707,6 +2710,10 @@ void HandoverInterceptionController::recordObjectPerceptionTruthSample(
     objectPerceptionBuffer_.back().pose = truthPose;
   }
 
+  // The perception path runs every control cycle on the control thread, before
+  // any planning freeze, so it must read the live configuration rather than the
+  // planner's frozen mirror. The mirror is only refreshed at freeze and
+  // calibration points and would otherwise hold its declared default here.
   const double keepAfter = controllerTime_
       - std::max(perceptionLatencyBufferDuration_,
                  perceptionLatencySeconds_ + 2.0 * controlDt_);
@@ -2807,12 +2814,12 @@ void HandoverInterceptionController::refreshObjectPose()
   {
     latest = W_T_O_simulated_;
   }
-  else if(robots().hasRobot(objectRobotName_))
+  else if(robots().hasRobot(plannerConfig_.objectRobotName))
   {
-    auto & object = robots().robot(objectRobotName_);
-    if(object.hasFrame(objectFrameName_))
+    auto & object = robots().robot(plannerConfig_.objectRobotName);
+    if(object.hasFrame(plannerConfig_.objectFrameName))
     {
-      latest = object.frame(objectFrameName_).position();
+      latest = object.frame(plannerConfig_.objectFrameName).position();
     }
     else
     {
@@ -2821,7 +2828,7 @@ void HandoverInterceptionController::refreshObjectPose()
       {
         mc_rtc::log::warning(
             "[ObjectGeometry] robot {} has no frame {}; using configured object pose",
-            objectRobotName_, objectFrameName_);
+            plannerConfig_.objectRobotName, plannerConfig_.objectFrameName);
         warned = true;
       }
     }
@@ -3132,6 +3139,15 @@ void HandoverInterceptionController::applyPlanningObjectSnapshot()
   W_T_O_predicted_ = W_T_O_;
 }
 
+// Planner-side application of the same snapshot. It writes the planner's own
+// world instead of the controller members the control thread logs every cycle.
+void HandoverInterceptionController::applyPlanningObjectSnapshotToPlanner()
+{
+  if(!planningObjectSnapshotActive_) { return; }
+  plannerContext_.W_T_O = W_T_O_planningSnapshot_;
+  plannerContext_.W_T_H = compose(plannerContext_.W_T_O, O_T_H_);
+}
+
 void HandoverInterceptionController::clearPlanningObjectSnapshot()
 {
   planningObjectSnapshotActive_ = false;
@@ -3234,7 +3250,7 @@ void HandoverInterceptionController::updateAttachedObjectPose()
 
 sva::PTransformd HandoverInterceptionController::actualBasePose() const
 {
-  return robot().frame(toolFrame_).position();
+  return robot().frame(plannerConfig_.toolFrame).position();
 }
 
 bool HandoverInterceptionController::livePadCenters(
@@ -3245,8 +3261,8 @@ bool HandoverInterceptionController::livePadCenters(
   static const std::string rightTip = "gen3_robotiq_85_right_finger_tip_link";
   if(!robot().hasFrame(leftTip) || !robot().hasFrame(rightTip)) { return false; }
 
-  pL_W = pointToWorld(robot().frame(leftTip).position(), leftPadPointTip_);
-  pR_W = pointToWorld(robot().frame(rightTip).position(), rightPadPointTip_);
+  pL_W = pointToWorld(robot().frame(leftTip).position(), plannerConfig_.leftPadPointTip);
+  pR_W = pointToWorld(robot().frame(rightTip).position(), plannerConfig_.rightPadPointTip);
   return true;
 }
 
@@ -3310,14 +3326,16 @@ bool HandoverInterceptionController::calibrateMouthControlFrame()
       "[MouthCalibration] calibrated physical B_T_M p_B=[{:.5f},{:.5f},{:.5f}] openHalfGap={:.5f}",
       p.x(), p.y(), p.z(), calibratedOpenHalfGap_);
   return true;
+  // Keep the planner mirror consistent with the calibrated geometry.
+  refreshPlannerConfig();
 }
 
 sva::PTransformd HandoverInterceptionController::mouthPoseFromBasePose(
     const sva::PTransformd & W_T_B) const
 {
-  sva::PTransformd B_T_M = mouthCalibrationValid_ ? B_T_M_control_ : B_T_M_config_;
+  sva::PTransformd B_T_M = plannerConfig_.mouthCalibrationValid ? B_T_M_control_ : B_T_M_config_;
   Eigen::Vector3d pL, pR;
-  if(mouthCalibrationValid_ && livePadCenters(pL, pR))
+  if(plannerConfig_.mouthCalibrationValid && livePadCenters(pL, pR))
   {
     // Keep the command map consistent with the current gripper aperture.
     B_T_M = relativePose(actualBasePose(), actualMouthPose());
@@ -3325,11 +3343,29 @@ sva::PTransformd HandoverInterceptionController::mouthPoseFromBasePose(
   return compose(W_T_B, B_T_M);
 }
 
+bool HandoverInterceptionController::frozenMouthToBaseTransform(
+    const rbd::MultiBodyConfig & mbc,
+    sva::PTransformd & B_T_M) const
+{
+  B_T_M = plannerConfig_.mouthCalibrationValid ? B_T_M_control_ : B_T_M_config_;
+  Eigen::Vector3d pL, pR;
+  if(plannerConfig_.mouthCalibrationValid && previewPadCenters(mbc, pL, pR))
+  {
+    // Same inverse as the live path, taken from the frozen configuration.
+    sva::PTransformd W_T_B;
+    sva::PTransformd W_T_M;
+    if(!previewBasePose(mbc, W_T_B)) { return false; }
+    if(!previewMouthPose(mbc, W_T_M)) { return false; }
+    B_T_M = relativePose(W_T_B, W_T_M);
+  }
+  return true;
+}
+
 sva::PTransformd HandoverInterceptionController::liveMouthToBaseTransform() const
 {
-  sva::PTransformd B_T_M = mouthCalibrationValid_ ? B_T_M_control_ : B_T_M_config_;
+  sva::PTransformd B_T_M = plannerConfig_.mouthCalibrationValid ? B_T_M_control_ : B_T_M_config_;
   Eigen::Vector3d pL, pR;
-  if(mouthCalibrationValid_ && livePadCenters(pL, pR))
+  if(plannerConfig_.mouthCalibrationValid && livePadCenters(pL, pR))
   {
     // The B->pad-mouth transform changes during Robotiq closure. Use the live
     // inverse so the arm holds the capture frame while the fingers move.
@@ -3653,6 +3689,8 @@ bool HandoverInterceptionController::refreshGripperGeometry(bool verbose)
         gripperSamplesB_.size(), liveMouthGap());
   }
   return true;
+  // Keep the planner mirror consistent with the calibrated geometry.
+  refreshPlannerConfig();
 }
 
 bool HandoverInterceptionController::prepareCaptureSelection()
@@ -3667,11 +3705,17 @@ bool HandoverInterceptionController::prepareCaptureSelection()
 // Object-aware swept-volume and grasp-corridor safety
 // =============================================================================
 
-Eigen::Vector3d HandoverInterceptionController::objectAxis() const
+Eigen::Vector3d HandoverInterceptionController::objectAxisFrom(
+    const sva::PTransformd & W_T_O) const
 {
-  Eigen::Vector3d axis = worldRotation(W_T_O_) * Eigen::Vector3d::UnitZ();
+  Eigen::Vector3d axis = worldRotation(W_T_O) * Eigen::Vector3d::UnitZ();
   if(axis.norm() < 1e-9) { axis = Eigen::Vector3d::UnitZ(); }
   return axis.normalized();
+}
+
+Eigen::Vector3d HandoverInterceptionController::objectAxis() const
+{
+  return objectAxisFrom(W_T_O_);
 }
 
 Eigen::Vector3d HandoverInterceptionController::blueHandleAxis() const
@@ -3679,28 +3723,155 @@ Eigen::Vector3d HandoverInterceptionController::blueHandleAxis() const
   return -objectAxis();
 }
 
+void HandoverInterceptionController::refreshPlannerConfig()
+{
+  plannerConfig_.acquisitionCenterTightenDistance = acquisitionCenterTightenDistance_;
+  plannerConfig_.acquisitionFarCenterTolerance = acquisitionFarCenterTolerance_;
+  plannerConfig_.acquisitionNearCenterTolerance = acquisitionNearCenterTolerance_;
+  plannerConfig_.armGroundSafetyMargin = armGroundSafetyMargin_;
+  plannerConfig_.candidateCount = candidateCount_;
+  plannerConfig_.candidateRetreatDistance = candidateRetreatDistance_;
+  plannerConfig_.candidateStandoffDistance = candidateStandoffDistance_;
+  plannerConfig_.captureDepth = captureDepth_;
+  plannerConfig_.completeEventSelectionMode = completeEventSelectionMode_;
+  plannerConfig_.completePlanSelectionMode = completePlanSelectionMode_;
+  plannerConfig_.corridorAxialTolerance = corridorAxialTolerance_;
+  plannerConfig_.corridorEntryDepth = corridorEntryDepth_;
+  plannerConfig_.corridorFingerInset = corridorFingerInset_;
+  plannerConfig_.corridorMaxAngleRad = corridorMaxAngleRad_;
+  plannerConfig_.corridorPalmLimit = corridorPalmLimit_;
+  plannerConfig_.corridorSafetyMargin = corridorSafetyMargin_;
+  plannerConfig_.decisionCharacteristicLength = decisionCharacteristicLength_;
+  plannerConfig_.decisionClearanceWeight = decisionClearanceWeight_;
+  plannerConfig_.decisionConditioningWeight = decisionConditioningWeight_;
+  plannerConfig_.decisionCostConfigurationValid = decisionCostConfigurationValid_;
+  plannerConfig_.decisionCostTieTolerance = decisionCostTieTolerance_;
+  plannerConfig_.decisionEffortReference = decisionEffortReference_;
+  plannerConfig_.decisionEffortWeight = decisionEffortWeight_;
+  plannerConfig_.decisionJointMarginWeight = decisionJointMarginWeight_;
+  plannerConfig_.decisionMetricStride = decisionMetricStride_;
+  plannerConfig_.decisionPathReference = decisionPathReference_;
+  plannerConfig_.decisionPathWeight = decisionPathWeight_;
+  plannerConfig_.decisionSoftClearance = decisionSoftClearance_;
+  plannerConfig_.decisionSoftConditionIndex = decisionSoftConditionIndex_;
+  plannerConfig_.decisionSoftJointMargin = decisionSoftJointMargin_;
+  plannerConfig_.decisionTimeReference = decisionTimeReference_;
+  plannerConfig_.decisionTimeWeight = decisionTimeWeight_;
+  plannerConfig_.decisionVelocityReserveWeight = decisionVelocityReserveWeight_;
+  plannerConfig_.forceTransferPolicy = forceTransferPolicy_;
+  plannerConfig_.gripperCloseQ = gripperCloseQ_;
+  plannerConfig_.gripperCloseRate = gripperCloseRate_;
+  plannerConfig_.gripperContactTolerance = gripperContactTolerance_;
+  plannerConfig_.gripperGeometryValid = gripperGeometryValid_;
+  plannerConfig_.gripperMaxClosure = gripperMaxClosure_;
+  plannerConfig_.gripperOpenQ = gripperOpenQ_;
+  plannerConfig_.gripperPenetrationTolerance = gripperPenetrationTolerance_;
+  plannerConfig_.gripperProxyHardBlue = gripperProxyHardBlue_;
+  plannerConfig_.gripperProxyHot = gripperProxyHot_;
+  plannerConfig_.gripperProxyNodes = gripperProxyNodes_;
+  plannerConfig_.gripperSafetyMargin = gripperSafetyMargin_;
+  plannerConfig_.gripperSampleNode = gripperSampleNode_;
+  plannerConfig_.gripperSamplesB = gripperSamplesB_;
+  plannerConfig_.groundEnabled = groundEnabled_;
+  plannerConfig_.groundSafetyMargin = groundSafetyMargin_;
+  plannerConfig_.groundZ = groundZ_;
+  plannerConfig_.handleHalfLength = handleHalfLength_;
+  plannerConfig_.handleRadius = handleRadius_;
+  plannerConfig_.leftPadPointTip = leftPadPointTip_;
+  plannerConfig_.mouthCalibrationValid = mouthCalibrationValid_;
+  plannerConfig_.objectFrameName = objectFrameName_;
+  plannerConfig_.objectRobotName = objectRobotName_;
+  plannerConfig_.padCenteringTolerance = padCenteringTolerance_;
+  plannerConfig_.perceptionLatencyBufferDuration = perceptionLatencyBufferDuration_;
+  plannerConfig_.perceptionLatencySeconds = perceptionLatencySeconds_;
+  plannerConfig_.physicalGripperCommandEnabled = physicalGripperCommandEnabled_;
+  plannerConfig_.predictiveReachPolicy = predictiveReachPolicy_;
+  plannerConfig_.presentationAcquisitionWindow = presentationAcquisitionWindow_;
+  plannerConfig_.presentationDecelerationDuration = presentationDecelerationDuration_;
+  plannerConfig_.previewAngularGain = previewAngularGain_;
+  plannerConfig_.previewClosureSamples = previewClosureSamples_;
+  plannerConfig_.previewDamping = previewDamping_;
+  plannerConfig_.previewDt = previewDt_;
+  plannerConfig_.previewEffortWeight = previewEffortWeight_;
+  plannerConfig_.previewJointLimitActivation = previewJointLimitActivation_;
+  plannerConfig_.previewJointLimitAvoidanceGain = previewJointLimitAvoidanceGain_;
+  plannerConfig_.previewJointLimitMargin = previewJointLimitMargin_;
+  plannerConfig_.previewJointLimitVelocityCap = previewJointLimitVelocityCap_;
+  plannerConfig_.previewJointLimitWeightGain = previewJointLimitWeightGain_;
+  plannerConfig_.previewLinearGain = previewLinearGain_;
+  plannerConfig_.previewMaxAngularSpeed = previewMaxAngularSpeed_;
+  plannerConfig_.previewMaxIterationsPerSegment = previewMaxIterationsPerSegment_;
+  plannerConfig_.previewMaxLinearSpeed = previewMaxLinearSpeed_;
+  plannerConfig_.previewOrientationTolerance = previewOrientationTolerance_;
+  plannerConfig_.previewPositionTolerance = previewPositionTolerance_;
+  plannerConfig_.previewPostureGain = previewPostureGain_;
+  plannerConfig_.previewRotationWeight = previewRotationWeight_;
+  plannerConfig_.readyPosture = readyPosture_;
+  plannerConfig_.rightPadPointTip = rightPadPointTip_;
+  plannerConfig_.sensorHalfLength = sensorHalfLength_;
+  plannerConfig_.sensorRadius = sensorRadius_;
+  plannerConfig_.simulateMovingObject = simulateMovingObject_;
+  plannerConfig_.sweepSamples = sweepSamples_;
+  plannerConfig_.timingArmScale = timingArmScale_;
+  plannerConfig_.timingBilateralDwell = timingBilateralDwell_;
+  plannerConfig_.timingCaptureLock = timingCaptureLock_;
+  plannerConfig_.timingConfirmationDwell = timingConfirmationDwell_;
+  plannerConfig_.timingConfirmationTimeout = timingConfirmationTimeout_;
+  plannerConfig_.timingEffectiveGripperRate = timingEffectiveGripperRate_;
+  plannerConfig_.timingPriorityBlend = timingPriorityBlend_;
+  plannerConfig_.timingTerminalCaptureDwell = timingTerminalCaptureDwell_;
+  plannerConfig_.toolFrame = toolFrame_;
+  plannerConfig_.transitClearancePreferenceBand = transitClearancePreferenceBand_;
+  plannerConfig_.transitCurveLengthSamples = transitCurveLengthSamples_;
+  plannerConfig_.transitMaximumPathStretch = transitMaximumPathStretch_;
+  plannerConfig_.transitMinimumPredictedClearance = transitMinimumPredictedClearance_;
+  plannerConfig_.transitPlanningEnabled = transitPlanningEnabled_;
+  plannerConfig_.transitRouteApexOffsets = transitRouteApexOffsets_;
+  plannerConfig_.transitRouteDirections = transitRouteDirections_;
+  plannerConfig_.worldUp = worldUp_;
+}
+
+void HandoverInterceptionController::refreshPlannerModel()
+{
+  planningSnapshot_.model = robot().mb();
+  planningSnapshot_.modelValid = true;
+}
+
 void HandoverInterceptionController::refreshPreviewKinematicCache() const
 {
-  const auto & mb = robot().mb();
+  const auto & mb = plannerModel();
   // Which joints the preview skips. The frozen test is a prefix match on the
   // joint name, evaluated once per joint here instead of once per joint per IK
   // iteration; the set of joints it selects is identical.
-  previewGripperJoint_.assign(mb.joints().size(), 0u);
+  plannerContext_.previewGripperJoint.assign(mb.joints().size(), 0u);
   for(std::size_t j = 0; j < mb.joints().size(); ++j)
   {
     const std::string & jointName = mb.joint(static_cast<int>(j)).name();
-    previewGripperJoint_[j] =
+    plannerContext_.previewGripperJoint[j] =
         jointName.rfind("gen3_robotiq_85_", 0) == 0 ? 1u : 0u;
   }
   // Joint velocity limits are constants of the robot model, so the dof-ordered
   // vectors the preview clamps against are built once rather than per call.
-  previewJointVelocityLower_ = rbd::dofToVector(mb, robot().vl());
-  previewJointVelocityUpper_ = rbd::dofToVector(mb, robot().vu());
+  plannerContext_.previewJointVelocityLower = rbd::dofToVector(mb, robot().vl());
+  plannerContext_.previewJointVelocityUpper = rbd::dofToVector(mb, robot().vu());
   // The tool Jacobian's structure depends only on the multibody and the tool
   // frame; only its numeric evaluation depends on the configuration.
-  previewToolJacobian_ = std::make_unique<rbd::Jacobian>(mb, toolFrame_);
-  previewKinematicCacheValid_ =
-      previewGripperJoint_.size() == mb.joints().size();
+  plannerContext_.previewToolJacobian = std::make_unique<rbd::Jacobian>(mb, plannerConfig_.toolFrame);
+  // The controlled base body index is a model constant. Resolving it here
+  // removes the per-call lookup whose failure branch used to read the live
+  // robot; an unresolvable tool body now invalidates the cache instead.
+  plannerContext_.previewToolBodyIndex = -1;
+  try
+  {
+    plannerContext_.previewToolBodyIndex = mb.bodyIndexByName(plannerConfig_.toolFrame);
+  }
+  catch(const std::exception &)
+  {
+    plannerContext_.previewToolBodyIndex = -1;
+  }
+  plannerContext_.previewKinematicCacheValid =
+      plannerContext_.previewGripperJoint.size() == mb.joints().size()
+      && plannerContext_.previewToolBodyIndex >= 0;
 }
 
 double HandoverInterceptionController::pointSegmentDistance(
@@ -3744,24 +3915,34 @@ bool HandoverInterceptionController::graspCorridorSafe(
     const sva::PTransformd & W_T_M,
     HandoverSafetyReport & report) const
 {
-  const Eigen::Vector3d pH_M = pointToLocal(W_T_M, W_T_H_.translation());
-  Eigen::Vector3d aH_M = worldRotation(W_T_M).transpose() * blueHandleAxis();
+  // Runtime entry point: the handle pose comes from the live world.
+  return graspCorridorSafeWith(W_T_M, W_T_O_, W_T_H_, report);
+}
+
+bool HandoverInterceptionController::graspCorridorSafeWith(
+    const sva::PTransformd & W_T_M,
+    const sva::PTransformd & W_T_O,
+    const sva::PTransformd & W_T_H,
+    HandoverSafetyReport & report) const
+{
+  const Eigen::Vector3d pH_M = pointToLocal(W_T_M, W_T_H.translation());
+  Eigen::Vector3d aH_M = worldRotation(W_T_M).transpose() * (-objectAxisFrom(W_T_O));
   if(aH_M.norm() < 1e-9) { aH_M = Eigen::Vector3d::UnitZ(); }
   aH_M.normalize();
 
   const double alignment = clampUnit(std::abs(aH_M.dot(Eigen::Vector3d::UnitZ())));
   const double angle = std::acos(alignment);
-  const double usableHalfGap = liveMouthHalfGap() - corridorFingerInset_;
+  const double usableHalfGap = liveMouthHalfGap() - plannerConfig_.corridorFingerInset;
 
   // x_M: finger-closing direction, y_M: outward toward the gripper base,
   // z_M: blue-handle axis. At standoff the handle is at negative y_M; at
   // capture it reaches y_M=0. Positive y_M would put it behind the mouth.
   const double lateralClear = usableHalfGap
-                            - (std::abs(pH_M.x()) + handleRadius_ + corridorSafetyMargin_);
-  const double entryClear = pH_M.y() + corridorEntryDepth_;
-  const double palmClear = corridorPalmLimit_ - pH_M.y();
-  const double axialClear = corridorAxialTolerance_ - std::abs(pH_M.z());
-  const double angleClear = corridorMaxAngleRad_ - angle;
+                            - (std::abs(pH_M.x()) + plannerConfig_.handleRadius + plannerConfig_.corridorSafetyMargin);
+  const double entryClear = pH_M.y() + plannerConfig_.corridorEntryDepth;
+  const double palmClear = plannerConfig_.corridorPalmLimit - pH_M.y();
+  const double axialClear = plannerConfig_.corridorAxialTolerance - std::abs(pH_M.z());
+  const double angleClear = plannerConfig_.corridorMaxAngleRad - angle;
 
   report.corridorLateralClearance = lateralClear;
   report.corridorEntryClearance = entryClear;
@@ -3885,6 +4066,8 @@ void HandoverInterceptionController::rebuildGripperProxyHierarchy()
     node.radius = std::max(
         node.radius, (gripperSamplesB_[i].p_B - node.centre_B).norm());
   }
+  // Keep the planner mirror consistent with the calibrated geometry.
+  refreshPlannerConfig();
 }
 
 /**
@@ -3926,7 +4109,20 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
     HandoverSafetyReport & report,
     bool requireCorridor) const
 {
-  if(!mouthCalibrationValid_ || !gripperGeometryValid_)
+  // Runtime entry point: obstacles come from the controller's live world.
+  return gripperBasePoseSafeWith(W_T_B, W_T_M, W_T_O_, W_T_H_, report,
+                                 requireCorridor);
+}
+
+bool HandoverInterceptionController::gripperBasePoseSafeWith(
+    const sva::PTransformd & W_T_B,
+    const sva::PTransformd & W_T_M,
+    const sva::PTransformd & W_T_O,
+    const sva::PTransformd & W_T_H,
+    HandoverSafetyReport & report,
+    bool requireCorridor) const
+{
+  if(!plannerConfig_.mouthCalibrationValid || !plannerConfig_.gripperGeometryValid)
   {
     report.safe = false;
     report.minClearance = -1e9;
@@ -3935,20 +4131,20 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
     return false;
   }
 
-  const Eigen::Vector3d axis = objectAxis();
-  const Eigen::Vector3d pO = W_T_O_.translation();
+  const Eigen::Vector3d axis = objectAxisFrom(W_T_O);
+  const Eigen::Vector3d pO = W_T_O.translation();
   const double centerOffset = std::abs(O_T_H_.translation().z());
 
-  const Eigen::Vector3d sensorA = pO - axis * sensorHalfLength_;
-  const Eigen::Vector3d sensorB = pO + axis * sensorHalfLength_;
+  const Eigen::Vector3d sensorA = pO - axis * plannerConfig_.sensorHalfLength;
+  const Eigen::Vector3d sensorB = pO + axis * plannerConfig_.sensorHalfLength;
 
   const Eigen::Vector3d humanCenter = pO + axis * centerOffset;
-  const Eigen::Vector3d humanA = humanCenter - axis * handleHalfLength_;
-  const Eigen::Vector3d humanB = humanCenter + axis * handleHalfLength_;
+  const Eigen::Vector3d humanA = humanCenter - axis * plannerConfig_.handleHalfLength;
+  const Eigen::Vector3d humanB = humanCenter + axis * plannerConfig_.handleHalfLength;
 
-  const Eigen::Vector3d blueCenter = W_T_H_.translation();
-  const Eigen::Vector3d blueA = blueCenter - axis * handleHalfLength_;
-  const Eigen::Vector3d blueB = blueCenter + axis * handleHalfLength_;
+  const Eigen::Vector3d blueCenter = W_T_H.translation();
+  const Eigen::Vector3d blueA = blueCenter - axis * plannerConfig_.handleHalfLength;
+  const Eigen::Vector3d blueB = blueCenter + axis * plannerConfig_.handleHalfLength;
 
   // Each query tests every node centre and every surviving proxy against the
   // same three segments, so the segment-invariant terms are computed once here
@@ -3971,10 +4167,10 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
   // that obstacle: distance-to-a-segment is 1-Lipschitz and the base-frame
   // proxy cloud is rigid, so shifting the centre by at most the node radius and
   // inflating by the largest contained proxy radius can only understate.
-  const std::size_t proxyNodeCount = gripperProxyNodes_.size();
+  const std::size_t proxyNodeCount = plannerConfig_.gripperProxyNodes.size();
   const bool useHierarchy = proxyNodeCount > 0
       && proxyNodeCount <= maximumProxyNodes_
-      && gripperSampleNode_.size() == gripperSamplesB_.size();
+      && plannerConfig_.gripperSampleNode.size() == plannerConfig_.gripperSamplesB.size();
   double lbGround[maximumProxyNodes_];
   double lbSensor[maximumProxyNodes_];
   double lbHuman[maximumProxyNodes_];
@@ -3983,16 +4179,16 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
   {
     for(std::size_t k = 0; k < proxyNodeCount; ++k)
     {
-      const auto & node = gripperProxyNodes_[k];
+      const auto & node = plannerConfig_.gripperProxyNodes[k];
       const Eigen::Vector3d cW = pointToWorld(W_T_B, node.centre_B);
       const double pad = node.radius + node.maxProxyRadius;
-      lbGround[k] = cW.z() - groundZ_ - pad - groundSafetyMargin_;
+      lbGround[k] = cW.z() - plannerConfig_.groundZ - pad - plannerConfig_.groundSafetyMargin;
       lbSensor[k] = segmentDistancePrepared(cW, sensorA, sensorAB, sensorDen)
-          - (pad + sensorRadius_ + gripperSafetyMargin_);
+          - (pad + plannerConfig_.sensorRadius + plannerConfig_.gripperSafetyMargin);
       lbHuman[k] = segmentDistancePrepared(cW, humanA, humanAB, humanDen)
-          - (pad + handleRadius_ + gripperSafetyMargin_);
+          - (pad + plannerConfig_.handleRadius + plannerConfig_.gripperSafetyMargin);
       lbBlue[k] = segmentDistancePrepared(cW, blueA, blueAB, blueDen)
-          - (pad + handleRadius_ + gripperSafetyMargin_);
+          - (pad + plannerConfig_.handleRadius + plannerConfig_.gripperSafetyMargin);
     }
   }
 
@@ -4008,8 +4204,8 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
   // to names once, after the query's minimum is final - which is exact, because
   // updateWorstClearance writes those names only when the minimum strictly
   // improves.
-  const bool hotValid = gripperProxyHot_.size() == gripperSamplesB_.size()
-      && gripperProxyHardBlue_.size() == gripperSamplesB_.size();
+  const bool hotValid = plannerConfig_.gripperProxyHot.size() == plannerConfig_.gripperSamplesB.size()
+      && plannerConfig_.gripperProxyHardBlue.size() == plannerConfig_.gripperSamplesB.size();
   const Eigen::Vector3d W_T_B_p = W_T_B.translation();
   const Eigen::Matrix3d W_T_B_R = worldRotation(W_T_B);
   double curMin = report.minClearance;
@@ -4018,17 +4214,17 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
   std::size_t bestProxy = 0;
   int bestObstacle = -1;
 
-  for(std::size_t i = 0; i < gripperSamplesB_.size(); ++i)
+  for(std::size_t i = 0; i < plannerConfig_.gripperSamplesB.size(); ++i)
   {
     const std::size_t node = useHierarchy
-        ? static_cast<std::size_t>(gripperSampleNode_[i]) : 0u;
-    const double px = hotValid ? gripperProxyHot_[i].x : gripperSamplesB_[i].p_B.x();
-    const double py = hotValid ? gripperProxyHot_[i].y : gripperSamplesB_[i].p_B.y();
-    const double pz = hotValid ? gripperProxyHot_[i].z : gripperSamplesB_[i].p_B.z();
+        ? static_cast<std::size_t>(plannerConfig_.gripperSampleNode[i]) : 0u;
+    const double px = hotValid ? plannerConfig_.gripperProxyHot[i].x : plannerConfig_.gripperSamplesB[i].p_B.x();
+    const double py = hotValid ? plannerConfig_.gripperProxyHot[i].y : plannerConfig_.gripperSamplesB[i].p_B.y();
+    const double pz = hotValid ? plannerConfig_.gripperProxyHot[i].z : plannerConfig_.gripperSamplesB[i].p_B.z();
     const double proxyRadius = hotValid
-        ? gripperProxyHot_[i].radius : gripperSamplesB_[i].radius;
+        ? plannerConfig_.gripperProxyHot[i].radius : plannerConfig_.gripperSamplesB[i].radius;
     const bool hardAgainstBlue = hotValid
-        ? gripperProxyHardBlue_[i] != 0u : gripperSamplesB_[i].hardAgainstBlue;
+        ? plannerConfig_.gripperProxyHardBlue[i] != 0u : plannerConfig_.gripperSamplesB[i].hardAgainstBlue;
 
     Eigen::Vector3d pW;
     bool havePW = false;
@@ -4042,7 +4238,7 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
       return pW;
     };
 
-    if(groundEnabled_)
+    if(plannerConfig_.groundEnabled)
     {
       // Ground carries a second, independent running minimum, so it may only be
       // skipped when the bound dominates both it and the shared minimum, and
@@ -4053,8 +4249,8 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
           && lbGround[node] >= curGnd;
       if(!skipGround)
       {
-        const double groundClear = worldPoint().z() - groundZ_
-            - (proxyRadius + groundSafetyMargin_);
+        const double groundClear = worldPoint().z() - plannerConfig_.groundZ
+            - (proxyRadius + plannerConfig_.groundSafetyMargin);
         if(curGnd < -1e8 || groundClear < curGnd) { curGnd = groundClear; }
         if(groundClear < curMin)
         { curMin = groundClear; bestProxy = i; bestObstacle = ObstacleGroundPlane; }
@@ -4066,7 +4262,7 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
     {
       const double sensorClear =
           segmentDistancePrepared(worldPoint(), sensorA, sensorAB, sensorDen)
-          - (sensorRadius_ + proxyRadius + gripperSafetyMargin_);
+          - (plannerConfig_.sensorRadius + proxyRadius + plannerConfig_.gripperSafetyMargin);
       if(sensorClear < curMin)
       { curMin = sensorClear; bestProxy = i; bestObstacle = ObstacleSensorCore; }
       if(sensorClear < 0.0) { curSafe = false; }
@@ -4076,7 +4272,7 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
     {
       const double humanClear =
           segmentDistancePrepared(worldPoint(), humanA, humanAB, humanDen)
-          - (handleRadius_ + proxyRadius + gripperSafetyMargin_);
+          - (plannerConfig_.handleRadius + proxyRadius + plannerConfig_.gripperSafetyMargin);
       if(humanClear < curMin)
       { curMin = humanClear; bestProxy = i; bestObstacle = ObstacleHumanHandle; }
       if(humanClear < 0.0) { curSafe = false; }
@@ -4088,7 +4284,7 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
       {
         const double blueClear =
             segmentDistancePrepared(worldPoint(), blueA, blueAB, blueDen)
-            - (handleRadius_ + proxyRadius + gripperSafetyMargin_);
+            - (plannerConfig_.handleRadius + proxyRadius + plannerConfig_.gripperSafetyMargin);
         if(blueClear < curMin)
         { curMin = blueClear; bestProxy = i; bestObstacle = ObstacleBlueHandle; }
         if(blueClear < 0.0) { curSafe = false; }
@@ -4103,21 +4299,21 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
   if(bestObstacle >= 0)
   {
     report.minClearance = curMin;
-    report.sample = gripperSamplesB_[bestProxy].name;
+    report.sample = plannerConfig_.gripperSamplesB[bestProxy].name;
     report.obstacle = clearanceObstacleName(bestObstacle);
   }
 
   if(oracleCheck)
   {
     // Frozen brute force, verbatim, over the same inputs. Debug mode only.
-    for(const auto & sample : gripperSamplesB_)
+    for(const auto & sample : plannerConfig_.gripperSamplesB)
     {
       const Eigen::Vector3d pW = pointToWorld(W_T_B, sample.p_B);
 
-      if(groundEnabled_)
+      if(plannerConfig_.groundEnabled)
       {
-        const double groundClear = pW.z() - groundZ_
-            - (sample.radius + groundSafetyMargin_);
+        const double groundClear = pW.z() - plannerConfig_.groundZ
+            - (sample.radius + plannerConfig_.groundSafetyMargin);
         if(oracleReport.groundClearance < -1e8
            || groundClear < oracleReport.groundClearance)
         {
@@ -4127,17 +4323,17 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
       }
 
       const double sensorClear = pointSegmentDistance(pW, sensorA, sensorB)
-          - (sensorRadius_ + sample.radius + gripperSafetyMargin_);
+          - (plannerConfig_.sensorRadius + sample.radius + plannerConfig_.gripperSafetyMargin);
       updateWorstClearance(oracleReport, sensorClear, sample.name, "sensor_core");
 
       const double humanClear = pointSegmentDistance(pW, humanA, humanB)
-          - (handleRadius_ + sample.radius + gripperSafetyMargin_);
+          - (plannerConfig_.handleRadius + sample.radius + plannerConfig_.gripperSafetyMargin);
       updateWorstClearance(oracleReport, humanClear, sample.name, "human_grey_handle");
 
       if(!requireCorridor || sample.hardAgainstBlue)
       {
         const double blueClear = pointSegmentDistance(pW, blueA, blueB)
-            - (handleRadius_ + sample.radius + gripperSafetyMargin_);
+            - (plannerConfig_.handleRadius + sample.radius + plannerConfig_.gripperSafetyMargin);
         updateWorstClearance(oracleReport, blueClear, sample.name, "robot_blue_handle");
       }
     }
@@ -4165,7 +4361,7 @@ bool HandoverInterceptionController::gripperBasePoseSafe(
     }
   }
 
-  if(requireCorridor) { graspCorridorSafe(W_T_M, report); }
+  if(requireCorridor) { graspCorridorSafeWith(W_T_M, W_T_O, W_T_H, report); }
   return report.safe;
 }
 
@@ -4175,15 +4371,26 @@ bool HandoverInterceptionController::sweptGripperPoseSafe(
     HandoverSafetyReport & report,
     bool requireCorridor) const
 {
+  // Runtime entry point: the mouth-to-base transform is a property of the live
+  // robot's current aperture, resolved once for the whole sweep.
+  return sweptGripperPoseSafeWith(
+      W_T_M_from, W_T_M_to, liveMouthToBaseTransform(), W_T_O_, W_T_H_, report,
+      requireCorridor);
+}
+
+bool HandoverInterceptionController::sweptGripperPoseSafeWith(
+    const sva::PTransformd & W_T_M_from,
+    const sva::PTransformd & W_T_M_to,
+    const sva::PTransformd & B_T_M,
+    const sva::PTransformd & W_T_O,
+    const sva::PTransformd & W_T_H,
+    HandoverSafetyReport & report,
+    bool requireCorridor) const
+{
   report = HandoverSafetyReport{};
   report.safe = true;
   report.minClearance = std::numeric_limits<double>::infinity();
 
-  // Everything below is a property of the segment endpoints and of the live
-  // robot, not of the individual interpolated pose, so it is resolved once for
-  // the whole sweep instead of once per pose. The per-pose expressions that
-  // follow are unchanged, and the helpers are the same code the single-pose
-  // entry points now call, so every evaluated pose is identical to before.
   Eigen::Quaterniond qA(worldRotation(W_T_M_from));
   Eigen::Quaterniond qB(worldRotation(W_T_M_to));
   qA.normalize();
@@ -4191,15 +4398,20 @@ bool HandoverInterceptionController::sweptGripperPoseSafe(
   if(qA.dot(qB) < 0.0) { qB.coeffs() *= -1.0; }
   const Eigen::Vector3d pA = W_T_M_from.translation();
   const Eigen::Vector3d pB = W_T_M_to.translation();
-  const sva::PTransformd B_T_M = liveMouthToBaseTransform();
 
-  const int N = std::max(2, sweepSamples_);
+  // Everything below is a property of the segment endpoints and of the supplied
+  // mouth-to-base transform, not of the individual interpolated pose, so it is
+  // resolved once for the whole sweep instead of once per pose. The per-pose
+  // expressions are unchanged, and the helpers are the same code the
+  // single-pose entry points call, so every evaluated pose is identical.
+  const int N = std::max(2, plannerConfig_.sweepSamples);
   for(int k = 0; k <= N; ++k)
   {
     const double alpha = static_cast<double>(k) / static_cast<double>(N);
     const sva::PTransformd W_T_M = interpolatePoseWith(pA, pB, qA, qB, alpha);
-    gripperBasePoseSafe(
-        basePoseFromMouthPoseWith(W_T_M, B_T_M), W_T_M, report, requireCorridor);
+    gripperBasePoseSafeWith(
+        basePoseFromMouthPoseWith(W_T_M, B_T_M), W_T_M, W_T_O, W_T_H, report,
+        requireCorridor);
   }
 
   return report.safe;
@@ -4264,7 +4476,7 @@ bool HandoverInterceptionController::evaluateCurrentPoseSafety(
 bool HandoverInterceptionController::wholeRobotGroundSafe(
     HandoverSafetyReport & report) const
 {
-  if(!groundEnabled_) { return true; }
+  if(!plannerConfig_.groundEnabled) { return true; }
 
   // Online whole-arm monitor. These conservative frame-centred spheres are
   // not used to bias candidate direction; they are a hard static-environment
@@ -4286,7 +4498,7 @@ bool HandoverInterceptionController::wholeRobotGroundSafe(
     if(!robot().hasFrame(item.first)) { continue; }
     sawSample = true;
     const double clear = robot().frame(item.first).position().translation().z()
-        - groundZ_ - (item.second + armGroundSafetyMargin_);
+        - plannerConfig_.groundZ - (item.second + plannerConfig_.armGroundSafetyMargin);
     if(report.groundClearance < -1e8 || clear < report.groundClearance)
     {
       report.groundClearance = clear;
@@ -4334,7 +4546,8 @@ bool HandoverInterceptionController::evaluateCurrentClosureSafety(
 
   for(const auto & sample : gripperSamplesB_)
   {
-    const Eigen::Vector3d pW = sampleWorldPoint(sample, robot().mbc());
+    Eigen::Vector3d pW;
+    if(!sampleWorldPoint(sample, robot().mbc(), pW)) { return false; }
 
     if(groundEnabled_)
     {
@@ -4460,39 +4673,46 @@ bool HandoverInterceptionController::bilateralPadContactReached(
 // Internal whole-arm preview used by plan-once candidate selection
 // =============================================================================
 
-Eigen::Vector3d HandoverInterceptionController::sampleWorldPoint(
+bool HandoverInterceptionController::sampleWorldPoint(
     const GripperSample & sample,
-    const rbd::MultiBodyConfig & mbc) const
+    const rbd::MultiBodyConfig & mbc,
+    Eigen::Vector3d & pW) const
 {
   try
   {
-    const int bodyIndex = robot().mb().bodyIndexByName(sample.frame);
+    const int bodyIndex = plannerModel().bodyIndexByName(sample.frame);
     if(bodyIndex >= 0 && static_cast<size_t>(bodyIndex) < mbc.bodyPosW.size())
     {
-      return pointToWorld(mbc.bodyPosW[static_cast<size_t>(bodyIndex)], sample.p_F);
+      pW = pointToWorld(mbc.bodyPosW[static_cast<size_t>(bodyIndex)], sample.p_F);
+      return true;
     }
   }
   catch(const std::exception &)
   {
   }
-  return pointToWorld(previewBasePose(mbc), sample.p_B);
+  // Copied-state fallback on the controlled base frame. This is unchanged; only
+  // the live-robot escape underneath previewBasePose() is gone.
+  sva::PTransformd W_T_B;
+  if(!previewBasePose(mbc, W_T_B)) { return false; }
+  pW = pointToWorld(W_T_B, sample.p_B);
+  return true;
 }
 
-sva::PTransformd HandoverInterceptionController::previewBasePose(
-    const rbd::MultiBodyConfig & mbc) const
+bool HandoverInterceptionController::previewBasePose(
+    const rbd::MultiBodyConfig & mbc,
+    sva::PTransformd & W_T_B) const
 {
-  try
+  if(!plannerContext_.previewKinematicCacheValid || plannerContext_.previewToolBodyIndex < 0)
   {
-    const int idx = robot().mb().bodyIndexByName(toolFrame_);
-    if(idx >= 0 && static_cast<size_t>(idx) < mbc.bodyPosW.size())
-    {
-      return mbc.bodyPosW[static_cast<size_t>(idx)];
-    }
+    refreshPreviewKinematicCache();
   }
-  catch(const std::exception &)
+  if(plannerContext_.previewToolBodyIndex < 0
+     || static_cast<size_t>(plannerContext_.previewToolBodyIndex) >= mbc.bodyPosW.size())
   {
+    return false;
   }
-  return actualBasePose();
+  W_T_B = mbc.bodyPosW[static_cast<size_t>(plannerContext_.previewToolBodyIndex)];
+  return true;
 }
 
 bool HandoverInterceptionController::previewPadCenters(
@@ -4502,9 +4722,9 @@ bool HandoverInterceptionController::previewPadCenters(
 {
   try
   {
-    const int l = robot().mb().bodyIndexByName(
+    const int l = plannerModel().bodyIndexByName(
         "gen3_robotiq_85_left_finger_tip_link");
-    const int r = robot().mb().bodyIndexByName(
+    const int r = plannerModel().bodyIndexByName(
         "gen3_robotiq_85_right_finger_tip_link");
     if(l < 0 || r < 0
        || static_cast<size_t>(l) >= mbc.bodyPosW.size()
@@ -4512,8 +4732,8 @@ bool HandoverInterceptionController::previewPadCenters(
     {
       return false;
     }
-    pL_W = pointToWorld(mbc.bodyPosW[static_cast<size_t>(l)], leftPadPointTip_);
-    pR_W = pointToWorld(mbc.bodyPosW[static_cast<size_t>(r)], rightPadPointTip_);
+    pL_W = pointToWorld(mbc.bodyPosW[static_cast<size_t>(l)], plannerConfig_.leftPadPointTip);
+    pR_W = pointToWorld(mbc.bodyPosW[static_cast<size_t>(r)], plannerConfig_.rightPadPointTip);
     return true;
   }
   catch(const std::exception &)
@@ -4522,14 +4742,19 @@ bool HandoverInterceptionController::previewPadCenters(
   }
 }
 
-sva::PTransformd HandoverInterceptionController::previewMouthPose(
-    const rbd::MultiBodyConfig & mbc) const
+bool HandoverInterceptionController::previewMouthPose(
+    const rbd::MultiBodyConfig & mbc,
+    sva::PTransformd & W_T_M) const
 {
-  const sva::PTransformd W_T_B = previewBasePose(mbc);
+  sva::PTransformd W_T_B;
+  if(!previewBasePose(mbc, W_T_B)) { return false; }
   Eigen::Vector3d pL, pR;
   if(!previewPadCenters(mbc, pL, pR))
   {
-    return mouthPoseFromBasePose(W_T_B);
+    // Previously mouthPoseFromBasePose(), which reads livePadCenters(),
+    // actualBasePose() and actualMouthPose(). A copied-state preview that
+    // cannot resolve its own pad frames fails instead.
+    return false;
   }
 
   const Eigen::Vector3d pM = 0.5 * (pL + pR);
@@ -4549,19 +4774,23 @@ sva::PTransformd HandoverInterceptionController::previewMouthPose(
   R_W_M.col(0) = xM;
   R_W_M.col(1) = yM;
   R_W_M.col(2) = zM;
-  return fromWorldPose(R_W_M, pM);
+  W_T_M = fromWorldPose(R_W_M, pM);
+  return true;
 }
 
-sva::PTransformd HandoverInterceptionController::previewBasePoseFromMouthPose(
+bool HandoverInterceptionController::previewBasePoseFromMouthPose(
     const sva::PTransformd & W_T_M,
-    const rbd::MultiBodyConfig & mbc) const
+    const rbd::MultiBodyConfig & mbc,
+    sva::PTransformd & W_T_B) const
 {
   // Use the copied gripper configuration, including its current aperture, to
   // map the desired pad-midpoint mouth pose back to the controlled base frame.
   // Runtime performs the same map from the live aperture. This avoids
   // certifying closure with the open-gripper B->M transform.
-  const sva::PTransformd W_T_B_current = previewBasePose(mbc);
-  const sva::PTransformd W_T_M_current = previewMouthPose(mbc);
+  sva::PTransformd W_T_B_current;
+  sva::PTransformd W_T_M_current;
+  if(!previewBasePose(mbc, W_T_B_current)) { return false; }
+  if(!previewMouthPose(mbc, W_T_M_current)) { return false; }
   const sva::PTransformd B_T_M = relativePose(
       W_T_B_current, W_T_M_current);
   const Eigen::Matrix3d R_W_M = worldRotation(W_T_M);
@@ -4569,14 +4798,15 @@ sva::PTransformd HandoverInterceptionController::previewBasePoseFromMouthPose(
   const Eigen::Vector3d p_B_M = B_T_M.translation();
   const Eigen::Matrix3d R_W_B = R_W_M * R_B_M.transpose();
   const Eigen::Vector3d p_W_B = W_T_M.translation() - R_W_B * p_B_M;
-  return fromWorldPose(R_W_B, p_W_B);
+  W_T_B = fromWorldPose(R_W_B, p_W_B);
+  return true;
 }
 
 bool HandoverInterceptionController::wholeRobotGroundSafe(
     const rbd::MultiBodyConfig & mbc,
     HandoverSafetyReport & report) const
 {
-  if(!groundEnabled_) { return true; }
+  if(!plannerConfig_.groundEnabled) { return true; }
   const std::vector<std::pair<std::string, double>> linkSamples =
   {
     {"gen3_half_arm_1_link", 0.045},
@@ -4593,11 +4823,11 @@ bool HandoverInterceptionController::wholeRobotGroundSafe(
   {
     try
     {
-      const int idx = robot().mb().bodyIndexByName(item.first);
+      const int idx = plannerModel().bodyIndexByName(item.first);
       if(idx < 0 || static_cast<size_t>(idx) >= mbc.bodyPosW.size()) { continue; }
       saw = true;
       const double clear = mbc.bodyPosW[static_cast<size_t>(idx)].translation().z()
-          - groundZ_ - (item.second + armGroundSafetyMargin_);
+          - plannerConfig_.groundZ - (item.second + plannerConfig_.armGroundSafetyMargin);
       if(report.groundClearance < -1e8 || clear < report.groundClearance)
       {
         report.groundClearance = clear;
@@ -4615,7 +4845,7 @@ bool HandoverInterceptionController::carriedObjectGroundSafe(
     const sva::PTransformd & W_T_O_carried,
     HandoverSafetyReport & report) const
 {
-  if(!groundEnabled_) { return true; }
+  if(!plannerConfig_.groundEnabled) { return true; }
 
   Eigen::Vector3d axis = worldRotation(W_T_O_carried) * Eigen::Vector3d::UnitZ();
   if(axis.norm() < 1e-9) { axis = Eigen::Vector3d::UnitZ(); }
@@ -4633,7 +4863,7 @@ bool HandoverInterceptionController::carriedObjectGroundSafe(
   {
     const double lowest = center.z()
         - std::abs(axis.z()) * halfLength - radius;
-    const double clear = lowest - groundZ_ - groundSafetyMargin_;
+    const double clear = lowest - plannerConfig_.groundZ - plannerConfig_.groundSafetyMargin;
     if(report.groundClearance < -1e8 || clear < report.groundClearance)
     {
       report.groundClearance = clear;
@@ -4641,10 +4871,10 @@ bool HandoverInterceptionController::carriedObjectGroundSafe(
     updateWorstClearance(report, clear, name, "ground_plane");
   };
 
-  checkCylinder(pO, sensorHalfLength_, sensorRadius_, "carried_sensor_core");
-  checkCylinder(humanCenter, handleHalfLength_, handleRadius_,
+  checkCylinder(pO, plannerConfig_.sensorHalfLength, plannerConfig_.sensorRadius, "carried_sensor_core");
+  checkCylinder(humanCenter, plannerConfig_.handleHalfLength, plannerConfig_.handleRadius,
                 "carried_human_handle");
-  checkCylinder(blueCenter, handleHalfLength_, handleRadius_,
+  checkCylinder(blueCenter, plannerConfig_.handleHalfLength, plannerConfig_.handleRadius,
                 "carried_blue_handle");
   return report.safe;
 }
@@ -4661,12 +4891,12 @@ bool HandoverInterceptionController::carriedObjectArmSafe(
   const double centerOffset = std::abs(O_T_H_.translation().z());
   const Eigen::Vector3d humanCenter = pO + axis * centerOffset;
   const Eigen::Vector3d blueCenter = compose(W_T_O_carried, O_T_H_).translation();
-  const Eigen::Vector3d sensorA = pO - axis * sensorHalfLength_;
-  const Eigen::Vector3d sensorB = pO + axis * sensorHalfLength_;
-  const Eigen::Vector3d humanA = humanCenter - axis * handleHalfLength_;
-  const Eigen::Vector3d humanB = humanCenter + axis * handleHalfLength_;
-  const Eigen::Vector3d blueA = blueCenter - axis * handleHalfLength_;
-  const Eigen::Vector3d blueB = blueCenter + axis * handleHalfLength_;
+  const Eigen::Vector3d sensorA = pO - axis * plannerConfig_.sensorHalfLength;
+  const Eigen::Vector3d sensorB = pO + axis * plannerConfig_.sensorHalfLength;
+  const Eigen::Vector3d humanA = humanCenter - axis * plannerConfig_.handleHalfLength;
+  const Eigen::Vector3d humanB = humanCenter + axis * plannerConfig_.handleHalfLength;
+  const Eigen::Vector3d blueA = blueCenter - axis * plannerConfig_.handleHalfLength;
+  const Eigen::Vector3d blueB = blueCenter + axis * plannerConfig_.handleHalfLength;
 
   // The bracelet/end-effector/gripper are intentionally close to the blue
   // handle and are handled by the exact gripper geometry. The proximal arm is
@@ -4684,20 +4914,20 @@ bool HandoverInterceptionController::carriedObjectArmSafe(
   {
     try
     {
-      const int idx = robot().mb().bodyIndexByName(item.first);
+      const int idx = plannerModel().bodyIndexByName(item.first);
       if(idx < 0 || static_cast<size_t>(idx) >= mbc.bodyPosW.size()) { continue; }
       const Eigen::Vector3d p = mbc.bodyPosW[static_cast<size_t>(idx)].translation();
       updateWorstClearance(report,
           pointSegmentDistance(p, sensorA, sensorB)
-            - (item.second + sensorRadius_ + gripperSafetyMargin_),
+            - (item.second + plannerConfig_.sensorRadius + plannerConfig_.gripperSafetyMargin),
           item.first, "carried_sensor_core");
       updateWorstClearance(report,
           pointSegmentDistance(p, humanA, humanB)
-            - (item.second + handleRadius_ + gripperSafetyMargin_),
+            - (item.second + plannerConfig_.handleRadius + plannerConfig_.gripperSafetyMargin),
           item.first, "carried_human_handle");
       updateWorstClearance(report,
           pointSegmentDistance(p, blueA, blueB)
-            - (item.second + handleRadius_ + gripperSafetyMargin_),
+            - (item.second + plannerConfig_.handleRadius + plannerConfig_.gripperSafetyMargin),
           item.first, "carried_blue_handle");
     }
     catch(const std::exception &)
@@ -4723,15 +4953,16 @@ bool HandoverInterceptionController::previewAttachedRetreatSafe(
   report.safe = true;
   report.minClearance = std::numeric_limits<double>::infinity();
 
-  for(const auto & sample : gripperSamplesB_)
+  for(const auto & sample : plannerConfig_.gripperSamplesB)
   {
-    if(!groundEnabled_) { break; }
+    if(!plannerConfig_.groundEnabled) { break; }
     // Use the copied closed-gripper link transforms. Reconstructing every
     // sample from the cached live/open B->M calibration can certify a retreat
     // geometry that is different from the copied state being evaluated.
-    const Eigen::Vector3d pW = sampleWorldPoint(sample, mbc);
-    const double clear = pW.z() - groundZ_
-        - (sample.radius + groundSafetyMargin_);
+    Eigen::Vector3d pW;
+    if(!sampleWorldPoint(sample, mbc, pW)) { return false; }
+    const double clear = pW.z() - plannerConfig_.groundZ
+        - (sample.radius + plannerConfig_.groundSafetyMargin);
     if(report.groundClearance < -1e8 || clear < report.groundClearance)
     {
       report.groundClearance = clear;
@@ -4839,7 +5070,7 @@ HandoverInterceptionController::armPostureFromMbc(
     const std::string name = "gen3_joint_" + std::to_string(i);
     try
     {
-      const int idx = robot().mb().jointIndexByName(name);
+      const int idx = plannerModel().jointIndexByName(name);
       if(idx >= 0 && static_cast<size_t>(idx) < mbc.q.size()
          && !mbc.q[static_cast<size_t>(idx)].empty())
       {
@@ -4859,7 +5090,7 @@ bool HandoverInterceptionController::previewJointLimitsSafe(
 {
   const auto & ql = robot().ql();
   const auto & qu = robot().qu();
-  const auto & mb = robot().mb();
+  const auto & mb = plannerModel();
   const size_t n = std::min(mbc.q.size(), std::min(ql.size(), qu.size()));
   for(size_t j = 0; j < n; ++j)
   {
@@ -4876,8 +5107,8 @@ bool HandoverInterceptionController::previewJointLimitsSafe(
       // legitimate commanded configurations and must remain preview-feasible.
       const bool gripperJoint = name.rfind("gen3_robotiq_85_", 0) == 0;
       const double margin = (!gripperJoint
-                             && hi - lo > 4.0 * previewJointLimitMargin_)
-                          ? previewJointLimitMargin_ : 0.0;
+                             && hi - lo > 4.0 * plannerConfig_.previewJointLimitMargin)
+                          ? plannerConfig_.previewJointLimitMargin : 0.0;
       constexpr double numericalTolerance = 1e-9;
       if(q < lo + margin - numericalTolerance
          || q > hi - margin + numericalTolerance)
@@ -4899,7 +5130,17 @@ bool HandoverInterceptionController::previewConfigurationSafe(
   report = HandoverSafetyReport{};
   report.safe = true;
   report.minClearance = std::numeric_limits<double>::infinity();
-  gripperBasePoseSafe(previewBasePose(mbc), W_T_M, report, requireCorridor);
+  sva::PTransformd W_T_B;
+  if(!previewBasePose(mbc, W_T_B))
+  {
+    report.safe = false;
+    report.sample = "preview_kinematics";
+    report.obstacle = "tool_body_unresolved";
+    report.minClearance = 0.0;
+    return false;
+  }
+  gripperBasePoseSafeWith(W_T_B, W_T_M, plannerContext_.W_T_O,
+                          plannerContext_.W_T_H, report, requireCorridor);
   wholeRobotGroundSafe(mbc, report);
   return report.safe;
 }
@@ -4909,7 +5150,7 @@ void HandoverInterceptionController::setPreviewGripperClosure(
     double closure) const
 {
   closure = std::max(0.0, std::min(1.0, closure));
-  const double q = gripperOpenQ_ + closure * (gripperCloseQ_ - gripperOpenQ_);
+  const double q = plannerConfig_.gripperOpenQ + closure * (plannerConfig_.gripperCloseQ - plannerConfig_.gripperOpenQ);
   const std::vector<std::pair<std::string, double>> commands =
   {
     {"gen3_robotiq_85_left_knuckle_joint", q},
@@ -4923,7 +5164,7 @@ void HandoverInterceptionController::setPreviewGripperClosure(
   {
     try
     {
-      const int idx = robot().mb().jointIndexByName(cmd.first);
+      const int idx = plannerModel().jointIndexByName(cmd.first);
       if(idx >= 0 && static_cast<size_t>(idx) < mbc.q.size()
          && !mbc.q[static_cast<size_t>(idx)].empty())
       {
@@ -4934,7 +5175,7 @@ void HandoverInterceptionController::setPreviewGripperClosure(
     {
     }
   }
-  rbd::forwardKinematics(robot().mb(), mbc);
+  rbd::forwardKinematics(plannerModel(), mbc);
 }
 
 bool HandoverInterceptionController::previewDynamicClosureSafety(
@@ -4946,26 +5187,35 @@ bool HandoverInterceptionController::previewDynamicClosureSafety(
   report.safe = true;
   report.minClearance = std::numeric_limits<double>::infinity();
 
-  const sva::PTransformd W_T_M = previewMouthPose(mbc);
-  const Eigen::Vector3d axis = objectAxis();
-  const Eigen::Vector3d pO = W_T_O_.translation();
-  const double centerOffset = std::abs(O_T_H_.translation().z());
-  const Eigen::Vector3d sensorA = pO - axis * sensorHalfLength_;
-  const Eigen::Vector3d sensorB = pO + axis * sensorHalfLength_;
-  const Eigen::Vector3d humanCenter = pO + axis * centerOffset;
-  const Eigen::Vector3d humanA = humanCenter - axis * handleHalfLength_;
-  const Eigen::Vector3d humanB = humanCenter + axis * handleHalfLength_;
-  const Eigen::Vector3d blueCenter = W_T_H_.translation();
-  const Eigen::Vector3d blueA = blueCenter - axis * handleHalfLength_;
-  const Eigen::Vector3d blueB = blueCenter + axis * handleHalfLength_;
-
-  for(const auto & sample : gripperSamplesB_)
+  sva::PTransformd W_T_M;
+  if(!previewMouthPose(mbc, W_T_M))
   {
-    const Eigen::Vector3d pW = sampleWorldPoint(sample, mbc);
-    if(groundEnabled_)
+    report.safe = false;
+    report.sample = "preview_kinematics";
+    report.obstacle = "tool_body_unresolved";
+    report.minClearance = 0.0;
+    return false;
+  }
+  const Eigen::Vector3d axis = plannerObjectAxis();
+  const Eigen::Vector3d pO = plannerContext_.W_T_O.translation();
+  const double centerOffset = std::abs(O_T_H_.translation().z());
+  const Eigen::Vector3d sensorA = pO - axis * plannerConfig_.sensorHalfLength;
+  const Eigen::Vector3d sensorB = pO + axis * plannerConfig_.sensorHalfLength;
+  const Eigen::Vector3d humanCenter = pO + axis * centerOffset;
+  const Eigen::Vector3d humanA = humanCenter - axis * plannerConfig_.handleHalfLength;
+  const Eigen::Vector3d humanB = humanCenter + axis * plannerConfig_.handleHalfLength;
+  const Eigen::Vector3d blueCenter = plannerContext_.W_T_H.translation();
+  const Eigen::Vector3d blueA = blueCenter - axis * plannerConfig_.handleHalfLength;
+  const Eigen::Vector3d blueB = blueCenter + axis * plannerConfig_.handleHalfLength;
+
+  for(const auto & sample : plannerConfig_.gripperSamplesB)
+  {
+    Eigen::Vector3d pW;
+    if(!sampleWorldPoint(sample, mbc, pW)) { return false; }
+    if(plannerConfig_.groundEnabled)
     {
-      const double clear = pW.z() - groundZ_
-          - (sample.radius + groundSafetyMargin_);
+      const double clear = pW.z() - plannerConfig_.groundZ
+          - (sample.radius + plannerConfig_.groundSafetyMargin);
       if(report.groundClearance < -1e8 || clear < report.groundClearance)
       {
         report.groundClearance = clear;
@@ -4974,17 +5224,17 @@ bool HandoverInterceptionController::previewDynamicClosureSafety(
     }
     updateWorstClearance(report,
         pointSegmentDistance(pW, sensorA, sensorB)
-          - (sensorRadius_ + sample.radius + gripperSafetyMargin_),
+          - (plannerConfig_.sensorRadius + sample.radius + plannerConfig_.gripperSafetyMargin),
         sample.name, "sensor_core");
     updateWorstClearance(report,
         pointSegmentDistance(pW, humanA, humanB)
-          - (handleRadius_ + sample.radius + gripperSafetyMargin_),
+          - (plannerConfig_.handleRadius + sample.radius + plannerConfig_.gripperSafetyMargin),
         sample.name, "human_grey_handle");
     if(sample.hardAgainstBlue)
     {
       updateWorstClearance(report,
           pointSegmentDistance(pW, blueA, blueB)
-            - (handleRadius_ + sample.radius + gripperSafetyMargin_),
+            - (plannerConfig_.handleRadius + sample.radius + plannerConfig_.gripperSafetyMargin),
           sample.name, "robot_blue_handle");
     }
   }
@@ -4998,16 +5248,16 @@ bool HandoverInterceptionController::previewDynamicClosureSafety(
   }
   const Eigen::Vector3d pL_M = pointToLocal(W_T_M, pL_W);
   const Eigen::Vector3d pR_M = pointToLocal(W_T_M, pR_W);
-  const Eigen::Vector3d pH_M = pointToLocal(W_T_M, W_T_H_.translation());
+  const Eigen::Vector3d pH_M = pointToLocal(W_T_M, plannerContext_.W_T_H.translation());
   const double xPositive = std::max(pL_M.x(), pR_M.x());
   const double xNegative = std::min(pL_M.x(), pR_M.x());
-  report.leftPadClearance = xPositive - pH_M.x() - handleRadius_;
-  report.rightPadClearance = pH_M.x() - xNegative - handleRadius_;
+  report.leftPadClearance = xPositive - pH_M.x() - plannerConfig_.handleRadius;
+  report.rightPadClearance = pH_M.x() - xNegative - plannerConfig_.handleRadius;
   report.signedPadCenteringError =
       0.5 * (report.rightPadClearance - report.leftPadClearance);
   report.padCenteringError = std::abs(report.signedPadCenteringError);
   const double designatedPadAllowance = allowDesignatedPadContact
-      ? gripperContactTolerance_ : gripperPenetrationTolerance_;
+      ? plannerConfig_.gripperContactTolerance : plannerConfig_.gripperPenetrationTolerance;
   updateWorstClearance(report,
       report.leftPadClearance + designatedPadAllowance,
       "left_inner_pad", "robot_blue_handle");
@@ -5022,15 +5272,15 @@ bool HandoverInterceptionController::previewDynamicClosureSafety(
       acquisitionCenterTol - report.padCenteringError,
       "pad_pair", "blue_handle_acquisition_tube");
 
-  Eigen::Vector3d aH_M = worldRotation(W_T_M).transpose() * blueHandleAxis();
+  Eigen::Vector3d aH_M = worldRotation(W_T_M).transpose() * plannerHandleAxis();
   if(aH_M.norm() < 1e-9) { aH_M = Eigen::Vector3d::UnitZ(); }
   aH_M.normalize();
   const double angle = std::acos(
       clampUnit(std::abs(aH_M.dot(Eigen::Vector3d::UnitZ()))));
-  const double entryClear = pH_M.y() + corridorEntryDepth_;
-  const double palmClear = corridorPalmLimit_ - pH_M.y();
-  const double axialClear = corridorAxialTolerance_ - std::abs(pH_M.z());
-  const double angleClear = corridorMaxAngleRad_ - angle;
+  const double entryClear = pH_M.y() + plannerConfig_.corridorEntryDepth;
+  const double palmClear = plannerConfig_.corridorPalmLimit - pH_M.y();
+  const double axialClear = plannerConfig_.corridorAxialTolerance - std::abs(pH_M.z());
+  const double angleClear = plannerConfig_.corridorMaxAngleRad - angle;
   report.corridorEntryClearance = entryClear;
   report.corridorPalmClearance = palmClear;
   report.corridorAxialClearance = axialClear;
@@ -5042,13 +5292,13 @@ bool HandoverInterceptionController::previewDynamicClosureSafety(
                        "mouth_corridor", "blue_handle_axis_alignment");
 
   const double designatedPadLowerBound = allowDesignatedPadContact
-      ? -gripperContactTolerance_ : -gripperPenetrationTolerance_;
+      ? -plannerConfig_.gripperContactTolerance : -plannerConfig_.gripperPenetrationTolerance;
   report.bilateralPadContact = report.safe
-      && report.leftPadClearance <= gripperContactTolerance_
-      && report.rightPadClearance <= gripperContactTolerance_
+      && report.leftPadClearance <= plannerConfig_.gripperContactTolerance
+      && report.rightPadClearance <= plannerConfig_.gripperContactTolerance
       && report.leftPadClearance >= designatedPadLowerBound
       && report.rightPadClearance >= designatedPadLowerBound
-      && report.padCenteringError <= padCenteringTolerance_;
+      && report.padCenteringError <= plannerConfig_.padCenteringTolerance;
   return report.safe;
 }
 
@@ -5066,24 +5316,30 @@ HandoverInterceptionController::previewReachStep(
     const std::map<std::string, std::vector<double>> * postureTarget,
     bool collectDecisionMetrics) const
 {
-  if(segmentIteration >= previewMaxIterationsPerSegment_)
+  if(segmentIteration >= plannerConfig_.previewMaxIterationsPerSegment)
   {
     result.reason = "ik_preview_no_convergence";
     return PreviewStepStatus::Failed;
   }
 
-  const auto & mb = robot().mb();
-  if(!previewKinematicCacheValid_
-     || previewGripperJoint_.size() != mb.joints().size()
-     || !previewToolJacobian_)
+  const auto & mb = plannerModel();
+  if(!plannerContext_.previewKinematicCacheValid
+     || plannerContext_.previewGripperJoint.size() != mb.joints().size()
+     || !plannerContext_.previewToolJacobian)
   {
     refreshPreviewKinematicCache();
   }
-  rbd::Jacobian & jac = *previewToolJacobian_;
-  const sva::PTransformd W_T_B_goal = previewBasePoseFromMouthPose(
-      W_T_M_goal, mbc);
-  const sva::PTransformd W_T_B = previewBasePose(mbc);
-  const sva::PTransformd W_T_M = previewMouthPose(mbc);
+  rbd::Jacobian & jac = *plannerContext_.previewToolJacobian;
+  sva::PTransformd W_T_B_goal;
+  sva::PTransformd W_T_B;
+  sva::PTransformd W_T_M;
+  if(!previewBasePoseFromMouthPose(W_T_M_goal, mbc, W_T_B_goal)
+     || !previewBasePose(mbc, W_T_B)
+     || !previewMouthPose(mbc, W_T_M))
+  {
+    result.reason = "preview_kinematics_unavailable";
+    return PreviewStepStatus::Failed;
+  }
   const Eigen::Vector3d pErr = W_T_B_goal.translation() - W_T_B.translation();
   const Eigen::Matrix3d Rerr = worldRotation(W_T_B_goal)
                              * worldRotation(W_T_B).transpose();
@@ -5095,11 +5351,11 @@ HandoverInterceptionController::previewReachStep(
   }
 
   if(allowConvergence
-     && pErr.norm() <= previewPositionTolerance_
-     && rErr.norm() <= previewOrientationTolerance_)
+     && pErr.norm() <= plannerConfig_.previewPositionTolerance
+     && rErr.norm() <= plannerConfig_.previewOrientationTolerance)
   {
     HandoverSafetyReport finalReport;
-    const sva::PTransformd W_T_O_carried = compose(W_T_M, planningM_T_O_);
+    const sva::PTransformd W_T_O_carried = compose(W_T_M, plannerContext_.planningM_T_O);
     const bool finalSafe = attachedRetreat
         ? previewAttachedRetreatSafe(mbc, W_T_O_carried, finalReport)
         : previewConfigurationSafe(mbc, W_T_M, requireCorridor, finalReport);
@@ -5117,15 +5373,15 @@ HandoverInterceptionController::previewReachStep(
     return PreviewStepStatus::Succeeded;
   }
 
-  Eigen::Vector3d v = linearFeedforwardWorld + previewLinearGain_ * pErr;
-  if(v.norm() > previewMaxLinearSpeed_)
+  Eigen::Vector3d v = linearFeedforwardWorld + plannerConfig_.previewLinearGain * pErr;
+  if(v.norm() > plannerConfig_.previewMaxLinearSpeed)
   {
-    v *= previewMaxLinearSpeed_ / v.norm();
+    v *= plannerConfig_.previewMaxLinearSpeed / v.norm();
   }
-  Eigen::Vector3d w = angularFeedforwardWorld + previewAngularGain_ * rErr;
-  if(w.norm() > previewMaxAngularSpeed_)
+  Eigen::Vector3d w = angularFeedforwardWorld + plannerConfig_.previewAngularGain * rErr;
+  if(w.norm() > plannerConfig_.previewMaxAngularSpeed)
   {
-    w *= previewMaxAngularSpeed_ / w.norm();
+    w *= plannerConfig_.previewMaxAngularSpeed / w.norm();
   }
   Eigen::Matrix<double, 6, 1> twist;
   twist.head<3>() = w;
@@ -5136,13 +5392,13 @@ HandoverInterceptionController::previewReachStep(
   jac.fullJacobian(mb, Jcompact, J);
 
   if(collectDecisionMetrics
-     && segmentIteration % decisionMetricStride_ == 0)
+     && segmentIteration % plannerConfig_.decisionMetricStride == 0)
   {
     // Angular Jacobian rows are multiplied by a characteristic length so the
     // 6D condition index is dimensionless and translation/rotation are
     // comparable. One is isotropic; zero is singular.
     Eigen::MatrixXd Jmetric = J;
-    Jmetric.topRows(3) *= decisionCharacteristicLength_;
+    Jmetric.topRows(3) *= plannerConfig_.decisionCharacteristicLength;
     const Eigen::Matrix<double, 6, 6> gram = Jmetric * Jmetric.transpose();
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 6, 6>> eig(gram);
     if(eig.info() == Eigen::Success)
@@ -5172,7 +5428,7 @@ HandoverInterceptionController::previewReachStep(
   for(size_t j = 0; j < mb.joints().size() && j < mbc.q.size()
       && j < ql.size() && j < qu.size(); ++j)
   {
-    if(previewGripperJoint_[j] != 0u) { continue; }
+    if(plannerContext_.previewGripperJoint[j] != 0u) { continue; }
     const int dofPos = mb.jointPosInDof(static_cast<int>(j));
     const size_t m = std::min(mbc.q[j].size(),
                              std::min(ql[j].size(), qu[j].size()));
@@ -5183,8 +5439,8 @@ HandoverInterceptionController::previewReachStep(
       const double lo = ql[j][k];
       const double hi = qu[j][k];
       if(!std::isfinite(lo) || !std::isfinite(hi)) { continue; }
-      const double margin = (hi - lo > 4.0 * previewJointLimitMargin_)
-                          ? previewJointLimitMargin_ : 0.0;
+      const double margin = (hi - lo > 4.0 * plannerConfig_.previewJointLimitMargin)
+                          ? plannerConfig_.previewJointLimitMargin : 0.0;
       const double safeLo = lo + margin;
       const double safeHi = hi - margin;
       const double half = 0.5 * (safeHi - safeLo);
@@ -5201,20 +5457,20 @@ HandoverInterceptionController::previewReachStep(
       const double pressure = std::pow(absS, 6)
                             / (barrierDen * barrierDen);
       mobility[d] = std::max(
-          0.02, 1.0 / (1.0 + previewJointLimitWeightGain_ * pressure));
+          0.02, 1.0 / (1.0 + plannerConfig_.previewJointLimitWeightGain * pressure));
 
-      if(absS > previewJointLimitActivation_)
+      if(absS > plannerConfig_.previewJointLimitActivation)
       {
         const double active = std::max(
-            1e-6, 1.0 - previewJointLimitActivation_);
+            1e-6, 1.0 - plannerConfig_.previewJointLimitActivation);
         const double u = std::min(
-            1.0, (absS - previewJointLimitActivation_) / active);
+            1.0, (absS - plannerConfig_.previewJointLimitActivation) / active);
         double v = -std::copysign(
-            previewJointLimitAvoidanceGain_ * u * u
+            plannerConfig_.previewJointLimitAvoidanceGain * u * u
               / std::max(0.05, 1.0 - absS),
             s);
-        v = std::max(-previewJointLimitVelocityCap_,
-                     std::min(previewJointLimitVelocityCap_, v));
+        v = std::max(-plannerConfig_.previewJointLimitVelocityCap,
+                     std::min(plannerConfig_.previewJointLimitVelocityCap, v));
         qLimitAvoidance[d] = v;
       }
     }
@@ -5222,7 +5478,7 @@ HandoverInterceptionController::previewReachStep(
 
   const Eigen::MatrixXd WInv = mobility.asDiagonal();
   Eigen::Matrix<double, 6, 6> A = J * WInv * J.transpose();
-  A.diagonal().array() += previewDamping_ * previewDamping_;
+  A.diagonal().array() += plannerConfig_.previewDamping * plannerConfig_.previewDamping;
   const Eigen::MatrixXd Jpinv = WInv * J.transpose() * A.ldlt().solve(
       Eigen::Matrix<double, 6, 6>::Identity());
   Eigen::VectorXd qdot = Jpinv * twist;
@@ -5232,7 +5488,7 @@ HandoverInterceptionController::previewReachStep(
   Eigen::VectorXd qPosture = Eigen::VectorXd::Zero(mb.nrDof());
   for(size_t j = 0; j < mb.joints().size() && j < mbc.q.size(); ++j)
   {
-    const auto & posture = postureTarget ? *postureTarget : readyPosture_;
+    const auto & posture = postureTarget ? *postureTarget : plannerConfig_.readyPosture;
     const auto it = posture.find(mb.joint(static_cast<int>(j)).name());
     if(it == posture.end() || it->second.empty() || mbc.q[j].empty())
     {
@@ -5241,7 +5497,7 @@ HandoverInterceptionController::previewReachStep(
     const int dofPos = mb.jointPosInDof(static_cast<int>(j));
     if(dofPos >= 0 && dofPos < qPosture.size())
     {
-      qPosture[dofPos] = previewPostureGain_
+      qPosture[dofPos] = plannerConfig_.previewPostureGain
                        * (it->second[0] - mbc.q[j][0]);
     }
   }
@@ -5249,8 +5505,8 @@ HandoverInterceptionController::previewReachStep(
       mb.nrDof(), mb.nrDof()) - Jpinv * J;
   qdot += nullspace * (qPosture + qLimitAvoidance);
 
-  const Eigen::VectorXd & vl = previewJointVelocityLower_;
-  const Eigen::VectorXd & vu = previewJointVelocityUpper_;
+  const Eigen::VectorXd & vl = plannerContext_.previewJointVelocityLower;
+  const Eigen::VectorXd & vu = plannerContext_.previewJointVelocityUpper;
   if(vl.size() == qdot.size() && vu.size() == qdot.size())
   {
     for(Eigen::Index i = 0; i < qdot.size(); ++i)
@@ -5266,7 +5522,7 @@ HandoverInterceptionController::previewReachStep(
   for(size_t j = 0; j < mb.joints().size() && j < mbc.q.size()
       && j < ql.size() && j < qu.size(); ++j)
   {
-    if(previewGripperJoint_[j] != 0u) { continue; }
+    if(plannerContext_.previewGripperJoint[j] != 0u) { continue; }
     const int dofPos = mb.jointPosInDof(static_cast<int>(j));
     const size_t m = std::min(mbc.q[j].size(),
                              std::min(ql[j].size(), qu[j].size()));
@@ -5277,8 +5533,8 @@ HandoverInterceptionController::previewReachStep(
       const double lo = ql[j][k];
       const double hi = qu[j][k];
       if(!std::isfinite(lo) || !std::isfinite(hi)) { continue; }
-      const double margin = (hi - lo > 4.0 * previewJointLimitMargin_)
-                          ? previewJointLimitMargin_ : 0.0;
+      const double margin = (hi - lo > 4.0 * plannerConfig_.previewJointLimitMargin)
+                          ? plannerConfig_.previewJointLimitMargin : 0.0;
       const double safeLo = lo + margin;
       const double safeHi = hi - margin;
       const double dq = qdot[d];
@@ -5287,14 +5543,14 @@ HandoverInterceptionController::previewReachStep(
         boundaryScale = std::min(
             boundaryScale,
             0.98 * std::max(0.0, safeHi - mbc.q[j][k])
-              / (previewDt_ * dq));
+              / (plannerConfig_.previewDt * dq));
       }
       else if(dq < -1e-12)
       {
         boundaryScale = std::min(
             boundaryScale,
             0.98 * std::max(0.0, mbc.q[j][k] - safeLo)
-              / (-previewDt_ * dq));
+              / (-plannerConfig_.previewDt * dq));
       }
     }
   }
@@ -5317,11 +5573,11 @@ HandoverInterceptionController::previewReachStep(
 
   mbc.alpha = rbd::vectorToDof(mb, qdot);
   for(auto & aD : mbc.alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
-  rbd::integration(mb, mbc, previewDt_);
+  rbd::integration(mb, mbc, plannerConfig_.previewDt);
   rbd::forwardKinematics(mb, mbc);
   ++segmentIteration;
-  result.duration += previewDt_;
-  result.effort += qdot.squaredNorm() * previewDt_;
+  result.duration += plannerConfig_.previewDt;
+  result.effort += qdot.squaredNorm() * plannerConfig_.previewDt;
 
   std::string limitReason;
   if(!previewJointLimitsSafe(mbc, limitReason))
@@ -5331,8 +5587,13 @@ HandoverInterceptionController::previewReachStep(
   }
 
   HandoverSafetyReport report;
-  const sva::PTransformd newMouth = previewMouthPose(mbc);
-  const sva::PTransformd W_T_O_carried = compose(newMouth, planningM_T_O_);
+  sva::PTransformd newMouth;
+  if(!previewMouthPose(mbc, newMouth))
+  {
+    result.reason = "preview_kinematics_unavailable";
+    return PreviewStepStatus::Failed;
+  }
+  const sva::PTransformd W_T_O_carried = compose(newMouth, plannerContext_.planningM_T_O);
   const bool stepSafe = attachedRetreat
       ? previewAttachedRetreatSafe(mbc, W_T_O_carried, report)
       : previewConfigurationSafe(mbc, newMouth, requireCorridor, report);
@@ -5374,14 +5635,14 @@ HandoverInterceptionController::previewClosureStep(
     int & closureIndex,
     PreviewResult & result) const
 {
-  const int samples = std::max(20, previewClosureSamples_);
+  const int samples = std::max(20, plannerConfig_.previewClosureSamples);
   if(closureIndex > samples)
   {
     result.reason = "closure/no_bilateral_contact";
     return PreviewStepStatus::Failed;
   }
 
-  const double closure = gripperMaxClosure_
+  const double closure = plannerConfig_.gripperMaxClosure
       * static_cast<double>(closureIndex) / static_cast<double>(samples);
   setPreviewGripperClosure(mbc, closure);
 
@@ -5427,7 +5688,7 @@ HandoverInterceptionController::previewClosureStep(
   if(report.bilateralPadContact)
   {
     result.contactClosure = closure;
-    result.duration += closure / std::max(1e-3, gripperCloseRate_);
+    result.duration += closure / std::max(1e-3, plannerConfig_.gripperCloseRate);
     return PreviewStepStatus::Succeeded;
   }
 
@@ -5435,6 +5696,40 @@ HandoverInterceptionController::previewClosureStep(
   return PreviewStepStatus::Running;
 }
 
+
+// One terminal capture dwell sample. Extracted verbatim from the dwell loop
+// body so the whole-segment caller and the resumable rollout execute one shared
+// copy of this arithmetic.
+bool HandoverInterceptionController::previewTerminalCaptureDwellStep(
+    rbd::MultiBodyConfig & mbc,
+    PreviewResult & result) const
+{
+  for(auto & a : mbc.alpha) { std::fill(a.begin(), a.end(), 0.0); }
+  for(auto & aD : mbc.alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
+  rbd::forwardKinematics(plannerModel(), mbc);
+
+  HandoverSafetyReport report;
+  sva::PTransformd mouth;
+  if(!previewMouthPose(mbc, mouth))
+  {
+    result.reason = "terminal_capture_dwell/preview_kinematics_unavailable";
+    return false;
+  }
+  if(!previewConfigurationSafe(mbc, mouth, true, report))
+  {
+    result.reason = "terminal_capture_dwell/" + report.sample
+                  + "/" + report.obstacle;
+    result.limitingSample = report.sample;
+    result.limitingObstacle = report.obstacle;
+    result.minClearance = std::min(result.minClearance,
+                                   report.minClearance);
+    return false;
+  }
+  result.minClearance = std::min(result.minClearance,
+                                 report.minClearance);
+  result.duration += plannerConfig_.previewDt;
+  return true;
+}
 
 bool HandoverInterceptionController::previewTerminalCaptureDwell(
     rbd::MultiBodyConfig & mbc,
@@ -5446,25 +5741,7 @@ bool HandoverInterceptionController::previewTerminalCaptureDwell(
   setPreviewGripperClosure(mbc, 0.0);
   for(int k = 0; k < steps; ++k)
   {
-    for(auto & a : mbc.alpha) { std::fill(a.begin(), a.end(), 0.0); }
-    for(auto & aD : mbc.alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
-    rbd::forwardKinematics(robot().mb(), mbc);
-
-    HandoverSafetyReport report;
-    const sva::PTransformd mouth = previewMouthPose(mbc);
-    if(!previewConfigurationSafe(mbc, mouth, true, report))
-    {
-      result.reason = "terminal_capture_dwell/" + report.sample
-                    + "/" + report.obstacle;
-      result.limitingSample = report.sample;
-      result.limitingObstacle = report.obstacle;
-      result.minClearance = std::min(result.minClearance,
-                                     report.minClearance);
-      return false;
-    }
-    result.minClearance = std::min(result.minClearance,
-                                   report.minClearance);
-    result.duration += previewDt_;
+    if(!previewTerminalCaptureDwellStep(mbc, result)) { return false; }
   }
   return true;
 }
@@ -5551,7 +5828,12 @@ bool HandoverInterceptionController::previewVelocityGateParityShadow(
 
   setPreviewGripperClosure(mbc, 0.0);
   const sva::PTransformd goal = candidate.W_T_M_pre;
-  const sva::PTransformd startPose = previewMouthPose(mbc);
+  sva::PTransformd startPose;
+  if(!previewMouthPose(mbc, startPose))
+  {
+    reason = "preview_kinematics_unavailable";
+    return false;
+  }
   sva::PTransformd previous = startPose;
   sva::PTransformd reference = startPose;
   const Eigen::Vector3d linearPath =
@@ -5595,17 +5877,22 @@ bool HandoverInterceptionController::previewVelocityGateParityShadow(
   PreviewResult shadow;
   shadow.minClearance = std::numeric_limits<double>::infinity();
   const int maximumSteps = std::max(1, static_cast<int>(std::ceil(
-      maximumDuration / std::max(1e-9, previewDt_))));
+      maximumDuration / std::max(1e-9, plannerConfig_.previewDt))));
   const double effectiveFilter = 1.0 - std::pow(
       1.0 - velocityFilter,
-      previewDt_ / std::max(1e-9, controlDt_));
+      plannerConfig_.previewDt / std::max(1e-9, controlDt_));
 
   for(int step = 0; step < maximumSteps; ++step)
   {
-    const sva::PTransformd current = previewMouthPose(mbc);
+    sva::PTransformd current;
+    if(!previewMouthPose(mbc, current))
+    {
+      reason = "preview_kinematics_unavailable";
+      return false;
+    }
     Eigen::Vector3d linearVelocity;
     Eigen::Vector3d angularVelocity;
-    worldPoseTwist(previous, current, previewDt_,
+    worldPoseTwist(previous, current, plannerConfig_.previewDt,
                    linearVelocity, angularVelocity);
     previous = current;
     const double measuredLinearSpeed = linearVelocity.norm();
@@ -5650,7 +5937,7 @@ bool HandoverInterceptionController::previewVelocityGateParityShadow(
 
     if(geometryReady && velocityReady)
     {
-      stableTime += previewDt_;
+      stableTime += plannerConfig_.previewDt;
       finalStableTime = stableTime;
       if(stableTime + 1e-12 >= stableDwell)
       {
@@ -5672,9 +5959,9 @@ bool HandoverInterceptionController::previewVelocityGateParityShadow(
     if(geometryReady)
     {
       commandedLinearSpeed = rampSpeedShadow(
-          commandedLinearSpeed, 0.0, linearDeceleration, previewDt_);
+          commandedLinearSpeed, 0.0, linearDeceleration, plannerConfig_.previewDt);
       commandedAngularSpeed = rampSpeedShadow(
-          commandedAngularSpeed, 0.0, angularDeceleration, previewDt_);
+          commandedAngularSpeed, 0.0, angularDeceleration, plannerConfig_.previewDt);
       reference = goal;
     }
     else
@@ -5743,11 +6030,11 @@ bool HandoverInterceptionController::previewVelocityGateParityShadow(
       commandedLinearSpeed = rampSpeedShadow(
           commandedLinearSpeed, desiredLinearSpeed,
           linearBrakingActive ? linearDeceleration : linearAcceleration,
-          previewDt_);
+          plannerConfig_.previewDt);
       commandedAngularSpeed = rampSpeedShadow(
           commandedAngularSpeed, desiredAngularSpeed,
           angularBrakingActive ? angularDeceleration : angularAcceleration,
-          previewDt_);
+          plannerConfig_.previewDt);
 
       double measuredLinearProgress = 1.0;
       if(pathDistance > 1e-9)
@@ -5785,8 +6072,8 @@ bool HandoverInterceptionController::previewVelocityGateParityShadow(
           startPose, goal, targetProgress);
       reference = boundedPoseStep(
           reference, spatialTarget,
-          commandedLinearSpeed * previewDt_,
-          commandedAngularSpeed * previewDt_);
+          commandedLinearSpeed * plannerConfig_.previewDt,
+          commandedAngularSpeed * plannerConfig_.previewDt);
 
       double referenceLinearProgress = 1.0;
       if(pathDistance > 1e-9)
@@ -5890,7 +6177,7 @@ bool HandoverInterceptionController::verifyPredictiveStaticCandidate(
     const sva::PTransformd & W_T_O_presentation)
 {
   const auto routes = transitRouteBank(
-      planningStartMouthPose_, candidate.W_T_M_standoff);
+      plannerContext_.planningStartMouthPose, candidate.W_T_M_standoff);
   bool found = false;
   CaptureCandidate best;
   std::string lastFailure = "no_route_tested";
@@ -5903,14 +6190,17 @@ bool HandoverInterceptionController::verifyPredictiveStaticCandidate(
            route.first, route.second))
     {
       lastFailure = trial.failureReason;
-      mc_rtc::log::info(
-          "[TransitRoute] candidate={} route={} infeasible reason={} reachClear={:.4f}",
-          candidate.name, route.first, trial.failureReason,
-          trial.predictiveReachClearance);
+      if(plannerEvidenceLogging_)
+      {
+        mc_rtc::log::info(
+            "[TransitRoute] candidate={} route={} infeasible reason={} reachClear={:.4f}",
+            candidate.name, route.first, trial.failureReason,
+            trial.predictiveReachClearance);
+      }
       continue;
     }
 
-    planningCompletePlanAuditCandidates_.push_back(trial);
+    plannerContext_.planningCompletePlanAuditCandidates.push_back(trial);
 
     const double routeCost = trial.estimatedTime
         + previewEffortWeight_ * trial.predictedEffort
@@ -5944,16 +6234,46 @@ bool HandoverInterceptionController::verifyPredictiveStaticCandidate(
   }
 
   candidate = best;
-  mc_rtc::log::success(
-      "[TransitRoute] SELECTED candidate={} route={} curveOffset=[{:.3f},{:.3f},{:.3f}] pathLength={:.3f}m reachClear={:.4f}m completePlan=true",
-      candidate.name, candidate.transitRouteName,
-      candidate.reachCurveOffsetWorld.x(),
-      candidate.reachCurveOffsetWorld.y(),
-      candidate.reachCurveOffsetWorld.z(),
-      candidate.transitPathLength, candidate.predictiveReachClearance);
+  if(plannerEvidenceLogging_)
+  {
+    mc_rtc::log::success(
+        "[TransitRoute] SELECTED candidate={} route={} curveOffset=[{:.3f},{:.3f},{:.3f}] pathLength={:.3f}m reachClear={:.4f}m completePlan=true",
+        candidate.name, candidate.transitRouteName,
+        candidate.reachCurveOffsetWorld.x(),
+        candidate.reachCurveOffsetWorld.y(),
+        candidate.reachCurveOffsetWorld.z(),
+        candidate.transitPathLength, candidate.predictiveReachClearance);
+  }
   return true;
 }
 
+void HandoverInterceptionController::routeStepRestorePlanningWorld()
+{
+  plannerContext_.W_T_O = plannerContext_.routeStepSavedObject;
+  plannerContext_.W_T_H = plannerContext_.routeStepSavedHandle;
+  plannerContext_.planningM_T_O =
+      plannerContext_.routeStepSavedPlanningAttachment;
+}
+
+void HandoverInterceptionController::routeStepSetVirtualObject(
+    const sva::PTransformd & W_T_O_virtual)
+{
+  plannerContext_.W_T_O = W_T_O_virtual;
+  plannerContext_.W_T_H = compose(plannerContext_.W_T_O, O_T_H_);
+}
+
+HandoverInterceptionController::RouteStepOutcome
+HandoverInterceptionController::routeStepFail(const std::string & reason)
+{
+  plannerContext_.routeStepCandidate.failureReason = reason;
+  routeStepRestorePlanningWorld();
+  plannerContext_.routeStepPhase = RouteStepPhase::Idle;
+  return RouteStepOutcome::Infeasible;
+}
+
+// Synchronous driver kept for the unstepped call path. It is exactly the
+// original whole-route contract expressed on top of the resumable rollout, so
+// both paths execute one shared copy of the arithmetic.
 bool HandoverInterceptionController::verifyPredictiveRouteCandidate(
     CaptureCandidate & candidate,
     const PreviewResult & staticResult,
@@ -5961,78 +6281,90 @@ bool HandoverInterceptionController::verifyPredictiveRouteCandidate(
     const std::string & routeName,
     const Eigen::Vector3d & curveOffsetWorld)
 {
-  candidate.transitRouteName = routeName;
-  candidate.reachCurveOffsetWorld = curveOffsetWorld;
-  if(!previewMovingInterception_) { return true; }
+  RouteStepOutcome outcome = beginPredictiveRouteCandidate(
+      candidate, staticResult, W_T_O_presentation, routeName,
+      curveOffsetWorld);
+  while(outcome == RouteStepOutcome::Running)
+  {
+    outcome = stepPredictiveRouteCandidate(1);
+  }
+  candidate = plannerContext_.routeStepCandidate;
+  return outcome == RouteStepOutcome::Feasible;
+}
+
+// Setup phase. Everything here is the original pre-rollout arithmetic of
+// verifyPredictiveRouteCandidate(); the only change is that its results are
+// stored in the persistent rollout state instead of the stack.
+HandoverInterceptionController::RouteStepOutcome
+HandoverInterceptionController::beginPredictiveRouteCandidate(
+    const CaptureCandidate & candidate,
+    const PreviewResult & staticResult,
+    const sva::PTransformd & W_T_O_presentation,
+    const std::string & routeName,
+    const Eigen::Vector3d & curveOffsetWorld)
+{
+  plannerContext_.routeStepPhase = RouteStepPhase::Idle;
+  plannerContext_.routeStepCandidate = candidate;
+  plannerContext_.routeStepCandidate.transitRouteName = routeName;
+  plannerContext_.routeStepCandidate.reachCurveOffsetWorld = curveOffsetWorld;
+  if(!previewMovingInterception_) { return RouteStepOutcome::Feasible; }
   if(!presentationMode_)
   {
-    candidate.failureReason = "predictive_static/presentation_mode_required";
-    return false;
+    plannerContext_.routeStepCandidate.failureReason =
+        "predictive_static/presentation_mode_required";
+    return RouteStepOutcome::Infeasible;
   }
   if(staticResult.contactClosure <= 0.0
      || !std::isfinite(staticResult.contactClosure))
   {
-    candidate.failureReason = "predictive_static/no_contact_closure";
-    return false;
+    plannerContext_.routeStepCandidate.failureReason =
+        "predictive_static/no_contact_closure";
+    return RouteStepOutcome::Infeasible;
   }
 
   // Immutable presentation anchor. The virtual object below is mutable, but
   // this value copy can never alias it.
-  const sva::PTransformd presentationAnchor = W_T_O_presentation;
-  const sva::PTransformd savedObject = W_T_O_;
-  const sva::PTransformd savedHandle = W_T_H_;
-  const sva::PTransformd savedPlanningAttachment = planningM_T_O_;
-  auto restorePlanningWorld = [&]()
-  {
-    W_T_O_ = savedObject;
-    W_T_H_ = savedHandle;
-    planningM_T_O_ = savedPlanningAttachment;
-  };
-  auto setVirtualObject = [&](const sva::PTransformd & W_T_O_virtual)
-  {
-    W_T_O_ = W_T_O_virtual;
-    W_T_H_ = compose(W_T_O_, O_T_H_);
-  };
+  plannerContext_.routeStepPresentationAnchor = W_T_O_presentation;
+  plannerContext_.routeStepSavedObject = plannerContext_.W_T_O;
+  plannerContext_.routeStepSavedHandle = plannerContext_.W_T_H;
+  plannerContext_.routeStepSavedPlanningAttachment =
+      plannerContext_.planningM_T_O;
 
-  candidate.contactClosure = staticResult.contactClosure;
+  plannerContext_.routeStepCandidate.contactClosure = staticResult.contactClosure;
   const double baseReachDuration = std::max(
-      2.0 * previewDt_,
-      timingArmScale_ * staticResult.reachStandoffDuration);
-  const double chordLength = (candidate.W_T_M_standoff.translation()
-      - planningStartMouthPose_.translation()).norm();
-  candidate.transitPathLength = reachCurveLength(
-      planningStartMouthPose_, candidate.W_T_M_standoff,
-      candidate.reachCurveOffsetWorld);
-  candidate.W_T_M_transit = reachCurvePose(
-      planningStartMouthPose_, candidate.W_T_M_standoff,
-      candidate.reachCurveOffsetWorld, 0.5);
-  const double pathStretch = candidate.transitPathLength
+      2.0 * plannerConfig_.previewDt,
+      plannerConfig_.timingArmScale * staticResult.reachStandoffDuration);
+  const double chordLength = (plannerContext_.routeStepCandidate.W_T_M_standoff.translation()
+      - plannerContext_.planningStartMouthPose.translation()).norm();
+  plannerContext_.routeStepCandidate.transitPathLength = reachCurveLength(
+      plannerContext_.planningStartMouthPose, plannerContext_.routeStepCandidate.W_T_M_standoff,
+      plannerContext_.routeStepCandidate.reachCurveOffsetWorld);
+  plannerContext_.routeStepCandidate.W_T_M_transit = reachCurvePose(
+      plannerContext_.planningStartMouthPose, plannerContext_.routeStepCandidate.W_T_M_standoff,
+      plannerContext_.routeStepCandidate.reachCurveOffsetWorld, 0.5);
+  const double pathStretch = plannerContext_.routeStepCandidate.transitPathLength
       / std::max(0.05, chordLength);
-  if(pathStretch > transitMaximumPathStretch_)
+  if(pathStretch > plannerConfig_.transitMaximumPathStretch)
   {
-    candidate.failureReason = "transit_route/path_stretch_limit";
-    restorePlanningWorld();
-    return false;
+    return routeStepFail("transit_route/path_stretch_limit");
   }
   const double reachDuration = baseReachDuration * std::max(1.0, pathStretch);
-  const double approachDuration = timingTerminalCaptureDwell_ + std::max(
-      2.0 * previewDt_,
-      timingArmScale_ * staticResult.reachCaptureDuration);
-  const double acquireDuration = timingPriorityBlend_ + timingCaptureLock_
+  const double approachDuration = plannerConfig_.timingTerminalCaptureDwell + std::max(
+      2.0 * plannerConfig_.previewDt,
+      plannerConfig_.timingArmScale * staticResult.reachCaptureDuration);
+  const double acquireDuration = plannerConfig_.timingPriorityBlend + plannerConfig_.timingCaptureLock
       + staticResult.contactClosure
-          / std::max(1e-6, timingEffectiveGripperRate_);
+          / std::max(1e-6, plannerConfig_.timingEffectiveGripperRate);
   const double retreatDuration = std::max(
-      0.0, timingArmScale_ * staticResult.retreatDuration);
+      0.0, plannerConfig_.timingArmScale * staticResult.retreatDuration);
 
-  const InterceptionPlan plan = makeInterceptionPlan(
-      candidate, presentationAnchor, 0.0,
+  plannerContext_.routeStepPlan = makeInterceptionPlan(
+      plannerContext_.routeStepCandidate, plannerContext_.routeStepPresentationAnchor, 0.0,
       reachDuration, approachDuration, acquireDuration, retreatDuration);
   std::string invariantReason;
-  if(!validateInterceptionPlan(plan, &invariantReason, false))
+  if(!validateInterceptionPlan(plannerContext_.routeStepPlan, &invariantReason, false))
   {
-    candidate.failureReason = "predictive_static/" + invariantReason;
-    restorePlanningWorld();
-    return false;
+    return routeStepFail("predictive_static/" + invariantReason);
   }
 
   // -----------------------------------------------------------------------
@@ -6044,491 +6376,651 @@ bool HandoverInterceptionController::verifyPredictiveRouteCandidate(
   // Same frozen decision-state discipline as startNextPlanningCandidate():
   // this route's local rollout must not seed from a live robot().mbc() that
   // depends on how many other candidates/routes were already processed in
-  // this search. See resetGlobalTimePlanSearch().
-  rbd::MultiBodyConfig mbc = globalTimePlanFrozenRobotStateValid_
-      ? globalTimePlanFrozenRobotState_ : robot().mbc();
-  for(auto & a : mbc.alpha) { std::fill(a.begin(), a.end(), 0.0); }
-  for(auto & aD : mbc.alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
-  setPreviewGripperClosure(mbc, 0.0);
+  // this search. See resetGlobalTimePlanSearch(). The copied state is carried
+  // across work-unit suspensions and is never re-seeded on resume.
+  plannerContext_.routeStepMbc = planningSnapshot_.frozenRobotStateValid
+      ? planningSnapshot_.frozenRobotState : robot().mbc();
+  for(auto & a : plannerContext_.routeStepMbc.alpha) { std::fill(a.begin(), a.end(), 0.0); }
+  for(auto & aD : plannerContext_.routeStepMbc.alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
+  setPreviewGripperClosure(plannerContext_.routeStepMbc, 0.0);
 
-  PreviewResult reachResult;
-  reachResult.minClearance = std::numeric_limits<double>::infinity();
-  int reachIteration = 0;
-  const int reachSteps = std::max(1, static_cast<int>(std::ceil(
-      plan.reachDuration / previewDt_)));
-  const PredictiveReachPolicy & policy = predictiveReachPolicy_;
-  sva::PTransformd commandReference = plan.mouthAtReachStart;
-  double clearanceScale = 1.0;
-  bool transitPostureSaved = false;
+  plannerContext_.routeStepReachResult = PreviewResult();
+  plannerContext_.routeStepReachResult.minClearance = std::numeric_limits<double>::infinity();
+  plannerContext_.routeStepReachIteration = 0;
+  plannerContext_.routeStepReachIndex = 0;
+  plannerContext_.routeStepReachSteps = std::max(1, static_cast<int>(std::ceil(
+      plannerContext_.routeStepPlan.reachDuration / plannerConfig_.previewDt)));
+  plannerContext_.routeStepCommandReference = plannerContext_.routeStepPlan.mouthAtReachStart;
+  plannerContext_.routeStepClearanceScale = 1.0;
+  plannerContext_.routeStepTransitPostureSaved = false;
 
-  for(int k = 0; k < reachSteps; ++k)
+  plannerContext_.routeStepPhase = RouteStepPhase::Reach;
+  return RouteStepOutcome::Running;
+}
+
+// Bounded advance of the active route rollout. Each work unit is exactly one
+// complete iteration of the phase loop it belongs to, so a suspension never
+// splits an IK integration step, a swept clearance query or a closure sample.
+HandoverInterceptionController::RouteStepOutcome
+HandoverInterceptionController::stepPredictiveRouteCandidate(int workUnits)
+{
+  if(plannerContext_.routeStepPhase == RouteStepPhase::Idle)
   {
-    const double t = std::min(
-        plan.standoffTime, plan.reachStartTime + k * previewDt_);
-    const double tNext = std::min(
-        plan.standoffTime, t + previewDt_);
-    const MovingReference refNext = interceptionReferenceAt(
-        plan, tNext, previewDt_);
+    return RouteStepOutcome::Infeasible;
+  }
 
-    setPreviewGripperClosure(mbc, 0.0);
-    setVirtualObject(refNext.objectPose);
-    const sva::PTransformd currentMouth = previewMouthPose(mbc);
+  // Re-establish the temporary virtual world the suspended phase was running
+  // in. The reach phase is excluded because every reach iteration sets its own
+  // virtual object before the first world-dependent read, and
+  // interceptionReferenceAt() is a pure function of the frozen plan.
+  if(plannerContext_.routeStepPhase != RouteStepPhase::Reach)
+  {
+    routeStepSetVirtualObject(plannerContext_.routeStepPresentationAnchor);
+  }
 
-    HandoverSafetyReport currentReport;
-    if(!previewConfigurationSafe(mbc, currentMouth, false, currentReport))
+  const PredictiveReachPolicy & policy = plannerConfig_.predictiveReachPolicy;
+  const int budget = std::max(1, workUnits);
+  for(int unit = 0; unit < budget; ++unit)
+  {
+    if(plannerContext_.routeStepPhase == RouteStepPhase::Reach)
     {
-      candidate.failureReason = "predictive_static/reach_current/"
-                              + currentReport.sample + "/"
-                              + currentReport.obstacle;
-      candidate.predictiveReachClearance = currentReport.minClearance;
-      restorePlanningWorld();
-      return false;
+      if(plannerContext_.routeStepReachIndex < plannerContext_.routeStepReachSteps)
+      {
+        const int k = plannerContext_.routeStepReachIndex;
+        ++plannerContext_.routeStepReachIndex;
+
+        const double t = std::min(
+            plannerContext_.routeStepPlan.standoffTime,
+            plannerContext_.routeStepPlan.reachStartTime + k * plannerConfig_.previewDt);
+        const double tNext = std::min(
+            plannerContext_.routeStepPlan.standoffTime, t + plannerConfig_.previewDt);
+        const MovingReference refNext = interceptionReferenceAt(
+            plannerContext_.routeStepPlan, tNext, plannerConfig_.previewDt);
+
+        setPreviewGripperClosure(plannerContext_.routeStepMbc, 0.0);
+        routeStepSetVirtualObject(refNext.objectPose);
+        sva::PTransformd currentMouth;
+        if(!previewMouthPose(plannerContext_.routeStepMbc, currentMouth))
+        {
+          return routeStepFail(
+              "predictive_static/preview_kinematics_unavailable");
+        }
+
+        HandoverSafetyReport currentReport;
+        if(!previewConfigurationSafe(
+               plannerContext_.routeStepMbc, currentMouth, false, currentReport))
+        {
+          plannerContext_.routeStepCandidate.predictiveReachClearance =
+              currentReport.minClearance;
+          return routeStepFail("predictive_static/reach_current/"
+                               + currentReport.sample + "/"
+                               + currentReport.obstacle);
+        }
+        plannerContext_.routeStepReachResult.minClearance = std::min(
+            plannerContext_.routeStepReachResult.minClearance, currentReport.minClearance);
+        if(currentReport.minClearance < policy.minimumRuntimeClearance)
+        {
+          plannerContext_.routeStepCandidate.predictiveReachClearance =
+              currentReport.minClearance;
+          return routeStepFail(
+              "predictive_static/runtime_clearance_reserve");
+        }
+
+        double rawClearanceScale = 1.0;
+        if(currentReport.minClearance < policy.clearanceSlowdownStart)
+        {
+          const double denominator = std::max(
+              1e-6, policy.clearanceSlowdownStart - policy.clearanceHardMargin);
+          const double u = std::min(1.0, std::max(0.0,
+              (currentReport.minClearance - policy.clearanceHardMargin)
+                  / denominator));
+          const double smooth = u * u * (3.0 - 2.0 * u);
+          rawClearanceScale = policy.minimumVelocityScale
+              + (1.0 - policy.minimumVelocityScale) * smooth;
+        }
+        const double scaleRate = rawClearanceScale < plannerContext_.routeStepClearanceScale
+            ? policy.clearanceScaleDropRate : policy.clearanceScaleRiseRate;
+        const double maximumScaleChange = scaleRate * plannerConfig_.previewDt;
+        const double scaleError = rawClearanceScale - plannerContext_.routeStepClearanceScale;
+        plannerContext_.routeStepClearanceScale += std::max(
+            -maximumScaleChange, std::min(maximumScaleChange, scaleError));
+        plannerContext_.routeStepClearanceScale = std::min(1.0, std::max(
+            policy.minimumVelocityScale, plannerContext_.routeStepClearanceScale));
+
+        const double linearSpeedLimit = policy.nearLinearSpeed
+            + plannerContext_.routeStepClearanceScale
+                * (policy.farLinearSpeed - policy.nearLinearSpeed);
+        const double angularSpeedLimit = policy.nearAngularSpeed
+            + plannerContext_.routeStepClearanceScale
+                * (policy.farAngularSpeed - policy.nearAngularSpeed);
+        const double linearLeadLimit = policy.nearLinearTrackingLead
+            + plannerContext_.routeStepClearanceScale
+                * (policy.maxLinearTrackingLead
+                   - policy.nearLinearTrackingLead);
+        const double angularLeadLimit = policy.nearAngularTrackingLead
+            + plannerContext_.routeStepClearanceScale
+                * (policy.maxAngularTrackingLead
+                   - policy.nearAngularTrackingLead);
+
+        const sva::PTransformd rateLimitedReference = boundedPoseStep(
+            plannerContext_.routeStepCommandReference, refNext.mouthPose,
+            linearSpeedLimit * plannerConfig_.previewDt, angularSpeedLimit * plannerConfig_.previewDt);
+        const sva::PTransformd nextCommand = boundedPoseStep(
+            currentMouth, rateLimitedReference,
+            linearLeadLimit, angularLeadLimit);
+
+        HandoverSafetyReport sweptReport;
+        if(!sweptGripperPoseSafeWith(
+               currentMouth, nextCommand,
+               planningSnapshot_.mouthToBaseTransform, plannerContext_.W_T_O,
+               plannerContext_.W_T_H, sweptReport, false))
+        {
+          plannerContext_.routeStepCandidate.predictiveReachClearance =
+              sweptReport.minClearance;
+          return routeStepFail("predictive_static/reach_command/"
+                               + sweptReport.sample + "/"
+                               + sweptReport.obstacle);
+        }
+        plannerContext_.routeStepReachResult.minClearance = std::min(
+            plannerContext_.routeStepReachResult.minClearance, sweptReport.minClearance);
+
+        Eigen::Vector3d ffLinear = Eigen::Vector3d::Zero();
+        Eigen::Vector3d ffAngular = Eigen::Vector3d::Zero();
+        sva::PTransformd baseCommandNow;
+        sva::PTransformd baseCommandNext;
+        if(!previewBasePoseFromMouthPose(
+               plannerContext_.routeStepCommandReference, plannerContext_.routeStepMbc, baseCommandNow)
+           || !previewBasePoseFromMouthPose(
+               nextCommand, plannerContext_.routeStepMbc, baseCommandNext))
+        {
+          return routeStepFail(
+              "predictive_static/preview_kinematics_unavailable");
+        }
+        worldPoseTwist(baseCommandNow, baseCommandNext, plannerConfig_.previewDt,
+                       ffLinear, ffAngular);
+
+        const PreviewStepStatus status = previewReachStep(
+            plannerContext_.routeStepMbc, nextCommand, false, false, plannerContext_.routeStepReachIteration,
+            plannerContext_.routeStepReachResult, ffLinear, ffAngular, false,
+            &plannerContext_.routeStepCandidate.plannedStandoffArmPosture, true);
+        if(status == PreviewStepStatus::Failed)
+        {
+          plannerContext_.routeStepCandidate.predictiveReachClearance =
+              plannerContext_.routeStepReachResult.minClearance;
+          return routeStepFail("predictive_static/reach/"
+                               + plannerContext_.routeStepReachResult.reason);
+        }
+        plannerContext_.routeStepCommandReference = nextCommand;
+
+        if(!plannerContext_.routeStepTransitPostureSaved && refNext.phaseProgress >= 0.5)
+        {
+          plannerContext_.routeStepCandidate.plannedTransitArmPosture =
+              armPostureFromMbc(plannerContext_.routeStepMbc);
+          plannerContext_.routeStepTransitPostureSaved = true;
+        }
+        continue;
+      }
+
+      // Reach loop complete: original post-rollout arithmetic, in order.
+      plannerContext_.routeStepCandidate.predictiveReachClearance =
+          plannerContext_.routeStepReachResult.minClearance;
+      if(!std::isfinite(plannerContext_.routeStepReachResult.minClearance)
+         || plannerContext_.routeStepReachResult.minClearance
+                < plannerConfig_.transitMinimumPredictedClearance)
+      {
+        plannerContext_.routeStepCandidate.minClearance = std::min(
+            plannerContext_.routeStepCandidate.minClearance,
+            plannerContext_.routeStepReachResult.minClearance);
+        return routeStepFail(
+            "predictive_static/robust_transit_clearance_reserve");
+      }
+
+      routeStepSetVirtualObject(plannerContext_.routeStepPresentationAnchor);
+      setPreviewGripperClosure(plannerContext_.routeStepMbc, 0.0);
+      sva::PTransformd reachedStandoff;
+      if(!previewMouthPose(plannerContext_.routeStepMbc, reachedStandoff))
+      {
+        return routeStepFail(
+            "predictive_static/preview_kinematics_unavailable");
+      }
+      plannerContext_.routeStepReachPositionError = (
+          plannerContext_.routeStepCandidate.W_T_M_standoff.translation()
+          - reachedStandoff.translation()).norm();
+      plannerContext_.routeStepReachOrientationError = orientationError(
+          reachedStandoff, plannerContext_.routeStepCandidate.W_T_M_standoff);
+      if(plannerContext_.routeStepReachPositionError > policy.positionTolerance
+         || plannerContext_.routeStepReachOrientationError > policy.orientationTolerance)
+      {
+        plannerContext_.routeStepCandidate.minClearance = std::min(
+            plannerContext_.routeStepCandidate.minClearance,
+            plannerContext_.routeStepReachResult.minClearance);
+        return routeStepFail("predictive_static/reach_tracking");
+      }
+      if(!plannerContext_.routeStepTransitPostureSaved)
+      {
+        plannerContext_.routeStepCandidate.plannedTransitArmPosture =
+            armPostureFromMbc(plannerContext_.routeStepMbc);
+      }
+      plannerContext_.routeStepCandidate.plannedStandoffArmPosture =
+          armPostureFromMbc(plannerContext_.routeStepMbc);
+      plannerContext_.routeStepTimingAuditStartMbc = plannerContext_.routeStepMbc;
+
+      // ---------------------------------------------------------------------
+      // 2) Exact proven static terminal controller from the reached standoff:
+      //    open insertion -> full closure -> bilateral contact -> retreat.
+      // ---------------------------------------------------------------------
+      plannerContext_.routeStepTerminalResult = PreviewResult();
+      plannerContext_.routeStepTerminalResult.minClearance =
+          std::numeric_limits<double>::infinity();
+      plannerContext_.routeStepPhaseStart = plannerContext_.routeStepTerminalResult.duration;
+      plannerContext_.routeStepSegmentIteration = 0;
+      plannerContext_.routeStepPhase = RouteStepPhase::Approach;
+      continue;
     }
-    reachResult.minClearance = std::min(
-        reachResult.minClearance, currentReport.minClearance);
-    if(currentReport.minClearance < policy.minimumRuntimeClearance)
+
+    if(plannerContext_.routeStepPhase == RouteStepPhase::Approach)
     {
-      candidate.failureReason = "predictive_static/runtime_clearance_reserve";
-      candidate.predictiveReachClearance = currentReport.minClearance;
-      restorePlanningWorld();
-      return false;
+      // One iteration of the previewReachSegment() loop, same arguments.
+      const PreviewStepStatus status = previewReachStep(
+          plannerContext_.routeStepMbc, plannerContext_.routeStepCandidate.W_T_M_pre, true, false,
+          plannerContext_.routeStepSegmentIteration, plannerContext_.routeStepTerminalResult,
+          Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), true, nullptr,
+          true);
+      if(status == PreviewStepStatus::Running) { continue; }
+      if(status == PreviewStepStatus::Failed)
+      {
+        plannerContext_.routeStepCandidate.minClearance = std::min(
+            plannerContext_.routeStepCandidate.minClearance,
+            std::min(plannerContext_.routeStepReachResult.minClearance,
+                     plannerContext_.routeStepTerminalResult.minClearance));
+        return routeStepFail("predictive_static/static_approach/"
+                             + plannerContext_.routeStepTerminalResult.reason);
+      }
+      plannerContext_.routeStepTerminalResult.reachCaptureDuration =
+          plannerContext_.routeStepTerminalResult.duration - plannerContext_.routeStepPhaseStart;
+
+      if(plannerContext_.routeStepCandidate.name == "axisP_side_337deg"
+         && plannerContext_.routeStepCandidate.transitRouteName == "direct")
+      {
+        sva::PTransformd previewCapturePose;
+        if(!previewMouthPose(plannerContext_.routeStepMbc, previewCapturePose))
+        {
+          return routeStepFail(
+              "predictive_static/preview_kinematics_unavailable");
+        }
+        const double positionError =
+            (plannerContext_.routeStepCandidate.W_T_M_pre.translation()
+             - previewCapturePose.translation()).norm();
+        const double rotationError = orientationError(
+            previewCapturePose, plannerContext_.routeStepCandidate.W_T_M_pre);
+        HandoverSafetyReport configurationReport;
+        const bool configurationSafe = previewConfigurationSafe(
+            plannerContext_.routeStepMbc, previewCapturePose, true, configurationReport);
+        HandoverSafetyReport closureReport;
+        const bool closureSafe = previewDynamicClosureSafety(
+            plannerContext_.routeStepMbc, closureReport);
+        const bool positionReady = positionError <= plannerConfig_.previewPositionTolerance;
+        const bool orientationReady =
+            rotationError <= plannerConfig_.previewOrientationTolerance;
+        const bool centeringReady = closureSafe
+            && closureReport.padCenteringError <= plannerConfig_.padCenteringTolerance;
+        const bool entryReady = closureReport.corridorEntryClearance >= -1e-9;
+        const bool palmReady = closureReport.corridorPalmClearance >= -1e-9;
+        const bool axialReady = closureReport.corridorAxialClearance >= -1e-9;
+        const bool axisReady = closureReport.corridorAngleClearance >= -1e-9;
+
+        if(plannerEvidenceLogging_)
+        {
+          mc_rtc::log::info(
+              "[R1TerminalGateAudit] source=preview candidate={} route={} positionReady={} orientationReady={} configurationSafe={} closureSafe={} centeringReady={} entryReady={} palmReady={} axialReady={} axisReady={} staticVelocityReady=true dwellRequested={:.3f}s posErr={:.4f}/{:.4f} oriErr={:.4f}/{:.4f} centerErr={:.4f}/{:.4f} corridor=[entry:{:.4f},palm:{:.4f},axial:{:.4f},axis:{:.4f}] configClear={:.4f} configLimiting={}/{} closureClear={:.4f} closureLimiting={}/{}",
+              plannerContext_.routeStepCandidate.name, plannerContext_.routeStepCandidate.transitRouteName,
+              positionReady, orientationReady, configurationSafe, closureSafe,
+              centeringReady, entryReady, palmReady, axialReady, axisReady,
+              plannerConfig_.timingTerminalCaptureDwell, positionError,
+              plannerConfig_.previewPositionTolerance, rotationError,
+              plannerConfig_.previewOrientationTolerance,
+              closureReport.padCenteringError, plannerConfig_.padCenteringTolerance,
+              closureReport.corridorEntryClearance,
+              closureReport.corridorPalmClearance,
+              closureReport.corridorAxialClearance,
+              closureReport.corridorAngleClearance,
+              configurationReport.minClearance, configurationReport.sample,
+              configurationReport.obstacle, closureReport.minClearance,
+              closureReport.sample, closureReport.obstacle);
+        }
+      }
+
+      // previewTerminalCaptureDwell() prologue: step count and the single
+      // pre-loop gripper closure reset.
+      plannerContext_.routeStepDwellSteps = std::max(0, static_cast<int>(std::ceil(
+          std::max(0.0, plannerConfig_.timingTerminalCaptureDwell)
+              / std::max(1e-9, plannerConfig_.previewDt))));
+      setPreviewGripperClosure(plannerContext_.routeStepMbc, 0.0);
+      plannerContext_.routeStepDwellIndex = 0;
+      plannerContext_.routeStepPhase = RouteStepPhase::Dwell;
+      continue;
     }
 
-    double rawClearanceScale = 1.0;
-    if(currentReport.minClearance < policy.clearanceSlowdownStart)
+    if(plannerContext_.routeStepPhase == RouteStepPhase::Dwell)
     {
-      const double denominator = std::max(
-          1e-6, policy.clearanceSlowdownStart - policy.clearanceHardMargin);
-      const double u = std::min(1.0, std::max(0.0,
-          (currentReport.minClearance - policy.clearanceHardMargin)
-              / denominator));
-      const double smooth = u * u * (3.0 - 2.0 * u);
-      rawClearanceScale = policy.minimumVelocityScale
-          + (1.0 - policy.minimumVelocityScale) * smooth;
+      if(plannerContext_.routeStepDwellIndex < plannerContext_.routeStepDwellSteps)
+      {
+        ++plannerContext_.routeStepDwellIndex;
+        if(!previewTerminalCaptureDwellStep(
+               plannerContext_.routeStepMbc, plannerContext_.routeStepTerminalResult))
+        {
+          plannerContext_.routeStepCandidate.minClearance = std::min(
+              plannerContext_.routeStepCandidate.minClearance,
+              std::min(plannerContext_.routeStepReachResult.minClearance,
+                       plannerContext_.routeStepTerminalResult.minClearance));
+          return routeStepFail("predictive_static/terminal_velocity_gate/"
+                               + plannerContext_.routeStepTerminalResult.reason);
+        }
+        continue;
+      }
+      plannerContext_.routeStepPhaseStart = plannerContext_.routeStepTerminalResult.duration;
+      plannerContext_.routeStepCandidate.plannedArmPosture =
+          armPostureFromMbc(plannerContext_.routeStepMbc);
+      plannerContext_.routeStepClosureIndex = 0;
+      plannerContext_.routeStepPhase = RouteStepPhase::Closure;
+      continue;
     }
-    const double scaleRate = rawClearanceScale < clearanceScale
-        ? policy.clearanceScaleDropRate : policy.clearanceScaleRiseRate;
-    const double maximumScaleChange = scaleRate * previewDt_;
-    const double scaleError = rawClearanceScale - clearanceScale;
-    clearanceScale += std::max(
-        -maximumScaleChange, std::min(maximumScaleChange, scaleError));
-    clearanceScale = std::min(1.0, std::max(
-        policy.minimumVelocityScale, clearanceScale));
 
-    const double linearSpeedLimit = policy.nearLinearSpeed
-        + clearanceScale * (policy.farLinearSpeed - policy.nearLinearSpeed);
-    const double angularSpeedLimit = policy.nearAngularSpeed
-        + clearanceScale * (policy.farAngularSpeed - policy.nearAngularSpeed);
-    const double linearLeadLimit = policy.nearLinearTrackingLead
-        + clearanceScale
-            * (policy.maxLinearTrackingLead - policy.nearLinearTrackingLead);
-    const double angularLeadLimit = policy.nearAngularTrackingLead
-        + clearanceScale
-            * (policy.maxAngularTrackingLead - policy.nearAngularTrackingLead);
-
-    const sva::PTransformd rateLimitedReference = boundedPoseStep(
-        commandReference, refNext.mouthPose,
-        linearSpeedLimit * previewDt_, angularSpeedLimit * previewDt_);
-    const sva::PTransformd nextCommand = boundedPoseStep(
-        currentMouth, rateLimitedReference,
-        linearLeadLimit, angularLeadLimit);
-
-    HandoverSafetyReport sweptReport;
-    if(!sweptGripperPoseSafe(
-           currentMouth, nextCommand, sweptReport, false))
+    if(plannerContext_.routeStepPhase == RouteStepPhase::Closure)
     {
-      candidate.failureReason = "predictive_static/reach_command/"
-                              + sweptReport.sample + "/"
-                              + sweptReport.obstacle;
-      candidate.predictiveReachClearance = sweptReport.minClearance;
-      restorePlanningWorld();
-      return false;
+      // One iteration of the previewClosureSweep() loop, same arguments.
+      const PreviewStepStatus status = previewClosureStep(
+          plannerContext_.routeStepMbc, plannerContext_.routeStepClosureIndex, plannerContext_.routeStepTerminalResult);
+      if(status == PreviewStepStatus::Running) { continue; }
+      if(status == PreviewStepStatus::Failed)
+      {
+        plannerContext_.routeStepCandidate.minClearance = std::min(
+            plannerContext_.routeStepCandidate.minClearance,
+            std::min(plannerContext_.routeStepReachResult.minClearance,
+                     plannerContext_.routeStepTerminalResult.minClearance));
+        return routeStepFail("predictive_static/static_acquire/"
+                             + plannerContext_.routeStepTerminalResult.reason);
+      }
+      plannerContext_.routeStepTerminalResult.closureDuration =
+          plannerContext_.routeStepTerminalResult.duration - plannerContext_.routeStepPhaseStart;
+      plannerContext_.routeStepCandidate.contactClosure =
+          plannerContext_.routeStepTerminalResult.contactClosure;
+
+      sva::PTransformd closureMouth;
+      if(!previewMouthPose(plannerContext_.routeStepMbc, closureMouth))
+      {
+        return routeStepFail(
+            "predictive_static/preview_kinematics_unavailable");
+      }
+      plannerContext_.routeStepRetreatAttachment = relativePose(
+          closureMouth, plannerContext_.routeStepPresentationAnchor);
+      plannerContext_.routeStepRetreatResult = PreviewResult();
+      plannerContext_.routeStepRetreatResult.minClearance =
+          std::numeric_limits<double>::infinity();
+      plannerContext_.routeStepRetreatIteration = 0;
+      plannerContext_.routeStepPhase = RouteStepPhase::Retreat;
+      continue;
     }
-    reachResult.minClearance = std::min(
-        reachResult.minClearance, sweptReport.minClearance);
 
-    Eigen::Vector3d ffLinear = Eigen::Vector3d::Zero();
-    Eigen::Vector3d ffAngular = Eigen::Vector3d::Zero();
-    const sva::PTransformd baseCommandNow = previewBasePoseFromMouthPose(
-        commandReference, mbc);
-    const sva::PTransformd baseCommandNext = previewBasePoseFromMouthPose(
-        nextCommand, mbc);
-    worldPoseTwist(baseCommandNow, baseCommandNext, previewDt_,
-                   ffLinear, ffAngular);
-
-    const PreviewStepStatus status = previewReachStep(
-        mbc, nextCommand, false, false, reachIteration, reachResult,
-        ffLinear, ffAngular, false,
-        &candidate.plannedStandoffArmPosture, true);
-    if(status == PreviewStepStatus::Failed)
+    if(plannerContext_.routeStepPhase == RouteStepPhase::Retreat)
     {
-      candidate.failureReason = "predictive_static/reach/"
-                              + reachResult.reason;
-      candidate.predictiveReachClearance = reachResult.minClearance;
-      restorePlanningWorld();
-      return false;
-    }
-    commandReference = nextCommand;
+      // One iteration of the retreat while-loop, same arguments. The planning
+      // attachment is saved and restored inside the iteration exactly as in
+      // the original loop body.
+      const sva::PTransformd oldPlanning = plannerContext_.planningM_T_O;
+      plannerContext_.planningM_T_O = plannerContext_.routeStepRetreatAttachment;
+      const PreviewStepStatus status = previewReachStep(
+          plannerContext_.routeStepMbc, plannerContext_.routeStepCandidate.W_T_M_retreat, false, true,
+          plannerContext_.routeStepRetreatIteration, plannerContext_.routeStepRetreatResult,
+          Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), true, nullptr,
+          true);
+      plannerContext_.planningM_T_O = oldPlanning;
+      if(status == PreviewStepStatus::Running) { continue; }
+      if(status == PreviewStepStatus::Failed)
+      {
+        plannerContext_.routeStepCandidate.minClearance = std::min(
+            plannerContext_.routeStepCandidate.minClearance,
+            std::min(plannerContext_.routeStepReachResult.minClearance,
+                     std::min(plannerContext_.routeStepTerminalResult.minClearance,
+                              plannerContext_.routeStepRetreatResult.minClearance)));
+        return routeStepFail("predictive_static/static_retreat/"
+                             + plannerContext_.routeStepRetreatResult.reason);
+      }
+      plannerContext_.routeStepCandidate.predictiveRetreatClearance =
+          plannerContext_.routeStepRetreatResult.minClearance;
+      plannerContext_.routeStepCandidate.plannedRetreatArmPosture =
+          armPostureFromMbc(plannerContext_.routeStepMbc);
 
-    if(!transitPostureSaved && refNext.phaseProgress >= 0.5)
+      const double anchorTranslationError = (
+          plannerContext_.routeStepPresentationAnchor.translation()
+          - plannerContext_.routeStepPlan.objectAtPresentation.translation()).norm();
+      const double anchorRotationError = orientationError(
+          plannerContext_.routeStepPresentationAnchor, plannerContext_.routeStepPlan.objectAtPresentation);
+      if(anchorTranslationError > 1e-12 || anchorRotationError > 1e-12)
+      {
+        return routeStepFail(
+            "predictive_static/presentation_anchor_mutated");
+      }
+      plannerContext_.routeStepPhase = RouteStepPhase::Finalize;
+      continue;
+    }
+
+    if(plannerContext_.routeStepPhase == RouteStepPhase::Finalize)
     {
-      candidate.plannedTransitArmPosture = armPostureFromMbc(mbc);
-      transitPostureSaved = true;
+      return finalizePredictiveRouteCandidate();
     }
   }
 
-  candidate.predictiveReachClearance = reachResult.minClearance;
-  if(!std::isfinite(reachResult.minClearance)
-     || reachResult.minClearance < transitMinimumPredictedClearance_)
-  {
-    candidate.failureReason =
-        "predictive_static/robust_transit_clearance_reserve";
-    candidate.minClearance = std::min(
-        candidate.minClearance, reachResult.minClearance);
-    restorePlanningWorld();
-    return false;
-  }
+  routeStepRestorePlanningWorld();
+  return RouteStepOutcome::Running;
+}
 
-  setVirtualObject(presentationAnchor);
-  setPreviewGripperClosure(mbc, 0.0);
-  const sva::PTransformd reachedStandoff = previewMouthPose(mbc);
-  const double reachPositionError = (
-      candidate.W_T_M_standoff.translation()
-      - reachedStandoff.translation()).norm();
-  const double reachOrientationError = orientationError(
-      reachedStandoff, candidate.W_T_M_standoff);
-  if(reachPositionError > policy.positionTolerance
-     || reachOrientationError > policy.orientationTolerance)
-  {
-    candidate.failureReason = "predictive_static/reach_tracking";
-    candidate.minClearance = std::min(
-        candidate.minClearance, reachResult.minClearance);
-    restorePlanningWorld();
-    return false;
-  }
-  if(!transitPostureSaved)
-  {
-    candidate.plannedTransitArmPosture = armPostureFromMbc(mbc);
-  }
-  candidate.plannedStandoffArmPosture = armPostureFromMbc(mbc);
-  const rbd::MultiBodyConfig timingAuditStartMbc = mbc;
-
-  // -----------------------------------------------------------------------
-  // 2) Exact proven static terminal controller from the reached standoff:
-  //    open insertion -> full closure -> bilateral contact -> retreat.
-  // -----------------------------------------------------------------------
-  PreviewResult terminalResult;
-  terminalResult.minClearance = std::numeric_limits<double>::infinity();
-  double phaseStart = terminalResult.duration;
-
-  if(!previewReachSegment(
-         mbc, candidate.W_T_M_pre, true, false, terminalResult, true))
-  {
-    candidate.failureReason = "predictive_static/static_approach/"
-                            + terminalResult.reason;
-    candidate.minClearance = std::min(
-        candidate.minClearance,
-        std::min(reachResult.minClearance,
-                 terminalResult.minClearance));
-    restorePlanningWorld();
-    return false;
-  }
-  terminalResult.reachCaptureDuration = terminalResult.duration - phaseStart;
-
-  if(candidate.name == "axisP_side_337deg"
-     && candidate.transitRouteName == "direct")
-  {
-    const sva::PTransformd previewCapturePose = previewMouthPose(mbc);
-    const double positionError = (candidate.W_T_M_pre.translation()
-        - previewCapturePose.translation()).norm();
-    const double rotationError = orientationError(
-        previewCapturePose, candidate.W_T_M_pre);
-    HandoverSafetyReport configurationReport;
-    const bool configurationSafe = previewConfigurationSafe(
-        mbc, previewCapturePose, true, configurationReport);
-    HandoverSafetyReport closureReport;
-    const bool closureSafe = previewDynamicClosureSafety(mbc, closureReport);
-    const bool positionReady = positionError <= previewPositionTolerance_;
-    const bool orientationReady = rotationError <= previewOrientationTolerance_;
-    const bool centeringReady = closureSafe
-        && closureReport.padCenteringError <= padCenteringTolerance_;
-    const bool entryReady = closureReport.corridorEntryClearance >= -1e-9;
-    const bool palmReady = closureReport.corridorPalmClearance >= -1e-9;
-    const bool axialReady = closureReport.corridorAxialClearance >= -1e-9;
-    const bool axisReady = closureReport.corridorAngleClearance >= -1e-9;
-
-    mc_rtc::log::info(
-        "[R1TerminalGateAudit] source=preview candidate={} route={} positionReady={} orientationReady={} configurationSafe={} closureSafe={} centeringReady={} entryReady={} palmReady={} axialReady={} axisReady={} staticVelocityReady=true dwellRequested={:.3f}s posErr={:.4f}/{:.4f} oriErr={:.4f}/{:.4f} centerErr={:.4f}/{:.4f} corridor=[entry:{:.4f},palm:{:.4f},axial:{:.4f},axis:{:.4f}] configClear={:.4f} configLimiting={}/{} closureClear={:.4f} closureLimiting={}/{}",
-        candidate.name, candidate.transitRouteName, positionReady,
-        orientationReady, configurationSafe, closureSafe, centeringReady,
-        entryReady, palmReady, axialReady, axisReady,
-        timingTerminalCaptureDwell_, positionError, previewPositionTolerance_,
-        rotationError, previewOrientationTolerance_,
-        closureReport.padCenteringError, padCenteringTolerance_,
-        closureReport.corridorEntryClearance,
-        closureReport.corridorPalmClearance,
-        closureReport.corridorAxialClearance,
-        closureReport.corridorAngleClearance,
-        configurationReport.minClearance, configurationReport.sample,
-        configurationReport.obstacle, closureReport.minClearance,
-        closureReport.sample, closureReport.obstacle);
-  }
-
-  if(!previewTerminalCaptureDwell(
-         mbc, timingTerminalCaptureDwell_, terminalResult))
-  {
-    candidate.failureReason = "predictive_static/terminal_velocity_gate/"
-                            + terminalResult.reason;
-    candidate.minClearance = std::min(
-        candidate.minClearance,
-        std::min(reachResult.minClearance, terminalResult.minClearance));
-    restorePlanningWorld();
-    return false;
-  }
-  phaseStart = terminalResult.duration;
-  candidate.plannedArmPosture = armPostureFromMbc(mbc);
-
-  if(!previewClosureSweep(mbc, terminalResult))
-  {
-    candidate.failureReason = "predictive_static/static_acquire/"
-                            + terminalResult.reason;
-    candidate.minClearance = std::min(
-        candidate.minClearance,
-        std::min(reachResult.minClearance,
-                 terminalResult.minClearance));
-    restorePlanningWorld();
-    return false;
-  }
-  terminalResult.closureDuration = terminalResult.duration - phaseStart;
-  candidate.contactClosure = terminalResult.contactClosure;
-
-  const sva::PTransformd M_T_O = relativePose(
-      previewMouthPose(mbc), presentationAnchor);
-  PreviewResult retreatResult;
-  retreatResult.minClearance = std::numeric_limits<double>::infinity();
-  int retreatIteration = 0;
-  while(true)
-  {
-    const sva::PTransformd oldPlanning = planningM_T_O_;
-    planningM_T_O_ = M_T_O;
-    const PreviewStepStatus status = previewReachStep(
-        mbc, candidate.W_T_M_retreat, false, true,
-        retreatIteration, retreatResult, Eigen::Vector3d::Zero(),
-        Eigen::Vector3d::Zero(), true, nullptr, true);
-    planningM_T_O_ = oldPlanning;
-    if(status == PreviewStepStatus::Succeeded) { break; }
-    if(status == PreviewStepStatus::Failed)
-    {
-      candidate.failureReason = "predictive_static/static_retreat/"
-                              + retreatResult.reason;
-      candidate.minClearance = std::min(
-          candidate.minClearance,
-          std::min(reachResult.minClearance,
-                   std::min(terminalResult.minClearance,
-                            retreatResult.minClearance)));
-      restorePlanningWorld();
-      return false;
-    }
-  }
-  candidate.predictiveRetreatClearance = retreatResult.minClearance;
-  candidate.plannedRetreatArmPosture = armPostureFromMbc(mbc);
-
-  const double anchorTranslationError = (
-      presentationAnchor.translation()
-      - plan.objectAtPresentation.translation()).norm();
-  const double anchorRotationError = orientationError(
-      presentationAnchor, plan.objectAtPresentation);
-  if(anchorTranslationError > 1e-12 || anchorRotationError > 1e-12)
-  {
-    candidate.failureReason = "predictive_static/presentation_anchor_mutated";
-    restorePlanningWorld();
-    return false;
-  }
-
-  candidate.previewFeasible = true;
-  candidate.failureReason = "feasible_predictive_static_handover";
-  candidate.minClearance = std::min(
-      candidate.minClearance,
-      std::min(reachResult.minClearance,
-               std::min(terminalResult.minClearance,
-                        retreatResult.minClearance)));
-  candidate.rawRolloutTime = reachResult.duration + terminalResult.duration
-                           + retreatResult.duration;
-  candidate.predictedReachTime = plan.reachDuration;
-  candidate.predictedPresentationTime = plan.reachDuration;
-  candidate.predictedApproachTime = timingTerminalCaptureDwell_
-      + timingArmScale_ * terminalResult.reachCaptureDuration;
-  candidate.predictedAcquireTime = timingPriorityBlend_ + timingCaptureLock_
-      + candidate.contactClosure
-          / std::max(1e-6, timingEffectiveGripperRate_);
-  candidate.predictedContactTime = candidate.predictedPresentationTime
-                                 + candidate.predictedApproachTime
-                                 + candidate.predictedAcquireTime;
-  const double predictedRetreat = timingArmScale_ * retreatResult.duration;
-  candidate.predictedArmTime = candidate.predictedReachTime
-                             + candidate.predictedApproachTime
+HandoverInterceptionController::RouteStepOutcome
+HandoverInterceptionController::finalizePredictiveRouteCandidate()
+{
+  plannerContext_.routeStepCandidate.previewFeasible = true;
+  plannerContext_.routeStepCandidate.failureReason = "feasible_predictive_static_handover";
+  plannerContext_.routeStepCandidate.minClearance = std::min(
+      plannerContext_.routeStepCandidate.minClearance,
+      std::min(plannerContext_.routeStepReachResult.minClearance,
+               std::min(plannerContext_.routeStepTerminalResult.minClearance,
+                        plannerContext_.routeStepRetreatResult.minClearance)));
+  plannerContext_.routeStepCandidate.rawRolloutTime = plannerContext_.routeStepReachResult.duration + plannerContext_.routeStepTerminalResult.duration
+                           + plannerContext_.routeStepRetreatResult.duration;
+  plannerContext_.routeStepCandidate.predictedReachTime = plannerContext_.routeStepPlan.reachDuration;
+  plannerContext_.routeStepCandidate.predictedPresentationTime = plannerContext_.routeStepPlan.reachDuration;
+  plannerContext_.routeStepCandidate.predictedApproachTime = plannerConfig_.timingTerminalCaptureDwell
+      + plannerConfig_.timingArmScale * plannerContext_.routeStepTerminalResult.reachCaptureDuration;
+  plannerContext_.routeStepCandidate.predictedAcquireTime = plannerConfig_.timingPriorityBlend + plannerConfig_.timingCaptureLock
+      + plannerContext_.routeStepCandidate.contactClosure
+          / std::max(1e-6, plannerConfig_.timingEffectiveGripperRate);
+  plannerContext_.routeStepCandidate.predictedContactTime = plannerContext_.routeStepCandidate.predictedPresentationTime
+                                 + plannerContext_.routeStepCandidate.predictedApproachTime
+                                 + plannerContext_.routeStepCandidate.predictedAcquireTime;
+  const double predictedRetreat = plannerConfig_.timingArmScale * plannerContext_.routeStepRetreatResult.duration;
+  plannerContext_.routeStepCandidate.predictedArmTime = plannerContext_.routeStepCandidate.predictedReachTime
+                             + plannerContext_.routeStepCandidate.predictedApproachTime
                              + predictedRetreat;
-  candidate.predictedClosureTime = candidate.contactClosure
+  plannerContext_.routeStepCandidate.predictedClosureTime = plannerContext_.routeStepCandidate.contactClosure
                                  / std::max(1e-6,
-                                            timingEffectiveGripperRate_);
-  candidate.predictedFixedTime = timingPriorityBlend_ + timingCaptureLock_
-                               + timingBilateralDwell_
-                               + timingConfirmationDwell_;
-  candidate.estimatedTime = candidate.predictedContactTime
-                          + timingBilateralDwell_
-                          + timingConfirmationDwell_
+                                            plannerConfig_.timingEffectiveGripperRate);
+  plannerContext_.routeStepCandidate.predictedFixedTime = plannerConfig_.timingPriorityBlend + plannerConfig_.timingCaptureLock
+                               + plannerConfig_.timingBilateralDwell
+                               + plannerConfig_.timingConfirmationDwell;
+  plannerContext_.routeStepCandidate.estimatedTime = plannerContext_.routeStepCandidate.predictedContactTime
+                          + plannerConfig_.timingBilateralDwell
+                          + plannerConfig_.timingConfirmationDwell
                           + predictedRetreat;
 
   // Preserve the protected R1 prediction used by the legacy selector before
   // the accepted copied terminal duration is bound into reporting/commit
   // fields. This prevents a timing-model improvement from silently changing
-  // the discrete candidate decision at this checkpoint.
-  candidate.legacyPredictedApproachTime = candidate.predictedApproachTime;
-  candidate.legacyPredictedContactTime = candidate.predictedContactTime;
-  candidate.legacyEstimatedTime = candidate.estimatedTime;
+  // the discrete plannerContext_.routeStepCandidate decision at this checkpoint.
+  plannerContext_.routeStepCandidate.legacyPredictedApproachTime = plannerContext_.routeStepCandidate.predictedApproachTime;
+  plannerContext_.routeStepCandidate.legacyPredictedContactTime = plannerContext_.routeStepCandidate.predictedContactTime;
+  plannerContext_.routeStepCandidate.legacyEstimatedTime = plannerContext_.routeStepCandidate.estimatedTime;
 
-  candidate.predictedEffort = reachResult.effort + terminalResult.effort
-                            + retreatResult.effort;
-  candidate.minimumJointMarginRatio = std::min(
-      reachResult.minimumJointMarginRatio,
-      std::min(terminalResult.minimumJointMarginRatio,
-               retreatResult.minimumJointMarginRatio));
-  candidate.minimumConditionIndex = std::min(
-      reachResult.minimumConditionIndex,
-      std::min(terminalResult.minimumConditionIndex,
-               retreatResult.minimumConditionIndex));
-  candidate.maximumJointVelocityUtilization = std::max(
-      reachResult.maximumJointVelocityUtilization,
-      std::max(terminalResult.maximumJointVelocityUtilization,
-               retreatResult.maximumJointVelocityUtilization));
+  plannerContext_.routeStepCandidate.predictedEffort = plannerContext_.routeStepReachResult.effort + plannerContext_.routeStepTerminalResult.effort
+                            + plannerContext_.routeStepRetreatResult.effort;
+  plannerContext_.routeStepCandidate.minimumJointMarginRatio = std::min(
+      plannerContext_.routeStepReachResult.minimumJointMarginRatio,
+      std::min(plannerContext_.routeStepTerminalResult.minimumJointMarginRatio,
+               plannerContext_.routeStepRetreatResult.minimumJointMarginRatio));
+  plannerContext_.routeStepCandidate.minimumConditionIndex = std::min(
+      plannerContext_.routeStepReachResult.minimumConditionIndex,
+      std::min(plannerContext_.routeStepTerminalResult.minimumConditionIndex,
+               plannerContext_.routeStepRetreatResult.minimumConditionIndex));
+  plannerContext_.routeStepCandidate.maximumJointVelocityUtilization = std::max(
+      plannerContext_.routeStepReachResult.maximumJointVelocityUtilization,
+      std::max(plannerContext_.routeStepTerminalResult.maximumJointVelocityUtilization,
+               plannerContext_.routeStepRetreatResult.maximumJointVelocityUtilization));
 
   // Run the validated copied terminal controller only after the complete
   // reach-insert-close-retreat route has already passed every hard check.
   // Its duration may update prediction fields, but never hard feasibility or
   // the protected R1 ranking at this checkpoint.
-  candidate.terminalTimingAuditRan = true;
-  const bool verboseTimingAudit = candidate.name == "axisP_side_337deg"
-      && candidate.transitRouteName == "direct";
-  candidate.terminalTimingAuditSuccess = previewVelocityGateParityShadow(
-      timingAuditStartMbc, candidate,
-      candidate.terminalTimingAuditDuration,
-      candidate.terminalTimingFinalPositionError,
-      candidate.terminalTimingFinalOrientationError,
-      candidate.terminalTimingFinalLinearSpeed,
-      candidate.terminalTimingFinalAngularSpeed,
-      candidate.terminalTimingFinalStableTime,
-      candidate.terminalTimingAuditReason, verboseTimingAudit);
-  candidate.terminalVelocityUtilization = std::max(
-      candidate.terminalTimingFinalLinearSpeed / 0.040,
-      candidate.terminalTimingFinalAngularSpeed / 0.080);
+  plannerContext_.routeStepCandidate.terminalTimingAuditRan = true;
+  const bool verboseTimingAudit = plannerContext_.routeStepCandidate.name == "axisP_side_337deg"
+      && plannerContext_.routeStepCandidate.transitRouteName == "direct";
+  plannerContext_.routeStepCandidate.terminalTimingAuditSuccess = previewVelocityGateParityShadow(
+      plannerContext_.routeStepTimingAuditStartMbc, plannerContext_.routeStepCandidate,
+      plannerContext_.routeStepCandidate.terminalTimingAuditDuration,
+      plannerContext_.routeStepCandidate.terminalTimingFinalPositionError,
+      plannerContext_.routeStepCandidate.terminalTimingFinalOrientationError,
+      plannerContext_.routeStepCandidate.terminalTimingFinalLinearSpeed,
+      plannerContext_.routeStepCandidate.terminalTimingFinalAngularSpeed,
+      plannerContext_.routeStepCandidate.terminalTimingFinalStableTime,
+      plannerContext_.routeStepCandidate.terminalTimingAuditReason, verboseTimingAudit);
+  plannerContext_.routeStepCandidate.terminalVelocityUtilization = std::max(
+      plannerContext_.routeStepCandidate.terminalTimingFinalLinearSpeed / 0.040,
+      plannerContext_.routeStepCandidate.terminalTimingFinalAngularSpeed / 0.080);
 
-  const double legacyApproach = candidate.legacyPredictedApproachTime;
-  const double legacyContact = candidate.legacyPredictedContactTime;
-  const double legacyExecution = candidate.legacyEstimatedTime;
-  if(candidate.terminalTimingAuditSuccess)
+  const double legacyApproach = plannerContext_.routeStepCandidate.legacyPredictedApproachTime;
+  const double legacyContact = plannerContext_.routeStepCandidate.legacyPredictedContactTime;
+  const double legacyExecution = plannerContext_.routeStepCandidate.legacyEstimatedTime;
+  if(plannerContext_.routeStepCandidate.terminalTimingAuditSuccess)
   {
-    candidate.terminalTimingPredictionBound = true;
-    candidate.predictedApproachTime = candidate.terminalTimingAuditDuration;
-    candidate.predictedContactTime = candidate.predictedPresentationTime
-        + candidate.predictedApproachTime
-        + candidate.predictedAcquireTime;
-    candidate.predictedArmTime = candidate.predictedReachTime
-        + candidate.predictedApproachTime + predictedRetreat;
-    candidate.estimatedTime = candidate.predictedContactTime
-        + timingBilateralDwell_ + timingConfirmationDwell_
+    plannerContext_.routeStepCandidate.terminalTimingPredictionBound = true;
+    plannerContext_.routeStepCandidate.predictedApproachTime = plannerContext_.routeStepCandidate.terminalTimingAuditDuration;
+    plannerContext_.routeStepCandidate.predictedContactTime = plannerContext_.routeStepCandidate.predictedPresentationTime
+        + plannerContext_.routeStepCandidate.predictedApproachTime
+        + plannerContext_.routeStepCandidate.predictedAcquireTime;
+    plannerContext_.routeStepCandidate.predictedArmTime = plannerContext_.routeStepCandidate.predictedReachTime
+        + plannerContext_.routeStepCandidate.predictedApproachTime + predictedRetreat;
+    plannerContext_.routeStepCandidate.estimatedTime = plannerContext_.routeStepCandidate.predictedContactTime
+        + plannerConfig_.timingBilateralDwell + plannerConfig_.timingConfirmationDwell
         + predictedRetreat;
 
     // Keep the audit mirrors for backward-compatible diagnostics. From this
     // checkpoint onward they equal the accepted bound prediction fields.
-    candidate.auditPredictedContactTime = candidate.predictedContactTime;
-    candidate.auditEstimatedTime = candidate.estimatedTime;
+    plannerContext_.routeStepCandidate.auditPredictedContactTime = plannerContext_.routeStepCandidate.predictedContactTime;
+    plannerContext_.routeStepCandidate.auditEstimatedTime = plannerContext_.routeStepCandidate.estimatedTime;
   }
 
-  mc_rtc::log::success(
-      "[MeasuredTerminalPredictionBinding] candidate={} route={} applied={} legacyApproach={:.3f}s measuredApproach={:.3f}s boundApproach={:.3f}s contactDelta={:+.3f}s executionDelta={:+.3f}s hardFeasibilityUnchanged=true protectedHeuristicInputUnchanged=true bindingCostInputUpdated={} stateSequenceUnchanged=true",
-      candidate.name, candidate.transitRouteName,
-      candidate.terminalTimingPredictionBound, legacyApproach,
-      candidate.terminalTimingAuditDuration,
-      candidate.predictedApproachTime,
-      candidate.predictedContactTime - legacyContact,
-      candidate.estimatedTime - legacyExecution,
-      completePlanSelectionMode_ == "binding_cost");
+  if(plannerEvidenceLogging_)
+  {
+    mc_rtc::log::success(
+        "[MeasuredTerminalPredictionBinding] candidate={} route={} applied={} legacyApproach={:.3f}s measuredApproach={:.3f}s boundApproach={:.3f}s contactDelta={:+.3f}s executionDelta={:+.3f}s hardFeasibilityUnchanged=true protectedHeuristicInputUnchanged=true bindingCostInputUpdated={} stateSequenceUnchanged=true",
+        plannerContext_.routeStepCandidate.name, plannerContext_.routeStepCandidate.transitRouteName,
+        plannerContext_.routeStepCandidate.terminalTimingPredictionBound, legacyApproach,
+        plannerContext_.routeStepCandidate.terminalTimingAuditDuration,
+        plannerContext_.routeStepCandidate.predictedApproachTime,
+        plannerContext_.routeStepCandidate.predictedContactTime - legacyContact,
+        plannerContext_.routeStepCandidate.estimatedTime - legacyExecution,
+        plannerConfig_.completePlanSelectionMode == "binding_cost");
+  }
 
-  computeCompletePlanAuditCost(candidate);
-  mc_rtc::log::success(
-      "[CompletePlanTimingAudit] candidate={} route={} success={} captureReadyDuration={:.3f}s legacyApproach={:.3f}s boundApproach={:.3f}s delta={:+.3f}s final=[dist:{:.4f},angle:{:.4f},v:{:.4f},w:{:.4f},stable:{:.3f}] reason={} completeRoute=true predictionBinding={} hardFeasibilityUnchanged=true selectionMode={} canAffectCommittedSelection={}",
-      candidate.name, candidate.transitRouteName,
-      candidate.terminalTimingAuditSuccess,
-      candidate.terminalTimingAuditDuration, legacyApproach,
-      candidate.predictedApproachTime,
-      candidate.terminalTimingAuditDuration - legacyApproach,
-      candidate.terminalTimingFinalPositionError,
-      candidate.terminalTimingFinalOrientationError,
-      candidate.terminalTimingFinalLinearSpeed,
-      candidate.terminalTimingFinalAngularSpeed,
-      candidate.terminalTimingFinalStableTime,
-      candidate.terminalTimingAuditReason,
-      candidate.terminalTimingPredictionBound,
-      completePlanSelectionMode_,
-      completePlanSelectionMode_ == "binding_cost");
-  mc_rtc::log::success(
-      "[CompletePlanCost] candidate={} route={} valid={} J={:.6f} weightsNormalized=true auditTime={:.3f}s effort={:.3f} path={:.3f}m rotation={:.3f} clearance=[reach:{:.4f},retreat:{:.4f}] jointMargin={:.4f} conditionIndex={:.4f} velocityUtil={:.4f} velocityLaw=rho4 finiteBoundary=true terms=[T:{:.4f},E:{:.4f},L:{:.4f},R:{:.4f},C:{:.4f},Q:{:.4f},K:{:.4f},V:{:.4f}] hardFeasibilityUnchanged=true selectionMode={} binding={}",
-      candidate.name, candidate.transitRouteName,
-      candidate.completeCostAuditValid, candidate.completeCostAudit,
-      candidate.auditEstimatedTime, candidate.predictedEffort,
-      candidate.transitPathLength, candidate.rotation,
-      candidate.predictiveReachClearance,
-      candidate.predictiveRetreatClearance,
-      candidate.minimumJointMarginRatio,
-      candidate.minimumConditionIndex,
-      std::max(candidate.maximumJointVelocityUtilization,
-               candidate.terminalVelocityUtilization),
-      candidate.costTime, candidate.costEffort, candidate.costPath,
-      candidate.costRotation, candidate.costClearance,
-      candidate.costJointMargin, candidate.costConditioning,
-      candidate.costVelocityReserve, completePlanSelectionMode_,
-      completePlanSelectionMode_ == "binding_cost");
+  computeCompletePlanAuditCost(plannerContext_.routeStepCandidate);
+  if(plannerEvidenceLogging_)
+  {
+    mc_rtc::log::success(
+        "[CompletePlanTimingAudit] candidate={} route={} success={} captureReadyDuration={:.3f}s legacyApproach={:.3f}s boundApproach={:.3f}s delta={:+.3f}s final=[dist:{:.4f},angle:{:.4f},v:{:.4f},w:{:.4f},stable:{:.3f}] reason={} completeRoute=true predictionBinding={} hardFeasibilityUnchanged=true selectionMode={} canAffectCommittedSelection={}",
+        plannerContext_.routeStepCandidate.name, plannerContext_.routeStepCandidate.transitRouteName,
+        plannerContext_.routeStepCandidate.terminalTimingAuditSuccess,
+        plannerContext_.routeStepCandidate.terminalTimingAuditDuration, legacyApproach,
+        plannerContext_.routeStepCandidate.predictedApproachTime,
+        plannerContext_.routeStepCandidate.terminalTimingAuditDuration - legacyApproach,
+        plannerContext_.routeStepCandidate.terminalTimingFinalPositionError,
+        plannerContext_.routeStepCandidate.terminalTimingFinalOrientationError,
+        plannerContext_.routeStepCandidate.terminalTimingFinalLinearSpeed,
+        plannerContext_.routeStepCandidate.terminalTimingFinalAngularSpeed,
+        plannerContext_.routeStepCandidate.terminalTimingFinalStableTime,
+        plannerContext_.routeStepCandidate.terminalTimingAuditReason,
+        plannerContext_.routeStepCandidate.terminalTimingPredictionBound,
+        plannerConfig_.completePlanSelectionMode,
+        plannerConfig_.completePlanSelectionMode == "binding_cost");
+  }
+  if(plannerEvidenceLogging_)
+  {
+    mc_rtc::log::success(
+        "[CompletePlanCost] candidate={} route={} valid={} J={:.6f} weightsNormalized=true auditTime={:.3f}s effort={:.3f} path={:.3f}m rotation={:.3f} clearance=[reach:{:.4f},retreat:{:.4f}] jointMargin={:.4f} conditionIndex={:.4f} velocityUtil={:.4f} velocityLaw=rho4 finiteBoundary=true terms=[T:{:.4f},E:{:.4f},L:{:.4f},R:{:.4f},C:{:.4f},Q:{:.4f},K:{:.4f},V:{:.4f}] hardFeasibilityUnchanged=true selectionMode={} binding={}",
+        plannerContext_.routeStepCandidate.name, plannerContext_.routeStepCandidate.transitRouteName,
+        plannerContext_.routeStepCandidate.completeCostAuditValid, plannerContext_.routeStepCandidate.completeCostAudit,
+        plannerContext_.routeStepCandidate.auditEstimatedTime, plannerContext_.routeStepCandidate.predictedEffort,
+        plannerContext_.routeStepCandidate.transitPathLength, plannerContext_.routeStepCandidate.rotation,
+        plannerContext_.routeStepCandidate.predictiveReachClearance,
+        plannerContext_.routeStepCandidate.predictiveRetreatClearance,
+        plannerContext_.routeStepCandidate.minimumJointMarginRatio,
+        plannerContext_.routeStepCandidate.minimumConditionIndex,
+        std::max(plannerContext_.routeStepCandidate.maximumJointVelocityUtilization,
+                 plannerContext_.routeStepCandidate.terminalVelocityUtilization),
+        plannerContext_.routeStepCandidate.costTime, plannerContext_.routeStepCandidate.costEffort, plannerContext_.routeStepCandidate.costPath,
+        plannerContext_.routeStepCandidate.costRotation, plannerContext_.routeStepCandidate.costClearance,
+        plannerContext_.routeStepCandidate.costJointMargin, plannerContext_.routeStepCandidate.costConditioning,
+        plannerContext_.routeStepCandidate.costVelocityReserve, plannerConfig_.completePlanSelectionMode,
+        plannerConfig_.completePlanSelectionMode == "binding_cost");
+  }
 
   if(verboseTimingAudit)
   {
-    mc_rtc::log::success(
-        "[VelocityGateTimingApproximationSummary] candidate={} route={} success={} duration={:.3f}s reason={} final=[dist:{:.4f},angle:{:.4f},v:{:.4f},w:{:.4f},stable:{:.3f}] runtimePolicyEquivalent=false hardFeasibilityUnchanged=true feedsBindingCost={}",
-        candidate.name, candidate.transitRouteName,
-        candidate.terminalTimingAuditSuccess,
-        candidate.terminalTimingAuditDuration,
-        candidate.terminalTimingAuditReason,
-        candidate.terminalTimingFinalPositionError,
-        candidate.terminalTimingFinalOrientationError,
-        candidate.terminalTimingFinalLinearSpeed,
-        candidate.terminalTimingFinalAngularSpeed,
-        candidate.terminalTimingFinalStableTime,
-        completePlanSelectionMode_ == "binding_cost");
-    mc_rtc::log::success(
-        "[VelocityGateTimingApproximationComparison] candidate={} route={} shadowSuccess={} shadowDuration={:.3f}s legacyDuration={:.3f}s delta={:+.3f}s runtimePolicyEquivalent=false",
-        candidate.name, candidate.transitRouteName,
-        candidate.terminalTimingAuditSuccess,
-        candidate.terminalTimingAuditDuration, legacyApproach,
-        candidate.terminalTimingAuditDuration - legacyApproach);
+    if(plannerEvidenceLogging_)
+    {
+      mc_rtc::log::success(
+          "[VelocityGateTimingApproximationSummary] candidate={} route={} success={} duration={:.3f}s reason={} final=[dist:{:.4f},angle:{:.4f},v:{:.4f},w:{:.4f},stable:{:.3f}] runtimePolicyEquivalent=false hardFeasibilityUnchanged=true feedsBindingCost={}",
+          plannerContext_.routeStepCandidate.name, plannerContext_.routeStepCandidate.transitRouteName,
+          plannerContext_.routeStepCandidate.terminalTimingAuditSuccess,
+          plannerContext_.routeStepCandidate.terminalTimingAuditDuration,
+          plannerContext_.routeStepCandidate.terminalTimingAuditReason,
+          plannerContext_.routeStepCandidate.terminalTimingFinalPositionError,
+          plannerContext_.routeStepCandidate.terminalTimingFinalOrientationError,
+          plannerContext_.routeStepCandidate.terminalTimingFinalLinearSpeed,
+          plannerContext_.routeStepCandidate.terminalTimingFinalAngularSpeed,
+          plannerContext_.routeStepCandidate.terminalTimingFinalStableTime,
+          plannerConfig_.completePlanSelectionMode == "binding_cost");
+    }
+    if(plannerEvidenceLogging_)
+    {
+      mc_rtc::log::success(
+          "[VelocityGateTimingApproximationComparison] candidate={} route={} shadowSuccess={} shadowDuration={:.3f}s legacyDuration={:.3f}s delta={:+.3f}s runtimePolicyEquivalent=false",
+          plannerContext_.routeStepCandidate.name, plannerContext_.routeStepCandidate.transitRouteName,
+          plannerContext_.routeStepCandidate.terminalTimingAuditSuccess,
+          plannerContext_.routeStepCandidate.terminalTimingAuditDuration, legacyApproach,
+          plannerContext_.routeStepCandidate.terminalTimingAuditDuration - legacyApproach);
+    }
   }
 
-  mc_rtc::log::success(
-      "[PredictiveStaticPreview] candidate={} route={} certified runtimePolicyApproximation=true runtimePolicyEquivalent=false movingReach=true openInsertion=true fullAcquire=true retreat=true reach={:.3f}s legacyApproach={:.3f}s approach={:.3f}s auditApproach={:.3f}s acquire={:.3f}s contactAfterPresentation={:.3f}s auditContactAfterPresentation={:.3f}s closure={:.3f} reachError=[{:.4f},{:.4f}] reachClear={:.4f} requiredReachClear={:.4f} retreatClear={:.4f} terminalClear={:.4f} overallClear={:.4f} J={:.6f}",
-      candidate.name, candidate.transitRouteName, candidate.predictedReachTime,
-      candidate.legacyPredictedApproachTime,
-      candidate.predictedApproachTime,
-      candidate.terminalTimingAuditDuration,
-      candidate.predictedAcquireTime,
-      candidate.predictedContactTime - candidate.predictedPresentationTime,
-      candidate.auditPredictedContactTime - candidate.predictedPresentationTime,
-      candidate.contactClosure, reachPositionError,
-      reachOrientationError, candidate.predictiveReachClearance,
-      transitMinimumPredictedClearance_,
-      candidate.predictiveRetreatClearance,
-      terminalResult.minClearance, candidate.minClearance,
-      candidate.completeCostAudit);
+  if(plannerEvidenceLogging_)
+  {
+    mc_rtc::log::success(
+        "[PredictiveStaticPreview] candidate={} route={} certified runtimePolicyApproximation=true runtimePolicyEquivalent=false movingReach=true openInsertion=true fullAcquire=true retreat=true reach={:.3f}s legacyApproach={:.3f}s approach={:.3f}s auditApproach={:.3f}s acquire={:.3f}s contactAfterPresentation={:.3f}s auditContactAfterPresentation={:.3f}s closure={:.3f} reachError=[{:.4f},{:.4f}] reachClear={:.4f} requiredReachClear={:.4f} retreatClear={:.4f} terminalClear={:.4f} overallClear={:.4f} J={:.6f}",
+        plannerContext_.routeStepCandidate.name, plannerContext_.routeStepCandidate.transitRouteName, plannerContext_.routeStepCandidate.predictedReachTime,
+        plannerContext_.routeStepCandidate.legacyPredictedApproachTime,
+        plannerContext_.routeStepCandidate.predictedApproachTime,
+        plannerContext_.routeStepCandidate.terminalTimingAuditDuration,
+        plannerContext_.routeStepCandidate.predictedAcquireTime,
+        plannerContext_.routeStepCandidate.predictedContactTime - plannerContext_.routeStepCandidate.predictedPresentationTime,
+        plannerContext_.routeStepCandidate.auditPredictedContactTime - plannerContext_.routeStepCandidate.predictedPresentationTime,
+        plannerContext_.routeStepCandidate.contactClosure, plannerContext_.routeStepReachPositionError,
+        plannerContext_.routeStepReachOrientationError, plannerContext_.routeStepCandidate.predictiveReachClearance,
+        plannerConfig_.transitMinimumPredictedClearance,
+        plannerContext_.routeStepCandidate.predictiveRetreatClearance,
+        plannerContext_.routeStepTerminalResult.minClearance, plannerContext_.routeStepCandidate.minClearance,
+        plannerContext_.routeStepCandidate.completeCostAudit);
+  }
 
-  restorePlanningWorld();
-  return true;
+  routeStepRestorePlanningWorld();
+  plannerContext_.routeStepPhase = RouteStepPhase::Idle;
+  return RouteStepOutcome::Feasible;
 }
 
 bool HandoverInterceptionController::previewCandidate(
@@ -6596,15 +7088,17 @@ bool HandoverInterceptionController::previewCandidate(
   // The object is rigidly attached at the contact configuration for the
   // virtual retreat. mutable planner state is avoided here by evaluating the
   // same relative transform directly through a local full retreat loop.
-  const sva::PTransformd M_T_O = relativePose(previewMouthPose(mbc), W_T_O_);
+  sva::PTransformd closureMouthPose;
+  if(!previewMouthPose(mbc, closureMouthPose)) { return false; }
+  const sva::PTransformd M_T_O = relativePose(closureMouthPose, plannerContext_.W_T_O);
   int retreatIteration = 0;
   while(true)
   {
-    const sva::PTransformd oldPlanning = planningM_T_O_;
-    planningM_T_O_ = M_T_O;
+    const sva::PTransformd oldPlanning = plannerContext_.planningM_T_O;
+    plannerContext_.planningM_T_O = M_T_O;
     const PreviewStepStatus status = previewReachStep(
         mbc, candidate.W_T_M_retreat, false, true, retreatIteration, result);
-    planningM_T_O_ = oldPlanning;
+    plannerContext_.planningM_T_O = oldPlanning;
     if(status == PreviewStepStatus::Succeeded) { break; }
     if(status == PreviewStepStatus::Failed)
     {
@@ -6659,9 +7153,9 @@ HandoverInterceptionController::buildCandidate(
     const Eigen::Vector3d & baseOutward) const
 {
   CaptureCandidate c;
-  const Eigen::Vector3d pH = W_T_H_.translation();
+  const Eigen::Vector3d pH = plannerContext_.W_T_H.translation();
   const Eigen::Vector3d zM = (axisSign >= 0.0 ? 1.0 : -1.0)
-                            * blueHandleAxis();
+                            * plannerHandleAxis();
 
   Eigen::Vector3d yM = Eigen::AngleAxisd(angleRad, zM) * baseOutward;
   yM -= zM * zM.dot(yM);
@@ -6681,19 +7175,19 @@ HandoverInterceptionController::buildCandidate(
   // The controlled mouth frame is the midpoint of model-derived inner-pad
   // references. A small positive captureDepth keeps the blue handle slightly
   // in front of that reference (negative y_M), away from the palm.
-  const Eigen::Vector3d pCapture = pH + yM * captureDepth_;
-  const Eigen::Vector3d pStand = pCapture + yM * candidateStandoffDistance_;
+  const Eigen::Vector3d pCapture = pH + yM * plannerConfig_.captureDepth;
+  const Eigen::Vector3d pStand = pCapture + yM * plannerConfig_.candidateStandoffDistance;
   c.W_T_M_transit = fromWorldPose(R_W_M, pStand);
   c.W_T_M_standoff = fromWorldPose(R_W_M, pStand);
   c.W_T_M_pre = fromWorldPose(R_W_M, pCapture);
   // Retreat follows the same certified outward ray used for insertion. This is
   // candidate-relative rather than a world-direction preference.
   c.W_T_M_retreat = fromWorldPose(
-      R_W_M, pCapture + yM * candidateRetreatDistance_);
+      R_W_M, pCapture + yM * plannerConfig_.candidateRetreatDistance);
   // Direction is diagnostic only. Above, below and lateral approaches are
   // all generated; the internal whole-arm rollout decides feasibility before
   // the physical robot moves.
-  c.verticalComponent = clampUnit(yM.dot(worldUp_));
+  c.verticalComponent = clampUnit(yM.dot(plannerConfig_.worldUp));
 
   int deg = static_cast<int>(std::lround(angleRad * 180.0 / PI));
   while(deg < 0) { deg += 360; }
@@ -6703,17 +7197,69 @@ HandoverInterceptionController::buildCandidate(
   return c;
 }
 
-HandoverInterceptionController::CapturePlanningStatus
-HandoverInterceptionController::beginCapturePlanning(bool commitOnSuccess)
+// Controller-side preparation for a planning session. These are mutations of
+// controller state, not of the search: detaching the object, invalidating any
+// previously selected candidate, and taking the frozen model, configuration and
+// mouth-to-base transform. They used to run once per event hypothesis inside
+// beginCapturePlanning(); they are idempotent across a stationary search, and
+// hoisting them here is what lets the per-hypothesis path stay free of
+// controller side effects.
+void HandoverInterceptionController::prepareCapturePlanningSession()
 {
   detachObject();
   invalidateSelectedCandidate();
+  refreshPlannerModel();
+  refreshPlannerConfig();
+  // Derive the mouth-to-base transform from the same frozen robot state the
+  // rest of the search uses. It used to be re-read from the live robot at the
+  // start of every event hypothesis, which sampled the QP solution's
+  // cycle-to-cycle jitter into reachClear, motionJ and globalJ. Every
+  // hypothesis now consumes one value, taken from s0 and from no later sample.
+  // The live path remains only for the legacy non-global mode, which has no
+  // frozen robot state to derive from.
+  planningSnapshot_.mouthToBaseTransformValid = false;
+  if(planningSnapshot_.frozenRobotStateValid)
+  {
+    planningSnapshot_.mouthToBaseTransformValid = frozenMouthToBaseTransform(
+        planningSnapshot_.frozenRobotState,
+        planningSnapshot_.mouthToBaseTransform);
+  }
+  if(!planningSnapshot_.mouthToBaseTransformValid)
+  {
+    planningSnapshot_.mouthToBaseTransform = liveMouthToBaseTransform();
+    planningSnapshot_.mouthToBaseTransformValid = true;
+  }
+}
+
+HandoverInterceptionController::CapturePlanningStatus
+HandoverInterceptionController::beginCapturePlanning(bool commitOnSuccess)
+{
+  prepareCapturePlanningSession();
   capturePlanningCommitOnSuccess_ = commitOnSuccess;
   if(planningObjectSnapshotActive_) { applyPlanningObjectSnapshot(); }
   else { refreshObjectPose(); }
-  planningM_T_O_ = sva::PTransformd::Identity();
+  // Legacy non-global entry point: without a frozen robot state the start pose
+  // is sampled here, on the control thread, before the search begins.
+  plannerContext_.plannerWorldActive = planningObjectSnapshotActive_;
+  if(planningObjectSnapshotActive_) { applyPlanningObjectSnapshotToPlanner(); }
+  plannerContext_.planningStartMouthPoseValid = false;
+  if(!planningSnapshot_.frozenRobotStateValid)
+  {
+    plannerContext_.planningStartMouthPose = actualMouthPose();
+    plannerContext_.planningStartMouthPoseValid = true;
+  }
+  return beginCapturePlanningCore();
+}
 
-  if(!mouthCalibrationValid_ || !gripperGeometryValid_)
+// Per-hypothesis planner initialisation. Reads only the frozen snapshot, the
+// mirrored configuration and the planner-local context; the caller has already
+// established the hypothesis world state.
+HandoverInterceptionController::CapturePlanningStatus
+HandoverInterceptionController::beginCapturePlanningCore()
+{
+  plannerContext_.planningM_T_O = sva::PTransformd::Identity();
+
+  if(!plannerConfig_.mouthCalibrationValid || !plannerConfig_.gripperGeometryValid)
   {
     mc_rtc::log::error(
         "[PlanCapture] mouth/gripper geometry was not calibrated; planning aborted safely");
@@ -6728,19 +7274,39 @@ HandoverInterceptionController::beginCapturePlanning(bool commitOnSuccess)
   // of the two already-frozen preview seed sites. previewMouthPose() is the
   // existing MBC-parameterized equivalent of actualMouthPose() (same frame
   // construction, parameterized on an explicit mbc instead of live robot()).
-  planningStartMouthPose_ = globalTimePlanFrozenRobotStateValid_
-      ? previewMouthPose(globalTimePlanFrozenRobotState_) : actualMouthPose();
-  const Eigen::Vector3d pH = W_T_H_.translation();
-  const Eigen::Vector3d zH = blueHandleAxis();
+  if(planningSnapshot_.frozenRobotStateValid)
+  {
+    if(!previewMouthPose(planningSnapshot_.frozenRobotState,
+                         plannerContext_.planningStartMouthPose))
+    {
+      mc_rtc::log::error(
+          "[PlanCapture] copied-state preview kinematics unavailable; no candidate bank generated and no fallback permitted");
+      capturePlanningStatus_ = CapturePlanningStatus::Failure;
+      return capturePlanningStatus_;
+    }
+    plannerContext_.planningStartMouthPoseValid = true;
+  }
+  else if(!plannerContext_.planningStartMouthPoseValid)
+  {
+    // No frozen robot state and no pose supplied by the caller. The search must
+    // not sample the live robot once a snapshot exists, so it fails closed; the
+    // legacy non-global entry point supplies the pose before calling in.
+    mc_rtc::log::error(
+        "[PlanCapture] no frozen planning start mouth pose available; no candidate bank generated and no fallback permitted");
+    capturePlanningStatus_ = CapturePlanningStatus::Failure;
+    return capturePlanningStatus_;
+  }
+  const Eigen::Vector3d pH = plannerContext_.W_T_H.translation();
+  const Eigen::Vector3d zH = plannerHandleAxis();
 
   // Candidate zero is the direct object-to-current-mouth outward direction.
   // It is robot-relative. The complete ring is still tested with identical
   // hard constraints, so this is not a directional preference or penalty.
-  planningBaseOutward_ = planningStartMouthPose_.translation() - pH;
+  planningBaseOutward_ = plannerContext_.planningStartMouthPose.translation() - pH;
   planningBaseOutward_ -= zH * zH.dot(planningBaseOutward_);
   if(planningBaseOutward_.norm() < 1e-6)
   {
-    planningBaseOutward_ = worldUp_ - zH * zH.dot(worldUp_);
+    planningBaseOutward_ = plannerConfig_.worldUp - zH * zH.dot(plannerConfig_.worldUp);
   }
   if(planningBaseOutward_.norm() < 1e-6)
   {
@@ -6752,29 +7318,51 @@ HandoverInterceptionController::beginCapturePlanning(bool commitOnSuccess)
   }
   planningBaseOutward_.normalize();
 
-  planningCandidateIndex_ = 0;
+  plannerContext_.planningCandidateIndex = 0;
+  plannerContext_.routeCertificationActive = false;
+  plannerContext_.routeCertificationMovingRequested = false;
+  plannerContext_.routeCertificationBank.clear();
+  plannerContext_.routeCertificationIndex = 0;
+  plannerContext_.routeCertificationFound = false;
+  plannerContext_.routeCertificationBest = CaptureCandidate();
+  plannerContext_.routeCertificationLastFailure.clear();
+  plannerContext_.routeStepPhase = RouteStepPhase::Idle;
+  plannerContext_.routeStepCandidate = CaptureCandidate();
+  plannerContext_.routeStepReachIteration = 0;
+  plannerContext_.routeStepReachIndex = 0;
+  plannerContext_.routeStepReachSteps = 0;
+  plannerContext_.routeStepSegmentIteration = 0;
+  plannerContext_.routeStepDwellIndex = 0;
+  plannerContext_.routeStepDwellSteps = 0;
+  plannerContext_.routeStepClosureIndex = 0;
+  plannerContext_.routeStepRetreatIteration = 0;
+  plannerContext_.routeStepClearanceScale = 1.0;
+  plannerContext_.routeStepPhaseStart = 0.0;
+  plannerContext_.routeStepReachPositionError = 0.0;
+  plannerContext_.routeStepReachOrientationError = 0.0;
+  plannerContext_.routeStepTransitPostureSaved = false;
   // The cylindrical handle axis is undirected. Both +axis and -axis tool
   // alignments are physically equivalent grasps but can belong to very
   // different wrist branches. Evaluate both internally before any motion.
-  planningCandidateCount_ = 2 * std::max(4, candidateCount_);
-  planningFoundFeasible_ = false;
-  planningBestCandidate_ = CaptureCandidate{};
-  planningCompletePlanAuditCandidates_.clear();
+  plannerContext_.planningCandidateCount = 2 * std::max(4, plannerConfig_.candidateCount);
+  plannerContext_.planningFoundFeasible = false;
+  plannerContext_.planningBestCandidate = CaptureCandidate{};
+  plannerContext_.planningCompletePlanAuditCandidates.clear();
   planningCostSelectionValid_ = false;
   planningCostSelectionCommitAdmissible_ = false;
   planningGlobalSelectionActive_ = false;
   planningCostSelectionReason_ = "not_run";
-  planningCompletePlanCount_ = 0;
-  planningCostValidCount_ = 0;
-  planningTimingAdmissibleCount_ = 0;
+  plannerContext_.planningCompletePlanCount = 0;
+  plannerContext_.planningCostValidCount = 0;
+  plannerContext_.planningTimingAdmissibleCount = 0;
   planningMinimumAdmissibleCost_ = 1e9;
   planningSelectedObjectiveCost_ = 1e9;
-  planningMbc_.reset();
+  plannerContext_.planningMbc.reset();
   capturePlanningStatus_ = CapturePlanningStatus::Running;
 
   mc_rtc::log::warning(
       "[PlanCapture] beginning bounded internal rollout of {} complete whole-arm candidates; robot remains stationary until one plan is selected",
-      planningCandidateCount_);
+      plannerContext_.planningCandidateCount);
 
   if(!startNextPlanningCandidate())
   {
@@ -6785,41 +7373,44 @@ HandoverInterceptionController::beginCapturePlanning(bool commitOnSuccess)
 
 bool HandoverInterceptionController::startNextPlanningCandidate()
 {
-  if(planningCandidateIndex_ >= planningCandidateCount_) { return false; }
+  if(plannerContext_.planningCandidateIndex >= plannerContext_.planningCandidateCount) { return false; }
 
-  const int ringCount = std::max(4, candidateCount_);
-  const int axisIndex = planningCandidateIndex_ / ringCount;
-  const int sideIndex = planningCandidateIndex_ % ringCount;
+  const int ringCount = std::max(4, plannerConfig_.candidateCount);
+  const int axisIndex = plannerContext_.planningCandidateIndex / ringCount;
+  const int sideIndex = plannerContext_.planningCandidateIndex % ringCount;
   const double axisSign = axisIndex == 0 ? 1.0 : -1.0;
   const double angle = 2.0 * PI * static_cast<double>(sideIndex)
                      / static_cast<double>(ringCount);
-  planningCurrentCandidate_ = buildCandidate(
-      angle, axisSign, planningStartMouthPose_, planningBaseOutward_);
-  planningCurrentCandidate_.rotation = orientationError(
-      planningStartMouthPose_, planningCurrentCandidate_.W_T_M_standoff);
+  plannerContext_.planningCurrentCandidate = buildCandidate(
+      angle, axisSign, plannerContext_.planningStartMouthPose, planningBaseOutward_);
+  plannerContext_.planningCurrentCandidate.rotation = orientationError(
+      plannerContext_.planningStartMouthPose, plannerContext_.planningCurrentCandidate.W_T_M_standoff);
 
   // In global-time-plan mode every candidate in this search must preview
   // from the same decision state, not from whatever live robot().mbc()
   // happens to exist when this candidate's turn arrives (which otherwise
   // depends on enumeration order/workload). See resetGlobalTimePlanSearch().
-  planningMbc_ = std::make_unique<rbd::MultiBodyConfig>(
-      globalTimePlanFrozenRobotStateValid_
-          ? globalTimePlanFrozenRobotState_ : robot().mbc());
-  for(auto & a : planningMbc_->alpha) { std::fill(a.begin(), a.end(), 0.0); }
-  for(auto & aD : planningMbc_->alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
-  setPreviewGripperClosure(*planningMbc_, 0.0);
+  plannerContext_.planningMbc = std::make_unique<rbd::MultiBodyConfig>(
+      planningSnapshot_.frozenRobotStateValid
+          ? planningSnapshot_.frozenRobotState : robot().mbc());
+  for(auto & a : plannerContext_.planningMbc->alpha) { std::fill(a.begin(), a.end(), 0.0); }
+  for(auto & aD : plannerContext_.planningMbc->alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
+  setPreviewGripperClosure(*plannerContext_.planningMbc, 0.0);
 
-  planningResult_ = PreviewResult{};
-  planningResult_.minClearance = std::numeric_limits<double>::infinity();
-  planningPhaseStartDuration_ = 0.0;
-  planningPhase_ = PlanningPhase::ReachStandoff;
-  planningSegmentIteration_ = 0;
-  planningClosureIndex_ = 0;
+  plannerContext_.planningResult = PreviewResult{};
+  plannerContext_.planningResult.minClearance = std::numeric_limits<double>::infinity();
+  plannerContext_.planningPhaseStartDuration = 0.0;
+  plannerContext_.planningPhase = PlanningPhase::ReachStandoff;
+  plannerContext_.planningSegmentIteration = 0;
+  plannerContext_.planningClosureIndex = 0;
 
-  mc_rtc::log::info(
-      "[PlanCapture] previewing {} ({}/{}) entirely in controller memory",
-      planningCurrentCandidate_.name, planningCandidateIndex_ + 1,
-      planningCandidateCount_);
+  if(plannerEvidenceLogging_)
+  {
+    mc_rtc::log::info(
+        "[PlanCapture] previewing {} ({}/{}) entirely in controller memory",
+        plannerContext_.planningCurrentCandidate.name, plannerContext_.planningCandidateIndex + 1,
+        plannerContext_.planningCandidateCount);
+  }
   return true;
 }
 
@@ -6829,11 +7420,11 @@ double HandoverInterceptionController::predictedExecutionTime(
   const double armRaw = result.reachStandoffDuration
                       + result.reachCaptureDuration
                       + result.retreatDuration;
-  const double arm = timingArmScale_ * std::max(0.0, armRaw);
+  const double arm = plannerConfig_.timingArmScale * std::max(0.0, armRaw);
   const double closure = std::max(0.0, result.contactClosure)
-                       / timingEffectiveGripperRate_;
-  const double fixed = timingPriorityBlend_ + timingCaptureLock_
-                     + timingBilateralDwell_ + timingConfirmationDwell_;
+                       / plannerConfig_.timingEffectiveGripperRate;
+  const double fixed = plannerConfig_.timingPriorityBlend + plannerConfig_.timingCaptureLock
+                     + plannerConfig_.timingBilateralDwell + plannerConfig_.timingConfirmationDwell;
   return arm + closure + fixed;
 }
 
@@ -6879,11 +7470,11 @@ void HandoverInterceptionController::computeCompletePlanAuditCost(
   }
 
   candidate.costTime = std::max(0.0, candidate.auditEstimatedTime)
-                     / decisionTimeReference_;
+                     / plannerConfig_.decisionTimeReference;
   candidate.costEffort = std::max(0.0, candidate.predictedEffort)
-                       / decisionEffortReference_;
+                       / plannerConfig_.decisionEffortReference;
   candidate.costPath = std::max(0.0, candidate.transitPathLength)
-                     / decisionPathReference_;
+                     / plannerConfig_.decisionPathReference;
   const double normalizedRotation = std::max(0.0, candidate.rotation) / PI;
   candidate.costRotation = normalizedRotation * normalizedRotation;
 
@@ -6895,11 +7486,11 @@ void HandoverInterceptionController::computeCompletePlanAuditCost(
       candidate.predictiveRetreatClearance);
   candidate.costClearance = normalizedUpperBarrier(
       operationalClearance,
-      transitMinimumPredictedClearance_, decisionSoftClearance_);
+      plannerConfig_.transitMinimumPredictedClearance, plannerConfig_.decisionSoftClearance);
   candidate.costJointMargin = normalizedLowerBarrier(
-      candidate.minimumJointMarginRatio, decisionSoftJointMargin_);
+      candidate.minimumJointMarginRatio, plannerConfig_.decisionSoftJointMargin);
   candidate.costConditioning = normalizedLowerBarrier(
-      candidate.minimumConditionIndex, decisionSoftConditionIndex_);
+      candidate.minimumConditionIndex, plannerConfig_.decisionSoftConditionIndex);
 
   // Hard joint-velocity compliance has already been certified by the copied
   // rollout. This is therefore a soft preference only: keep it finite at the
@@ -6927,13 +7518,13 @@ void HandoverInterceptionController::computeCompletePlanAuditCost(
   // is retained in configuration for provenance/diagnostics only and is
   // intentionally never referenced below.
   candidate.completeCostAudit =
-        decisionTimeWeight_ * candidate.costTime
-      + decisionEffortWeight_ * candidate.costEffort
-      + decisionPathWeight_ * candidate.costPath
-      + decisionClearanceWeight_ * candidate.costClearance
-      + decisionJointMarginWeight_ * candidate.costJointMargin
-      + decisionConditioningWeight_ * candidate.costConditioning
-      + decisionVelocityReserveWeight_ * candidate.costVelocityReserve;
+        plannerConfig_.decisionTimeWeight * candidate.costTime
+      + plannerConfig_.decisionEffortWeight * candidate.costEffort
+      + plannerConfig_.decisionPathWeight * candidate.costPath
+      + plannerConfig_.decisionClearanceWeight * candidate.costClearance
+      + plannerConfig_.decisionJointMarginWeight * candidate.costJointMargin
+      + plannerConfig_.decisionConditioningWeight * candidate.costConditioning
+      + plannerConfig_.decisionVelocityReserveWeight * candidate.costVelocityReserve;
 }
 
 double HandoverInterceptionController::predictedContactTime(
@@ -6944,59 +7535,194 @@ double HandoverInterceptionController::predictedContactTime(
   // meeting time.
   const double armRaw = result.reachStandoffDuration
                       + result.reachCaptureDuration;
-  const double arm = timingArmScale_ * std::max(0.0, armRaw);
+  const double arm = plannerConfig_.timingArmScale * std::max(0.0, armRaw);
   const double closure = std::max(0.0, result.contactClosure)
-                       / timingEffectiveGripperRate_;
-  return arm + closure + timingPriorityBlend_ + timingCaptureLock_;
+                       / plannerConfig_.timingEffectiveGripperRate;
+  return arm + closure + plannerConfig_.timingPriorityBlend + plannerConfig_.timingCaptureLock;
 }
 
-void HandoverInterceptionController::finishCurrentPlanningCandidate(bool feasible)
+bool HandoverInterceptionController::finishCurrentPlanningCandidate(bool feasible)
 {
-  CaptureCandidate & c = planningCurrentCandidate_;
+  CaptureCandidate & c = plannerContext_.planningCurrentCandidate;
   c.previewFeasible = feasible;
-  c.failureReason = feasible ? "feasible" : planningResult_.reason;
-  c.minClearance = planningResult_.minClearance;
-  c.rawRolloutTime = planningResult_.duration;
-  c.estimatedTime = feasible ? predictedExecutionTime(planningResult_)
-                             : planningResult_.duration;
-  c.predictedContactTime = feasible ? predictedContactTime(planningResult_)
-                                    : planningResult_.duration;
-  c.predictedReachTime = timingArmScale_
-      * planningResult_.reachStandoffDuration;
+  c.failureReason = feasible ? "feasible" : plannerContext_.planningResult.reason;
+  c.minClearance = plannerContext_.planningResult.minClearance;
+  c.rawRolloutTime = plannerContext_.planningResult.duration;
+  c.estimatedTime = feasible ? predictedExecutionTime(plannerContext_.planningResult)
+                             : plannerContext_.planningResult.duration;
+  c.predictedContactTime = feasible ? predictedContactTime(plannerContext_.planningResult)
+                                    : plannerContext_.planningResult.duration;
+  c.predictedReachTime = plannerConfig_.timingArmScale
+      * plannerContext_.planningResult.reachStandoffDuration;
   c.predictedPresentationTime = c.predictedReachTime;
-  c.predictedApproachTime = timingArmScale_
-      * planningResult_.reachCaptureDuration;
-  c.predictedAcquireTime = timingPriorityBlend_ + timingCaptureLock_
-      + (planningResult_.contactClosure > 0.0
-         ? planningResult_.contactClosure / timingEffectiveGripperRate_ : 0.0);
-  c.predictedArmTime = timingArmScale_ * (
-      planningResult_.reachStandoffDuration
-      + planningResult_.reachCaptureDuration
-      + planningResult_.retreatDuration);
-  c.predictedClosureTime = planningResult_.contactClosure > 0.0
-      ? planningResult_.contactClosure / timingEffectiveGripperRate_ : 0.0;
-  c.predictedFixedTime = timingPriorityBlend_ + timingCaptureLock_
-                       + timingBilateralDwell_ + timingConfirmationDwell_;
-  c.predictedEffort = planningResult_.effort;
-  c.contactClosure = planningResult_.contactClosure;
+  c.predictedApproachTime = plannerConfig_.timingArmScale
+      * plannerContext_.planningResult.reachCaptureDuration;
+  c.predictedAcquireTime = plannerConfig_.timingPriorityBlend + plannerConfig_.timingCaptureLock
+      + (plannerContext_.planningResult.contactClosure > 0.0
+         ? plannerContext_.planningResult.contactClosure / plannerConfig_.timingEffectiveGripperRate : 0.0);
+  c.predictedArmTime = plannerConfig_.timingArmScale * (
+      plannerContext_.planningResult.reachStandoffDuration
+      + plannerContext_.planningResult.reachCaptureDuration
+      + plannerContext_.planningResult.retreatDuration);
+  c.predictedClosureTime = plannerContext_.planningResult.contactClosure > 0.0
+      ? plannerContext_.planningResult.contactClosure / plannerConfig_.timingEffectiveGripperRate : 0.0;
+  c.predictedFixedTime = plannerConfig_.timingPriorityBlend + plannerConfig_.timingCaptureLock
+                       + plannerConfig_.timingBilateralDwell + plannerConfig_.timingConfirmationDwell;
+  c.predictedEffort = plannerContext_.planningResult.effort;
+  c.contactClosure = plannerContext_.planningResult.contactClosure;
 
   const bool movingVerificationRequested =
-      previewMovingInterception_ && planningObjectSnapshotActive_
+      previewMovingInterception_ && plannerContext_.plannerWorldActive
       && objectMotionEstimateValid_;
   if(feasible && movingVerificationRequested)
   {
-    feasible = verifyPredictiveStaticCandidate(
-        c, planningResult_, W_T_O_);
-    c.previewFeasible = feasible;
-    if(!feasible && c.failureReason == "feasible")
+    // Start the route bank instead of certifying it here. The bank is advanced
+    // one route per planner step by stepTransitRouteCertification(), which
+    // finalises the candidate once the last route has been certified.
+    plannerContext_.routeCertificationBank = transitRouteBank(
+        plannerContext_.planningStartMouthPose, c.W_T_M_standoff);
+    plannerContext_.routeCertificationIndex = 0;
+    plannerContext_.routeCertificationFound = false;
+    plannerContext_.routeCertificationBest = CaptureCandidate();
+    plannerContext_.routeCertificationLastFailure = "no_route_tested";
+    plannerContext_.routeCertificationPresentation = plannerContext_.W_T_O;
+    plannerContext_.routeCertificationMovingRequested = movingVerificationRequested;
+    plannerContext_.routeCertificationActive = true;
+    return true;
+  }
+
+  completeCurrentPlanningCandidate(feasible, movingVerificationRequested);
+  return false;
+}
+
+// One route of the pending bank. Returns true while certification is still
+// pending. The body below is the original verifyPredictiveStaticCandidate loop
+// body and post-loop resolution, unchanged apart from reading its running state
+// from members instead of the call stack.
+// The per-route fold, unchanged. It is reached once per route, when that
+// route's resumable rollout reports a terminal outcome. trial is the rollout's
+// own candidate copy, which is exactly the copy the whole-route call produced.
+void HandoverInterceptionController::routeCertificationAcceptRouteResult(
+    bool feasible)
+{
+  CaptureCandidate & candidate = plannerContext_.planningCurrentCandidate;
+  const CaptureCandidate & trial = plannerContext_.routeStepCandidate;
+
+  if(!feasible)
+  {
+    plannerContext_.routeCertificationLastFailure = trial.failureReason;
+    if(plannerEvidenceLogging_)
     {
-      c.failureReason = "methodology_lock/unknown";
+      mc_rtc::log::info(
+          "[TransitRoute] candidate={} route={} infeasible reason={} reachClear={:.4f}",
+          candidate.name, trial.transitRouteName, trial.failureReason,
+          trial.predictiveReachClearance);
+    }
+    return;
+  }
+
+  plannerContext_.planningCompletePlanAuditCandidates.push_back(trial);
+
+  const double routeCost = trial.estimatedTime
+      + plannerConfig_.previewEffortWeight * trial.predictedEffort
+      + plannerConfig_.previewRotationWeight * trial.rotation;
+  const double bestCost = plannerContext_.routeCertificationBest.estimatedTime
+      + plannerConfig_.previewEffortWeight * plannerContext_.routeCertificationBest.predictedEffort
+      + plannerConfig_.previewRotationWeight * plannerContext_.routeCertificationBest.rotation;
+  bool choose = !plannerContext_.routeCertificationFound;
+  if(plannerContext_.routeCertificationFound)
+  {
+    const double clearanceGain = trial.predictiveReachClearance
+                               - plannerContext_.routeCertificationBest.predictiveReachClearance;
+    const bool clearlySafer = clearanceGain
+        > plannerConfig_.transitClearancePreferenceBand;
+    const bool comparableClearance = std::abs(clearanceGain)
+        <= plannerConfig_.transitClearancePreferenceBand;
+    choose = clearlySafer
+        || (comparableClearance && routeCost < bestCost);
+  }
+  if(choose)
+  {
+    plannerContext_.routeCertificationBest = trial;
+    plannerContext_.routeCertificationFound = true;
+  }
+}
+
+bool HandoverInterceptionController::stepTransitRouteCertification(
+    int routeWorkUnits)
+{
+  if(!plannerContext_.routeCertificationActive) { return false; }
+  CaptureCandidate & candidate = plannerContext_.planningCurrentCandidate;
+
+  // A rollout already in progress keeps the bank position it claimed and is
+  // advanced by at most routeWorkUnits bounded work units.
+  if(plannerContext_.routeStepPhase != RouteStepPhase::Idle)
+  {
+    const RouteStepOutcome outcome =
+        stepPredictiveRouteCandidate(routeWorkUnits);
+    if(outcome == RouteStepOutcome::Running) { return true; }
+    routeCertificationAcceptRouteResult(
+        outcome == RouteStepOutcome::Feasible);
+    return true;
+  }
+
+  if(plannerContext_.routeCertificationIndex < plannerContext_.routeCertificationBank.size())
+  {
+    const auto & route = plannerContext_.routeCertificationBank[plannerContext_.routeCertificationIndex];
+    ++plannerContext_.routeCertificationIndex;
+
+    const RouteStepOutcome outcome = beginPredictiveRouteCandidate(
+        candidate, plannerContext_.planningResult, plannerContext_.routeCertificationPresentation,
+        route.first, route.second);
+    if(outcome == RouteStepOutcome::Running) { return true; }
+    routeCertificationAcceptRouteResult(
+        outcome == RouteStepOutcome::Feasible);
+    return true;
+  }
+
+  bool feasible = true;
+  if(!plannerContext_.routeCertificationFound)
+  {
+    candidate.failureReason = "transit_route_bank/" + plannerContext_.routeCertificationLastFailure;
+    feasible = false;
+  }
+  else
+  {
+    candidate = plannerContext_.routeCertificationBest;
+    if(plannerEvidenceLogging_)
+    {
+      mc_rtc::log::success(
+          "[TransitRoute] SELECTED candidate={} route={} curveOffset=[{:.3f},{:.3f},{:.3f}] pathLength={:.3f}m reachClear={:.4f}m completePlan=true",
+          candidate.name, candidate.transitRouteName,
+          candidate.reachCurveOffsetWorld.x(),
+          candidate.reachCurveOffsetWorld.y(),
+          candidate.reachCurveOffsetWorld.z(),
+          candidate.transitPathLength, candidate.predictiveReachClearance);
     }
   }
 
-  if(feasible && planningMbc_ && !movingVerificationRequested)
+  candidate.previewFeasible = feasible;
+  if(!feasible && candidate.failureReason == "feasible")
   {
-    c.plannedRetreatArmPosture = armPostureFromMbc(*planningMbc_);
+    candidate.failureReason = "methodology_lock/unknown";
+  }
+
+  const bool movingVerificationRequested = plannerContext_.routeCertificationMovingRequested;
+  plannerContext_.routeCertificationActive = false;
+  plannerContext_.routeCertificationBank.clear();
+  plannerContext_.routeStepPhase = RouteStepPhase::Idle;
+  completeCurrentPlanningCandidate(feasible, movingVerificationRequested);
+  return false;
+}
+
+void HandoverInterceptionController::completeCurrentPlanningCandidate(
+    bool feasible, bool movingVerificationRequested)
+{
+  CaptureCandidate & c = plannerContext_.planningCurrentCandidate;
+
+  if(feasible && plannerContext_.planningMbc && !movingVerificationRequested)
+  {
+    c.plannedRetreatArmPosture = armPostureFromMbc(*plannerContext_.planningMbc);
   }
 
   if(feasible)
@@ -7006,8 +7732,8 @@ void HandoverInterceptionController::finishCurrentPlanningCandidate(bool feasibl
         && std::isfinite(c.legacyEstimatedTime)
         ? c.legacyEstimatedTime : c.estimatedTime;
     c.score = protectedSelectionTime
-            + previewEffortWeight_ * c.predictedEffort
-            + previewRotationWeight_ * c.rotation;
+            + plannerConfig_.previewEffortWeight * c.predictedEffort
+            + plannerConfig_.previewRotationWeight * c.rotation;
     mc_rtc::log::info(
         "[PlanCapture] {} route={} feasible reach+insert+close+retreat predictedTime={:.3f}s selectionTime={:.3f}s predictedContact={:.3f}s rawRollout={:.3f}s arm={:.3f}s closure={:.3f}s fixed={:.3f}s effort={:.3f} rot={:.3f} reachClear={:.4f} overallClear={:.4f} contactClosure={:.3f} cost={:.4f} vertical={:.3f}",
         c.name, c.transitRouteName, c.estimatedTime,
@@ -7017,22 +7743,22 @@ void HandoverInterceptionController::finishCurrentPlanningCandidate(bool feasibl
         c.rotation, c.predictiveReachClearance, c.minClearance,
         c.contactClosure, c.score, c.verticalComponent);
 
-    bool choose = !planningFoundFeasible_;
-    if(planningFoundFeasible_)
+    bool choose = !plannerContext_.planningFoundFeasible;
+    if(plannerContext_.planningFoundFeasible)
     {
       const double reachClearanceGain = c.predictiveReachClearance
-          - planningBestCandidate_.predictiveReachClearance;
+          - plannerContext_.planningBestCandidate.predictiveReachClearance;
       const bool clearlySafer = reachClearanceGain
-          > transitClearancePreferenceBand_;
+          > plannerConfig_.transitClearancePreferenceBand;
       const bool comparableSafety = std::abs(reachClearanceGain)
-          <= transitClearancePreferenceBand_;
+          <= plannerConfig_.transitClearancePreferenceBand;
       choose = clearlySafer
-          || (comparableSafety && c.score < planningBestCandidate_.score);
+          || (comparableSafety && c.score < plannerContext_.planningBestCandidate.score);
     }
     if(choose)
     {
-      planningFoundFeasible_ = true;
-      planningBestCandidate_ = c;
+      plannerContext_.planningFoundFeasible = true;
+      plannerContext_.planningBestCandidate = c;
     }
   }
   else
@@ -7043,8 +7769,8 @@ void HandoverInterceptionController::finishCurrentPlanningCandidate(bool feasibl
         c.minClearance, c.verticalComponent);
   }
 
-  ++planningCandidateIndex_;
-  planningMbc_.reset();
+  ++plannerContext_.planningCandidateIndex;
+  plannerContext_.planningMbc.reset();
 }
 
 bool HandoverInterceptionController::selectPlanningBestForCommit(
@@ -7056,44 +7782,44 @@ bool HandoverInterceptionController::selectPlanningBestForCommit(
   planningCostSelectionCommitAdmissible_ = false;
   planningGlobalSelectionActive_ = false;
   planningCostSelectionReason_ = "not_run";
-  planningCompletePlanCount_ = planningCompletePlanAuditCandidates_.size();
-  planningCostValidCount_ = 0;
-  planningTimingAdmissibleCount_ = 0;
+  plannerContext_.planningCompletePlanCount = plannerContext_.planningCompletePlanAuditCandidates.size();
+  plannerContext_.planningCostValidCount = 0;
+  plannerContext_.planningTimingAdmissibleCount = 0;
   planningMinimumAdmissibleCost_ = 1e9;
   planningSelectedObjectiveCost_ = 1e9;
   selectedGlobalMotionCost_ = 1e9;
   selectedGlobalScheduleWait_ = 0.0;
 
-  if(!planningFoundFeasible_)
+  if(!plannerContext_.planningFoundFeasible)
   {
     planningCostSelectionReason_ = "no_geometrically_feasible_plan";
     mc_rtc::log::error(
         "[PlanSelection] mode={} success=false reason={} no plan may be committed",
-        completePlanSelectionMode_, planningCostSelectionReason_);
+        plannerConfig_.completePlanSelectionMode, planningCostSelectionReason_);
     return false;
   }
 
-  if(completePlanSelectionMode_ == "protected_heuristic")
+  if(plannerConfig_.completePlanSelectionMode == "protected_heuristic")
   {
     planningCostSelectionValid_ = true;
     planningCostSelectionCommitAdmissible_ = true;
     planningCostSelectionReason_ = "protected_heuristic_selected";
-    planningSelectedObjectiveCost_ = planningBestCandidate_.completeCostAudit;
+    planningSelectedObjectiveCost_ = plannerContext_.planningBestCandidate.completeCostAudit;
     mc_rtc::log::warning(
         "[PlanSelection] mode=protected_heuristic candidate={} route={} costBinding=false historicalSelectorPreserved=true",
-        planningBestCandidate_.name,
-        planningBestCandidate_.transitRouteName);
+        plannerContext_.planningBestCandidate.name,
+        plannerContext_.planningBestCandidate.transitRouteName);
     return true;
   }
 
-  if(completePlanSelectionMode_ != "binding_cost"
-     || !decisionCostConfigurationValid_)
+  if(plannerConfig_.completePlanSelectionMode != "binding_cost"
+     || !plannerConfig_.decisionCostConfigurationValid)
   {
     planningCostSelectionReason_ = "invalid_binding_cost_configuration";
     mc_rtc::log::error(
         "[BindingCostSelection] success=false reason={} mode={} costConfigurationValid={} no fallback permitted",
-        planningCostSelectionReason_, completePlanSelectionMode_,
-        decisionCostConfigurationValid_);
+        planningCostSelectionReason_, plannerConfig_.completePlanSelectionMode,
+        plannerConfig_.decisionCostConfigurationValid);
     return false;
   }
 
@@ -7103,16 +7829,16 @@ bool HandoverInterceptionController::selectPlanningBestForCommit(
     planningCostSelectionReason_ = "physical_binding_execution_not_authorized";
     mc_rtc::log::error(
         "[BindingCostSelection] success=false reason={} physicalBridgeEnabled=true physicalCommandEnabled={} allowPhysicalExecution=false no fallback permitted",
-        planningCostSelectionReason_, physicalGripperCommandEnabled_);
+        planningCostSelectionReason_, plannerConfig_.physicalGripperCommandEnabled);
     return false;
   }
 
   std::vector<call_handover::FinitePlanRecord> records;
-  records.reserve(planningCompletePlanAuditCandidates_.size());
+  records.reserve(plannerContext_.planningCompletePlanAuditCandidates.size());
   for(std::size_t i = 0;
-      i < planningCompletePlanAuditCandidates_.size(); ++i)
+      i < plannerContext_.planningCompletePlanAuditCandidates.size(); ++i)
   {
-    const auto & candidate = planningCompletePlanAuditCandidates_[i];
+    const auto & candidate = plannerContext_.planningCompletePlanAuditCandidates[i];
     call_handover::FinitePlanRecord record;
     record.sourceIndex = i;
     record.costValid = candidate.completeCostAuditValid;
@@ -7126,29 +7852,29 @@ bool HandoverInterceptionController::selectPlanningBestForCommit(
 
   const bool enforceTiming = remainingToPresentation >= 0.0;
   const auto selection = call_handover::selectFinitePlan(
-      records, decisionCostTieTolerance_, enforceTiming,
+      records, plannerConfig_.decisionCostTieTolerance, enforceTiming,
       remainingToPresentation, minimumReachEntryLead,
       minimumSafeCommitLead);
-  planningCompletePlanCount_ = selection.completePlanCount;
-  planningCostValidCount_ = selection.costValidCount;
-  planningTimingAdmissibleCount_ = selection.timingAdmissibleCount;
+  plannerContext_.planningCompletePlanCount = selection.completePlanCount;
+  plannerContext_.planningCostValidCount = selection.costValidCount;
+  plannerContext_.planningTimingAdmissibleCount = selection.timingAdmissibleCount;
   planningMinimumAdmissibleCost_ = selection.minimumAdmissibleCost;
   planningCostSelectionReason_ = selection.reason;
 
   if(!selection.success
-     || selection.selectedRecord >= planningCompletePlanAuditCandidates_.size())
+     || selection.selectedRecord >= plannerContext_.planningCompletePlanAuditCandidates.size())
   {
     mc_rtc::log::error(
         "[BindingCostSelection] success=false reason={} completePlans={} costValidPlans={} timingAdmissiblePlans={} no fallback permitted",
-        planningCostSelectionReason_, planningCompletePlanCount_,
-        planningCostValidCount_, planningTimingAdmissibleCount_);
+        planningCostSelectionReason_, plannerContext_.planningCompletePlanCount,
+        plannerContext_.planningCostValidCount, plannerContext_.planningTimingAdmissibleCount);
     return false;
   }
 
-  planningBestCandidate_ =
-      planningCompletePlanAuditCandidates_[selection.selectedRecord];
-  planningSelectedObjectiveCost_ = planningBestCandidate_.completeCostAudit;
-  selectedGlobalMotionCost_ = planningBestCandidate_.completeCostAudit;
+  plannerContext_.planningBestCandidate =
+      plannerContext_.planningCompletePlanAuditCandidates[selection.selectedRecord];
+  planningSelectedObjectiveCost_ = plannerContext_.planningBestCandidate.completeCostAudit;
+  selectedGlobalMotionCost_ = plannerContext_.planningBestCandidate.completeCostAudit;
   planningCostSelectionValid_ = true;
   planningCostSelectionCommitAdmissible_ = selection.commitAdmissible;
 
@@ -7158,15 +7884,15 @@ bool HandoverInterceptionController::selectPlanningBestForCommit(
         std::isfinite(planningMinimumAdmissibleCost_)
         && std::abs(planningSelectedObjectiveCost_
                     - planningMinimumAdmissibleCost_)
-               <= decisionCostTieTolerance_;
+               <= plannerConfig_.decisionCostTieTolerance;
     mc_rtc::log::success(
         "[BindingCostSelection] success=true commitAdmissible=true completePlans={} costValidPlans={} timingAdmissiblePlans={} candidate={} route={} selectedJ={:.9f} minimumAdmissibleJ={:.9f} selectedWithinMinimumTolerance={} tieTolerance={:.3e} tieBreak=[reachTime,clearance,candidate,route,index]",
-        planningCompletePlanCount_, planningCostValidCount_,
-        planningTimingAdmissibleCount_, planningBestCandidate_.name,
-        planningBestCandidate_.transitRouteName,
-        planningBestCandidate_.completeCostAudit,
+        plannerContext_.planningCompletePlanCount, plannerContext_.planningCostValidCount,
+        plannerContext_.planningTimingAdmissibleCount, plannerContext_.planningBestCandidate.name,
+        plannerContext_.planningBestCandidate.transitRouteName,
+        plannerContext_.planningBestCandidate.completeCostAudit,
         planningMinimumAdmissibleCost_, selectedEqualsMinimum,
-        decisionCostTieTolerance_);
+        plannerConfig_.decisionCostTieTolerance);
     if(!selectedEqualsMinimum)
     {
       planningCostSelectionValid_ = false;
@@ -7179,10 +7905,10 @@ bool HandoverInterceptionController::selectPlanningBestForCommit(
   {
     mc_rtc::log::warning(
         "[BindingCostSelection] success=true commitAdmissible=false reason={} completePlans={} costValidPlans={} timingAdmissiblePlans=0 timingReferenceCandidate={} route={} predictedReach={:.3f}s; candidate may drive event-time refinement but cannot be committed",
-        planningCostSelectionReason_, planningCompletePlanCount_,
-        planningCostValidCount_, planningBestCandidate_.name,
-        planningBestCandidate_.transitRouteName,
-        planningBestCandidate_.predictedPresentationTime);
+        planningCostSelectionReason_, plannerContext_.planningCompletePlanCount,
+        plannerContext_.planningCostValidCount, plannerContext_.planningBestCandidate.name,
+        plannerContext_.planningBestCandidate.transitRouteName,
+        plannerContext_.planningBestCandidate.predictedPresentationTime);
   }
   return true;
 }
@@ -7190,16 +7916,18 @@ bool HandoverInterceptionController::selectPlanningBestForCommit(
 void HandoverInterceptionController::resetGlobalTimePlanSearch(
     double searchEpoch, bool globalTimePlanModeActive)
 {
-  globalEventPlanAlternatives_.clear();
-  globalTimePlanSearchEpoch_ = searchEpoch;
+  plannerContext_.globalEventPlanAlternatives.clear();
+  refreshPlannerModel();
+  refreshPlannerConfig();
+  planningSnapshot_.searchEpoch = searchEpoch;
   if(globalTimePlanModeActive)
   {
-    globalTimePlanFrozenRobotState_ = robot().mbc();
-    globalTimePlanFrozenRobotStateValid_ = true;
+    planningSnapshot_.frozenRobotState = robot().mbc();
+    planningSnapshot_.frozenRobotStateValid = true;
   }
   else
   {
-    globalTimePlanFrozenRobotStateValid_ = false;
+    planningSnapshot_.frozenRobotStateValid = false;
   }
   planningGlobalSelectionActive_ = false;
   planningSelectedObjectiveCost_ = 1e9;
@@ -7224,26 +7952,26 @@ bool HandoverInterceptionController::captureCurrentEventPlanAlternatives(
     const sva::PTransformd & W_T_O_presentation)
 {
   if(!globalTimePlanSelectionEnabled()
-     || completePlanSelectionMode_ != "binding_cost"
-     || !decisionCostConfigurationValid_)
+     || plannerConfig_.completePlanSelectionMode != "binding_cost"
+     || !plannerConfig_.decisionCostConfigurationValid)
   {
     planningCostSelectionReason_ = "invalid_global_time_plan_configuration";
     mc_rtc::log::error(
         "[GlobalTimePlanCapture] success=false reason={} mode={} eventSelectionMode={} no fallback permitted",
-        planningCostSelectionReason_, completePlanSelectionMode_,
-        completeEventSelectionMode_);
+        planningCostSelectionReason_, plannerConfig_.completePlanSelectionMode,
+        plannerConfig_.completeEventSelectionMode);
     return false;
   }
-  if(!planningFoundFeasible_
-     || planningCompletePlanAuditCandidates_.empty())
+  if(!plannerContext_.planningFoundFeasible
+     || plannerContext_.planningCompletePlanAuditCandidates.empty())
   {
     planningCostSelectionReason_ = "no_complete_plans_at_event";
     return false;
   }
-  if(!std::isfinite(globalTimePlanSearchEpoch_)
+  if(!std::isfinite(planningSnapshot_.searchEpoch)
      || !std::isfinite(eventLeadFromSearchEpoch)
      || !std::isfinite(eventPresentationTime)
-     || std::abs((eventPresentationTime - globalTimePlanSearchEpoch_)
+     || std::abs((eventPresentationTime - planningSnapshot_.searchEpoch)
                  - eventLeadFromSearchEpoch) > 1e-6)
   {
     planningCostSelectionReason_ = "inconsistent_global_event_epoch";
@@ -7251,13 +7979,13 @@ bool HandoverInterceptionController::captureCurrentEventPlanAlternatives(
         "[GlobalTimePlanCapture] success=false reason={} hypothesis={} eventLead={:.9f} presentationTime={:.9f} epoch={:.9f}",
         planningCostSelectionReason_, hypothesisIndex,
         eventLeadFromSearchEpoch, eventPresentationTime,
-        globalTimePlanSearchEpoch_);
+        planningSnapshot_.searchEpoch);
     return false;
   }
 
-  const std::size_t before = globalEventPlanAlternatives_.size();
+  const std::size_t before = plannerContext_.globalEventPlanAlternatives.size();
   std::size_t costInvalidCount = 0;
-  for(const auto & candidate : planningCompletePlanAuditCandidates_)
+  for(const auto & candidate : plannerContext_.planningCompletePlanAuditCandidates)
   {
     GlobalEventPlanAlternative alternative;
     alternative.candidate = candidate;
@@ -7270,23 +7998,26 @@ bool HandoverInterceptionController::captureCurrentEventPlanAlternatives(
         alternative.scheduleWaitBeforeReach + candidate.auditEstimatedTime;
     alternative.globalObjectiveCost =
         call_handover::extendMotionCostToSearchEpoch(
-            candidate.completeCostAudit, decisionTimeWeight_,
-            decisionTimeReference_, eventLeadFromSearchEpoch,
+            candidate.completeCostAudit, plannerConfig_.decisionTimeWeight,
+            plannerConfig_.decisionTimeReference, eventLeadFromSearchEpoch,
             candidate.predictedPresentationTime);
-    alternative.planningStartMouthPose = planningStartMouthPose_;
+    alternative.planningStartMouthPose = plannerContext_.planningStartMouthPose;
     alternative.W_T_O_presentation = W_T_O_presentation;
 
     const bool valid = candidate.completeCostAuditValid
         && std::isfinite(alternative.globalObjectiveCost)
         && std::isfinite(alternative.predictedSearchToCompletionTime);
-    mc_rtc::log::success(
-        "[GlobalPlanCost] hypothesis={} eventLead={:.3f}s presentationTime={:.3f}s candidate={} route={} valid={} motionJ={:.9f} scheduleWait={:+.3f}s searchToCompletion={:.3f}s globalJ={:.9f} timeTerm=search_to_completion hardFeasibilityUnchanged=true",
-        hypothesisIndex, eventLeadFromSearchEpoch, eventPresentationTime,
-        candidate.name, candidate.transitRouteName, valid,
-        candidate.completeCostAudit,
-        alternative.scheduleWaitBeforeReach,
-        alternative.predictedSearchToCompletionTime,
-        alternative.globalObjectiveCost);
+    if(plannerEvidenceLogging_)
+    {
+      mc_rtc::log::success(
+          "[GlobalPlanCost] hypothesis={} eventLead={:.3f}s presentationTime={:.3f}s candidate={} route={} valid={} motionJ={:.9f} scheduleWait={:+.3f}s searchToCompletion={:.3f}s globalJ={:.9f} timeTerm=search_to_completion hardFeasibilityUnchanged=true",
+          hypothesisIndex, eventLeadFromSearchEpoch, eventPresentationTime,
+          candidate.name, candidate.transitRouteName, valid,
+          candidate.completeCostAudit,
+          alternative.scheduleWaitBeforeReach,
+          alternative.predictedSearchToCompletionTime,
+          alternative.globalObjectiveCost);
+    }
 
     // Exclude only this candidate. A cost-invalid sibling must never remove
     // an otherwise hard-feasible, cost-valid candidate from the global pool.
@@ -7295,11 +8026,11 @@ bool HandoverInterceptionController::captureCurrentEventPlanAlternatives(
       ++costInvalidCount;
       continue;
     }
-    globalEventPlanAlternatives_.push_back(alternative);
+    plannerContext_.globalEventPlanAlternatives.push_back(alternative);
   }
 
   const std::size_t completePlansAdded =
-      globalEventPlanAlternatives_.size() - before;
+      plannerContext_.globalEventPlanAlternatives.size() - before;
   if(completePlansAdded == 0)
   {
     // Distinguish this from a genuine geometry/IK rejection: every candidate
@@ -7309,14 +8040,339 @@ bool HandoverInterceptionController::captureCurrentEventPlanAlternatives(
     mc_rtc::log::warning(
         "[GlobalTimePlanCostAuditReject] hypothesis={} eventLead={:.3f}s completePlans={} costInvalidPlans={} reason=all_candidates_cost_invalid deferredCommit=true; searching another future event",
         hypothesisIndex, eventLeadFromSearchEpoch,
-        planningCompletePlanAuditCandidates_.size(), costInvalidCount);
+        plannerContext_.planningCompletePlanAuditCandidates.size(), costInvalidCount);
   }
 
   mc_rtc::log::success(
       "[GlobalTimePlanCapture] success=true hypothesis={} eventLead={:.3f}s completePlansAdded={} cumulativeCompletePlans={} deferredCommit=true robotMotion=false",
       hypothesisIndex, eventLeadFromSearchEpoch, completePlansAdded,
-      globalEventPlanAlternatives_.size());
+      plannerContext_.globalEventPlanAlternatives.size());
   return true;
+}
+
+// Submit exactly one planning generation to the worker. The control thread does
+// not wait: it returns immediately and polls plannerJobState() on later cycles.
+// The worker must never outlive the controller, and is never detached.
+HandoverInterceptionController::~HandoverInterceptionController()
+{
+  shutdownPlannerWorker();
+}
+
+void HandoverInterceptionController::submitFiniteTriadSearch(
+    const FrozenEventBank & bank,
+    double requestControllerTime,
+    int previewSteps,
+    int routeWorkUnits)
+{
+  shutdownPlannerWorker();
+
+  beginFiniteTriadSearch(bank);
+  plannerResult_ = FrozenPlanSet();
+  plannerFailureReason_.clear();
+  plannerRequestControllerTime_ = requestControllerTime;
+  plannerWorkerWallDuration_ = 0.0;
+  plannerPublishHeldCycles_ = 0;
+  plannerCancel_.store(false, std::memory_order_relaxed);
+
+  const std::uint64_t generation =
+      plannerRequestGeneration_.fetch_add(1, std::memory_order_acq_rel) + 1;
+  plannerJobState_.store(static_cast<int>(PlannerJobState::Running),
+                         std::memory_order_release);
+  plannerWorkerStartWall_ = std::chrono::steady_clock::now();
+  mc_rtc::log::success(
+      "[PlannerWorkerSubmit] generation={} requestControllerTime={:.6f}s configuredHypotheses={} searchEpoch={:.6f}s oneWorker=true nonBlocking=true",
+      generation, requestControllerTime, bank.configuredHypotheses,
+      bank.searchEpoch);
+  if(plannerForceStaleGeneration_)
+  {
+    // Development-only: advance the expected generation so the result this
+    // worker publishes is recognised as stale on arrival.
+    plannerRequestGeneration_.fetch_add(1, std::memory_order_acq_rel);
+    mc_rtc::log::warning(
+        "[PlannerWorkerTest] forced stale generation: worker will publish generation={} while the controller expects {}",
+        generation, plannerRequestGeneration_.load(std::memory_order_acquire));
+  }
+  plannerThread_ = std::thread(
+      [this, generation, previewSteps, routeWorkUnits]()
+      {
+        runPlannerWorker(generation, previewSteps, routeWorkUnits);
+      });
+}
+
+// The worker body. It runs the same serial finite search the control thread ran,
+// with the admission instant pinned to the frozen search epoch so no hypothesis
+// is pruned merely because the worker took time to compute. Current timing
+// admission is applied by the control thread when the result is received.
+void HandoverInterceptionController::runPlannerWorker(
+    std::uint64_t generation,
+    int previewSteps,
+    int routeWorkUnits)
+{
+  try
+  {
+    if(plannerInjectFailure_)
+    {
+      throw std::runtime_error("injected planner worker failure");
+    }
+    const double admission = finiteSearch_.bank.searchEpoch;
+    FiniteSearchStatus status = FiniteSearchStatus::Running;
+    while(!plannerCancel_.load(std::memory_order_relaxed))
+    {
+      status = stepFiniteTriadSearch(admission, previewSteps, routeWorkUnits);
+      if(status != FiniteSearchStatus::Running) { break; }
+    }
+    if(plannerCancel_.load(std::memory_order_relaxed))
+    {
+      plannerFailureReason_ = "cancelled";
+      plannerJobState_.store(static_cast<int>(PlannerJobState::Failed),
+                             std::memory_order_release);
+      return;
+    }
+    if(status != FiniteSearchStatus::Complete)
+    {
+      plannerFailureReason_ = finiteSearch_.failureReason.empty()
+          ? std::string("search_failed") : finiteSearch_.failureReason;
+      plannerJobState_.store(static_cast<int>(PlannerJobState::Failed),
+                             std::memory_order_release);
+      return;
+    }
+    plannerResult_ = buildFrozenPlanSet(
+        static_cast<std::size_t>(finiteSearch_.evaluatedHypotheses),
+        finiteSearch_.bank.configuredHypotheses, true);
+    plannerWorkerWallDuration_ =
+        std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - plannerWorkerStartWall_).count();
+    // Publish last: the result and its generation are fully written before the
+    // control thread can observe Ready.
+    plannerResultGeneration_.store(generation, std::memory_order_release);
+    plannerJobState_.store(static_cast<int>(PlannerJobState::Ready),
+                           std::memory_order_release);
+  }
+  catch(const std::exception & e)
+  {
+    plannerFailureReason_ = std::string("worker_exception/") + e.what();
+    plannerJobState_.store(static_cast<int>(PlannerJobState::Failed),
+                           std::memory_order_release);
+  }
+  catch(...)
+  {
+    plannerFailureReason_ = "worker_exception/unknown";
+    plannerJobState_.store(static_cast<int>(PlannerJobState::Failed),
+                           std::memory_order_release);
+  }
+}
+
+// Cancel and join. The worker checks the cancel flag at every bounded work unit,
+// so this returns promptly. It is never called from the control callback.
+void HandoverInterceptionController::shutdownPlannerWorker()
+{
+  plannerCancel_.store(true, std::memory_order_relaxed);
+  if(plannerThread_.joinable()) { plannerThread_.join(); }
+  plannerCancel_.store(false, std::memory_order_relaxed);
+  plannerJobState_.store(static_cast<int>(PlannerJobState::Idle),
+                         std::memory_order_release);
+}
+
+void HandoverInterceptionController::beginFiniteTriadSearch(
+    const FrozenEventBank & bank)
+{
+  finiteSearch_ = FiniteTriadSearchState();
+  finiteSearch_.bank = bank;
+  finiteSearch_.active = true;
+  // The frozen search never commits. Commitment is a control-thread decision
+  // taken once, after selection, against the clock at result receipt.
+  capturePlanningCommitOnSuccess_ = false;
+  prepareCapturePlanningSession();
+}
+
+// One bounded unit of the complete finite TRIAD search. This is the exact
+// per-cycle sequence the SolveInterception state used to run: start the next
+// bounded hypothesis, or advance the active one, or capture its alternatives
+// and move on. The admission instant arrives as a parameter, so the search
+// never reads the controller clock.
+HandoverInterceptionController::FiniteSearchStatus
+HandoverInterceptionController::stepFiniteTriadSearch(
+    double admissionNow,
+    int previewSteps,
+    int routeWorkUnits)
+{
+  FiniteTriadSearchState & search = finiteSearch_;
+  const FrozenEventBank & bank = search.bank;
+  if(!search.active) { return FiniteSearchStatus::Complete; }
+
+  if(!search.hypothesisActive)
+  {
+    const bool hypothesisBudget =
+        search.evaluatedHypotheses < bank.maximumHypotheses;
+    const bool timeBudget = admissionNow - bank.searchEpoch
+                          < bank.maximumSearchWallTime;
+    if(!(hypothesisBudget && timeBudget))
+    {
+      search.failureReason = "budget_exhausted";
+      return FiniteSearchStatus::Failed;
+    }
+    if(search.cursor >= bank.leads.size())
+    {
+      search.active = false;
+      return FiniteSearchStatus::Complete;
+    }
+
+    search.currentLead = bank.leads[search.cursor];
+    search.currentPresentationPose = bank.presentationPoses[search.cursor];
+    ++search.cursor;
+    search.currentPresentationTime = bank.searchEpoch + search.currentLead;
+    const double predictionHorizon =
+        search.currentPresentationTime - admissionNow;
+    ++search.evaluatedHypotheses;
+
+    // Reference-mode hypothesis pruning. An event whose remaining lead has
+    // already fallen below the safe commit lead cannot be committed even if a
+    // plan were found, so its geometry is never evaluated. This is the one
+    // place the search depends on when it is scheduled rather than on the
+    // frozen decision state, which is why the instant is injected.
+    if(predictionHorizon + 1e-12 < bank.minimumSafeCommitLead)
+    {
+      mc_rtc::log::warning(
+          "[GlobalEventTimingReject] hypothesis={} eventLead={:.3f}s remaining={:.3f}s minimumSafeCommitLead={:.3f}s reason=expired_before_geometry completePlanEvaluationSkipped=true hardTimingConstraint=true",
+          search.evaluatedHypotheses, search.currentLead, predictionHorizon,
+          bank.minimumSafeCommitLead);
+      return FiniteSearchStatus::Running;
+    }
+
+    // Establish the hypothesis world directly in the planner's own state. The
+    // search used to route this through the controller's planning-object
+    // snapshot, whose clear path calls refreshObjectPose() and
+    // predictObjectPose() and so writes the controller world that the control
+    // thread logs every cycle.
+    plannerContext_.W_T_O = search.currentPresentationPose;
+    plannerContext_.W_T_H = compose(plannerContext_.W_T_O, O_T_H_);
+    plannerContext_.plannerWorldActive = true;
+    const auto status = beginCapturePlanningCore();
+
+    const Eigen::Vector3d po = search.currentPresentationPose.translation();
+    mc_rtc::log::warning(
+        "[PresentationSolve] iteration={}/{} hypothesisLead={:.3f}s presentationTime={:.3f}s decelerationStart={:.3f}s presentationObject=[{:.3f},{:.3f},{:.3f}]",
+        search.evaluatedHypotheses, bank.maximumHypotheses,
+        search.currentLead, search.currentPresentationTime,
+        search.currentPresentationTime - presentationDecelerationDuration(),
+        po.x(), po.y(), po.z());
+    mc_rtc::log::info(
+        "[BoundedEventHypothesis] index={}/{} source={} lead={:.3f}s absolutePresentationTime={:.3f}s remaining={:.3f}s elapsed={:.3f}s attempted={} fixedSearchEpoch={} robotStationary=true",
+        search.evaluatedHypotheses, bank.configuredHypotheses, bank.source,
+        search.currentLead, search.currentPresentationTime, predictionHorizon,
+        admissionNow - bank.searchEpoch, search.evaluatedHypotheses, true);
+
+    if(status == CapturePlanningStatus::Failure)
+    {
+      search.failureReason = "capture_planner_could_not_start";
+      return FiniteSearchStatus::Failed;
+    }
+    search.hypothesisActive = true;
+    return FiniteSearchStatus::Running;
+  }
+
+  plannerContext_.W_T_O = search.currentPresentationPose;
+  plannerContext_.W_T_H = compose(plannerContext_.W_T_O, O_T_H_);
+  plannerContext_.plannerWorldActive = true;
+  const auto status = stepCapturePlanning(previewSteps, routeWorkUnits);
+  if(status == CapturePlanningStatus::Running)
+  {
+    return FiniteSearchStatus::Running;
+  }
+
+  search.hypothesisActive = false;
+  if(status == CapturePlanningStatus::Failure
+     || !planningBestCandidateAvailable())
+  {
+    ++search.geometryFailures;
+    mc_rtc::log::warning(
+        "[BoundedEventGeometryReject] hypothesis={} lead={:.3f}s source={} completePlan=false geometryFailures={} robotStationary=true; searching another future event",
+        search.evaluatedHypotheses, search.currentLead, bank.source,
+        search.geometryFailures);
+    return FiniteSearchStatus::Running;
+  }
+
+  ++search.feasibleHypotheses;
+  if(!captureCurrentEventPlanAlternatives(
+         static_cast<std::size_t>(search.evaluatedHypotheses),
+         search.currentLead, search.currentPresentationTime,
+         search.currentPresentationPose))
+  {
+    search.failureReason = "event_alternative_capture_failed";
+    return FiniteSearchStatus::Failed;
+  }
+
+  mc_rtc::log::success(
+      "[GlobalEventEvaluation] hypothesis={} eventLead={:.3f}s presentationTime={:.3f}s completePlan=true remainingAfterEvaluation={:.3f}s deferredCommit=true robotStationary=true",
+      search.evaluatedHypotheses, search.currentLead,
+      search.currentPresentationTime,
+      search.currentPresentationTime - admissionNow);
+  return FiniteSearchStatus::Running;
+}
+
+HandoverInterceptionController::FrozenPlanSet
+HandoverInterceptionController::buildFrozenPlanSet(
+    std::size_t evaluatedHypotheses,
+    std::size_t configuredHypotheses,
+    bool scheduleComplete) const
+{
+  FrozenPlanSet planSet;
+  planSet.searchEpoch = planningSnapshot_.searchEpoch;
+  planSet.evaluatedHypotheses = evaluatedHypotheses;
+  planSet.configuredHypotheses = configuredHypotheses;
+  planSet.scheduleComplete = scheduleComplete;
+  planSet.alternatives = plannerContext_.globalEventPlanAlternatives;
+  return planSet;
+}
+
+void HandoverInterceptionController::logFrozenPlanSet(
+    const FrozenPlanSet & planSet) const
+{
+  // Full double precision (17 significant digits round-trips IEEE754 binary64
+  // exactly), so this stream detects any floating-point difference the
+  // formatted scientific streams would round away.
+  if(plannerEvidenceLogging_)
+  {
+    mc_rtc::log::success(
+        "[FrozenPlanSetSummary] records={} searchEpoch={:.17g} evaluatedHypotheses={} configuredHypotheses={} scheduleComplete={} receiptTimeAdmissionApplied=false",
+        planSet.alternatives.size(), planSet.searchEpoch,
+        planSet.evaluatedHypotheses, planSet.configuredHypotheses,
+        planSet.scheduleComplete);
+  }
+  for(std::size_t i = 0; i < planSet.alternatives.size(); ++i)
+  {
+    const auto & a = planSet.alternatives[i];
+    const auto & c = a.candidate;
+    const Eigen::Vector3d pres = a.W_T_O_presentation.translation();
+    const Eigen::Vector3d startMouth = a.planningStartMouthPose.translation();
+    const Eigen::Vector3d standoff = c.W_T_M_standoff.translation();
+    const Eigen::Vector3d pre = c.W_T_M_pre.translation();
+    const Eigen::Vector3d retreat = c.W_T_M_retreat.translation();
+    const Eigen::Vector3d transit = c.W_T_M_transit.translation();
+    if(plannerEvidenceLogging_)
+    {
+      mc_rtc::log::success(
+          "[FrozenPlanRecord] sourceIndex={} hypothesis={} candidate={} route={} feasible={} reason={} eventLead={:.17g} eventPresentationTime={:.17g} scheduleWait={:.17g} searchToCompletion={:.17g} globalJ={:.17g} motionJ={:.17g} motionJValid={} predictedPresentation={:.17g} auditEstimated={:.17g} predictedContact={:.17g} predictedArm={:.17g} predictedEffort={:.17g} contactClosure={:.17g} transitPathLength={:.17g} rotation={:.17g} reachClear={:.17g} retreatClear={:.17g} minClear={:.17g} jointMargin={:.17g} conditionIndex={:.17g} velocityUtil={:.17g} terminalVelocityUtil={:.17g} presentation=[{:.17g},{:.17g},{:.17g}] startMouth=[{:.17g},{:.17g},{:.17g}] standoff=[{:.17g},{:.17g},{:.17g}] pre=[{:.17g},{:.17g},{:.17g}] retreat=[{:.17g},{:.17g},{:.17g}] transit=[{:.17g},{:.17g},{:.17g}] curveOffset=[{:.17g},{:.17g},{:.17g}]",
+          i, a.hypothesisIndex, c.name, c.transitRouteName, c.previewFeasible,
+          c.failureReason, a.eventLeadFromSearchEpoch, a.eventPresentationTime,
+          a.scheduleWaitBeforeReach, a.predictedSearchToCompletionTime,
+          a.globalObjectiveCost, c.completeCostAudit, c.completeCostAuditValid,
+          c.predictedPresentationTime, c.auditEstimatedTime,
+          c.predictedContactTime, c.predictedArmTime, c.predictedEffort,
+          c.contactClosure, c.transitPathLength, c.rotation,
+          c.predictiveReachClearance, c.predictiveRetreatClearance,
+          c.minClearance, c.minimumJointMarginRatio, c.minimumConditionIndex,
+          c.maximumJointVelocityUtilization, c.terminalVelocityUtilization,
+          pres.x(), pres.y(), pres.z(),
+          startMouth.x(), startMouth.y(), startMouth.z(),
+          standoff.x(), standoff.y(), standoff.z(),
+          pre.x(), pre.y(), pre.z(),
+          retreat.x(), retreat.y(), retreat.z(),
+          transit.x(), transit.y(), transit.z(),
+          c.reachCurveOffsetWorld.x(), c.reachCurveOffsetWorld.y(),
+          c.reachCurveOffsetWorld.z());
+    }
+  }
 }
 
 bool HandoverInterceptionController::selectGlobalTimePlanForCommit(
@@ -7336,6 +8392,11 @@ bool HandoverInterceptionController::selectGlobalTimePlanForCommit(
   globalEvaluatedHypotheses_ = evaluatedHypotheses;
   globalConfiguredHypotheses_ = configuredHypotheses;
   globalScheduleComplete_ = scheduleComplete;
+
+  // The frozen finite search is complete at this point and `now` was taken by
+  // the caller, so emitting the plan set here cannot influence the decision.
+  logFrozenPlanSet(buildFrozenPlanSet(
+      evaluatedHypotheses, configuredHypotheses, scheduleComplete));
 
   if(!globalTimePlanSelectionEnabled()
      || completePlanSelectionMode_ != "binding_cost"
@@ -7368,10 +8429,10 @@ bool HandoverInterceptionController::selectGlobalTimePlanForCommit(
   }
 
   std::vector<call_handover::FiniteEventPlanRecord> records;
-  records.reserve(globalEventPlanAlternatives_.size());
-  for(std::size_t i = 0; i < globalEventPlanAlternatives_.size(); ++i)
+  records.reserve(plannerContext_.globalEventPlanAlternatives.size());
+  for(std::size_t i = 0; i < plannerContext_.globalEventPlanAlternatives.size(); ++i)
   {
-    const auto & alternative = globalEventPlanAlternatives_[i];
+    const auto & alternative = plannerContext_.globalEventPlanAlternatives[i];
     call_handover::FiniteEventPlanRecord record;
     record.sourceIndex = i;
     record.hypothesisIndex = alternative.hypothesisIndex;
@@ -7413,38 +8474,41 @@ bool HandoverInterceptionController::selectGlobalTimePlanForCommit(
       decisionCostTieTolerance_, &timingDiagnostics);
   for(const auto & diagnostic : timingDiagnostics)
   {
-    mc_rtc::log::info(
-        "[GlobalPlanTimingAdmissibility] hypothesis={} candidate={} route={} costValid={} globalJ={:.9f} eventPresentationTime={:.6f}s now={:.6f}s remaining={:.6f}s minimumSafeCommitLead={:.6f}s predictedPresentationDuration={:.6f}s minimumReachEntryLead={:.6f}s eventWindowAdmissible={} timingAdmissible={}",
-        diagnostic.hypothesisIndex, diagnostic.candidateName,
-        diagnostic.routeName, diagnostic.costValid, diagnostic.globalCost,
-        now + diagnostic.remaining, now, diagnostic.remaining,
-        diagnostic.minimumSafeCommitLead,
-        diagnostic.predictedPresentationDuration,
-        diagnostic.minimumReachEntryLead, diagnostic.eventWindowAdmissible,
-        diagnostic.timingAdmissible);
+    if(plannerEvidenceLogging_)
+    {
+      mc_rtc::log::info(
+          "[GlobalPlanTimingAdmissibility] hypothesis={} candidate={} route={} costValid={} globalJ={:.9f} eventPresentationTime={:.6f}s now={:.6f}s remaining={:.6f}s minimumSafeCommitLead={:.6f}s predictedPresentationDuration={:.6f}s minimumReachEntryLead={:.6f}s eventWindowAdmissible={} timingAdmissible={}",
+          diagnostic.hypothesisIndex, diagnostic.candidateName,
+          diagnostic.routeName, diagnostic.costValid, diagnostic.globalCost,
+          now + diagnostic.remaining, now, diagnostic.remaining,
+          diagnostic.minimumSafeCommitLead,
+          diagnostic.predictedPresentationDuration,
+          diagnostic.minimumReachEntryLead, diagnostic.eventWindowAdmissible,
+          diagnostic.timingAdmissible);
+    }
   }
-  planningCompletePlanCount_ = selection.completePlanCount;
-  planningCostValidCount_ = selection.costValidCount;
-  planningTimingAdmissibleCount_ = selection.timingAdmissibleCount;
+  plannerContext_.planningCompletePlanCount = selection.completePlanCount;
+  plannerContext_.planningCostValidCount = selection.costValidCount;
+  plannerContext_.planningTimingAdmissibleCount = selection.timingAdmissibleCount;
   planningMinimumAdmissibleCost_ =
       selection.minimumAdmissibleGlobalCost;
   planningCostSelectionReason_ = selection.reason;
 
   if(!selection.success
-     || selection.selectedRecord >= globalEventPlanAlternatives_.size())
+     || selection.selectedRecord >= plannerContext_.globalEventPlanAlternatives.size())
   {
     mc_rtc::log::error(
         "[GlobalTimePlanSelection] success=false reason={} scheduleComplete=true evaluatedHypotheses={} configuredHypotheses={} completePlans={} costValidPlans={} timingAdmissiblePlans={} no fallback permitted",
         planningCostSelectionReason_, evaluatedHypotheses,
-        configuredHypotheses, planningCompletePlanCount_,
-        planningCostValidCount_, planningTimingAdmissibleCount_);
+        configuredHypotheses, plannerContext_.planningCompletePlanCount,
+        plannerContext_.planningCostValidCount, plannerContext_.planningTimingAdmissibleCount);
     return false;
   }
 
   const auto & selected =
-      globalEventPlanAlternatives_[selection.selectedRecord];
-  planningBestCandidate_ = selected.candidate;
-  planningFoundFeasible_ = true;
+      plannerContext_.globalEventPlanAlternatives[selection.selectedRecord];
+  plannerContext_.planningBestCandidate = selected.candidate;
+  plannerContext_.planningFoundFeasible = true;
   planningSelectedObjectiveCost_ = selected.globalObjectiveCost;
   selectedGlobalMotionCost_ = selected.candidate.completeCostAudit;
   selectedGlobalScheduleWait_ = selected.scheduleWaitBeforeReach;
@@ -7478,8 +8542,8 @@ bool HandoverInterceptionController::selectGlobalTimePlanForCommit(
   mc_rtc::log::success(
       "[GlobalTimePlanSelection] success=true scheduleComplete=true evaluatedHypotheses={} configuredHypotheses={} completePlans={} costValidPlans={} timingAdmissiblePlans={} hypothesis={} eventLead={:.3f}s presentationTime={:.3f}s candidate={} route={} motionJ={:.9f} scheduleWait={:+.3f}s selectedGlobalJ={:.9f} minimumGlobalJ={:.9f} selectedWithinMinimumTolerance=true tieTolerance={:.3e} tieBreak=[completion,event,candidateReach,clearance,candidate,route,hypothesis,index]",
       evaluatedHypotheses, configuredHypotheses,
-      planningCompletePlanCount_, planningCostValidCount_,
-      planningTimingAdmissibleCount_, selected.hypothesisIndex,
+      plannerContext_.planningCompletePlanCount, plannerContext_.planningCostValidCount,
+      plannerContext_.planningTimingAdmissibleCount, selected.hypothesisIndex,
       selected.eventLeadFromSearchEpoch, selected.eventPresentationTime,
       selected.candidate.name, selected.candidate.transitRouteName,
       selected.candidate.completeCostAudit,
@@ -7504,7 +8568,7 @@ bool HandoverInterceptionController::commitGlobalTimePlanSelection()
                          - controllerTime_;
   const bool timingAdmissible =
       remaining + 1e-12 >= selectedGlobalMinimumSafeCommitLead_
-      && planningBestCandidate_.predictedPresentationTime
+      && plannerContext_.planningBestCandidate.predictedPresentationTime
              + selectedGlobalMinimumReachEntryLead_
              <= remaining + 1e-12;
   if(!timingAdmissible)
@@ -7514,7 +8578,7 @@ bool HandoverInterceptionController::commitGlobalTimePlanSelection()
     mc_rtc::log::error(
         "[GlobalTimePlanCommitProof] committed=false reason={} remaining={:.6f}s predictedReach={:.6f}s minimumReachEntryLead={:.6f}s minimumSafeCommitLead={:.6f}s no fallback permitted",
         planningCostSelectionReason_, remaining,
-        planningBestCandidate_.predictedPresentationTime,
+        plannerContext_.planningBestCandidate.predictedPresentationTime,
         selectedGlobalMinimumReachEntryLead_,
         selectedGlobalMinimumSafeCommitLead_);
     return false;
@@ -7543,10 +8607,22 @@ bool HandoverInterceptionController::commitGlobalTimePlanSelection()
     return false;
   }
 
-  const double residual = planningBestCandidate_.predictedPresentationTime
+  // Record the accepted prediction drift, not only the rejected one, so a
+  // successful commit carries its own freshness margin in the evidence.
+  mc_rtc::log::success(
+      "[GlobalTimePlanCommitFreshness] accepted=true translationDrift={:.6f}m translationThreshold={:.6f}m translationMargin={:.6f}m rotationDrift={:.6f}rad rotationThreshold={:.6f}rad rotationMargin={:.6f}rad remaining={:.6f}s",
+      translationDrift,
+      predictiveReachPolicy_.maximumObjectTranslationDeviation,
+      predictiveReachPolicy_.maximumObjectTranslationDeviation
+          - translationDrift,
+      rotationDrift, predictiveReachPolicy_.maximumObjectRotationDeviation,
+      predictiveReachPolicy_.maximumObjectRotationDeviation - rotationDrift,
+      remaining);
+
+  const double residual = plannerContext_.planningBestCandidate.predictedPresentationTime
                         - remaining;
-  planningStartMouthPose_ = selectedGlobalPlanningStartMouthPose_;
-  commitCandidate(planningBestCandidate_,
+  plannerContext_.planningStartMouthPose = selectedGlobalPlanningStartMouthPose_;
+  commitCandidate(plannerContext_.planningBestCandidate,
                   selectedGlobalObjectPresentationPose_, true,
                   selectedGlobalEventPresentationTime_, residual);
   return committedPlanValid();
@@ -7555,8 +8631,8 @@ bool HandoverInterceptionController::commitGlobalTimePlanSelection()
 HandoverInterceptionController::CapturePlanningStatus
 HandoverInterceptionController::finalizeCapturePlanning()
 {
-  planningMbc_.reset();
-  if(!planningFoundFeasible_)
+  plannerContext_.planningMbc.reset();
+  if(!plannerContext_.planningFoundFeasible)
   {
     mc_rtc::log::warning(
         "[PlanCapture] no complete collision-free, joint-feasible reach-insert-close-retreat plan exists at the current future-event snapshot; the stationary event solver may inspect another bounded hypothesis");
@@ -7564,11 +8640,11 @@ HandoverInterceptionController::finalizeCapturePlanning()
     return capturePlanningStatus_;
   }
 
-  const CaptureCandidate protectedBest = planningBestCandidate_;
+  const CaptureCandidate protectedBest = plannerContext_.planningBestCandidate;
 
   const CaptureCandidate * auditBest = nullptr;
   size_t auditValidCount = 0;
-  for(const auto & candidate : planningCompletePlanAuditCandidates_)
+  for(const auto & candidate : plannerContext_.planningCompletePlanAuditCandidates)
   {
     if(!candidate.completeCostAuditValid) { continue; }
     ++auditValidCount;
@@ -7584,7 +8660,7 @@ HandoverInterceptionController::finalizeCapturePlanning()
         && auditBest->transitRouteName == protectedBest.transitRouteName;
     mc_rtc::log::success(
         "[CompletePlanCostSet] completeRoutes={} costValidRoutes={} protected=[{}:{} score:{:.6f} selectionTime:{:.3f}] predictedTime={:.3f} unconstrainedCostBest=[{}:{} J:{:.6f} time:{:.3f}] sameAction={} configuredMode={} finalTimingAdmissionPending=true",
-        planningCompletePlanAuditCandidates_.size(), auditValidCount,
+        plannerContext_.planningCompletePlanAuditCandidates.size(), auditValidCount,
         protectedBest.name, protectedBest.transitRouteName,
         protectedBest.score,
         protectedBest.terminalTimingPredictionBound
@@ -7593,14 +8669,14 @@ HandoverInterceptionController::finalizeCapturePlanning()
         protectedBest.estimatedTime,
         auditBest->name, auditBest->transitRouteName,
         auditBest->completeCostAudit, auditBest->auditEstimatedTime,
-        sameAction, completePlanSelectionMode_);
+        sameAction, plannerConfig_.completePlanSelectionMode);
   }
   else
   {
     mc_rtc::log::warning(
         "[CompletePlanCostSet] completeRoutes={} costValidRoutes=0 cost unavailable configuredMode={}",
-        planningCompletePlanAuditCandidates_.size(),
-        completePlanSelectionMode_);
+        plannerContext_.planningCompletePlanAuditCandidates.size(),
+        plannerConfig_.completePlanSelectionMode);
   }
 
   // Prepare an unconstrained selection now. The moving-event state calls this
@@ -7619,15 +8695,15 @@ HandoverInterceptionController::finalizeCapturePlanning()
 
   if(localSelectionSucceeded)
   {
-    const CaptureCandidate & best = planningBestCandidate_;
+    const CaptureCandidate & best = plannerContext_.planningBestCandidate;
 
     if(capturePlanningCommitOnSuccess_)
     {
-      commitCandidate(best, W_T_O_, false, 0.0, 0.0);
+      commitCandidate(best, plannerContext_.W_T_O, false, 0.0, 0.0);
     }
     else
     {
-      const Eigen::Vector3d po = W_T_O_.translation();
+      const Eigen::Vector3d po = plannerContext_.W_T_O.translation();
       mc_rtc::log::success(
           "[PlanCaptureProbe] BEST {} route={} at presentation object=[{:.3f},{:.3f},{:.3f}] predictedPresentation={:.3f}s predictedContact={:.3f}s predictedExecution={:.3f}s reachClear={:.4f} score={:.4f}",
           best.name, best.transitRouteName, po.x(), po.y(), po.z(),
@@ -7647,7 +8723,7 @@ void HandoverInterceptionController::commitCandidate(
     double committedPresentationTime,
     double timingResidual)
 {
-  if(completePlanSelectionMode_ == "binding_cost")
+  if(plannerConfig_.completePlanSelectionMode == "binding_cost")
   {
     const bool selectedEqualsMinimum = best.completeCostAuditValid
         && planningCostSelectionValid_
@@ -7656,7 +8732,7 @@ void HandoverInterceptionController::commitCandidate(
         && std::isfinite(planningMinimumAdmissibleCost_)
         && std::abs(planningSelectedObjectiveCost_
                     - planningMinimumAdmissibleCost_)
-               <= decisionCostTieTolerance_;
+               <= plannerConfig_.decisionCostTieTolerance;
     if(!selectedEqualsMinimum)
     {
       candidateSelected_ = false;
@@ -7707,7 +8783,7 @@ void HandoverInterceptionController::commitCandidate(
   {
     const double retreatDuration = std::max(
         0.0, best.estimatedTime - best.predictedContactTime
-             - timingBilateralDwell_ - timingConfirmationDwell_);
+             - plannerConfig_.timingBilateralDwell - plannerConfig_.timingConfirmationDwell);
     const InterceptionPlan plan = makeInterceptionPlan(
         best, W_T_O_reference, committedPresentationTime,
         best.predictedReachTime, best.predictedApproachTime,
@@ -7716,7 +8792,7 @@ void HandoverInterceptionController::commitCandidate(
     if(!validateInterceptionPlan(plan, &invariantReason, true))
     {
       candidateSelected_ = false;
-      if(completePlanSelectionMode_ == "binding_cost")
+      if(plannerConfig_.completePlanSelectionMode == "binding_cost")
       {
         mc_rtc::log::error(
             "[BindingCostCommitProof] committed=false reason=interception_plan_validation candidate={} route={} detail={}",
@@ -7738,7 +8814,7 @@ void HandoverInterceptionController::commitCandidate(
     committedObjectLinearVelocity_ = plan.objectLinearVelocity;
     committedObjectAngularVelocity_ = plan.objectAngularVelocity;
 
-    if(simulateMovingObject_)
+    if(plannerConfig_.simulateMovingObject)
     {
       simulatedTruthInterceptionPlan_ = plan;
       const sva::PTransformd nominalAtCommit = interceptionObjectPoseAt(
@@ -7772,15 +8848,15 @@ void HandoverInterceptionController::commitCandidate(
     W_T_O_committedContact_ = W_T_O_reference;
   }
 
-  if(completePlanSelectionMode_ == "binding_cost"
+  if(plannerConfig_.completePlanSelectionMode == "binding_cost"
      && (!asInterception || interceptionCommitted_))
   {
     mc_rtc::log::success(
         "[BindingCostCommitProof] committed=true candidate={} route={} selectedJ={:.9f} minimumAdmissibleJ={:.9f} selectedWithinMinimumTolerance=true tieTolerance={:.3e} completePlans={} costValidPlans={} timingAdmissiblePlans={} motionJ={:.9f} eventTimePolicy={}",
         best.name, best.transitRouteName, planningSelectedObjectiveCost_,
-        planningMinimumAdmissibleCost_, decisionCostTieTolerance_,
-        planningCompletePlanCount_, planningCostValidCount_,
-        planningTimingAdmissibleCount_, best.completeCostAudit,
+        planningMinimumAdmissibleCost_, plannerConfig_.decisionCostTieTolerance,
+        plannerContext_.planningCompletePlanCount, plannerContext_.planningCostValidCount,
+        plannerContext_.planningTimingAdmissibleCount, best.completeCostAudit,
         planningGlobalSelectionActive_
             ? "global_time_plan" : "first_admissible_center_out");
     if(planningGlobalSelectionActive_ && asInterception
@@ -7789,13 +8865,13 @@ void HandoverInterceptionController::commitCandidate(
       mc_rtc::log::success(
           "[GlobalTimePlanCommitProof] committed=true scheduleComplete={} evaluatedHypotheses={} configuredHypotheses={} completePlans={} costValidPlans={} timingAdmissiblePlans={} hypothesis={} eventLead={:.3f}s presentationTime={:.3f}s candidate={} route={} motionJ={:.9f} scheduleWait={:+.3f}s selectedGlobalJ={:.9f} minimumGlobalJ={:.9f} selectedWithinMinimumTolerance=true tieTolerance={:.3e} objective=time_grasp_route noRetiming=true noReplanning=true",
           globalScheduleComplete_, globalEvaluatedHypotheses_,
-          globalConfiguredHypotheses_, planningCompletePlanCount_,
-          planningCostValidCount_, planningTimingAdmissibleCount_,
+          globalConfiguredHypotheses_, plannerContext_.planningCompletePlanCount,
+          plannerContext_.planningCostValidCount, plannerContext_.planningTimingAdmissibleCount,
           selectedGlobalHypothesisIndex_, selectedGlobalEventLead_,
           selectedGlobalEventPresentationTime_, best.name,
           best.transitRouteName, best.completeCostAudit,
           selectedGlobalScheduleWait_, planningSelectedObjectiveCost_,
-          planningMinimumAdmissibleCost_, decisionCostTieTolerance_);
+          planningMinimumAdmissibleCost_, plannerConfig_.decisionCostTieTolerance);
     }
   }
 
@@ -7867,7 +8943,7 @@ bool HandoverInterceptionController::commitPlanningBestAsInterception(
     double timingResidual,
     const sva::PTransformd & W_T_O_presentation)
 {
-  if(!planningFoundFeasible_)
+  if(!plannerContext_.planningFoundFeasible)
   {
     mc_rtc::log::error(
         "[InterceptionCommit] no feasible planning candidate is available");
@@ -7882,13 +8958,14 @@ bool HandoverInterceptionController::commitPlanningBestAsInterception(
         planningCostSelectionReason_);
     return false;
   }
-  commitCandidate(planningBestCandidate_, W_T_O_presentation, true,
+  commitCandidate(plannerContext_.planningBestCandidate, W_T_O_presentation, true,
                   committedPresentationTime, timingResidual);
   return committedPlanValid();
 }
 
 HandoverInterceptionController::CapturePlanningStatus
-HandoverInterceptionController::stepCapturePlanning(int maxInternalSteps)
+HandoverInterceptionController::stepCapturePlanning(int maxInternalSteps,
+                                                   int routeWorkUnits)
 {
   if(capturePlanningStatus_ != CapturePlanningStatus::Running)
   {
@@ -7899,7 +8976,22 @@ HandoverInterceptionController::stepCapturePlanning(int maxInternalSteps)
   for(int step = 0; step < budget
       && capturePlanningStatus_ == CapturePlanningStatus::Running; ++step)
   {
-    if(!planningMbc_)
+    // A pending transit-route bank takes priority over starting new preview
+    // work. Route certification is advanced by at most routeWorkUnits bounded
+    // work units and then ends the cycle rather than consuming units of the
+    // preview step budget; that is what bounds the per-cycle cost the atomic
+    // bank, and then the atomic route, used to produce.
+    if(plannerContext_.routeCertificationActive)
+    {
+      if(!stepTransitRouteCertification(routeWorkUnits)
+         && plannerContext_.planningCandidateIndex >= plannerContext_.planningCandidateCount)
+      {
+        return finalizeCapturePlanning();
+      }
+      break;
+    }
+
+    if(!plannerContext_.planningMbc)
     {
       if(!startNextPlanningCandidate())
       {
@@ -7908,71 +9000,80 @@ HandoverInterceptionController::stepCapturePlanning(int maxInternalSteps)
     }
 
     PreviewStepStatus status = PreviewStepStatus::Failed;
-    if(planningPhase_ == PlanningPhase::ReachStandoff)
+    if(plannerContext_.planningPhase == PlanningPhase::ReachStandoff)
     {
       status = previewReachStep(
-          *planningMbc_, planningCurrentCandidate_.W_T_M_standoff,
-          false, false, planningSegmentIteration_, planningResult_);
+          *plannerContext_.planningMbc, plannerContext_.planningCurrentCandidate.W_T_M_standoff,
+          false, false, plannerContext_.planningSegmentIteration, plannerContext_.planningResult);
       if(status == PreviewStepStatus::Succeeded)
       {
-        planningResult_.reachStandoffDuration =
-            planningResult_.duration - planningPhaseStartDuration_;
-        planningPhaseStartDuration_ = planningResult_.duration;
+        plannerContext_.planningResult.reachStandoffDuration =
+            plannerContext_.planningResult.duration - plannerContext_.planningPhaseStartDuration;
+        plannerContext_.planningPhaseStartDuration = plannerContext_.planningResult.duration;
         // Preserve the redundancy branch at the end of the standoff segment.
         // Reach execution must not be pulled toward the later capture posture.
-        planningCurrentCandidate_.plannedStandoffArmPosture =
-            armPostureFromMbc(*planningMbc_);
-        planningPhase_ = PlanningPhase::ReachCapture;
-        planningSegmentIteration_ = 0;
+        plannerContext_.planningCurrentCandidate.plannedStandoffArmPosture =
+            armPostureFromMbc(*plannerContext_.planningMbc);
+        plannerContext_.planningPhase = PlanningPhase::ReachCapture;
+        plannerContext_.planningSegmentIteration = 0;
         continue;
       }
     }
-    else if(planningPhase_ == PlanningPhase::ReachCapture)
+    else if(plannerContext_.planningPhase == PlanningPhase::ReachCapture)
     {
       status = previewReachStep(
-          *planningMbc_, planningCurrentCandidate_.W_T_M_pre,
-          true, false, planningSegmentIteration_, planningResult_);
+          *plannerContext_.planningMbc, plannerContext_.planningCurrentCandidate.W_T_M_pre,
+          true, false, plannerContext_.planningSegmentIteration, plannerContext_.planningResult);
       if(status == PreviewStepStatus::Succeeded)
       {
-        planningResult_.reachCaptureDuration =
-            planningResult_.duration - planningPhaseStartDuration_;
-        planningPhaseStartDuration_ = planningResult_.duration;
-        planningPhase_ = PlanningPhase::Closure;
-        planningClosureIndex_ = 0;
+        plannerContext_.planningResult.reachCaptureDuration =
+            plannerContext_.planningResult.duration - plannerContext_.planningPhaseStartDuration;
+        plannerContext_.planningPhaseStartDuration = plannerContext_.planningResult.duration;
+        plannerContext_.planningPhase = PlanningPhase::Closure;
+        plannerContext_.planningClosureIndex = 0;
         continue;
       }
     }
-    else if(planningPhase_ == PlanningPhase::Closure)
+    else if(plannerContext_.planningPhase == PlanningPhase::Closure)
     {
       status = previewClosureStep(
-          *planningMbc_, planningClosureIndex_, planningResult_);
+          *plannerContext_.planningMbc, plannerContext_.planningClosureIndex, plannerContext_.planningResult);
       if(status == PreviewStepStatus::Succeeded)
       {
-        planningResult_.closureDuration =
-            planningResult_.duration - planningPhaseStartDuration_;
-        planningPhaseStartDuration_ = planningResult_.duration;
+        plannerContext_.planningResult.closureDuration =
+            plannerContext_.planningResult.duration - plannerContext_.planningPhaseStartDuration;
+        plannerContext_.planningPhaseStartDuration = plannerContext_.planningResult.duration;
         // Save the capture redundancy branch before retreat changes it.
-        planningCurrentCandidate_.plannedArmPosture =
-            armPostureFromMbc(*planningMbc_);
-        planningM_T_O_ = relativePose(
-            previewMouthPose(*planningMbc_), W_T_O_);
-        planningPhase_ = PlanningPhase::Retreat;
-        planningSegmentIteration_ = 0;
+        plannerContext_.planningCurrentCandidate.plannedArmPosture =
+            armPostureFromMbc(*plannerContext_.planningMbc);
+        sva::PTransformd captureMouthPose;
+        if(!previewMouthPose(*plannerContext_.planningMbc, captureMouthPose))
+        {
+          plannerContext_.planningResult.reason = "preview_kinematics_unavailable";
+          status = PreviewStepStatus::Failed;
+          break;
+        }
+        plannerContext_.planningM_T_O = relativePose(captureMouthPose, plannerContext_.W_T_O);
+        plannerContext_.planningPhase = PlanningPhase::Retreat;
+        plannerContext_.planningSegmentIteration = 0;
         continue;
       }
     }
     else
     {
       status = previewReachStep(
-          *planningMbc_, planningCurrentCandidate_.W_T_M_retreat,
-          false, true, planningSegmentIteration_, planningResult_);
+          *plannerContext_.planningMbc, plannerContext_.planningCurrentCandidate.W_T_M_retreat,
+          false, true, plannerContext_.planningSegmentIteration, plannerContext_.planningResult);
       if(status == PreviewStepStatus::Succeeded)
       {
-        planningResult_.retreatDuration =
-            planningResult_.duration - planningPhaseStartDuration_;
-        planningPhaseStartDuration_ = planningResult_.duration;
-        finishCurrentPlanningCandidate(true);
-        if(planningCandidateIndex_ >= planningCandidateCount_)
+        plannerContext_.planningResult.retreatDuration =
+            plannerContext_.planningResult.duration - plannerContext_.planningPhaseStartDuration;
+        plannerContext_.planningPhaseStartDuration = plannerContext_.planningResult.duration;
+        if(finishCurrentPlanningCandidate(true))
+        {
+          break;
+        }
+        if(plannerContext_.planningCandidateIndex >= plannerContext_.planningCandidateCount)
         {
           return finalizeCapturePlanning();
         }
@@ -7982,8 +9083,11 @@ HandoverInterceptionController::stepCapturePlanning(int maxInternalSteps)
 
     if(status == PreviewStepStatus::Failed)
     {
-      finishCurrentPlanningCandidate(false);
-      if(planningCandidateIndex_ >= planningCandidateCount_)
+      if(finishCurrentPlanningCandidate(false))
+      {
+        break;
+      }
+      if(plannerContext_.planningCandidateIndex >= plannerContext_.planningCandidateCount)
       {
         return finalizeCapturePlanning();
       }

@@ -1,0 +1,9 @@
+timing frontier replay: PASS
+records=283
+plan_start=9.023000000
+logged_planner_time=2.901000000
+logged_timing_admissible=10
+tie_tolerance=1e-09
+fail_closed_boundary=3.900000000001
+boundary_semantics=admissible_at_boundary_due_to_non_strict_inequality;fail_closed_for_Tp_greater_than_boundary
+Tp=2.900000000 admissible=10 winner=h13:axisP_side_68deg:ring80mm_1of8 minimumGlobalJ=1.126642447

@@ -5,6 +5,16 @@ batch, on more than one commit. This document states, for each result,
 exactly which commit produced it and how confident that attribution is —
 do not assume every result was produced at the same commit.
 
+> **[`provenance.md`](provenance.md) is the canonical source-state map for this
+> repository.** It lists all five states, states which campaign belongs to which,
+> and records why the generalization and robustness campaigns are unaffected by
+> the later perception-latency configuration correction. Read it before quoting
+> any number from this page.
+
+The primary records for the campaigns run on the asynchronous-planner state are
+published under [`../evidence/`](../evidence/), with an integrity manifest and a
+dependency-free checker.
+
 Two datasets are reported:
 
 - **Dataset A — July-19 perception-latency matrix**: source target

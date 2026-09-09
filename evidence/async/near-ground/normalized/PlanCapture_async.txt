@@ -1,0 +1,910 @@
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0549 vertical=0.587
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=mouth_corridor/blue_handle_lateral elapsedPreview=2.640s clear=-0.0008 vertical=0.852
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=direct feasible reach+insert+close+retreat predictedTime=8.148s selectionTime=8.048s predictedContact=6.748s rawRollout=5.124s arm=5.130s closure=2.318s fixed=0.700s effort=8.405 rot=3.114 reachClear=0.0751 overallClear=0.0003 contactClosure=0.742 cost=8.5070 vertical=0.988
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg route=ring80mm_7of8 feasible reach+insert+close+retreat predictedTime=8.357s selectionTime=8.232s predictedContact=6.857s rawRollout=5.284s arm=5.340s closure=2.318s fixed=0.700s effort=8.422 rot=2.834 reachClear=0.0773 overallClear=0.0003 contactClosure=0.742 cost=8.6696 vertical=0.973
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0411 vertical=0.810
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0477 vertical=0.524
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=right_knuckle_b/human_grey_handle elapsedPreview=0.660s clear=-0.0061 vertical=0.158
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.520s clear=-0.0006 vertical=-0.232
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_finger_2/ground_plane elapsedPreview=0.580s clear=-0.0019 vertical=-0.587
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.400s clear=-0.0090 vertical=-0.852
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0098 vertical=-0.988
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0103 vertical=-0.973
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0018 vertical=-0.810
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.440s clear=-0.0069 vertical=-0.524
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0006 vertical=-0.158
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0288 vertical=0.232
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0695 vertical=0.587
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0567 vertical=0.232
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0106 vertical=-0.158
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.800s clear=-0.0056 vertical=-0.524
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=right_finger_2/ground_plane elapsedPreview=0.720s clear=-0.0035 vertical=-0.810
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=right_finger_0/ground_plane elapsedPreview=0.660s clear=-0.0034 vertical=-0.973
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_finger_0/ground_plane elapsedPreview=0.660s clear=-0.0050 vertical=-0.988
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.620s clear=-0.0084 vertical=-0.852
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.700s clear=-0.0010 vertical=-0.587
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=left_finger_12/ground_plane elapsedPreview=1.180s clear=-0.0003 vertical=-0.232
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=left_pad_shoulder_high/sensor_core elapsedPreview=1.860s clear=-0.0024 vertical=0.158
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=left_tip_body_2/sensor_core elapsedPreview=2.060s clear=-0.0024 vertical=0.524
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0511 vertical=0.810
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg route=direct feasible reach+insert+close+retreat predictedTime=8.128s selectionTime=8.023s predictedContact=6.428s rawRollout=5.044s arm=5.110s closure=2.318s fixed=0.700s effort=8.326 rot=1.641 reachClear=0.0798 overallClear=0.0003 contactClosure=0.742 cost=8.3621 vertical=0.973
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg route=direct feasible reach+insert+close+retreat predictedTime=7.998s selectionTime=7.873s predictedContact=6.573s rawRollout=4.944s arm=4.980s closure=2.318s fixed=0.700s effort=5.889 rot=1.599 reachClear=0.0813 overallClear=0.0003 contactClosure=0.742 cost=8.1479 vertical=0.988
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.960s clear=-0.0010 vertical=0.852
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0563 vertical=0.597
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=mouth_corridor/blue_handle_lateral elapsedPreview=2.720s clear=-0.0002 vertical=0.859
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=direct feasible reach+insert+close+retreat predictedTime=8.148s selectionTime=8.048s predictedContact=6.748s rawRollout=5.124s arm=5.130s closure=2.318s fixed=0.700s effort=8.362 rot=3.105 reachClear=0.0744 overallClear=0.0003 contactClosure=0.742 cost=8.5051 vertical=0.989
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg route=ring80mm_7of8 feasible reach+insert+close+retreat predictedTime=8.383s selectionTime=8.258s predictedContact=6.858s rawRollout=5.304s arm=5.366s closure=2.318s fixed=0.700s effort=8.291 rot=2.825 reachClear=0.0758 overallClear=0.0003 contactClosure=0.742 cost=8.6916 vertical=0.970
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0423 vertical=0.802
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0465 vertical=0.512
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=right_knuckle_b/human_grey_handle elapsedPreview=0.640s clear=-0.0028 vertical=0.145
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.520s clear=-0.0048 vertical=-0.245
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_finger_2/ground_plane elapsedPreview=0.560s clear=-0.0026 vertical=-0.597
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0017 vertical=-0.859
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0115 vertical=-0.989
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0112 vertical=-0.970
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0014 vertical=-0.802
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.440s clear=-0.0041 vertical=-0.512
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0046 vertical=-0.145
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0302 vertical=0.245
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0705 vertical=0.597
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0590 vertical=0.245
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0154 vertical=-0.145
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.800s clear=-0.0066 vertical=-0.512
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=right_finger_2/ground_plane elapsedPreview=0.720s clear=-0.0031 vertical=-0.802
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=right_finger_0/ground_plane elapsedPreview=0.660s clear=-0.0037 vertical=-0.970
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_finger_0/ground_plane elapsedPreview=0.640s clear=-0.0011 vertical=-0.989
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.600s clear=-0.0037 vertical=-0.859
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.700s clear=-0.0006 vertical=-0.597
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.200s clear=-0.0033 vertical=-0.245
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=left_pad_shoulder_high/sensor_core elapsedPreview=1.880s clear=-0.0003 vertical=0.145
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=left_tip_body_2/sensor_core elapsedPreview=2.080s clear=-0.0015 vertical=0.512
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0527 vertical=0.802
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg route=direct feasible reach+insert+close+retreat predictedTime=8.128s selectionTime=8.023s predictedContact=6.428s rawRollout=5.044s arm=5.110s closure=2.318s fixed=0.700s effort=8.348 rot=1.644 reachClear=0.0797 overallClear=0.0003 contactClosure=0.742 cost=8.3629 vertical=0.970
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg route=direct feasible reach+insert+close+retreat predictedTime=7.998s selectionTime=7.873s predictedContact=6.573s rawRollout=4.944s arm=4.980s closure=2.318s fixed=0.700s effort=5.953 rot=1.600 reachClear=0.0809 overallClear=0.0003 contactClosure=0.742 cost=8.1495 vertical=0.989
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.900s clear=-0.0012 vertical=0.859
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0614 vertical=0.648
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.600s clear=-0.0006 vertical=0.890
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=ring80mm_6of8 feasible reach+insert+close+retreat predictedTime=8.270s selectionTime=8.170s predictedContact=6.870s rawRollout=5.244s arm=5.252s closure=2.318s fixed=0.700s effort=7.267 rot=3.058 reachClear=0.0738 overallClear=0.0004 contactClosure=0.742 cost=8.5963 vertical=0.997
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg route=ring80mm_2of8 feasible reach+insert+close+retreat predictedTime=8.387s selectionTime=8.262s predictedContact=6.862s rawRollout=5.304s arm=5.370s closure=2.318s fixed=0.700s effort=10.190 rot=2.779 reachClear=0.0820 overallClear=0.0003 contactClosure=0.742 cost=8.7395 vertical=0.952
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0478 vertical=0.762
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0241 vertical=0.456
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=right_finger_3/human_grey_handle elapsedPreview=0.620s clear=-0.0007 vertical=0.080
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.480s clear=-0.0022 vertical=-0.307
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.460s clear=-0.0052 vertical=-0.648
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0008 vertical=-0.890
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0063 vertical=-0.997
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0011 vertical=-0.952
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.400s clear=-0.0112 vertical=-0.762
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.460s clear=-0.0017 vertical=-0.456
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0115 vertical=-0.080
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0391 vertical=0.307
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0753 vertical=0.648
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0698 vertical=0.307
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0237 vertical=-0.080
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.780s clear=-0.0013 vertical=-0.456
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.720s clear=-0.0012 vertical=-0.762
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=right_finger_2/ground_plane elapsedPreview=0.640s clear=-0.0004 vertical=-0.952
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_finger_0/ground_plane elapsedPreview=0.620s clear=-0.0012 vertical=-0.997
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.560s clear=-0.0062 vertical=-0.890
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=palm_corner_mm/human_grey_handle elapsedPreview=0.680s clear=-0.0005 vertical=-0.648
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.220s clear=-0.0025 vertical=-0.307
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=left_pad_shoulder_high/sensor_core elapsedPreview=2.020s clear=-0.0013 vertical=0.080
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=left_pad_shoulder_high/sensor_core elapsedPreview=2.200s clear=-0.0005 vertical=0.456
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0583 vertical=0.762
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg route=direct feasible reach+insert+close+retreat predictedTime=8.223s selectionTime=8.098s predictedContact=6.473s rawRollout=5.104s arm=5.205s closure=2.318s fixed=0.700s effort=8.315 rot=1.658 reachClear=0.0778 overallClear=0.0002 contactClosure=0.742 cost=8.4382 vertical=0.952
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/right_pad_shoulder_low/robot_blue_handle elapsedPreview=3.000s clear=-0.0001 vertical=0.997
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.940s clear=-0.0017 vertical=0.890
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0670 vertical=0.704
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.720s clear=-0.0007 vertical=0.922
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=ring80mm_7of8 feasible reach+insert+close+retreat predictedTime=8.274s selectionTime=8.174s predictedContact=6.874s rawRollout=5.244s arm=5.256s closure=2.318s fixed=0.700s effort=7.392 rot=3.004 reachClear=0.0821 overallClear=0.0004 contactClosure=0.742 cost=8.5987 vertical=1.000
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg route=ring80mm_0of8 feasible reach+insert+close+retreat predictedTime=8.415s selectionTime=8.290s predictedContact=6.840s rawRollout=5.324s arm=5.398s closure=2.318s fixed=0.700s effort=9.791 rot=2.725 reachClear=0.0817 overallClear=0.0002 contactClosure=0.742 cost=8.7531 vertical=0.925
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0521 vertical=0.710
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=right_tip_body_5/robot_blue_handle elapsedPreview=2.480s clear=-0.0018 vertical=0.386
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.660s clear=-0.0008 vertical=0.004
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=0.760s clear=-0.0015 vertical=-0.379
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.400s clear=-0.0063 vertical=-0.704
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0099 vertical=-0.922
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0110 vertical=-1.000
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0003 vertical=-0.925
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.400s clear=-0.0025 vertical=-0.710
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.500s clear=-0.0045 vertical=-0.386
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0200 vertical=-0.004
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0871 vertical=0.379
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0791 vertical=0.704
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0774 vertical=0.379
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0368 vertical=-0.004
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.780s clear=-0.0001 vertical=-0.386
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.720s clear=-0.0019 vertical=-0.710
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=right_finger_2/ground_plane elapsedPreview=0.660s clear=-0.0052 vertical=-0.925
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_finger_2/ground_plane elapsedPreview=0.600s clear=-0.0012 vertical=-1.000
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.520s clear=-0.0058 vertical=-0.922
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.580s clear=-0.0010 vertical=-0.704
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.200s clear=-0.0002 vertical=-0.379
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0003 vertical=0.004
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0049 vertical=0.386
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0620 vertical=0.710
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg route=direct feasible reach+insert+close+retreat predictedTime=8.323s selectionTime=8.198s predictedContact=6.473s rawRollout=5.184s arm=5.305s closure=2.318s fixed=0.700s effort=8.333 rot=1.677 reachClear=0.0760 overallClear=0.0002 contactClosure=0.742 cost=8.5402 vertical=0.925
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.020s clear=-0.0000 vertical=1.000
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.960s clear=-0.0019 vertical=0.922
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0734 vertical=0.766
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.860s clear=-0.0009 vertical=0.954
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=ring80mm_7of8 feasible reach+insert+close+retreat predictedTime=8.297s selectionTime=8.177s predictedContact=6.897s rawRollout=5.244s arm=5.279s closure=2.318s fixed=0.700s effort=7.057 rot=2.939 reachClear=0.0806 overallClear=0.0004 contactClosure=0.742 cost=8.5883 vertical=0.996
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg route=ring80mm_0of8 feasible reach+insert+close+retreat predictedTime=8.494s selectionTime=8.394s predictedContact=6.844s rawRollout=5.404s arm=5.476s closure=2.318s fixed=0.700s effort=8.864 rot=2.662 reachClear=0.0779 overallClear=0.0002 contactClosure=0.742 cost=8.8282 vertical=0.887
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0562 vertical=0.643
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=right_tip_body_5/robot_blue_handle elapsedPreview=2.420s clear=-0.0004 vertical=0.301
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.400s clear=-0.0015 vertical=-0.087
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.520s clear=-0.0014 vertical=-0.461
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0068 vertical=-0.766
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0038 vertical=-0.954
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0130 vertical=-0.996
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0090 vertical=-0.887
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.420s clear=-0.0028 vertical=-0.643
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.540s clear=-0.0030 vertical=-0.301
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0323 vertical=0.087
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.1284 vertical=0.461
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0731 vertical=0.766
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0802 vertical=0.461
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0520 vertical=0.087
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.820s clear=-0.0065 vertical=-0.301
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.720s clear=-0.0058 vertical=-0.643
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.660s clear=-0.0036 vertical=-0.887
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.600s clear=-0.0046 vertical=-0.996
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.480s clear=-0.0037 vertical=-0.954
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.520s clear=-0.0001 vertical=-0.766
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.140s clear=-0.0002 vertical=-0.461
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0068 vertical=-0.087
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0164 vertical=0.301
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0643 vertical=0.643
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg route=ring80mm_2of8 feasible reach+insert+close+retreat predictedTime=8.659s selectionTime=8.534s predictedContact=6.584s rawRollout=5.464s arm=5.641s closure=2.318s fixed=0.700s effort=6.882 rot=1.702 reachClear=0.0781 overallClear=0.0002 contactClosure=0.742 cost=8.8417 vertical=0.887
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.020s clear=-0.0000 vertical=0.996
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.080s clear=-0.0022 vertical=0.954
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0795 vertical=0.830
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=4.000s clear=-0.0008 vertical=0.980
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=ring80mm_7of8 feasible reach+insert+close+retreat predictedTime=8.278s selectionTime=8.178s predictedContact=6.853s rawRollout=5.244s arm=5.261s closure=2.318s fixed=0.700s effort=6.870 rot=2.863 reachClear=0.0763 overallClear=0.0004 contactClosure=0.742 cost=8.5791 vertical=0.981
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg route=ring80mm_1of8 feasible reach+insert+close+retreat predictedTime=8.647s selectionTime=8.547s predictedContact=6.847s rawRollout=5.524s arm=5.629s closure=2.318s fixed=0.700s effort=9.657 rot=2.588 reachClear=0.0809 overallClear=0.0000 contactClosure=0.742 cost=8.9950 vertical=0.833
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0600 vertical=0.558
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0031 vertical=0.198
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.160s clear=-0.0000 vertical=-0.192
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.420s clear=-0.0065 vertical=-0.553
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0052 vertical=-0.830
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0075 vertical=-0.980
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0111 vertical=-0.981
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.400s clear=-0.0135 vertical=-0.833
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.460s clear=-0.0111 vertical=-0.558
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.620s clear=-0.0038 vertical=-0.198
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0751 vertical=0.192
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.1664 vertical=0.553
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0841 vertical=0.830
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0650 vertical=0.553
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0733 vertical=0.192
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=gen3_forearm_link/ground_plane elapsedPreview=1.460s clear=-0.0012 vertical=-0.198
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.700s clear=-0.0030 vertical=-0.558
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.660s clear=-0.0002 vertical=-0.833
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.600s clear=-0.0061 vertical=-0.981
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.440s clear=-0.0014 vertical=-0.980
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.500s clear=-0.0012 vertical=-0.830
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.020s clear=-0.0012 vertical=-0.553
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.940s clear=-0.0019 vertical=-0.192
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0240 vertical=0.198
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0654 vertical=0.558
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg infeasible reason=closure/right_pad_shoulder_low/robot_blue_handle elapsedPreview=2.880s clear=-0.0001 vertical=0.833
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.000s clear=-0.0000 vertical=0.981
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.400s clear=-0.0025 vertical=0.980
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=mouth_corridor/blue_handle_lateral elapsedPreview=5.000s clear=-0.0000 vertical=0.893
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.360s clear=-0.0012 vertical=0.997
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=ring80mm_0of8 feasible reach+insert+close+retreat predictedTime=8.274s selectionTime=8.154s predictedContact=6.849s rawRollout=5.224s arm=5.256s closure=2.318s fixed=0.700s effort=7.511 rot=2.775 reachClear=0.0827 overallClear=0.0004 contactClosure=0.742 cost=8.5639 vertical=0.950
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg infeasible reason=closure/right_pad_shoulder_low/robot_blue_handle elapsedPreview=3.100s clear=-0.0000 vertical=0.758
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0633 vertical=0.451
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0108 vertical=0.075
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=0.900s clear=-0.0009 vertical=-0.312
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0068 vertical=-0.652
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0122 vertical=-0.893
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0073 vertical=-0.997
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0047 vertical=-0.950
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.420s clear=-0.0138 vertical=-0.758
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.480s clear=-0.0020 vertical=-0.451
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.880s clear=-0.0014 vertical=-0.075
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.1309 vertical=0.312
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.1901 vertical=0.652
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=17.160s clear=0.0000 vertical=0.893
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0599 vertical=0.652
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0353 vertical=0.312
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0040 vertical=-0.075
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.700s clear=-0.0011 vertical=-0.451
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.680s clear=-0.0074 vertical=-0.758
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.600s clear=-0.0021 vertical=-0.950
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.560s clear=-0.0033 vertical=-0.997
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=right_finger_0/human_grey_handle elapsedPreview=0.580s clear=-0.0018 vertical=-0.893
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=left_finger_12/ground_plane elapsedPreview=0.880s clear=-0.0020 vertical=-0.652
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.660s clear=-0.0017 vertical=-0.312
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0266 vertical=0.075
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0650 vertical=0.451
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg infeasible reason=closure/right_pad_shoulder_low/robot_blue_handle elapsedPreview=2.880s clear=-0.0002 vertical=0.758
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.980s clear=-0.0000 vertical=0.950
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.360s clear=-0.0027 vertical=0.997
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.720s clear=0.0035 vertical=0.947
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.300s clear=-0.0007 vertical=0.998
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=ring80mm_0of8 feasible reach+insert+close+retreat predictedTime=8.301s selectionTime=8.181s predictedContact=6.851s rawRollout=5.244s arm=5.283s closure=2.318s fixed=0.700s effort=7.316 rot=2.675 reachClear=0.0790 overallClear=0.0004 contactClosure=0.742 cost=8.5775 vertical=0.896
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg infeasible reason=closure/right_pad_shoulder_low/robot_blue_handle elapsedPreview=3.100s clear=-0.0000 vertical=0.658
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0664 vertical=0.320
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0207 vertical=-0.067
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.420s clear=-0.0046 vertical=-0.444
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0111 vertical=-0.753
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0147 vertical=-0.947
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0025 vertical=-0.998
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0070 vertical=-0.896
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.440s clear=-0.0104 vertical=-0.658
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.540s clear=-0.0058 vertical=-0.320
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=1.160s clear=-0.0018 vertical=0.067
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.1799 vertical=0.444
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.2091 vertical=0.753
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=left_pad_shoulder_high/sensor_core elapsedPreview=1.040s clear=-0.0027 vertical=0.947
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0562 vertical=0.753
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0044 vertical=0.444
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0224 vertical=0.067
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.760s clear=-0.0058 vertical=-0.320
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.660s clear=-0.0068 vertical=-0.658
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.640s clear=-0.0074 vertical=-0.896
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.560s clear=-0.0033 vertical=-0.998
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=left_finger_14/ground_plane elapsedPreview=0.580s clear=-0.0022 vertical=-0.947
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=left_finger_12/ground_plane elapsedPreview=0.740s clear=-0.0032 vertical=-0.753
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=left_finger_12/ground_plane elapsedPreview=1.200s clear=-0.0007 vertical=-0.444
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0327 vertical=-0.067
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0650 vertical=0.320
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg infeasible reason=ik_preview_no_convergence elapsedPreview=17.329s clear=0.0000 vertical=0.658
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.980s clear=-0.0000 vertical=0.896
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.280s clear=-0.0022 vertical=0.998
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.700s clear=0.0067 vertical=0.986
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.240s clear=-0.0003 vertical=0.975
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=ring80mm_0of8 feasible reach+insert+close+retreat predictedTime=8.320s selectionTime=8.205s predictedContact=6.845s rawRollout=5.244s arm=5.303s closure=2.318s fixed=0.700s effort=7.229 rot=2.567 reachClear=0.0733 overallClear=0.0004 contactClosure=0.742 cost=8.5913 vertical=0.816
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg infeasible reason=closure/right_pad_shoulder_low/robot_blue_handle elapsedPreview=3.080s clear=-0.0001 vertical=0.532
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0683 vertical=0.168
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=gen3_spherical_wrist_2_link/ground_plane elapsedPreview=1.160s clear=-0.0013 vertical=-0.222
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0100 vertical=-0.578
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.320s clear=-0.0032 vertical=-0.846
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0114 vertical=-0.986
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0076 vertical=-0.975
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.400s clear=-0.0044 vertical=-0.816
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.460s clear=-0.0009 vertical=-0.532
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.620s clear=-0.0018 vertical=-0.168
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0364 vertical=0.222
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.2024 vertical=0.578
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.2209 vertical=0.846
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.340s clear=0.0000 vertical=0.986
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=left_pad_shoulder_high/sensor_core elapsedPreview=1.100s clear=-0.0003 vertical=0.846
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=right_tip_body_8/human_grey_handle elapsedPreview=0.660s clear=-0.0025 vertical=0.578
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0011 vertical=0.222
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=gen3_forearm_link/ground_plane elapsedPreview=1.420s clear=-0.0057 vertical=-0.168
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.660s clear=-0.0094 vertical=-0.532
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.640s clear=-0.0036 vertical=-0.816
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.580s clear=-0.0047 vertical=-0.975
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.540s clear=-0.0041 vertical=-0.986
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=left_finger_14/ground_plane elapsedPreview=0.640s clear=-0.0033 vertical=-0.846
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=left_finger_12/ground_plane elapsedPreview=0.860s clear=-0.0018 vertical=-0.578
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0161 vertical=-0.222
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0659 vertical=0.168
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.880s clear=-0.0000 vertical=0.532
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.940s clear=-0.0000 vertical=0.816
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.200s clear=-0.0017 vertical=0.975
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.560s clear=0.0069 vertical=1.000
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.200s clear=-0.0000 vertical=0.925
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=ring140mm_1of8 feasible reach+insert+close+retreat predictedTime=8.450s selectionTime=8.450s predictedContact=6.950s rawRollout=5.484s arm=5.432s closure=2.318s fixed=0.700s effort=8.171 rot=2.454 reachClear=0.0822 overallClear=0.0004 contactClosure=0.742 cost=8.8504 vertical=0.709
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg infeasible reason=closure/right_pad_shoulder_low/robot_blue_handle elapsedPreview=3.080s clear=-0.0000 vertical=0.385
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.140s clear=-0.0000 vertical=0.003
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.400s clear=-0.0008 vertical=-0.380
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.320s clear=-0.0001 vertical=-0.705
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.320s clear=-0.0026 vertical=-0.923
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0035 vertical=-1.000
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0082 vertical=-0.925
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.440s clear=-0.0135 vertical=-0.709
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.520s clear=-0.0075 vertical=-0.385
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=1.000s clear=-0.0023 vertical=-0.003
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0886 vertical=0.380
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.2238 vertical=0.705
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.2251 vertical=0.923
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.600s clear=0.0066 vertical=1.000
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=20.380s clear=0.0018 vertical=0.923
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=right_tip_body_2/human_grey_handle elapsedPreview=0.740s clear=-0.0014 vertical=0.705
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=mouth_corridor/blue_handle_axial_offset elapsedPreview=4.080s clear=-0.0000 vertical=0.380
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=right_finger_2/human_grey_handle elapsedPreview=0.640s clear=-0.0022 vertical=-0.003
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.700s clear=-0.0039 vertical=-0.385
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.620s clear=-0.0052 vertical=-0.709
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.600s clear=-0.0003 vertical=-0.925
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.540s clear=-0.0018 vertical=-1.000
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.560s clear=-0.0002 vertical=-0.923
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=left_finger_14/ground_plane elapsedPreview=0.720s clear=-0.0070 vertical=-0.705
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=left_finger_14/ground_plane elapsedPreview=1.120s clear=-0.0015 vertical=-0.380
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.0552 vertical=0.003
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.880s clear=-0.0000 vertical=0.385
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.920s clear=-0.0000 vertical=0.709
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.120s clear=-0.0013 vertical=0.925
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.440s clear=0.0068 vertical=0.987
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.200s clear=-0.0000 vertical=0.849
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=ring80mm_1of8 feasible reach+insert+close+retreat predictedTime=8.254s selectionTime=8.254s predictedContact=6.704s rawRollout=5.284s arm=5.236s closure=2.318s fixed=0.700s effort=7.415 rot=2.344 reachClear=0.0732 overallClear=0.0004 contactClosure=0.742 cost=8.6270 vertical=0.583
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg infeasible reason=ik_preview_no_convergence elapsedPreview=17.529s clear=0.0000 vertical=0.228
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.120s clear=-0.0000 vertical=-0.162
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0128 vertical=-0.528
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.320s clear=-0.0047 vertical=-0.813
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0118 vertical=-0.974
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0070 vertical=-0.987
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.400s clear=-0.0073 vertical=-0.849
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.460s clear=-0.0051 vertical=-0.583
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.580s clear=-0.0027 vertical=-0.228
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.860s clear=0.0064 vertical=0.162
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=ik_preview_no_convergence elapsedPreview=17.080s clear=0.0020 vertical=0.528
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.2298 vertical=0.813
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.2272 vertical=0.974
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.480s clear=0.0066 vertical=0.987
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.240s clear=0.0061 vertical=0.974
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=mouth_corridor/blue_handle_axial_offset elapsedPreview=3.840s clear=-0.0001 vertical=0.813
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.160s clear=0.0043 vertical=0.528
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.280s clear=0.0071 vertical=0.162
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=palm_corner_mm/human_grey_handle elapsedPreview=0.580s clear=-0.0056 vertical=-0.228
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.620s clear=-0.0080 vertical=-0.583
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.620s clear=-0.0075 vertical=-0.849
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.560s clear=-0.0018 vertical=-0.987
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.540s clear=-0.0053 vertical=-0.974
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.620s clear=-0.0026 vertical=-0.813
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=left_finger_14/ground_plane elapsedPreview=0.820s clear=-0.0020 vertical=-0.528
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.940s clear=-0.0000 vertical=-0.162
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.900s clear=-0.0000 vertical=0.228
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.900s clear=-0.0000 vertical=0.583
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.080s clear=-0.0011 vertical=0.849
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.380s clear=0.0068 vertical=0.949
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.220s clear=-0.0000 vertical=0.756
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg route=ring140mm_1of8 feasible reach+insert+close+retreat predictedTime=8.494s selectionTime=8.494s predictedContact=6.944s rawRollout=5.524s arm=5.476s closure=2.318s fixed=0.700s effort=7.627 rot=2.242 reachClear=0.0819 overallClear=0.0002 contactClosure=0.742 cost=8.8638 vertical=0.448
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg infeasible reason=ik_preview_no_convergence elapsedPreview=17.509s clear=0.0001 vertical=0.072
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.420s clear=-0.0074 vertical=-0.315
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0132 vertical=-0.654
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.320s clear=-0.0019 vertical=-0.894
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0025 vertical=-0.997
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0085 vertical=-0.949
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.420s clear=-0.0037 vertical=-0.756
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.500s clear=-0.0045 vertical=-0.448
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=1.000s clear=-0.0004 vertical=-0.072
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.900s clear=0.0064 vertical=0.315
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.920s clear=0.0065 vertical=0.654
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.2298 vertical=0.894
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.620s clear=0.0072 vertical=0.997
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.380s clear=0.0063 vertical=0.949
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=left_tip_body_7/human_grey_handle elapsedPreview=1.340s clear=-0.0018 vertical=0.997
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=right_pad_shoulder_high/sensor_core elapsedPreview=1.220s clear=-0.0007 vertical=0.894
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.160s clear=0.0079 vertical=0.654
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.200s clear=0.0072 vertical=0.315
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.360s clear=-0.0004 vertical=-0.072
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=palm_corner_pm/human_grey_handle elapsedPreview=0.600s clear=-0.0079 vertical=-0.448
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.600s clear=-0.0131 vertical=-0.756
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.600s clear=-0.0077 vertical=-0.949
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.540s clear=-0.0062 vertical=-0.997
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.580s clear=-0.0071 vertical=-0.894
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.700s clear=-0.0054 vertical=-0.654
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=1.040s clear=-0.0007 vertical=-0.315
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.900s clear=-0.0000 vertical=0.072
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.900s clear=-0.0000 vertical=0.448
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.060s clear=-0.0011 vertical=0.756
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.320s clear=0.0067 vertical=0.895
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.340s clear=-0.0006 vertical=0.656
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg infeasible reason=closure/left_pad_shoulder_low/robot_blue_handle elapsedPreview=3.100s clear=-0.0003 vertical=0.317
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg route=direct feasible reach+insert+close+retreat predictedTime=8.658s selectionTime=8.523s predictedContact=6.708s rawRollout=5.484s arm=5.640s closure=2.318s fixed=0.700s effort=8.809 rot=1.928 reachClear=0.0456 overallClear=0.0003 contactClosure=0.742 cost=8.8972 vertical=-0.070
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0038 vertical=-0.447
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.320s clear=-0.0010 vertical=-0.755
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0108 vertical=-0.949
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0070 vertical=-0.998
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.400s clear=-0.0113 vertical=-0.895
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.460s clear=-0.0114 vertical=-0.656
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.560s clear=-0.0110 vertical=-0.317
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.780s clear=-0.0000 vertical=0.070
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.920s clear=0.0064 vertical=0.447
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.940s clear=0.0065 vertical=0.755
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=14.000s clear=0.2298 vertical=0.949
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.520s clear=0.0071 vertical=0.998
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.320s clear=0.0064 vertical=0.895
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=right_pad_shoulder_high/human_grey_handle elapsedPreview=0.940s clear=-0.0044 vertical=0.998
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.240s clear=0.0055 vertical=0.949
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.200s clear=0.0076 vertical=0.755
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.220s clear=0.0070 vertical=0.447
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.240s clear=-0.0000 vertical=0.070
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.760s clear=-0.0009 vertical=-0.317
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.580s clear=-0.0005 vertical=-0.656
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.600s clear=-0.0097 vertical=-0.895
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.560s clear=-0.0077 vertical=-0.998
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.560s clear=-0.0037 vertical=-0.949
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.640s clear=-0.0071 vertical=-0.755
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.820s clear=-0.0016 vertical=-0.447
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.920s clear=-0.0000 vertical=-0.070
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=2.940s clear=-0.0000 vertical=0.317
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.120s clear=-0.0015 vertical=0.656
+[warning] [PlanCapture] beginning bounded internal rollout of 32 complete whole-arm candidates; robot remains stationary until one plan is selected
+[info] [PlanCapture] previewing axisP_side_0deg (1/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.260s clear=0.0067 vertical=0.733
+[info] [PlanCapture] previewing axisP_side_23deg (2/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.260s clear=0.0065 vertical=0.417
+[info] [PlanCapture] previewing axisP_side_45deg (3/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_45deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.320s clear=-0.0009 vertical=0.038
+[info] [PlanCapture] previewing axisP_side_68deg (4/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_68deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.400s clear=-0.0063 vertical=-0.348
+[info] [PlanCapture] previewing axisP_side_90deg (5/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_90deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0048 vertical=-0.680
+[info] [PlanCapture] previewing axisP_side_113deg (6/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_113deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.340s clear=-0.0056 vertical=-0.909
+[info] [PlanCapture] previewing axisP_side_135deg (7/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_135deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.360s clear=-0.0048 vertical=-0.999
+[info] [PlanCapture] previewing axisP_side_158deg (8/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_158deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.380s clear=-0.0005 vertical=-0.938
+[info] [PlanCapture] previewing axisP_side_180deg (9/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_180deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.440s clear=-0.0035 vertical=-0.733
+[info] [PlanCapture] previewing axisP_side_202deg (10/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_202deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.540s clear=-0.0116 vertical=-0.417
+[info] [PlanCapture] previewing axisP_side_225deg (11/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_225deg infeasible reason=ik_preview_no_convergence elapsedPreview=18.164s clear=0.0003 vertical=-0.038
+[info] [PlanCapture] previewing axisP_side_247deg (12/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_247deg route=ring80mm_5of8 feasible reach+insert+close+retreat predictedTime=9.104s selectionTime=9.104s predictedContact=7.504s rawRollout=6.124s arm=6.086s closure=2.318s fixed=0.700s effort=8.755 rot=2.427 reachClear=0.0769 overallClear=0.0003 contactClosure=0.742 cost=9.5166 vertical=0.348
+[info] [PlanCapture] previewing axisP_side_270deg (13/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_270deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.840s clear=-0.0000 vertical=0.680
+[info] [PlanCapture] previewing axisP_side_293deg (14/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_293deg infeasible reason=ik_preview_no_convergence elapsedPreview=17.000s clear=0.0066 vertical=0.909
+[info] [PlanCapture] previewing axisP_side_315deg (15/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_315deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.560s clear=0.0074 vertical=0.999
+[info] [PlanCapture] previewing axisP_side_337deg (16/32) entirely in controller memory
+[info] [PlanCapture] axisP_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.420s clear=0.0044 vertical=0.938
+[info] [PlanCapture] previewing axisN_side_0deg (17/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_0deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.180s clear=0.0063 vertical=0.733
+[info] [PlanCapture] previewing axisN_side_23deg (18/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_23deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.520s clear=0.0031 vertical=0.938
+[info] [PlanCapture] previewing axisN_side_45deg (19/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_45deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.120s clear=0.0067 vertical=0.999
+[info] [PlanCapture] previewing axisN_side_68deg (20/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_68deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.260s clear=0.0073 vertical=0.909
+[info] [PlanCapture] previewing axisN_side_90deg (21/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_90deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.120s clear=-0.0001 vertical=0.680
+[info] [PlanCapture] previewing axisN_side_113deg (22/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_113deg infeasible reason=closure/left_pad_shoulder_low/robot_blue_handle elapsedPreview=3.160s clear=-0.0001 vertical=0.348
+[info] [PlanCapture] previewing axisN_side_135deg (23/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_135deg infeasible reason=ik_preview_no_convergence elapsedPreview=17.864s clear=0.0003 vertical=-0.038
+[info] [PlanCapture] previewing axisN_side_158deg (24/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_158deg infeasible reason=gen3_forearm_link/ground_plane elapsedPreview=1.320s clear=-0.0022 vertical=-0.417
+[info] [PlanCapture] previewing axisN_side_180deg (25/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_180deg infeasible reason=base_rear/human_grey_handle elapsedPreview=0.540s clear=-0.0001 vertical=-0.733
+[info] [PlanCapture] previewing axisN_side_202deg (26/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_202deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.560s clear=-0.0000 vertical=-0.938
+[info] [PlanCapture] previewing axisN_side_225deg (27/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_225deg infeasible reason=right_tip_body_2/ground_plane elapsedPreview=0.540s clear=-0.0023 vertical=-0.999
+[info] [PlanCapture] previewing axisN_side_247deg (28/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_247deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.600s clear=-0.0008 vertical=-0.909
+[info] [PlanCapture] previewing axisN_side_270deg (29/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_270deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.660s clear=-0.0025 vertical=-0.680
+[info] [PlanCapture] previewing axisN_side_293deg (30/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_293deg infeasible reason=left_tip_body_2/ground_plane elapsedPreview=0.860s clear=-0.0021 vertical=-0.348
+[info] [PlanCapture] previewing axisN_side_315deg (31/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_315deg infeasible reason=closure/pad_pair/blue_handle_acquisition_tube elapsedPreview=3.040s clear=-0.0015 vertical=0.038
+[info] [PlanCapture] previewing axisN_side_337deg (32/32) entirely in controller memory
+[info] [PlanCapture] axisN_side_337deg infeasible reason=ik_preview_no_convergence elapsedPreview=16.140s clear=0.0065 vertical=0.417

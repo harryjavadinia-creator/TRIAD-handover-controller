@@ -1,0 +1,2 @@
+PlannerWorkerSubmit] generation=1 requestControllerTime=9.023000s configuredHypotheses=14 searchEpoch=9.023000s oneWorker=true nonBlocking=true
+PlannerWorkerResult] generation=1 records=233 requestControllerTime=9.023000s resultControllerTime=11.181000s workerWall=2.156331s controllerElapsed=2.158000s evaluatedHypotheses=14 feasibleHypotheses=7 nonBlocking=true

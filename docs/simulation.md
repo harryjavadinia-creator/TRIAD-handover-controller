@@ -1,4 +1,8 @@
-# Simulation reproduction
+# Simulation reference
+
+For installation and live visualization, start with [Quick start](quickstart.md).
+The current publication supplies the asynchronous controller. The four named
+scenarios below are also the historical Dataset-B inputs.
 
 ## Scope
 
@@ -8,7 +12,7 @@ Dataset A is an earlier, separate perception-latency study. Its numbers and sour
 
 ## Build and install
 
-Use the verified build procedure in the top-level [`README.md`](../README.md). After installation, the dependency-free scientific checks can still be run from the source checkout:
+Use the build procedure in [Quick start](quickstart.md). After installation, the dependency-free scientific checks can still be run from the source checkout:
 
 ```bash
 bash tools/run_binding_cost_checks.sh
@@ -64,7 +68,7 @@ Additional reference metrics from the frozen campaign are:
 | lateral-low | 8.803 | 7.435 | 0.398 | 0.082 | 1.00 | ≈0.88 |
 | diagonal | 9.620 | 8.224 | 0.405 | 0.081 | ≈0.690 | ≈1.39 |
 
-The exact-serial source currently shipped in this repository was revalidated against the four deterministic winner fingerprints above. See [`release_validation.md`](release_validation.md).
+These values describe historical Dataset-B results and exact-serial revalidation. They are not a new asynchronous publication-head runtime campaign. Current admission depends on result-receipt time, so an identical winner is not promised under different timing conditions. See [Validation scope](release_validation.md) and [Results](results.md).
 
 ## Runtime verification
 

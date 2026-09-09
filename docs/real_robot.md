@@ -66,3 +66,19 @@ smoke-test path (item 2 above), with the arm frozen and the gripper the only
 active component, before any full handover attempt is considered. Do not
 enable `commandEnabled` or full FSM execution on hardware without first
 independently establishing all of the missing information in section 4.
+
+## Status on the source state published on this branch
+
+Nothing in this section has changed with the asynchronous planner. The frozen
+scientific state published here was exercised entirely in simulation, with
+`allowPhysicalExecution: false`, the physical gripper bridge disabled and the
+force-transfer source set to the virtual sensor.
+
+`mc_kortex` is a hardware driver and `mc_rtc_ticker` is a simulation harness.
+The presence of either in the toolchain is **not** evidence of hardware
+execution, and none is claimed.
+
+Consequently the real-robot reproduction procedure in this repository is
+published as a **prerequisite checklist and a staged commissioning path**, not
+as a tested procedure — because no such procedure has been executed. Section 4
+above lists what must be established locally first.

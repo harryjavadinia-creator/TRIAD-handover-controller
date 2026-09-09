@@ -1,0 +1,13 @@
+unmutated source: PASS
+  caught: reinstate the live mouth-to-base read in the swept certification
+  caught: reinstate the live base-pose fallback in previewBasePose
+  caught: reinstate the live mouth fallback in previewMouthPose
+  caught: read the controller clock inside the rollout
+  caught: share the mc_rtc multibody instead of the planner's copy
+  caught: write control-thread commit state from the rollout
+  caught: resample the live mouth-to-base transform inside the search
+  caught: reinstate the live start-mouth-pose fallback in the search
+  caught: emit an mc_rtc log from a pure preview helper
+
+mutations caught: 9/9
+planner core purity checker tests: PASS
