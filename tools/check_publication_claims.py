@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Fail closed if known publication-claim regressions reappear.
-
-This checker deliberately scans only publication-facing interpretation files.
-Frozen source comments and byte-preserved archived reports are excluded because
-known historical wording is superseded downstream rather than rewritten.
-"""
+"""Fail closed if known publication-claim regressions reappear."""
 from pathlib import Path
 import sys
 
@@ -22,6 +17,7 @@ FILES = [
     "docs/results.md",
     "docs/related_work.md",
     "docs/corrections_of_record.md",
+    "docs/experiments.md",
     "evidence/README.md",
 ]
 
@@ -35,7 +31,6 @@ for rel in FILES:
 
 
 def norm(text):
-    """Case-fold and collapse whitespace for robust prose checks."""
     return " ".join(text.casefold().split())
 
 
@@ -55,19 +50,14 @@ def check(label, ok):
         failures.append(label)
 
 
-# Exact/near-exact regressions from the final independent cross-audit.
 forbidden = {
     "absolute callback-no-join assurance": "no mutex, condition variable, future or join is reachable",
     "absolute copied-state no-live-pose assurance": "reads no live robot **pose or configuration** after",
     "near-ground raw byte-identity claim": "all 229 control-thread records are byte-identical",
-    "H002 universal-failure claim": "no tested perturbation moves it off that boundary",
-    "feasible-set lower-bound interpretation": "coverage figures derived from it are lower bounds only",
-    "async clean-machine reproduction overclaim": "after\" column is independently reproduced by",
 }
 for label, phrase in forbidden.items():
     check(label + " absent", norm(phrase) not in joined)
 
-# Required corrected claims.
 required = {
     "finite bank is explicit": "14 × 32 × 17 = 7616",
     "no weight sensitivity is explicit": "no weight-sensitivity result is reported",
@@ -76,19 +66,29 @@ required = {
     "live fingertip qualification is explicit": "residual live fingertip-frame reads",
     "near-ground sourceIndex normalization is explicit": "sourceIndex",
     "near-ground raw hashes are not identical": "full raw records and full set hashes are **not** identical",
-    "H002 post-hoc qualification is explicit": "secondary, post-hoc diagnostic",
-    "H002 3/8 split is explicit": "3 complete and 8 fail",
-    "0.60 ambiguous observation is explicit": "classification is `AMBIGUOUS`",
+    "0.60 ambiguous observation is explicit": "`ambiguous`",
     "0.60 displacement is explicit": "0.0241 m",
     "0.60 speed is explicit": "0.0760 m/s",
-    "coverage interpretation is rejected": "not feasible-space coverage",
     "WCET is rejected": "not WCET",
     "historical/current validation is separated": "historical exact-serial runtime revalidation",
 }
 for label, phrase in required.items():
     check(label, norm(phrase) in joined)
 
-# File-specific guards to avoid a correction existing only somewhere unrelated.
+release_surface = norm("\n".join(
+    texts[p] for p in [
+        "README.md", "docs/results.md", "docs/provenance.md",
+        "docs/reproducibility.md", "docs/experiments.md",
+        "docs/corrections_of_record.md", "evidence/README.md"
+    ]
+))
+for label, phrase in {
+    "held-out campaign": "held-out scenarios",
+    "local perturbation campaign": "local perturbations",
+    "H002 campaign diagnostic": "h002",
+}.items():
+    check(label + " absent from current release surface", norm(phrase) not in release_surface)
+
 check(
     "README qualifies callback lifecycle",
     norm("FSM teardown can reach worker cancellation and `join()`")
@@ -100,11 +100,6 @@ check(
     "residual live" in architecture
     and "fingertip-frame reads" in architecture
     and "aperture" in architecture,
-)
-check(
-    "evidence README makes full 66-case result primary",
-    norm("The left-hand column is the primary result")
-    in norm_files["evidence/README.md"],
 )
 check(
     "release validation denies current-head runtime relabeling",

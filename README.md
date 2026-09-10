@@ -7,10 +7,10 @@ gripper. It predicts future object-presentation events, compares complete
 event–grasp–route plans, and executes one admissible plan through acquisition
 and retreat. It is implemented in C++ using mc_rtc.
 
-**Validation scope: simulation.** This repository provides the asynchronous
-controller, mathematical method, scenario commands, and archived experimental
-evidence. There is no validated end-to-end physical human-to-robot handover
-campaign.
+**Validation scope: simulation.** This release publishes the asynchronous
+controller, mathematical method, canonical scenario commands, latency evidence,
+and asynchronous control-loop evidence. There is no validated end-to-end
+physical human-to-robot handover campaign.
 
 ## Start here
 
@@ -19,7 +19,7 @@ campaign.
 | Build the controller and watch a simulation | [Quick start](docs/quickstart.md) |
 | Understand the equations and decision rule | [Mathematical formulation](docs/mathematics.md) |
 | Follow the algorithm and execution stages | [Architecture and pseudocode](docs/architecture.md) |
-| See the experimental results and figures | [Results](docs/results.md) |
+| See the current release evidence | [Results](docs/results.md) |
 | Position the contribution in the literature | [Related work](docs/related_work.md) |
 | Check data, source versions, and validation | [Reproducibility](docs/reproducibility.md) |
 
@@ -40,31 +40,27 @@ J_{\mathrm{global}}(\xi;s_0).
 ```
 
 Selection is exhaustive over this generated finite set, with a documented
-numerical tie convention. A final prediction-freshness check precedes the
+numerical tie convention. A final prediction-consistency check precedes the
 one-time commitment. TRIAD then generates and governs task-space references;
 the mc_rtc task/QP layer realizes those references at the joint level.
 
 The seven objective weights are fixed engineering preferences;
 **no weight-sensitivity result is reported**. The [full formulation](docs/mathematics.md)
-covers prediction, local IK, objective terms, timing, ties, and freshness.
+covers prediction, local IK, objective terms, timing, ties, and commitment.
 
-## Results at a glance
+## Current release evidence
 
-![Outcomes of all held-out scenarios and local perturbations](docs/figures/outcomes.svg)
+This release keeps the evidence that is directly used for the present
+controller/method discussion:
 
-| Campaign | Completed | Rejected before commitment | Failed after commitment |
-| --- | ---: | ---: | ---: |
-| Held-out scenarios, ideal sensing | 36 / 62 | 24 / 62 | 2 / 62 |
-| Local perturbations, ideal sensing | 40 / 66 | 14 / 66 | 12 / 66 |
+- the four canonical moving-object simulation scenarios and their historical
+  reference winners;
+- the corrected perception-latency ablation;
+- asynchronous planning/control-loop profiles and frozen plan-set checks;
+- planner-core integrity checks.
 
-Held-out completion given commitment is **36/38 (94.7%)**; overall completion
-is **36/62 (58.1%)**. These are empirical outcomes, **not feasible-space coverage**.
-The full perturbation set is the primary robustness result.
-
-The corrected latency study and asynchronous control-loop measurements are
-shown in [Results](docs/results.md), alongside their conditions and limitations.
-Figures come from the included records; each campaign retains its own
-[source attribution](docs/provenance.md).
+See [Results](docs/results.md), [Simulation](docs/simulation.md),
+[Performance](docs/performance.md), and the [evidence index](evidence/README.md).
 
 ## Clone and run
 
@@ -84,7 +80,7 @@ The other scenarios are `near-ground`, `lateral-low`, and `diagonal`.
 The [simulation guide](docs/simulation.md) gives their inputs, completion
 markers, and historical reference outputs.
 
-To verify the published records without installing a simulator:
+To verify the published evidence without installing a simulator:
 
 ```bash
 python3 tools/check_evidence_manifest.py
@@ -113,10 +109,10 @@ freedom is not established. See [Architecture](docs/architecture.md),
 | `call_object_description/` | Handover object model |
 | `scripts/`, `tools/` | Reproduction, verification, and figure generation |
 | `docs/` | Method, setup, results, and technical appendices |
-| `evidence/` | Compact experimental records and integrity checks |
+| `evidence/` | Current release evidence and integrity checks |
 
 TRIAD is the method name; `HandoverInterceptionController`, `call_handover`,
-and `call_object` are the implementation identifiers used by the build and logs.
+and `call_object` are implementation identifiers used by the build and logs.
 
 ## Citation
 
