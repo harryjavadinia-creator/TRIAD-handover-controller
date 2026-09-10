@@ -1,4 +1,3 @@
-
 # Local CMake compilation output
 /build/
 
@@ -6,17 +5,15 @@
 __pycache__/
 *.py[cod]
 
-# Scenario/latency reproduction run outputs (scripts/run_scenario.sh,
-# scripts/reproduce_latency_matrix.sh)
+# Scenario and latency reproduction outputs
 /results/
 
-# Isolated historical-commit worktree created by
-# scripts/reproduce_latency_matrix.sh
+# Temporary historical-source worktrees
 /.historical-worktrees/
 
-# Reconstructed gen3_2f85 mc_rtc robot module (scripts/setup_gen3_2f85_module.py)
-# -- built from external upstream packages, never tracked here.
+# Reconstructed Gen3 + 2F-85 mc_rtc robot module
+# Generated from external upstream packages and not tracked here.
 /gen3_2f85_module/
 
-# Optional environment used only to regenerate published figures
+# Optional environment used to regenerate result figures
 /.venv-figures/
