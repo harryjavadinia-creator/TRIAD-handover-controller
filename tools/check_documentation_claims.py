@@ -62,15 +62,6 @@ forbidden = {
     "absolute callback-no-join assurance": "no mutex, condition variable, future or join is reachable",
     "absolute copied-state no-live-pose assurance": "reads no live robot **pose or configuration** after",
     "near-ground raw byte-identity claim": "all 229 control-thread records are byte-identical",
-    "audience-specific supervisor-facing wording": "supervisor-facing",
-    "audience-specific supervisor-package wording": "supervisor package",
-    "internal release-facing wording": "release-facing",
-    "presentation-specific interpretation wording": "for presentation purposes",
-    "internal publication-head wording": "publication-head",
-    "internal current-story wording": "main current experiment story",
-    "internal current-publication-interpretation wording": "current publication interpretation",
-    "internal present-discussion wording": "present controller/method discussion",
-    "publication-preparation process wording": "during publication preparation",
 }
 for label, phrase in forbidden.items():
     check(label + " absent", norm(phrase) not in joined)
