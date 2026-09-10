@@ -108,4 +108,4 @@ The tracked configuration defaults to:
 - `physicalBridge.enabled: false`;
 - `allowPhysicalExecution: false`.
 
-These defaults reproduce the simulation-oriented release configuration and do not constitute physical-robot validation.
+These are the tracked simulation defaults and do not constitute physical-robot validation.
