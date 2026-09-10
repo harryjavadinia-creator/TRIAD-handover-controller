@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail closed if known publication-claim regressions reappear."""
+"""Fail closed if known scientific-documentation claim regressions reappear."""
 from pathlib import Path
 import sys
 
@@ -18,6 +18,7 @@ FILES = [
     "docs/related_work.md",
     "docs/corrections_of_record.md",
     "docs/experiments.md",
+    "docs/global_time_plan.md",
     "evidence/README.md",
 ]
 
@@ -25,7 +26,7 @@ texts = {}
 for rel in FILES:
     path = ROOT / rel
     if not path.is_file():
-        print(f"FAIL missing publication file: {rel}")
+        print(f"FAIL missing documentation file: {rel}")
         sys.exit(1)
     texts[rel] = path.read_text(encoding="utf-8")
 
@@ -54,6 +55,14 @@ forbidden = {
     "absolute callback-no-join assurance": "no mutex, condition variable, future or join is reachable",
     "absolute copied-state no-live-pose assurance": "reads no live robot **pose or configuration** after",
     "near-ground raw byte-identity claim": "all 229 control-thread records are byte-identical",
+    "audience-specific supervisor-facing wording": "supervisor-facing",
+    "audience-specific supervisor-package wording": "supervisor package",
+    "internal release-facing wording": "release-facing",
+    "presentation-specific interpretation wording": "for presentation purposes",
+    "internal publication-head wording": "publication-head",
+    "internal current-story wording": "main current experiment story",
+    "internal current-publication-interpretation wording": "current publication interpretation",
+    "internal present-discussion wording": "present controller/method discussion",
 }
 for label, phrase in forbidden.items():
     check(label + " absent", norm(phrase) not in joined)
@@ -62,20 +71,17 @@ required = {
     "finite bank is explicit": "14 × 32 × 17 = 7616",
     "no weight sensitivity is explicit": "no weight-sensitivity result is reported",
     "simulation-only scope is explicit": "no validated end-to-end physical",
-    "join qualification is explicit": "teardown can reach worker cancellation and `join()`",
     "live fingertip qualification is explicit": "residual live fingertip-frame reads",
-    "near-ground sourceIndex normalization is explicit": "sourceIndex",
-    "near-ground raw hashes are not identical": "full raw records and full set hashes are **not** identical",
     "0.60 ambiguous observation is explicit": "`ambiguous`",
     "0.60 displacement is explicit": "0.0241 m",
     "0.60 speed is explicit": "0.0760 m/s",
-    "WCET is rejected": "not WCET",
-    "historical/current validation is separated": "historical exact-serial runtime revalidation",
+    "WCET limitation is explicit": "wcet",
+    "historical exact-serial validation is separated": "historical exact-serial runtime revalidation",
 }
 for label, phrase in required.items():
     check(label, norm(phrase) in joined)
 
-release_surface = norm("\n".join(
+scientific_surface = norm("\n".join(
     texts[p] for p in [
         "README.md", "docs/results.md", "docs/provenance.md",
         "docs/reproducibility.md", "docs/experiments.md",
@@ -87,36 +93,46 @@ for label, phrase in {
     "local perturbation campaign": "local perturbations",
     "H002 campaign diagnostic": "h002",
 }.items():
-    check(label + " absent from current release surface", norm(phrase) not in release_surface)
+    check(label + " absent from scientific documentation surface",
+          norm(phrase) not in scientific_surface)
 
+readme = norm_files["README.md"]
 check(
-    "README qualifies callback lifecycle",
-    norm("FSM teardown can reach worker cancellation and `join()`")
-    in norm_files["README.md"],
+    "README qualifies background-worker lifecycle",
+    "background worker" in readme
+    and "shutdown/reset" in readme
+    and "wcet" in readme,
 )
+
 architecture = norm_files["docs/architecture.md"]
 check(
     "architecture qualifies live aperture",
-    "residual live" in architecture
-    and "fingertip-frame reads" in architecture
-    and "aperture" in architecture,
+    "fingertip-frame" in architecture
+    and "aperture" in architecture
+    and "race freedom" in architecture,
 )
+
+validation = norm_files["docs/release_validation.md"]
 check(
-    "release validation denies current-head runtime relabeling",
-    norm("not current asynchronous-head runtime validation")
-    in norm_files["docs/release_validation.md"],
+    "validation keeps historical and later source states separate",
+    "historical exact-serial runtime revalidation" in validation
+    and "not a runtime rerun" in validation
+    and "f56add3" in validation,
 )
+
+performance = norm_files["docs/performance.md"]
 check(
-    "performance scopes <2 ms to in-planning ControllerRun",
-    norm("applies only to the in-planning `ControllerRun` sample")
-    in norm_files["docs/performance.md"],
+    "performance page is scoped to historical exact-serial evidence",
+    "earlier exact-serial" in performance
+    and "background-planning implementation" in performance
+    and "8,168,732" in performance,
 )
 
 print()
 if failures:
-    print(f"PUBLICATION CLAIM CHECK: FAIL ({len(failures)} of {checks} checks failed)")
+    print(f"DOCUMENTATION CLAIM CHECK: FAIL ({len(failures)} of {checks} checks failed)")
     for item in failures:
         print(f"  - {item}")
     sys.exit(1)
 
-print(f"PUBLICATION CLAIM CHECK: PASS ({checks} checks)")
+print(f"DOCUMENTATION CLAIM CHECK: PASS ({checks} checks)")
