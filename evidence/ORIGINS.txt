@@ -1,9 +1,9 @@
-# Origin of every evidence file in the current release.
+# Origin of every evidence file retained in this repository.
 #
 # <archive-root> is the campaign evidence archive on the machine that ran the
 # experiments. Only the path inside that archive is relevant here.
 #
-# published path  <-  <archive-root>/...
+# repository path  <-  <archive-root>/...
 
 async/diagonal/frozen_plan_set_prethread_sha.txt                  <-  async/diagonal/frozen_plan_set_prethread_sha.txt
 async/diagonal/frozen_plan_set_sha.txt                            <-  async/diagonal/frozen_plan_set_sha.txt
