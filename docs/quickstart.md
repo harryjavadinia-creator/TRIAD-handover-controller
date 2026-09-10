@@ -1,9 +1,9 @@
 # Build and watch a simulation
 
-This guide runs the published asynchronous TRIAD controller in mc_rtc's
-open-loop simulation. It requires Linux and local robot-description
-dependencies. The [result figures](results.md) can be viewed on GitHub without
-installing anything.
+This guide runs the TRIAD controller in mc_rtc's open-loop simulation. It
+requires Linux and local robot-description dependencies. The
+[result figures](results.md) can be viewed on GitHub without installing
+anything.
 
 ## 1. Prepare the environment
 
@@ -30,7 +30,7 @@ The standalone viewer below avoids requiring ROS support in TRIAD.
 ## 2. Clone TRIAD
 
 ```bash
-git clone --branch publication/supervisor-release https://github.com/harryjavadinia-creator/TRIAD-handover-controller.git
+git clone https://github.com/harryjavadinia-creator/TRIAD-handover-controller.git
 cd TRIAD-handover-controller
 ```
 
@@ -66,10 +66,10 @@ export MAIN_ROBOT_MODULE_PATH="$PWD/gen3_2f85_module"
 
 The setup script checks the upstream URDF and all referenced mesh contents
 before generating the module. A content mismatch means the inputs differ
-from the reported robot model; use the matching packages.
+from the documented robot model; use the matching packages.
 
 The two tags above passed the supplied URDF and all 26 unique mesh checks
-during publication preparation. Keep the dependency directories in place:
+during robot-model validation. Keep the dependency directories in place:
 the generated module refers to their local meshes. Further model details
 are in [Robot module](robot_module.md).
 
@@ -116,15 +116,16 @@ The script saves the scenario input and log, checks the outcome, and stops
 the ticker after a terminal state. Open the viewer first because the wrapper
 closes the completed run automatically.
 
-The viewer instructions follow the upstream interface and the GUI fields in
-the published source. They are not a record of a new desktop/viewer test of
-this checkout; see [Validation scope](release_validation.md).
+The viewer procedure describes how to inspect the controller state; validation
+evidence and source attribution are listed separately in
+[Validation scope](release_validation.md).
 
 ## What to look for
 
 The intended completed sequence is observation, planning, committed reach,
 presentation, pregrasp approach, closure and transfer, then retreat. During
-planning the finite search runs on a worker while the controller continues.
+planning the finite search runs on a background worker while the controller
+continues its normal cycle.
 
 Open **Handover → Methodology** in the GUI:
 
@@ -137,8 +138,8 @@ Open **Handover → Methodology** in the GUI:
 | `TRANSIT STANDOFF` / `CAPTURE PREGRASP` | Approach targets |
 | `CERTIFIED RETREAT` | Retreat target from the model checks |
 
-These are existing controller outputs. “Certified” in the retreat label
-refers to the implemented sampled model checks.
+These are controller outputs. “Certified” in the retreat label refers to the
+implemented sampled model checks.
 
 ## Check the outcome
 
@@ -165,4 +166,5 @@ the ticker; its process exit code alone does not determine scientific success.
 The [simulation reference](simulation.md) lists exact inputs and historical
 winners. Wall time, live timing admission, and rendering depend on the machine;
 an identical winner or completion is not guaranteed across different timing
-conditions. Physical execution is disabled by the published defaults.
+conditions. Physical execution is disabled by the default tracked
+configuration.
