@@ -52,9 +52,7 @@ J_{\mathrm{global}}
 
 `J_motion` scores the motion associated with the complete plan. The additional common-epoch time contribution allows plans belonging to different future event times to be compared from the same search epoch `t0`.
 
-Because `J_motion` already contains its normalized execution-time term, the combined time contribution represents the controller's preference over both robot execution and when the selected future handover event occurs.
-
-For presentation purposes, this can be read simply as a **total-time preference across complete plans**. The exact decomposition is retained here for reproducibility.
+Because `J_motion` already contains its normalized execution-time term, the combined time contribution represents the controller's preference over both robot execution and when the selected future handover event occurs. It is a total-time preference across complete plans, with the exact decomposition retained for reproducibility.
 
 ## Seven-term motion objective
 
