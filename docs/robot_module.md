@@ -145,7 +145,7 @@ For copy-paste download and reconstruction commands using the upstream
 `ros2_kortex` **0.2.6** and `ros2_robotiq_gripper` **0.0.1** tags, see
 [Quick start](quickstart.md). These source trees supply the required mesh
 files directly; their contents passed this repository's pinned model checks
-during publication preparation.
+during robot-model validation.
 
 ```bash
 python3 scripts/setup_gen3_2f85_module.py \
