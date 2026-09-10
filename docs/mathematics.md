@@ -6,9 +6,9 @@ This page summarizes the finite decision problem implemented by TRIAD. For field
 
 A complete plan is
 
-$$
+```math
 \xi=(\tau,g,r),
-$$
+```
 
 where `tau` is a future presentation event, `g` is a receiver grasp orientation, and `r` is a transit route.
 
@@ -26,9 +26,9 @@ where `tau` is a future presentation event, `g` is a receiver grasp orientation,
 
 TRIAD searches a finite product
 
-$$
+```math
 \mathcal X_h=\mathcal T_h\times\mathcal G_h\times\mathcal R_h.
-$$
+```
 
 For the reported moving-object campaign:
 
@@ -38,9 +38,9 @@ For the reported moving-object campaign:
 
 The upper pre-pruning product is
 
-$$
+```math
 14\times32\times17=7616.
-$$
+```
 
 This is the generated finite bank, not the number of plans that survive complete evaluation and not a claim of continuous-space global optimality.
 
@@ -57,17 +57,17 @@ clamping and deduplication produce 14 distinct leads in this bank.
 
 Let `a` denote the age of the delayed object measurement. TRIAD propagates that measurement to the current estimation time using the filtered linear and angular velocity estimates:
 
-$$
+```math
 \hat p(t)=p_{\mathrm{meas}}(t-a)+a\,\hat v(t),
 \qquad
 \hat R(t)=\mathrm{Exp}\!\left(a\,\hat\omega(t)\right)R_{\mathrm{meas}}(t-a).
-$$
+```
 
 For each candidate event, TRIAD then applies a prescribed smooth terminal deceleration. With stop duration `D`, the predicted presentation pose at lead `h` is
 
-$$
+```math
 \Pi(h)=\mathrm{Prop}\!\left({}^{W}T_{O}(t_0),\; h-\tfrac12\min(h,D),\; \hat v,\hat\omega\right).
-$$
+```
 
 The predictor is deterministic: no covariance, learned predictor, or probability distribution over future states is used.
 
@@ -76,10 +76,10 @@ $\mathrm{Exp}(a\hat\omega)$ abbreviates the matrix exponential of
 $a[\hat\omega]_\times$. The stop velocity multiplier, for normalized stop
 progress $u\in[0,1]$, is
 
-$$
+```math
 b(u)=1-10u^3+15u^4-6u^5,\qquad
 \int_0^1 b(u)\,du=\tfrac12.
-$$
+```
 
 This gives the half-stop-duration reduction in effective travel above.
 
@@ -88,14 +88,14 @@ This gives the half-stop-duration reduction in effective travel above.
 The preview uses weighted damped least-squares differential IK. For geometric
 Jacobian $J$, task twist $v_{\mathrm{task}}$, and diagonal joint mobility $M$:
 
-$$
+```math
 J^\#=MJ^\top(JMJ^\top+\lambda^2I)^{-1},
-$$
+```
 
-$$
+```math
 \dot q=J^\#v_{\mathrm{task}}
  +(I-J^\#J)(\dot q_{\mathrm{posture}}+\dot q_{\mathrm{limit}}).
-$$
+```
 
 Mobility decreases near joint limits, with a floor of 0.02. The configured
 damping is $\lambda=0.040$ and preview step is 0.020 s. Directional joint-speed
@@ -111,10 +111,10 @@ defines the gains, phase tolerances, and iteration limits.
 
 Let $s_0$ denote the copied decision state at search epoch $t_0$. The finite hard-feasible set is
 
-$$
+```math
 \mathcal F_h(s_0)
 =\{\xi\in\mathcal X_h:\text{the modeled hard checks pass}\}.
-$$
+```
 
 The checks include reachability/IK, sampled collision and ground clearance, joint limits, corridor/acquisition geometry, terminal capture conditions, and receiver-action/retreat feasibility.
 
@@ -143,17 +143,17 @@ it does not establish frictional force closure or physical transfer dynamics.
 
 A hard-feasible plan is ranked only when the required objective quantities are finite and valid:
 
-$$
+```math
 \mathcal F_J(s_0)
 =\{\xi\in\mathcal F_h(s_0):J_{\mathrm{global}}(\xi;s_0)\text{ is finite and valid}\}.
-$$
+```
 
 ## Seven-term motion objective
 
-$$
+```math
 J_{\mathrm{motion}}
 =w_TT+w_EE+w_LL+w_CC+w_QQ+w_KK+w_VV.
-$$
+```
 
 | Term | Meaning | Weight |
 | --- | --- | ---: |
@@ -181,7 +181,7 @@ energy. Path length is the recorded transit-route length divided by 0.50 m.
 
 For clearance $d$, hard reference $d_h$, and soft reference $d_s$:
 
-$$
+```math
 \phi_C(d)=
 \begin{cases}
 0 & d\ge d_s,\\
@@ -189,20 +189,20 @@ $$
   & d_h<d<d_s,\\
 10^6 & d\le d_h\ \text{or nonfinite}.
 \end{cases}
-$$
+```
 
 Here $d$ is the minimum non-contact reach/retreat clearance, $d_h=0.020$ m,
 and $d_s=0.080$ m. For a positive reserve $x$ with soft reference $x_s$,
 the joint and conditioning terms use
 
-$$
+```math
 \phi(x;x_s)=
 \begin{cases}
 0 & x\ge x_s,\\
 -\log\!\left(\max(10^{-12},x/x_s)\right) & 0<x<x_s,\\
 10^6 & x\le0\ \text{or nonfinite}.
 \end{cases}
-$$
+```
 
 $Q$ uses minimum normalized joint-limit margin with $x_s=0.20$.
 $K$ uses minimum condition index with $x_s=0.10$; the Jacobian's angular
@@ -222,24 +222,24 @@ normalized by the interval's half-width.
 
 The within-event objective already contains the execution-time term
 
-$$
+```math
 T=\frac{T_{\mathrm{exec}}}{T_{\mathrm{ref}}},
 \qquad T_{\mathrm{ref}}=8\text{ s}.
-$$
+```
 
 For plans belonging to different future event times, TRIAD also accounts for the wait from the common search epoch to the start of the planned presentation motion:
 
-$$
+```math
 T_{\mathrm{wait}}=h-T_{\mathrm{pres}}.
-$$
+```
 
 The global objective is therefore
 
-$$
+```math
 J_{\mathrm{global}}
 =J_{\mathrm{motion}}
 +w_T\frac{T_{\mathrm{wait}}}{T_{\mathrm{ref}}}.
-$$
+```
 
 This extends the same time preference to a common temporal origin; it is not a separate eighth objective.
 
@@ -247,30 +247,30 @@ This extends the same time preference to a common temporal origin; it is not a s
 
 After the complete bounded schedule has been inspected, TRIAD applies a hard timing gate using the actual selector time `t_sel`:
 
-$$
+```math
 \mathrm{remaining}(\xi,t_{\mathrm{sel}})
 =t_{\mathrm{event}}(\xi)-t_{\mathrm{sel}}.
-$$
+```
 
 With implementation epsilon $\varepsilon=10^{-12}$, a plan must satisfy
 
-$$
+```math
 \mathrm{remaining}+\varepsilon \ge L_{\mathrm{safe}}
-$$
+```
 
 and
 
-$$
+```math
 T_{\mathrm{pres}}+L_{\mathrm{reach}}
 \le \mathrm{remaining}+\varepsilon.
-$$
+```
 
 Thus
 
-$$
+```math
 \mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})
 =\{\xi\in\mathcal F_J(s_0):\text{both timing inequalities hold}\}.
-$$
+```
 
 The timing gate is an admission constraint, not another cost term: a good plan can still be rejected if it has become too late to commit safely.
 
@@ -278,11 +278,11 @@ The timing gate is an admission constraint, not another cost term: a good plan c
 
 The selected plan is
 
-$$
+```math
 \xi_h^{\ast}
 =\arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
 J_{\mathrm{global}}(\xi;s_0).
-$$
+```
 
 The minimum is exhaustive over the generated bounded finite set. The bank carries no completeness guarantee: failure to find a TRIAD plan does not prove that no physical handover exists outside the tested discretization.
 
@@ -303,10 +303,10 @@ commitment. The live predictor refreshes its future event pose using the
 remaining lead. Writing the frozen selected event pose as $(R_f,p_f)$
 and the refreshed event pose as $(R_c,p_c)$:
 
-$$
+```math
 \|p_c-p_f\|_2\le0.015\ {\rm m},\qquad
 \|\mathrm{Log}(R_cR_f^\top)\|_2\le0.12\ {\rm rad}.
-$$
+```
 
 This is a prediction-consistency test, not just a timestamp-age threshold.
 Here $\mathrm{Log}$ denotes the rotation-vector logarithm on $SO(3)$.
