@@ -2,9 +2,9 @@
 
 TRIAD selects a complete handover plan
 
-\[
+```math
 \xi=(\tau,g,r)
-\]
+```
 
 where `tau` is the future handover event time, `g` is the grasp, and `r` is the transit route.
 
