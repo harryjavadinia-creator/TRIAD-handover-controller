@@ -4,9 +4,9 @@
 
 TRIAD makes one complete handover decision:
 
-\[
+```math
 \xi=(\tau,g,r)
-\]
+```
 
 where `tau` is the future handover event time, `g` is the grasp, and `r` is the transit route.
 
@@ -128,7 +128,7 @@ The exact feasibility sets, objective terms, timing equations and numerical tie 
 - `src/states/` — execution FSM states.
 - `etc/HandoverInterceptionController.in.yaml` — controller and scenario configuration template.
 
-TRIAD is the public method name. `call_handover` and `HandoverInterceptionController` are implementation identifiers retained from the CALL project lineage.
+TRIAD is the method name. `call_handover` and `HandoverInterceptionController` are implementation identifiers retained from the CALL project lineage.
 
 ## Active FSM
 
@@ -158,4 +158,4 @@ The background worker uses one frozen planning snapshot for most candidate calcu
 
 Most candidate kinematics use the frozen copied robot state. A small number of implementation paths still read live fingertip-frame information for gripper aperture and live robot-model accessors for joint limits. For that reason, the repository does **not** claim complete copied-state purity or formal race freedom.
 
-These qualifications do not change the high-level TRIAD decision process above; they define the current implementation scope. Detailed historical corrections and provenance are kept in [Corrections of record](corrections_of_record.md) and [Provenance](provenance.md).
+These qualifications define the current implementation scope. Additional source and evidence qualifications are documented in [Technical qualifications](corrections_of_record.md) and [Provenance](provenance.md).
