@@ -1,34 +1,34 @@
 # Validation scope
 
-The current publication contains the frozen asynchronous controller and a
-reduced evidence package. This page identifies what each validation layer
-establishes.
+This page distinguishes the validation layers associated with the documented
+TRIAD source states and evidence.
 
-## Current publication
+## Frozen background-planning source
 
 | Layer | Scope |
 | --- | --- |
-| Source identity | the current source manifest pins the frozen asynchronous implementation |
+| Source identity | `source_sync_f56add3.sha256` pins the frozen background-planning implementation |
 | Selector/checker tests | finite selection, timing replay, scenario identity, overrides and model-setup fixtures |
-| Evidence integrity | asynchronous, latency and planner-core records |
-| Documentation | local links, publication-claim guards and script syntax |
-| Controller build | clean configure/build recorded during the asynchronous publication pass |
-| Current desktop demonstration | no new publication-head runtime or viewer campaign is asserted |
+| Evidence integrity | latency, planner-core, and archived background-planning records |
+| Documentation | local links, claim guards and script syntax |
+| Controller build | clean configure/build recorded for the frozen background-planning source |
+| Runtime scope | no new four-scenario runtime rerun at `f56add3` is attributed without an explicit record |
 
-For the supervisor package, model reconstruction was checked from the pinned
-upstream robot tags. The URDF and mesh contents passed the published checks.
-Reconstruction does not itself establish runtime behavior.
+Robot-model reconstruction was checked from the pinned upstream robot tags. The
+URDF and mesh contents passed the documented checks. Reconstruction does not by
+itself establish controller runtime behavior.
 
-The published latency and controller-timing figures are generated from included
-records. The current source manifest refers to scientific commit `f56add3`.
+The latency figure is generated from included records. The current source
+manifest refers to scientific source state `f56add3`.
 
 ## Historical exact-serial runtime revalidation
 
-At publication synchronization `123be4a`, the imported exact-serial
-implementation from `82e6eaa` passed a clean build and four Dataset-B
-simulation reruns. Its public release is preserved by `csi-2026-release`.
-This is historical exact-serial runtime revalidation,
-**not current asynchronous-head runtime validation**.
+For the exact-serial source imported from `82e6eaa`, validation state `123be4a`
+passed a clean build and four Dataset-B simulation reruns. The corresponding
+source is preserved by tag `csi-2026-release`.
+
+This evidence is **historical exact-serial runtime revalidation**; it is not a
+runtime rerun of the later `f56add3` background-planning source.
 
 Each rerun reported:
 
@@ -52,5 +52,5 @@ physical handovers are different validation layers. No cross-machine exact
 wall-time, WCET, human-subject or end-to-end physical-robot validation is
 established by these checks.
 
-A reproduced run should preserve its actual checkout, environment, inputs and
-checker outputs rather than inheriting attribution from an earlier campaign.
+A reproduced run should retain its actual checkout, environment, inputs and
+checker outputs rather than inheriting attribution from another source state.
