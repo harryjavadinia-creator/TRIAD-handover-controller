@@ -1,18 +1,17 @@
 # Simulation results
 
-The current release keeps only the evidence directly used for the present
-TRIAD controller/method discussion. All end-to-end outcomes described here are
-from simulation.
+All end-to-end outcomes described here are from simulation. The results below
+cover the canonical finite-plan scenarios and the corrected perception-latency
+ablation.
 
 ## Canonical finite-plan scenarios
 
 The four canonical moving-object scenarios provide reference event, grasp,
 route and global-cost values for the finite TRIAD selector. They are documented
-in [Simulation](simulation.md) and retain their historical source attribution in
+in [Simulation](simulation.md) and retain their source attribution in
 [Provenance](provenance.md).
 
-These scenarios are the clearest end-to-end demonstration of the complete
-TRIAD chain:
+Together they exercise the complete TRIAD chain:
 
 ```text
 predict event
@@ -42,27 +41,27 @@ condition for completing the full handover.
 | 0.50 s | Failed after commitment | Failed after commitment |
 | 0.60 s | Prediction-consistency rejection before commitment | Ambiguous observation; no finite search |
 
-The archived report additionally records four repeats per mode at 0.30 s:
+The latency report additionally records four repeats per mode at 0.30 s:
 four compensated completions and four uncompensated failures after commitment.
 
 At uncompensated 0.60 s, classification is `AMBIGUOUS`: displacement is
 0.0241 m, below the 0.0250 m moving threshold, while estimated linear speed is
 0.0760 m/s, above the 0.0100 m/s static threshold. See the
-[interpretation note](corrections_of_record.md).
+[technical qualification](corrections_of_record.md).
 
 Data: [corrected sweep records](../evidence/latency/sweep_rows.json) and
-[archived latency report](../evidence/latency/FINAL_LATENCY_REPORT.md).
+[latency report](../evidence/latency/FINAL_LATENCY_REPORT.md).
 
-## Earlier latency matrix
+## Historical latency matrix
 
-The earlier five-scenario latency matrix is documented separately in
-[Experiments](experiments.md). It is historical evidence and should not be
-merged numerically with the corrected sweep above.
+An earlier five-scenario latency matrix is preserved under tag
+`dataset-a-baseline` and attributed in [Provenance](provenance.md). Its numbers
+are not merged with the corrected sweep above.
 
 ## Regenerate the figure
 
-The latency figure is derived from already-published records. No controller run
-or new experiment is performed:
+The latency figure is derived from included records. No controller run or new
+experiment is performed:
 
 ```bash
 python3 -m venv .venv-figures
