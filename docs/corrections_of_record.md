@@ -1,7 +1,7 @@
-# Publication corrections of record
+# Technical qualifications
 
-This page records narrow technical qualifications for publication-facing text
-while preserving the frozen scientific implementation and archived evidence.
+This page records implementation and evidence qualifications that are important
+for interpreting the TRIAD results and source provenance.
 
 ## Copied-state planning
 
@@ -21,13 +21,13 @@ The finite TRIAD search runs on a background worker so the normal controller
 cycle does not have to perform the full search directly. Ordinary result polling
 is nonblocking.
 
-Shutdown and reset paths can still cancel and `join()` the worker. The release
-therefore does not claim a bounded join latency, WCET, hard-real-time guarantee
-or formal schedulability proof.
+Shutdown and reset paths can still cancel and `join()` the worker. No bounded
+join latency, WCET, hard-real-time guarantee or formal schedulability proof is
+established.
 
 ## Corrected latency at 0.60 s
 
-The archived latency report is retained under
+The latency report is stored under
 `evidence/latency/FINAL_LATENCY_REPORT.md`.
 
 - compensated 0.60 s: the selected result is rejected by the
@@ -44,28 +44,25 @@ mode for all large delays.
 
 ## Source-state attribution
 
-The canonical source-state table is [`provenance.md`](provenance.md).
+The source-state table is [`provenance.md`](provenance.md).
 
-- Dataset A remains historical `e2e194d` evidence.
-- Dataset B remains historical `c07368c` evidence.
+- Dataset A is historical `e2e194d` evidence.
+- Dataset B is historical `c07368c` evidence.
 - Exact-serial performance/revalidation material belongs to the
   `82e6eaa` / public `a006912` state.
-- `f56add3` is the frozen asynchronous implementation and source state of the
-  corrected nonzero-delay latency sweep.
+- `f56add3` is the frozen background-planning implementation and source state
+  of the corrected nonzero-delay latency sweep.
 
 Some background-planning timing/determinism/safety records were produced earlier
-in the asynchronous development lineage. Source compatibility must not be
-rewritten as execution at `f56add3` unless a specific record establishes that
-provenance.
+in the asynchronous development lineage. Source compatibility does not by
+itself establish that a specific historical record was executed at `f56add3`.
 
-## Clean-clone validation scope
+## Validation attribution
 
-Historical runtime revalidation belongs to the exact-serial release. Later
-current-release validation establishes source synchronization, dependency-free
-checks, evidence integrity and clean configure/build. It does not silently
-re-label historical four-scenario runtime evidence as a current-head rerun and
-does not establish physical-robot validation.
+Historical runtime revalidation belongs to the exact-serial source state.
+Later validation establishes source synchronization, dependency-free checks,
+evidence integrity and clean configure/build for the frozen background-planning
+source. Historical runtime evidence is not re-labeled as a later-source rerun.
 
-Simulation, historical runtime evidence, current-source verification and
-physical-robot validation are separate validation layers and should be reported
-as such.
+Simulation, historical runtime evidence, source verification and physical-robot
+validation are separate validation layers and should be reported separately.
