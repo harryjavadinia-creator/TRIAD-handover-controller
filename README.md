@@ -7,10 +7,10 @@ gripper. It predicts future object-presentation events, compares complete
 event–grasp–route plans, and executes one admissible plan through acquisition
 and retreat. It is implemented in C++ using mc_rtc.
 
-**Validation scope: simulation.** This release publishes the asynchronous
-controller, mathematical method, canonical scenario commands, latency evidence,
-and asynchronous control-loop evidence. There is no validated end-to-end
-physical human-to-robot handover campaign.
+**Validation scope: simulation.** The repository contains the controller,
+mathematical formulation, canonical simulation scenarios, corrected
+perception-latency evidence, verification tools, and source/evidence provenance.
+There is no validated end-to-end physical human-to-robot handover campaign.
 
 ## Start here
 
@@ -19,7 +19,7 @@ physical human-to-robot handover campaign.
 | Build the controller and watch a simulation | [Quick start](docs/quickstart.md) |
 | Understand the equations and decision rule | [Mathematical formulation](docs/mathematics.md) |
 | Follow the algorithm and execution stages | [Architecture and pseudocode](docs/architecture.md) |
-| See the current release evidence | [Results](docs/results.md) |
+| Inspect the simulation results | [Results](docs/results.md) |
 | Position the contribution in the literature | [Related work](docs/related_work.md) |
 | Check data, source versions, and validation | [Reproducibility](docs/reproducibility.md) |
 
@@ -48,24 +48,24 @@ The seven objective weights are fixed engineering preferences;
 **no weight-sensitivity result is reported**. The [full formulation](docs/mathematics.md)
 covers prediction, local IK, objective terms, timing, ties, and commitment.
 
-## Current release evidence
+## Evidence
 
-This release keeps the evidence that is directly used for the present
-controller/method discussion:
+The principal simulation evidence consists of:
 
-- the four canonical moving-object simulation scenarios and their historical
-  reference winners;
+- four canonical moving-object scenarios with reference event-time, grasp,
+  route, and objective values;
 - the corrected perception-latency ablation;
-- asynchronous planning/control-loop profiles and frozen plan-set checks;
-- planner-core integrity checks.
+- source, model, and evidence-integrity checks.
 
 See [Results](docs/results.md), [Simulation](docs/simulation.md),
-[Performance](docs/performance.md), and the [evidence index](evidence/README.md).
+[Experiments](docs/experiments.md), and the [evidence index](evidence/README.md).
+Historical implementation-performance measurements are documented separately in
+[Performance](docs/performance.md).
 
 ## Clone and run
 
 ```bash
-git clone --branch publication/supervisor-release https://github.com/harryjavadinia-creator/TRIAD-handover-controller.git
+git clone https://github.com/harryjavadinia-creator/TRIAD-handover-controller.git
 cd TRIAD-handover-controller
 ```
 
@@ -78,9 +78,9 @@ scripts/run_scenario.sh longitudinal
 
 The other scenarios are `near-ground`, `lateral-low`, and `diagonal`.
 The [simulation guide](docs/simulation.md) gives their inputs, completion
-markers, and historical reference outputs.
+markers, and reference outputs.
 
-To verify the published evidence without installing a simulator:
+To verify the included evidence without installing a simulator:
 
 ```bash
 python3 tools/check_evidence_manifest.py
@@ -94,11 +94,12 @@ convergence study, continuous collision proof, arbitrary-clutter perception,
 human-body model, comprehensive self-collision checking, or post-commit global
 replanning is established.
 
-Ordinary worker-result polling is nonblocking; FSM teardown can reach worker
-cancellation and `join()`. Residual live fingertip-frame reads affect aperture
-checks. The measured timing is not WCET, and full copied-state purity or race
-freedom is not established. See [Architecture](docs/architecture.md),
-[Performance](docs/performance.md), and [Hardware status](docs/real_robot.md).
+The finite search is executed by a background worker. Ordinary result polling
+is nonblocking, while shutdown/reset paths may cancel and join the worker; no
+WCET or formal schedulability guarantee is claimed. Residual live
+fingertip-frame reads affect aperture checks, so complete copied-state purity or
+formal race freedom is not established. See [Architecture](docs/architecture.md)
+and [Hardware status](docs/real_robot.md).
 
 ## Repository contents
 
@@ -108,13 +109,13 @@ freedom is not established. See [Architecture](docs/architecture.md),
 | `etc/`, `configs/` | Controller and simulation configuration |
 | `call_object_description/` | Handover object model |
 | `scripts/`, `tools/` | Reproduction, verification, and figure generation |
-| `docs/` | Method, setup, results, and technical appendices |
-| `evidence/` | Current release evidence and integrity checks |
+| `docs/` | Method, setup, results, provenance, and technical notes |
+| `evidence/` | Evidence records and integrity manifests |
 
 TRIAD is the method name; `HandoverInterceptionController`, `call_handover`,
 and `call_object` are implementation identifiers used by the build and logs.
 
 ## Citation
 
-Cite the repository title and the release or commit used. Publication citation
-metadata will be added when a paper is finalized.
+Cite the repository title together with the commit or tag used for the reported
+results.
