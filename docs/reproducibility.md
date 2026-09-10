@@ -16,7 +16,7 @@ python3 tools/test_verify_latency_matrix_cell.py
 python3 tools/test_verify_scenario_identity.py
 python3 tools/test_scenario_override_yaml.py
 python3 tools/check_markdown_links.py
-python3 tools/check_publication_claims.py
+python3 tools/check_documentation_claims.py
 python3 tools/test_check_planner_core_purity.py
 python3 tools/check_planner_core_purity.py
 python3 tools/verify_scientific_baseline.py SCIENTIFIC_BASELINE.sha256 --commit scientific-baseline
