@@ -33,10 +33,11 @@ number of combinations before pruning. Each retained alternative is previewed
 through the modeled handover phases and ranked only after hard feasibility
 checks pass. At result receipt, the controller reapplies timing admission:
 
-$$
-\xi^*\in\underset{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
-{\operatorname{argmin}}\;J_{\mathrm{global}}(\xi;s_0).
-$$
+```math
+\xi^*\in
+\arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,t_{\mathrm{sel}})}
+J_{\mathrm{global}}(\xi;s_0).
+```
 
 Selection is exhaustive over this generated finite set, with a documented
 numerical tie convention. A final prediction-freshness check precedes the
