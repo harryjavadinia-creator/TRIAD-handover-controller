@@ -1,18 +1,23 @@
 # Simulation reference
 
 For installation and live visualization, start with [Quick start](quickstart.md).
-The current publication supplies the asynchronous controller. The four named
-scenarios below are also the historical Dataset-B inputs.
+The four named scenarios below are the historical Dataset-B inputs used for the
+finite event-time–grasp–route campaign.
 
 ## Scope
 
-Dataset B is the four-scenario moving-object campaign for the finite global event-time–grasp–route selector. It is simulation evidence: `allowPhysicalExecution: false`.
+Dataset B is the four-scenario moving-object campaign for the finite global
+event-time–grasp–route selector. It is simulation evidence with
+`allowPhysicalExecution: false`.
 
-Dataset A is an earlier, separate perception-latency study. Its numbers and source attribution are documented in [`experiments.md`](experiments.md).
+An earlier perception-latency matrix belongs to a separate source state and is
+attributed in [`provenance.md`](provenance.md). The corrected latency experiment
+is summarized in [`experiments.md`](experiments.md) and [`results.md`](results.md).
 
 ## Build and install
 
-Use the build procedure in [Quick start](quickstart.md). After installation, the dependency-free scientific checks can still be run from the source checkout:
+Use the build procedure in [Quick start](quickstart.md). After installation, the
+dependency-free scientific checks can still be run from the source checkout:
 
 ```bash
 bash tools/run_binding_cost_checks.sh
@@ -22,7 +27,9 @@ python3 tools/verify_scientific_baseline.py SCIENTIFIC_BASELINE.sha256 \
 
 ## Scenario selection without tracked-file edits
 
-`scripts/run_scenario.sh` writes a small controller-override YAML file under a temporary `HOME`. mc_rtc merges that fragment over the installed default configuration for the duration of the run.
+`scripts/run_scenario.sh` writes a small controller-override YAML file under a
+temporary `HOME`. mc_rtc merges that fragment over the installed default
+configuration for the duration of the run.
 
 This mechanism means:
 
@@ -46,11 +53,14 @@ The default result directory is `results/<timestamp>_<name>/`.
 | `lateral-low` | `CANONICAL_YZ` | `[0.55, -0.56, 0.15]` | `[0.0, 0.08, 0.0]` |
 | `diagonal` | `DIAGONAL_XZ` | `[0.90, 0.00, 0.30]` | `[-0.0565685, 0.0, 0.0565685]` |
 
-The controller also contains a `static_nominal` preset. It is not part of Dataset B and is not exposed by `run_scenario.sh`.
+The controller also contains a `static_nominal` preset. It is not part of
+Dataset B and is not exposed by `run_scenario.sh`.
 
 ## Frozen Dataset-B outputs
 
-The original scientific campaign is anchored to the frozen `scientific-baseline` provenance described in [`experiments.md`](experiments.md). The following deterministic selection quantities are the reference values:
+The scientific campaign is anchored to the `scientific-baseline` source state
+listed in [`provenance.md`](provenance.md). The following deterministic
+selection quantities are the reference values:
 
 | Scenario | Event lead (s) | Grasp | Route | `J_global` |
 | --- | ---: | --- | --- | ---: |
@@ -59,7 +69,7 @@ The original scientific campaign is anchored to the frozen `scientific-baseline`
 | lateral-low | 4.150 | `axisN_side_337deg` | `direct` | 0.700830630 |
 | diagonal | 4.600 | `axisP_side_337deg` | `ring140mm_2of8` | 0.684634405 |
 
-Additional reference metrics from the frozen campaign are:
+Additional reference metrics from that campaign are:
 
 | Scenario | Predicted completion (s) | Actual completion (s) | Path length (m) | Min. reach clearance (m) | Joint-velocity utilization | Logical planning elapsed (s) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -68,7 +78,11 @@ Additional reference metrics from the frozen campaign are:
 | lateral-low | 8.803 | 7.435 | 0.398 | 0.082 | 1.00 | ≈0.88 |
 | diagonal | 9.620 | 8.224 | 0.405 | 0.081 | ≈0.690 | ≈1.39 |
 
-These values describe historical Dataset-B results and exact-serial revalidation. They are not a new asynchronous publication-head runtime campaign. Current admission depends on result-receipt time, so an identical winner is not promised under different timing conditions. See [Validation scope](release_validation.md) and [Results](results.md).
+These values describe historical Dataset-B results and exact-serial
+revalidation. They are not measurements of the later background-planning
+implementation. Current timing admission depends on result-receipt time, so an
+identical winner is not guaranteed under different timing conditions. See
+[Validation scope](release_validation.md).
 
 ## Runtime verification
 
@@ -80,15 +94,18 @@ RUNTIME_CHECKER_RESULT=PASS
 SCENARIO_IDENTITY_RESULT=PASS
 ```
 
-`tools/check_global_time_plan_log.py` verifies the global selector/runtime proof. Among other checks it:
+`tools/check_global_time_plan_log.py` verifies the global selector/runtime
+record. Among other checks it:
 
 - confirms the configured bounded schedule was fully evaluated;
 - reconciles valid, invalid and geometry-rejected alternatives;
 - verifies selection/commit identity;
 - independently reconstructs the frozen seven-term objective;
-- uses `[GlobalPlanTimingAdmissibility]` records, when present, to verify the exact argmin over the cost-valid and final-timing-admissible set.
+- uses `[GlobalPlanTimingAdmissibility]` records, when present, to verify the
+  exact argmin over the cost-valid and final-timing-admissible set.
 
-It does not independently prove collision geometry, real-robot behavior or scenario identity.
+It does not independently prove collision geometry, real-robot behavior or
+scenario identity.
 
 Scenario identity is checked separately:
 
@@ -96,17 +113,21 @@ Scenario identity is checked separately:
 python3 tools/verify_scenario_identity.py <log> --expect-scenario diagonal
 ```
 
-The identity checker compares the logged initial object position and settled velocity with the named scenario and checks the expected completion class.
+The identity checker compares the logged initial object position and settled
+velocity with the named scenario and checks the expected completion class.
 
 ## Three timing quantities
 
 The repository distinguishes:
 
-1. **logical/controller planning elapsed** — no-sync simulation time associated with the number of `SolveInterception` cycles;
+1. **logical/controller planning elapsed** — no-sync simulation time associated
+   with the number of `SolveInterception` cycles;
 2. **external planner wall time** — real elapsed computation time;
-3. **scenario-specific timing boundary** — a counterfactual planner duration derived from the exact final timing-admission rule.
+3. **scenario-specific timing boundary** — a counterfactual planner duration
+   derived from the exact final timing-admission rule.
 
-The first is not a CPU benchmark. The second is machine-dependent. The third is computed from complete-plan timing records and the selector rule.
+The first is not a CPU benchmark. The second is machine-dependent. The third is
+computed from complete-plan timing records and the selector rule.
 
 Replay a run with:
 
@@ -121,4 +142,5 @@ See [`timing_frontiers.md`](timing_frontiers.md).
 - Dataset-B runs use `allowPhysicalExecution: false`.
 - The virtual load-transfer source is not a physical force measurement.
 - Copied-state preview is a predictive approximation, not exact QP-rollout parity.
-- Hardware-facing timing replay is a counterfactual analysis, not an end-to-end physical experiment.
+- Timing-frontier replay is a counterfactual analysis, not an end-to-end
+  physical experiment.
