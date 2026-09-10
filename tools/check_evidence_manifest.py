@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dependency-free integrity checks for the reduced release evidence package."""
+"""Dependency-free integrity checks for the TRIAD evidence package."""
 import hashlib
 import json
 import os
@@ -78,15 +78,17 @@ check("latency sweep contains 0.30 s uncompensated condition",
 check("latency sweep contains 0.60 s conditions",
       sum(float(r.get("delay", -1)) == 0.60 for r in rows) >= 2)
 
-print("4. publication interpretation guards")
+print("4. evidence interpretation guards")
 with open(os.path.join(EV, "README.md"), encoding="utf-8") as handle:
     readme = handle.read()
 check("0.60 s ambiguous observation is documented",
       "`AMBIGUOUS`" in readme and "0.0241 m" in readme and "0.0760 m/s" in readme)
-check("near-ground normalization is documented",
-      "sourceIndex" in readme and "full raw records and full set hashes are **not** identical" in readme)
-check("<2 ms statement is scoped",
-      "restricted to this in-planning" in readme and "No hard-real-time/WCET claim" in readme)
+check("planner-core limitations are documented",
+      "fingertip-frame reads" in readme and "race freedom" in readme)
+check("background-planning timing is qualified",
+      "machine- and source-state dependent" in readme
+      and "WCET" in readme
+      and "formal schedulability" in readme)
 
 print()
 if failures:
