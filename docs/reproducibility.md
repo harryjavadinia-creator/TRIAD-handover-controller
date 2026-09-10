@@ -1,7 +1,7 @@
 # Reproducibility
 
 Use [Quick start](quickstart.md) for installation, model reconstruction and live
-simulation. Use [Results](results.md) to inspect the archived release evidence
+simulation. Use [Results](results.md) to inspect the included result records
 without installing mc_rtc.
 
 ## Check the repository
@@ -25,7 +25,7 @@ python3 tools/check_evidence_manifest.py
 ```
 
 These checks exercise the selectors and checker fixtures, verify source/evidence
-contents and check publication-document consistency. Passing them does not
+contents, and test documentation-claim consistency. Passing them does not
 establish physical safety, WCET or complete race freedom.
 
 ## Reproduce a canonical scenario
@@ -57,10 +57,10 @@ git status --short
 | Completion | depends on admission and execution conditions |
 | Wall time and visualization | machine-dependent |
 
-## Reproduce analyses from archived records
+## Reproduce analyses from stored records
 
-[Results](results.md) gives the figure-generation command. It reads included
-records without executing the controller.
+[Results](results.md) gives the latency-figure generation command. It reads
+included records without executing the controller.
 
 For a log with final timing-diagnostic records:
 
@@ -69,18 +69,18 @@ python3 tools/replay_timing_frontier.py results/<run>/longitudinal.log \
   --planner-time 3.808 --planner-time 3.976
 ```
 
-See [Timing frontiers](timing_frontiers.md).
+See [Timing frontiers](timing_frontiers.md) for the exact replay semantics.
 
-## Preserved experimental protocols
+## Source-linked protocols and records
 
-| Protocol | Documentation / preserved version |
+| Protocol / record set | Documentation / source state |
 | --- | --- |
-| Historical five-scenario latency matrix | [Experiments](experiments.md), tag `dataset-a-baseline` |
+| Historical five-scenario latency matrix | tag `dataset-a-baseline`; see [Provenance](provenance.md) |
 | Four canonical finite-plan scenarios | [Simulation](simulation.md), tag `scientific-baseline` |
 | Exact-serial performance/revalidation | [Performance](performance.md), tag `csi-2026-release` |
-| Corrected latency and asynchronous records | [Evidence index](../evidence/README.md) and [Provenance](provenance.md) |
+| Corrected latency records | [Evidence index](../evidence/README.md) and [Provenance](provenance.md) |
+| Background-planning implementation records | `evidence/async/` and [Provenance](provenance.md) |
 
-The historical exact-serial manifest verifies at its historical release tag,
-not against the current asynchronous source. Interpretation notes in
-[Corrections of record](corrections_of_record.md) qualify superseded wording
-where necessary.
+The exact-serial manifest verifies at its corresponding historical source state,
+not against the later background-planning source. Interpretation qualifications
+are collected in [Technical qualifications](corrections_of_record.md).
