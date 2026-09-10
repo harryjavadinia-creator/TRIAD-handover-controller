@@ -1,7 +1,7 @@
-# TRIAD reduced release evidence package — integrity manifest
+# TRIAD evidence package — integrity manifest
 #
-# The current release contains asynchronous-planner, corrected-latency and
-# planner-core evidence only.
+# The manifest covers background-planning implementation records,
+# corrected perception-latency evidence, and planner-core guard records.
 #
 # Verify with:
 #     cd evidence && sha256sum -c MANIFEST.sha256
