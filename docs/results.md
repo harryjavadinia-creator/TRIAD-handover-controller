@@ -53,40 +53,16 @@ At uncompensated 0.60 s, classification is `AMBIGUOUS`: displacement is
 Data: [corrected sweep records](../evidence/latency/sweep_rows.json) and
 [archived latency report](../evidence/latency/FINAL_LATENCY_REPORT.md).
 
-## How much controller time is used while planning?
-
-![Planning-phase and whole-run timing summaries](figures/controller_timing.svg)
-
-The left panel shows quantiles and maxima of **in-planning ControllerRun**
-samples. The right panel gives whole-run ControllerRun and GlobalRun maxima from
-the same summaries. The panels have different vertical scales and measurement
-scopes.
-
-All four published in-planning ControllerRun maxima are below 2 ms; each
-profile includes one sample above 1 ms. Whole-run maxima are higher.
-These are empirical measurements on one machine, not WCET, a 1 kHz deadline
-guarantee, or a schedulability proof. Planner completion and result receipt
-remain subject to live timing admission.
-
-Data: clean-machine summaries for
-[lateral-low](../evidence/async/lateral-low/perf_analysis_clean_machine.txt),
-[near-ground](../evidence/async/near-ground/perf_analysis_clean_machine.txt),
-[longitudinal](../evidence/async/longitudinal/perf_analysis_clean_machine.txt),
-and [diagonal](../evidence/async/diagonal/perf_analysis_clean_machine.txt).
-
-The [performance appendix](performance.md) retains the serial measurements,
-timing-frontier analysis and plan-set comparison qualifications.
-
 ## Earlier latency matrix
 
 The earlier five-scenario latency matrix is documented separately in
 [Experiments](experiments.md). It is historical evidence and should not be
 merged numerically with the corrected sweep above.
 
-## Regenerate the figures
+## Regenerate the figure
 
-The figures are derived from already-published records. No controller run or new
-experiment is performed:
+The latency figure is derived from already-published records. No controller run
+or new experiment is performed:
 
 ```bash
 python3 -m venv .venv-figures
@@ -94,5 +70,4 @@ python3 -m venv .venv-figures
 .venv-figures/bin/python tools/plot_results.py
 ```
 
-The script writes `latency.svg` and `controller_timing.svg` under
-`docs/figures/`.
+The script writes `latency.svg` under `docs/figures/`.
