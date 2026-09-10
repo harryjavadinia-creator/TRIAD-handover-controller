@@ -179,29 +179,35 @@ Stored weights are normalized by their sum. Effort is the preview's integrated
 squared joint-speed proxy divided by 8; it is not electrical or mechanical
 energy. Path length is the recorded transit-route length divided by 0.50 m.
 
-For clearance $d$, hard reference $d_h$, and soft reference $d_s$:
+For clearance $d$, hard reference $d_h$, and soft reference $d_s$, the clearance reserve is:
 
 ```math
-\phi_C(d)=
-\begin{cases}
-0 & d\ge d_s,\\
--\log\!\left(\max(10^{-12},(d-d_h)/(d_s-d_h))\right)
-  & d_h<d<d_s,\\
-10^6 & d\le d_h\ \text{or nonfinite}.
-\end{cases}
+\phi_C(d)=0,\qquad d\ge d_s.
+```
+
+```math
+\phi_C(d)=-\log\!\left(\max\!\left(10^{-12},\frac{d-d_h}{d_s-d_h}\right)\right),\qquad d_h<d<d_s.
+```
+
+```math
+\phi_C(d)=10^6,\qquad d\le d_h\ \text{or}\ d\ \text{is nonfinite}.
 ```
 
 Here $d$ is the minimum non-contact reach/retreat clearance, $d_h=0.020$ m,
-and $d_s=0.080$ m. For a positive reserve $x$ with soft reference $x_s$,
-the joint and conditioning terms use
+and $d_s=0.080$ m.
+
+For a positive reserve $x$ with soft reference $x_s$, the joint and conditioning terms use:
 
 ```math
-\phi(x;x_s)=
-\begin{cases}
-0 & x\ge x_s,\\
--\log\!\left(\max(10^{-12},x/x_s)\right) & 0<x<x_s,\\
-10^6 & x\le0\ \text{or nonfinite}.
-\end{cases}
+\phi(x;x_s)=0,\qquad x\ge x_s.
+```
+
+```math
+\phi(x;x_s)=-\log\!\left(\max\!\left(10^{-12},\frac{x}{x_s}\right)\right),\qquad 0<x<x_s.
+```
+
+```math
+\phi(x;x_s)=10^6,\qquad x\le0\ \text{or}\ x\ \text{is nonfinite}.
 ```
 
 $Q$ uses minimum normalized joint-limit margin with $x_s=0.20$.
