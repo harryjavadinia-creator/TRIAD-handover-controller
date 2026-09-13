@@ -5,7 +5,8 @@
   * giver independence (static) fails when the truth path reads a commit
   * V2 run-log checker fails on a second commitment, on post-commit
     reselection, on closure authority before commitment, and on a stale or
-    cancelled generation affecting adoption or commitment
+    cancelled generation affecting adoption or commitment, and on adoption
+    from an uncertified re-certification or outside the freshness tube
 """
 import contextlib
 import io
@@ -96,6 +97,11 @@ with tempfile.TemporaryDirectory() as tmp:
                 "[warning] [V2JobCancelled] type=TERMINAL_CERTIFY planningGeneration=" +
                 re.search(r"certificatePlanningGeneration=(\d+)", lines[ci]).group(1) +
                 " effect=none canCommit=false canReplacePlan=false"] + lines[ci:],
+            "certified adoption without a successful certificate": lines[:ci] + [
+                "[info] [V2AdoptFreshness] planningGeneration=1 hypothesis=1 source=certified certificateGeneration=999998 fresh=true",
+                "[success] [V2ProvisionalAdopt] planId=7 kind=REPLACEMENT sourcePlanningGeneration=1 adoptionSource=certified adoptionCertificateGeneration=999998 t=1.0"] + lines[ci:],
+            "adoption outside the freshness tube": [
+                l.replace("fresh=true", "fresh=false") if "[V2AdoptFreshness]" in l else l for l in lines],
         }
         for name, content in cases.items():
             path = tmp / (name.replace(" ", "_") + ".log")

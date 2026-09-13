@@ -16,6 +16,11 @@ not contain; every number is a count or a logged value.
                           reproducibility check: every complete record of the
                           default-bank characterization run appears with the same
                           lead, grasp, route and objective in the superset run
+  supersession LOG...     prediction-update handling comparison per run: time to
+                          the first certified provisional plan relative to the
+                          search epoch and to the giver's rest time, discarded
+                          work units, concurrent robot/object motion, and worker
+                          load (FULL_SEARCH and all jobs) until commitment
   tgr --search moving|rest LOG
                           T/G/R resolution study on a characterization run
                           (characterizeOnly: true) whose bank is a superset grid:
@@ -570,6 +575,112 @@ def subset_check(default_log, superset_log, which):
     return 0 if ok else 1
 
 
+PHASE_BUCKETS = BUCKETS[:12]
+
+
+def units_of(profile):
+    return sum(int(profile.get(b, "0s/0").split("/")[1]) for b in PHASE_BUCKETS)
+
+
+def supersession_metrics(log):
+    lines = open(log, errors="replace").read().splitlines()
+    mode = "cancel_and_restart"
+    giver = None
+    submits, adopts, profiles, motion, moved, certs = [], [], [], [], [], {}
+    commit_t = None
+    completed = False
+    for l in lines:
+        if "[V2PredictionUpdateMode]" in l:
+            mode = kvs(l)["fullSearchPredictionUpdate"]
+        elif "[GiverTruthScript]" in l:
+            giver = kvs(l)
+        elif "[V2PlanningJobSubmit]" in l:
+            submits.append(kvs(l))
+        elif "[V2ProvisionalAdopt]" in l:
+            adopts.append(kvs(l))
+        elif "[V2JobProfile]" in l:
+            profiles.append(kvs(l))
+        elif "[V2Motion]" in l and commit_t is None:
+            motion.append(kvs(l))
+        elif "[V2SelectedTargetMoved]" in l:
+            moved.append(kvs(l))
+        elif "[V2SelectedCertification]" in l and "success=" in l:
+            d = kvs(l)
+            certs[d["certificateGeneration"]] = d["success"] == "true"
+        elif "[V2TerminalCommit] committed=true" in l:
+            commit_t = fnum(kvs(l)["commitTime"])
+        elif "[Completed] full plan-once handover completed" in l:
+            completed = True
+    start = fnum(giver["startTime"])
+    decel = start + fnum(giver["cruiseDuration"])
+    rest = decel + fnum(giver["stopDuration"])
+    full_submits = [x for x in submits if x["type"] == "FULL_SEARCH"]
+    epoch0 = fnum(full_submits[0]["t"]) if full_submits else None
+    first = adopts[0] if adopts else None
+    first_t = fnum(first["t"]) if first else None
+    horizon = commit_t if commit_t is not None else (fnum(profiles[-1]["t"]) if profiles else None)
+    full = [p for p in profiles if p["type"] == "FULL_SEARCH"]
+    full_cancel = [p for p in full if p["cancelRequested"] == "true"]
+    failed_certs = [p for p in profiles if p["type"] == "CERTIFY_SELECTED"
+                    and (p["cancelRequested"] == "true" or not certs.get(p["planningGeneration"], False))]
+    discarded_units = sum(units_of(p) for p in full_cancel) + sum(units_of(p) for p in failed_certs)
+    discarded_wall = sum(fnum(p["jobWall"]) for p in full_cancel) + sum(fnum(p["jobWall"]) for p in failed_certs)
+    before_first = [p for p in full if first_t is None or fnum(p["t"]) <= first_t + 1e-9]
+    concurrent = sum(1 for m in motion if m.get("robotMoving") == "true" and m.get("objectMoving") == "true") * 0.05
+    all_wall = sum(fnum(p["jobWall"]) for p in profiles if horizon is None or fnum(p["t"]) <= horizon + 1e-9)
+    return dict(
+        mode=mode, completed=completed, giverDecel=decel, giverRest=rest, epoch0=epoch0,
+        firstAdopt=first_t,
+        timeToFirstPlan=(first_t - epoch0) if first_t is not None and epoch0 is not None else None,
+        firstAdoptMinusRest=(first_t - rest) if first_t is not None else None,
+        firstAdoptWhileMoving=(first_t is not None and first_t < rest),
+        firstAdoptLead=first.get("eventLead", "").rstrip("s") if first else None,
+        commit=commit_t,
+        fullSearches=len(full), fullCancelled=len(full_cancel),
+        selectedTargetMoved=len(moved),
+        selectedCertOk=sum(1 for v in certs.values() if v),
+        selectedCertFailed=sum(1 for v in certs.values() if not v),
+        firstAdoptSource=first.get("adoptionSource", "search") if first else None,
+        discardedUnits=discarded_units, discardedWall=discarded_wall,
+        fullUnits=sum(units_of(p) for p in full), fullWall=sum(fnum(p["jobWall"]) for p in full),
+        fullWallToFirstPlan=sum(fnum(p["jobWall"]) for p in before_first),
+        fullUnitsToFirstPlan=sum(units_of(p) for p in before_first),
+        allWorkerWallToCommit=all_wall,
+        concurrentMotion=concurrent,
+        replacements=sum(1 for a in adopts if a.get("kind") == "REPLACEMENT"),
+    )
+
+
+def supersession(logs):
+    cols = ["mode", "completed", "timeToFirstPlan", "firstAdoptMinusRest", "firstAdoptWhileMoving", "firstAdoptLead",
+            "firstAdoptSource", "fullSearches", "fullCancelled", "selectedTargetMoved", "selectedCertOk", "selectedCertFailed",
+            "discardedUnits", "discardedWall", "fullUnits", "fullWall", "fullWallToFirstPlan",
+            "allWorkerWallToCommit", "concurrentMotion", "replacements"]
+    print("## Prediction-update handling: per run\n")
+    print("Times in s. timeToFirstPlan: first provisional adoption minus first FULL_SEARCH submission. "
+          "firstAdoptMinusRest: negative means the plan was obtained before the giver came to rest. "
+          "discardedUnits: bounded planner work units (static preview steps, route work units, hypothesis setups) "
+          "belonging to cancelled searches or to failed/cancelled selected-action certifications. concurrentMotion: 50 ms samples "
+          "with robot and object truth both moving, before commitment.\n")
+    print("| run | " + " | ".join(cols) + " |")
+    print("|---|" + "---|" * len(cols))
+    rows = []
+    for log in logs:
+        m = supersession_metrics(log)
+        rows.append(m)
+        name = "/".join(log.split("/")[-3:-1])
+        print(f"| {name} | " + " | ".join(f(m[c], 3) if not isinstance(m[c], bool) else ("yes" if m[c] else "no") for c in cols) + " |")
+    print("\n## Per mode (median over runs; counts are totals)\n")
+    print("| mode | runs | completed | first plan while moving | median timeToFirstPlan | median firstAdoptMinusRest | total discardedUnits | total discardedWall | median fullWall | median concurrentMotion |")
+    print("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+    for mode in sorted({r["mode"] for r in rows}):
+        rs = [r for r in rows if r["mode"] == mode]
+        print(f"| {mode} | {len(rs)} | {sum(r['completed'] for r in rs)} | {sum(r['firstAdoptWhileMoving'] for r in rs)} | "
+              f"{f(q([r['timeToFirstPlan'] for r in rs], .5))} | {f(q([r['firstAdoptMinusRest'] for r in rs], .5))} | "
+              f"{sum(r['discardedUnits'] for r in rs)} | {f(sum(r['discardedWall'] for r in rs))} | "
+              f"{f(q([r['fullWall'] for r in rs], .5))} | {f(q([r['concurrentMotion'] for r in rs], .5))} |")
+
+
 def main(argv):
     if len(argv) < 3:
         print(__doc__)
@@ -579,6 +690,8 @@ def main(argv):
         timing(argv[2:])
     elif mode == "stages":
         stages(argv[2:])
+    elif mode == "supersession":
+        supersession(argv[2:])
     elif mode == "subset":
         args = argv[2:]
         which = "moving"

@@ -65,6 +65,7 @@ const char * HandoverInterceptionController::receiverJobTypeNameV2(ReceiverJobTy
     case ReceiverJobTypeV2::FullSearch: return "FULL_SEARCH";
     case ReceiverJobTypeV2::RecertifyActive: return "RECERTIFY_ACTIVE";
     case ReceiverJobTypeV2::TerminalCertify: return "TERMINAL_CERTIFY";
+    case ReceiverJobTypeV2::CertifySelected: return "CERTIFY_SELECTED";
     default: return "NONE";
   }
 }
@@ -191,6 +192,18 @@ bool HandoverInterceptionController::beginReceiverV2(
   v2Params_.injectStaleRecertifyResultOnce = readBool(stateConfig, "injectStaleRecertifyResultOnce", false);
   v2Params_.injectSupersedeFullSearchOnce = readBool(stateConfig, "injectSupersedeFullSearchOnce", false);
   v2Params_.characterizeOnly = readBool(stateConfig, "characterizeOnly", false);
+  {
+    const std::string mode = stateConfig.has("fullSearchPredictionUpdate")
+        ? static_cast<std::string>(stateConfig("fullSearchPredictionUpdate"))
+        : std::string("select_then_certify");
+    if(mode != "select_then_certify" && mode != "cancel_and_restart")
+    {
+      mc_rtc::log::error_and_throw<std::runtime_error>(
+          "[V2ReceiverBegin] fullSearchPredictionUpdate must be select_then_certify or cancel_and_restart, got {}", mode);
+    }
+    v2SelectThenCertify_ = mode == "select_then_certify";
+    mc_rtc::log::info("[V2PredictionUpdateMode] fullSearchPredictionUpdate={}", mode);
+  }
   v2Params_.characterizationRestDwell = readDouble(stateConfig, "characterizationRestDwell", v2Params_.characterizationRestDwell);
   v2CharacterizationStage_ = 0;
 
@@ -541,7 +554,7 @@ bool HandoverInterceptionController::submitReceiverFullSearchV2(double now)
 }
 
 bool HandoverInterceptionController::submitReceiverCertificationV2(
-    ReceiverJobTypeV2 type, double now)
+    ReceiverJobTypeV2 type, double now, const CaptureCandidate * candidate, const InterceptionPlan * plan)
 {
   if(v2ReselectionLocked_)
   {
@@ -550,7 +563,8 @@ bool HandoverInterceptionController::submitReceiverCertificationV2(
     return false;
   }
   if(v2Pending_.active || plannerJobState() == PlannerJobState::Running) { return false; }
-  if(!provisionalReceiverPlan_.valid) { return false; }
+  if(type != ReceiverJobTypeV2::CertifySelected && !provisionalReceiverPlan_.valid) { return false; }
+  if(type == ReceiverJobTypeV2::CertifySelected && (candidate == nullptr || plan == nullptr)) { return false; }
   const ObjectPredictionRecordV2 prediction = currentObjectPredictionV2();
   if(!prediction.valid) { return false; }
 
@@ -575,8 +589,8 @@ bool HandoverInterceptionController::submitReceiverCertificationV2(
   request.planId = provisionalReceiverPlan_.planId;
   request.snapshotTime = now;
   request.prediction = prediction;
-  request.candidate = provisionalReceiverPlan_.candidate;
-  request.plan = provisionalReceiverPlan_.plan;
+  request.candidate = candidate != nullptr ? *candidate : provisionalReceiverPlan_.candidate;
+  request.plan = plan != nullptr ? *plan : provisionalReceiverPlan_.plan;
   if(!previewMouthPose(planningSnapshot_.frozenRobotState, request.snapshotMouthPose))
   {
     request.snapshotMouthPose = actualMouthPose();
@@ -603,7 +617,7 @@ bool HandoverInterceptionController::submitReceiverCertificationV2(
   v2Pending_.submitTime = now;
   v2Pending_.prediction = prediction;
   v2Pending_.snapshotMouthPose = request.snapshotMouthPose;
-  if(type == ReceiverJobTypeV2::RecertifyActive)
+  if(type == ReceiverJobTypeV2::RecertifyActive || type == ReceiverJobTypeV2::CertifySelected)
   {
     v2Pending_.bankEventTimes.push_back(request.plan.presentationTime);
     v2Pending_.bankPoses.push_back(predictionPoseAtV2(prediction, request.plan.presentationTime));
@@ -613,7 +627,8 @@ bool HandoverInterceptionController::submitReceiverCertificationV2(
     v2Pending_.bankEventTimes.push_back(now);
     v2Pending_.bankPoses.push_back(request.terminalObjectPose);
   }
-  if(type == ReceiverJobTypeV2::RecertifyActive) { ++v2Counters_.recertifySubmitted; }
+  if(type == ReceiverJobTypeV2::CertifySelected) { ++v2SelectedCertifications_; }
+  else if(type == ReceiverJobTypeV2::RecertifyActive) { ++v2Counters_.recertifySubmitted; }
   else { ++v2Counters_.terminalSubmitted; }
   const bool robotMoving = v2MouthLinearSpeed_ > v2Params_.settleLinearSpeedTolerance;
   const bool objectMoving = prediction.linearVelocity.norm() > presentationMaximumLinearSpeed_;
@@ -654,7 +669,8 @@ void HandoverInterceptionController::runReceiverWorkerJobV2(std::uint64_t genera
       throw std::runtime_error("receiver worker requires a frozen robot state");
     }
     refreshPreviewKinematicCache();
-    if(request.type == ReceiverJobTypeV2::RecertifyActive)
+    if(request.type == ReceiverJobTypeV2::RecertifyActive
+       || request.type == ReceiverJobTypeV2::CertifySelected)
     {
       runRecertifyActiveRolloutV2(result);
     }
@@ -747,12 +763,15 @@ void HandoverInterceptionController::runRecertifyActiveRolloutV2(ReceiverJobResu
   plannerContext_.routeStepReachResult.minClearance = std::numeric_limits<double>::infinity();
   plannerContext_.routeStepReachIteration = 0;
   const int steps = std::max(1, static_cast<int>(std::ceil(plan.reachDuration / plannerConfig_.previewDt)));
-  const int resumeIndex = std::max(0, std::min(steps, static_cast<int>(
+  // CERTIFY_SELECTED certifies a not-yet-adopted action from the held arm, so
+  // like the FULL_SEARCH it starts at reach index 0 from the planned start pose.
+  const bool fromStart = request.type == ReceiverJobTypeV2::CertifySelected;
+  const int resumeIndex = fromStart ? 0 : std::max(0, std::min(steps, static_cast<int>(
       std::floor((tSnap - plan.reachStartTime) / plannerConfig_.previewDt))));
   plannerContext_.routeStepReachIndex = resumeIndex;
   plannerContext_.routeStepReachSteps = steps;
   // Resume the same reference from where the moving arm actually is.
-  plannerContext_.routeStepCommandReference = tSnap < plan.reachStartTime
+  plannerContext_.routeStepCommandReference = (fromStart || tSnap < plan.reachStartTime)
       ? plan.mouthAtReachStart : request.snapshotMouthPose;
   plannerContext_.routeStepClearanceScale = 1.0;
   plannerContext_.routeStepTransitPostureSaved = false;
@@ -769,8 +788,8 @@ void HandoverInterceptionController::runRecertifyActiveRolloutV2(ReceiverJobResu
                  routeDeepestStageV2(outcome == RouteStepOutcome::Feasible),
                  std::numeric_limits<double>::quiet_NaN(), plan.reachDuration, result.reason);
   mc_rtc::log::info(
-      "[V2CertificationDetail] type=RECERTIFY_ACTIVE planId={} planningGeneration={} candidate={} route={} resumeIndex={}/{} success={} reason={} stageReached={}",
-      request.planId, request.planningGeneration, candidate.name, candidate.transitRouteName,
+      "[V2CertificationDetail] type={} planId={} planningGeneration={} candidate={} route={} resumeIndex={}/{} success={} reason={} stageReached={}",
+      receiverJobTypeNameV2(request.type), request.planId, request.planningGeneration, candidate.name, candidate.transitRouteName,
       resumeIndex, steps, result.success, result.reason,
       outcome == RouteStepOutcome::Feasible ? "complete_through_carried_retreat" : "rejected");
 }
@@ -867,6 +886,7 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
   const bool jobFailed = plannerJobState() == PlannerJobState::Failed;
   v2Pending_.active = false;
   logJobProfileV2(pending, now);
+  if(pending.type == ReceiverJobTypeV2::CertifySelected) { v2SelectedCertificationPending_ = false; }
 
   if(pending.cancelRequested)
   {
@@ -931,6 +951,12 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
         jobFailed ? plannerFailureReason() : std::string("complete"),
         jobFailed ? 0 : set.alternatives.size(), plannerWorkerWallDuration(),
         now - pending.submitTime, now);
+    if(!jobFailed && v2SelectThenCertify_ && !v2Params_.characterizeOnly)
+    {
+      filterHypothesisFreshnessV2(pending, now);
+      v2ExcludedRecords_.assign(plannerResult_.alternatives.size(), 0);
+      v2SelectedSearchGeneration_ = pending.planningGeneration;
+    }
     if(v2Params_.characterizeOnly)
     {
       if(!jobFailed) { logCharacterizationSearchV2(pending, now); }
@@ -950,6 +976,12 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
       receiverJobTypeNameV2(pending.type), pending.planningGeneration,
       pending.stateGeneration, pending.planId, result.success, result.reason,
       result.wallDuration, now - pending.submitTime, now);
+
+  if(pending.type == ReceiverJobTypeV2::CertifySelected)
+  {
+    handleSelectedCertificationV2(pending, now);
+    return;
+  }
 
   if(pending.type == ReceiverJobTypeV2::RecertifyActive)
   {
@@ -1007,8 +1039,11 @@ bool HandoverInterceptionController::adoptFullSearchResultV2(double now)
   const FrozenPlanSet & set = plannerResult();
   std::vector<call_handover::FiniteEventPlanRecord> records;
   records.reserve(set.alternatives.size());
+  const bool useExclusions = v2SelectThenCertify_
+      && v2ExcludedRecords_.size() == set.alternatives.size();
   for(std::size_t i = 0; i < set.alternatives.size(); ++i)
   {
+    if(useExclusions && v2ExcludedRecords_[i]) { continue; }
     const auto & alternative = set.alternatives[i];
     call_handover::FiniteEventPlanRecord record;
     record.sourceIndex = i;
@@ -1039,7 +1074,6 @@ bool HandoverInterceptionController::adoptFullSearchResultV2(double now)
     return false;
   }
   const auto & alternative = set.alternatives[selection.selectedRecord];
-
   // Start-state premise: the certified reach begins at the snapshot mouth pose.
   const sva::PTransformd mouth = actualMouthPose();
   const double startError = (mouth.translation() - alternative.planningStartMouthPose.translation()).norm();
@@ -1073,12 +1107,62 @@ bool HandoverInterceptionController::adoptFullSearchResultV2(double now)
     return false;
   }
 
+  // Freshness of the selected record against the newest prediction. A record
+  // whose target moved beyond the commit-freshness tube is not unsafe: that one
+  // action is re-certified at the newest prediction (same rollout as
+  // RECERTIFY_ACTIVE) before it can be adopted. Other records are untouched.
+  const ObjectPredictionRecordV2 latest = currentObjectPredictionV2();
+  const sva::PTransformd predicted = predictionPoseAtV2(latest, alternative.eventPresentationTime);
+  const double deviation = (predicted.translation() - alternative.W_T_O_presentation.translation()).norm();
+  const double rotation = orientationError(predicted, alternative.W_T_O_presentation);
+  const bool fresh = deviation <= predictiveReachPolicy_.maximumObjectTranslationDeviation
+      && rotation <= predictiveReachPolicy_.maximumObjectRotationDeviation;
+  if(!fresh && v2SelectThenCertify_)
+  {
+    v2SelectedRecord_ = selection.selectedRecord;
+    if(!submitReceiverCertificationV2(ReceiverJobTypeV2::CertifySelected, now, &c, &plan))
+    {
+      return false;
+    }
+    v2SelectedCertificationPending_ = true;
+    mc_rtc::log::info(
+        "[V2SelectedTargetMoved] searchGeneration={} record={} hypothesis={} eventTime={:.6f} candidate={} route={} deviation={:.6f}m rotation={:.6f}rad tolerance={:.3f}m/{:.3f}rad action=certify_selected certificateGeneration={} t={:.6f}",
+        v2SelectedSearchGeneration_, selection.selectedRecord, alternative.hypothesisIndex,
+        alternative.eventPresentationTime, c.name, c.transitRouteName, deviation, rotation,
+        predictiveReachPolicy_.maximumObjectTranslationDeviation,
+        predictiveReachPolicy_.maximumObjectRotationDeviation, plannerRequestGeneration(), now);
+    return true;
+  }
+  adoptProvisionalPlanV2(alternative, c, plan, now, "search", plannerResultGeneration(), 0);
+  return true;
+}
+
+void HandoverInterceptionController::adoptProvisionalPlanV2(
+    const GlobalEventPlanAlternative & alternative, const CaptureCandidate & c,
+    const InterceptionPlan & plan, double now, const char * source, std::uint64_t sourceGeneration,
+    std::uint64_t certificateGeneration)
+{
+  const sva::PTransformd mouth = actualMouthPose();
+  {
+    const ObjectPredictionRecordV2 latest = currentObjectPredictionV2();
+    const sva::PTransformd predicted = predictionPoseAtV2(latest, plan.presentationTime);
+    const double deviation = (predicted.translation() - plan.objectAtPresentation.translation()).norm();
+    const double rotation = orientationError(predicted, plan.objectAtPresentation);
+    mc_rtc::log::info(
+        "[V2AdoptFreshness] planningGeneration={} hypothesis={} eventTime={:.6f} source={} certificateGeneration={} deviation={:.6f}m rotation={:.6f}rad tolerance={:.3f}m/{:.3f}rad fresh={} t={:.6f}",
+        sourceGeneration, alternative.hypothesisIndex, plan.presentationTime, source,
+        certificateGeneration, deviation, rotation,
+        predictiveReachPolicy_.maximumObjectTranslationDeviation,
+        predictiveReachPolicy_.maximumObjectRotationDeviation,
+        deviation <= predictiveReachPolicy_.maximumObjectTranslationDeviation
+            && rotation <= predictiveReachPolicy_.maximumObjectRotationDeviation, now);
+  }
   const std::uint64_t previousPlanId = provisionalReceiverPlan_.planId;
   const bool replacement = previousPlanId != 0;
   ProvisionalReceiverPlanV2 next;
   next.valid = true;
   next.planId = ++v2PlanIdCounter_;
-  next.sourcePlanningGeneration = plannerResultGeneration();
+  next.sourcePlanningGeneration = sourceGeneration;
   next.adoptedStateGeneration = ++v2StateGeneration_;
   next.candidate = c;
   next.plan = plan;
@@ -1102,14 +1186,14 @@ bool HandoverInterceptionController::adoptFullSearchResultV2(double now)
 
   const Eigen::Vector3d po = plan.objectAtPresentation.translation();
   mc_rtc::log::success(
-      "[V2ProvisionalAdopt] planId={} previousPlanId={} kind={} reason={} sourcePlanningGeneration={} stateGeneration={} hypothesis={} eventLead={:.3f}s tau={:.6f} candidate={} route={} globalJ={:.9f} reachStart={:.6f} standoffTime={:.6f} predictedPresentation=[{:.4f},{:.4f},{:.4f}] closureAuthorized=false committed=false t={:.6f}",
+      "[V2ProvisionalAdopt] planId={} previousPlanId={} kind={} reason={} sourcePlanningGeneration={} adoptionSource={} adoptionCertificateGeneration={} stateGeneration={} hypothesis={} eventLead={:.3f}s tau={:.6f} candidate={} route={} globalJ={:.9f} reachStart={:.6f} standoffTime={:.6f} predictedPresentation=[{:.4f},{:.4f},{:.4f}] closureAuthorized=false committed=false t={:.6f}",
       next.planId, previousPlanId, replacement ? "REPLACEMENT" : "INITIAL",
       replacement ? v2ReplacementReason_ : std::string("initial"),
-      next.sourcePlanningGeneration, v2StateGeneration_, next.hypothesisIndex,
+      next.sourcePlanningGeneration, source, certificateGeneration, v2StateGeneration_, next.hypothesisIndex,
       next.eventLead, plan.presentationTime, c.name, c.transitRouteName,
       next.globalCost, plan.reachStartTime, plan.standoffTime, po.x(), po.y(), po.z(), now);
-  return true;
 }
+
 
 void HandoverInterceptionController::invalidateProvisionalPlanV2(
     const std::string & reason, double now)
@@ -1471,6 +1555,17 @@ void HandoverInterceptionController::checkSupersessionV2(double now)
   {
     reason = "state_generation_advanced";
   }
+  else if(pending.type == ReceiverJobTypeV2::FullSearch && v2SelectThenCertify_)
+  {
+    // The robot snapshot is what the whole job depends on: leaving it makes
+    // every record unsafe. A prediction change only moves targets; records are
+    // classified against the tube at receipt and a selected record whose
+    // target moved is re-certified alone (handleSelectedCertificationV2).
+    if(robotDrift > policy.positionTolerance || robotRotationDrift > policy.orientationTolerance)
+    {
+      reason = "robot_left_snapshot_start";
+    }
+  }
   else if(pending.type == ReceiverJobTypeV2::FullSearch)
   {
     // The bank certified these poses at these instants. If the newest
@@ -1628,13 +1723,14 @@ void HandoverInterceptionController::logJobProfileV2(const PendingJobV2 & pendin
                            plannerContext_.stageCount[b]);
   }
   mc_rtc::log::info(
-      "[V2JobProfile] type={} planningGeneration={} profileGeneration={} cancelRequested={} jobWall={:.6f}s partitionedWall={:.6f}s hypotheses={} memoReuses={} staticRecords={} routeRecords={} latency={:.6f}s{} t={:.6f}",
+      "[V2JobProfile] type={} planningGeneration={} profileGeneration={} cancelRequested={} jobWall={:.6f}s partitionedWall={:.6f}s hypotheses={} memoReuses={} staticRecords={} routeRecords={} workUnits={} latency={:.6f}s{} t={:.6f}",
       receiverJobTypeNameV2(pending.type), pending.planningGeneration,
       plannerContext_.certJobGeneration, pending.cancelRequested, plannerContext_.certJobWall,
       partition,
       pending.type == ReceiverJobTypeV2::FullSearch ? finiteSearch_.evaluatedHypotheses : 0,
       plannerContext_.certMemoReuses, plannerContext_.certStaticRecords,
-      plannerContext_.certRouteRecords, now - pending.submitTime, buckets, now);
+      plannerContext_.certRouteRecords, workUnitsV2(),
+      now - pending.submitTime, buckets, now);
 }
 
 // Characterization: every complete (tau, g, r) record of one search, and the
@@ -1688,5 +1784,108 @@ void HandoverInterceptionController::logCharacterizationSearchV2(const PendingJo
         ok ? set.alternatives[selection.selectedRecord].candidate.transitRouteName : std::string("none"),
         ok ? set.alternatives[selection.selectedRecord].globalObjectiveCost : 0.0,
         minimumSafeCommitLead, v2Params_.minimumReachEntryLead);
+  }
+}
+
+// =============================================================================
+// FULL_SEARCH prediction updates: select, then certify only the selected action
+// =============================================================================
+//
+// Classification when the independent prediction changes while a FULL_SEARCH
+// runs (tolerances are the existing ones):
+//  - unsafe/stale job: the held arm left the snapshot or the receiver state
+//    generation advanced -> the job is cancelled (unchanged);
+//  - record whose target moved: its certified presentation pose is outside the
+//    commit-freshness tube of the prediction at its event instant -> not
+//    adoptable as is; if the unchanged selector picks it, that single action is
+//    certified at the newest prediction (the RECERTIFY_ACTIVE rollout, from the
+//    same held start and reach index 0) before adoption; a failed certificate
+//    excludes that record and the selector runs again on the rest;
+//  - record within the tube: adoptable exactly as before.
+// No search work is discarded because a target moved.
+
+long long HandoverInterceptionController::workUnitsV2() const
+{
+  long long units = 0;
+  for(int b = PlannerContext::StageStaticReachStandoff; b <= PlannerContext::StageHypothesisSetup; ++b)
+  {
+    units += plannerContext_.stageCount[b];
+  }
+  return units;
+}
+
+void HandoverInterceptionController::filterHypothesisFreshnessV2(const PendingJobV2 & pending, double now)
+{
+  // Classification only. Records whose target moved beyond the tube stay in
+  // the set; if the selector picks one, only that action is re-certified.
+  const ObjectPredictionRecordV2 prediction = currentObjectPredictionV2();
+  if(!prediction.valid) { return; }
+  const auto & policy = predictiveReachPolicy_;
+  std::size_t moved = 0;
+  double maxDeviation = 0.0;
+  for(const auto & a : plannerResult_.alternatives)
+  {
+    const sva::PTransformd p = predictionPoseAtV2(prediction, a.eventPresentationTime);
+    const double d = (p.translation() - a.W_T_O_presentation.translation()).norm();
+    const double rot = orientationError(p, a.W_T_O_presentation);
+    maxDeviation = std::max(maxDeviation, d);
+    if(d > policy.maximumObjectTranslationDeviation || rot > policy.maximumObjectRotationDeviation) { ++moved; }
+  }
+  mc_rtc::log::info(
+      "[V2HypothesisFreshnessAtReceipt] planningGeneration={} records={} withinTube={} targetMoved={} maxDeviation={:.6f}m tolerance={:.3f}m t={:.6f}",
+      pending.planningGeneration, plannerResult_.alternatives.size(),
+      plannerResult_.alternatives.size() - moved, moved, maxDeviation,
+      policy.maximumObjectTranslationDeviation, now);
+}
+
+void HandoverInterceptionController::handleSelectedCertificationV2(const PendingJobV2 & pending, double now)
+{
+  const ReceiverJobResultV2 result = v2Result_;
+  if(v2SelectedRecord_ >= plannerResult_.alternatives.size()
+     || v2ExcludedRecords_.size() != plannerResult_.alternatives.size())
+  {
+    mc_rtc::log::warning(
+        "[V2SelectedCertification] certificateGeneration={} success=false reason=search_result_replaced effect=none t={:.6f}",
+        pending.planningGeneration, now);
+    return;
+  }
+  const GlobalEventPlanAlternative alternative = plannerResult_.alternatives[v2SelectedRecord_];
+  InterceptionPlan plan = result.plan;
+  const bool ok = result.success;
+  mc_rtc::log::info(
+      "[V2SelectedCertification] certificateGeneration={} searchGeneration={} record={} hypothesis={} candidate={} route={} success={} reason={} t={:.6f}",
+      pending.planningGeneration, v2SelectedSearchGeneration_, v2SelectedRecord_,
+      alternative.hypothesisIndex, alternative.candidate.name, alternative.candidate.transitRouteName,
+      ok, result.success ? std::string("certified") : result.reason, now);
+  if(ok)
+  {
+    // The target may have moved again while the certificate was computed.
+    const ObjectPredictionRecordV2 latest = currentObjectPredictionV2();
+    const sva::PTransformd predicted = predictionPoseAtV2(latest, plan.presentationTime);
+    const bool freshNow =
+        (predicted.translation() - plan.objectAtPresentation.translation()).norm()
+            <= predictiveReachPolicy_.maximumObjectTranslationDeviation
+        && orientationError(predicted, plan.objectAtPresentation)
+            <= predictiveReachPolicy_.maximumObjectRotationDeviation;
+    if(!freshNow)
+    {
+      mc_rtc::log::info(
+          "[V2SelectedCertification] certificateGeneration={} record={} outcome=target_moved_during_certification action=certify_selected_again t={:.6f}",
+          pending.planningGeneration, v2SelectedRecord_, now);
+      if(!adoptFullSearchResultV2(now)) { ++v2Counters_.searchFailures; }
+      return;
+    }
+    CaptureCandidate candidate = result.candidate;
+    candidate.name = alternative.candidate.name;
+    candidate.transitRouteName = alternative.candidate.transitRouteName;
+    adoptProvisionalPlanV2(alternative, candidate, plan, now, "certified",
+                           v2SelectedSearchGeneration_, pending.planningGeneration);
+    return;
+  }
+  ++v2SelectedCertificationFailures_;
+  v2ExcludedRecords_[v2SelectedRecord_] = 1;
+  if(!adoptFullSearchResultV2(now))
+  {
+    ++v2Counters_.searchFailures;
   }
 }

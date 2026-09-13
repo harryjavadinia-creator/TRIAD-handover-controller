@@ -24,6 +24,13 @@ INVARIANTS (any failure -> exit 1):
       commitment certificate; every cancellation reports canCommit=false
       canReplacePlan=false; every cancel request is resolved by a cancellation
       (holds on failed runs too)
+  I10 prediction updates cannot make a stale target adoptable: every
+      provisional adoption is logged fresh ([V2AdoptFreshness] fresh=true, the
+      adopted presentation pose within the commit-freshness tube of the
+      prediction at adoption), and every adoption from a re-certified selected
+      action (adoptionSource=certified) cites a certificate generation that
+      succeeded ([V2SelectedCertification] success=true) before the adoption
+      (holds on failed runs too)
 
 DEMONSTRATIONS (reported per run; coverage is required across the evidence set,
 see tools/summarize_v2_evidence.py):
@@ -167,6 +174,7 @@ def main(argv):
             effect_sites.append(("result/retain/certificate", kv(l, "planningGeneration")))
         elif "[V2ProvisionalAdopt]" in l:
             effect_sites.append(("adopt", kv(l, "sourcePlanningGeneration")))
+            effect_sites.append(("adopt-certificate", kv(l, "adoptionCertificateGeneration")))
         elif "[V2TerminalCommit] committed=true" in l:
             effect_sites.append(("commit", kv(l, "certificatePlanningGeneration")))
     leaked = [(k, g) for k, g in effect_sites if g is not None and g in obsolete]
@@ -177,6 +185,23 @@ def main(argv):
         not leaked and not cancelled_bad and (not unresolved or ended_pending),
         f"cancelRequests={len(cancel_req)} cancelled={len(cancelled)} stale={len(stale_gens)} "
         f"leaked={leaked} badCancelLines={len(cancelled_bad)} unresolvedCancelRequests={sorted(unresolved)}")
+
+    # I10
+    adopt_idx = [i for i, l in enumerate(lines) if "[V2ProvisionalAdopt]" in l]
+    fresh_lines = [l for l in lines if "[V2AdoptFreshness]" in l]
+    not_fresh = [l for l in fresh_lines if kv(l, "fresh") != "true"]
+    uncertified = []
+    for i in adopt_idx:
+        if kv(lines[i], "adoptionSource") == "certified":
+            g = kv(lines[i], "adoptionCertificateGeneration")
+            if not any("[V2SelectedCertification]" in l and kv(l, "certificateGeneration") == g
+                       and "success=true" in l for l in lines[:i]):
+                uncertified.append(g)
+    certified_adoptions = sum(1 for i in adopt_idx if kv(lines[i], "adoptionSource") == "certified")
+    inv("I10_prediction_updates_cannot_adopt_stale_targets",
+        not not_fresh and not uncertified and len(fresh_lines) >= len(adopt_idx),
+        f"adoptions={len(adopt_idx)} certifiedAdoptions={certified_adoptions} adoptFreshnessLines={len(fresh_lines)} "
+        f"notFresh={len(not_fresh)} uncertifiedCertifiedAdoptions={uncertified}")
 
     # Demonstrations
     motion = [l for l in before if "[V2Motion]" in l]
@@ -216,6 +241,7 @@ def main(argv):
         "staleRejections": len(stale),
         "cancelRequests": len(cancel_req),
         "cancelled": len(cancelled),
+        "certifiedAdoptions": certified_adoptions,
         "cancelLatencies": [kv(l, "cancelLatency", lambda v: float(v.rstrip("s"))) for l in cancelled_lines],
         "minRuntimeClearance": kv(summary[-1], "minRuntimeClearance", float) if summary else None,
         "fullSearchLatencies": [kv(l, "latency", lambda s: float(s.rstrip("s")))

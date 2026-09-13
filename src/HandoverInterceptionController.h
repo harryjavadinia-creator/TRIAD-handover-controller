@@ -1288,6 +1288,8 @@ private:
   std::atomic<std::uint64_t> plannerRequestGeneration_{0};
   std::atomic<std::uint64_t> plannerResultGeneration_{0};
   std::atomic<bool> plannerCancel_{false};
+  bool v2SelectThenCertify_ = false;
+  long long workUnitsV2() const;
   FrozenPlanSet plannerResult_;
   std::string plannerFailureReason_;
   double plannerRequestControllerTime_ = 0.0;
@@ -2031,7 +2033,8 @@ private:
     None,
     FullSearch,
     RecertifyActive,
-    TerminalCertify
+    TerminalCertify,
+    CertifySelected
   };
   static const char * receiverJobTypeNameV2(ReceiverJobTypeV2 type);
 
@@ -2168,13 +2171,28 @@ private:
   };
 
   bool submitReceiverFullSearchV2(double now);
-  bool submitReceiverCertificationV2(ReceiverJobTypeV2 type, double now);
+  bool submitReceiverCertificationV2(ReceiverJobTypeV2 type, double now,
+                                     const CaptureCandidate * candidate = nullptr,
+                                     const InterceptionPlan * plan = nullptr);
   void runReceiverWorkerJobV2(std::uint64_t generation);
   void runRecertifyActiveRolloutV2(ReceiverJobResultV2 & result);
   void runTerminalCertificationV2(ReceiverJobResultV2 & result);
   RouteStepOutcome runRouteStepToCompletionV2();
   void processReceiverJobResultV2(double now);
   bool adoptFullSearchResultV2(double now);
+  void adoptProvisionalPlanV2(const GlobalEventPlanAlternative & alternative,
+                              const CaptureCandidate & candidate, const InterceptionPlan & plan,
+                              double now, const char * source, std::uint64_t sourceGeneration,
+                              std::uint64_t certificateGeneration);
+  void handleSelectedCertificationV2(const PendingJobV2 & pending, double now);
+  // Select-then-certify state: the FULL_SEARCH result whose selected record is
+  // being re-certified at the newest prediction, and records already refused.
+  bool v2SelectedCertificationPending_ = false;
+  std::size_t v2SelectedRecord_ = 0;
+  std::uint64_t v2SelectedSearchGeneration_ = 0;
+  std::vector<char> v2ExcludedRecords_;
+  long long v2SelectedCertifications_ = 0;
+  long long v2SelectedCertificationFailures_ = 0;
   void invalidateProvisionalPlanV2(const std::string & reason, double now);
   bool executeProvisionalReachV2(double now);
   bool executeTerminalTrackV2(double now, bool & gateSatisfied);
@@ -2183,6 +2201,7 @@ private:
   void checkSupersessionV2(double now);
   void logSnapshotAuditV2(const PendingJobV2 & pending, double now, const char * outcome);
   void logJobProfileV2(const PendingJobV2 & pending, double now) const;
+  void filterHypothesisFreshnessV2(const PendingJobV2 & pending, double now);
   double independentGiverSpeedForLogV2(double now) const;
 
   ReceiverV2Parameters v2Params_;

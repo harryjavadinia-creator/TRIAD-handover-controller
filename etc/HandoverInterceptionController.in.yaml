@@ -629,6 +629,12 @@ configs:
     # the moving epoch and one after the object rests, log all records, adopt
     # nothing, then fail by design.
     characterizeOnly: false
+    # How a running FULL_SEARCH reacts to a changed object prediction:
+    # select_then_certify (the search is not cancelled; a selected record whose
+    # target left the commit-freshness tube is certified alone at the newest
+    # prediction before adoption) or cancel_and_restart (checkpoint
+    # triad-v2-checkpoint-cancel-restart behaviour).
+    fullSearchPredictionUpdate: select_then_certify
     characterizationRestDwell: 1.0
 
 transitions:
