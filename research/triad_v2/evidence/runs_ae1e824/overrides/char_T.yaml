@@ -1,0 +1,9 @@
+configs:
+  HandoverInterceptionController_ReceiverV2:
+    characterizeOnly: true
+  HandoverInterceptionController_SolveInterception:
+    maximumEventHypotheses: 192
+    eventSearchLeadStep: 0.05
+    initialPresentationLead: 3.25
+    minimumPresentationLead: 0.5
+    maximumPresentationLead: 10.0

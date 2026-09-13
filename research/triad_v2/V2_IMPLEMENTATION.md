@@ -138,6 +138,11 @@ changes was tuned to a scenario.
    pose and recomputes only lead-dependent fields. This yields the same records
    and the same selector: a computational change, not a resolution change.
 
+Later phase (see [`V2_COMPUTATION_AND_CANDIDATE_SPACE.md`](V2_COMPUTATION_AND_CANDIDATE_SPACE.md)):
+superseded generations are cancelled (`439bf77`), and a latent hypothesis-budget
+defect for banks of ≥15 leads was fixed (`1139d31`). The fix leaves the default
+14-lead bank unchanged.
+
 ## 6. Known limitations
 
 - **Bank latency.** A full search of the inherited bank takes 2.3–3.8 s while the
