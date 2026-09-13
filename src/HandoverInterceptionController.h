@@ -1938,10 +1938,32 @@ private:
     std::vector<double> transitRouteApexOffsets = {0.08, 0.14};
     int transitRouteDirections = 8;
     Eigen::Vector3d worldUp = Eigen::Vector3d::UnitZ();
+
+    // Worker snapshot of values that are otherwise read from the live robot or
+    // the live estimator. They are copied on the control thread at every
+    // refresh (freeze) and read by planner code only while it executes on the
+    // background worker thread (see plannerWorkerThreadActive()). Control-
+    // thread callers keep their original live reads, so V1 behaviour is
+    // unchanged whenever the live value equals the frozen one.
+    double frozenMouthHalfGap = 0.0;
+    std::vector<std::vector<double>> jointPositionLower;
+    std::vector<std::vector<double>> jointPositionUpper;
+    std::vector<std::vector<double>> jointVelocityLower;
+    std::vector<std::vector<double>> jointVelocityUpper;
+    ObservedObjectMode observedObjectMode = ObservedObjectMode::Unclassified;
+    Eigen::Vector3d objectLinearVelocity = Eigen::Vector3d::Zero();
+    Eigen::Vector3d objectAngularVelocity = Eigen::Vector3d::Zero();
+    bool objectMotionEstimateValid = false;
+    bool presentationMode = true;
+    bool previewMovingInterception = true;
   };
 
   PlannerConfig plannerConfig_;
   void refreshPlannerConfig();
+  /** True only on the background planner worker thread. Planner functions
+   * that are shared with control-thread callers use this to read the frozen
+   * snapshot instead of live robot or estimator state. */
+  static bool plannerWorkerThreadActive();
 
   /** Mutable state owned by one finite TRIAD search.
    *

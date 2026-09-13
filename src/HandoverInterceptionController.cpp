@@ -2006,10 +2006,12 @@ HandoverInterceptionController::makeInterceptionPlan(
   InterceptionPlan plan;
   plan.valid = true;
   plan.candidateName = candidate.name;
-  plan.objectMode = observedObjectMode_;
+  plan.objectMode = plannerWorkerThreadActive()
+      ? plannerConfig_.observedObjectMode : observedObjectMode_;
   plan.transitRouteName = candidate.transitRouteName;
   plan.reachCurveOffsetWorld = candidate.reachCurveOffsetWorld;
-  plan.presentationMode = presentationMode_;
+  plan.presentationMode = plannerWorkerThreadActive()
+      ? plannerConfig_.presentationMode : presentationMode_;
   plan.presentationTime = presentationTime;
   plan.reachDuration = std::max(2.0 * plannerConfig_.previewDt, reachDuration);
   plan.approachDuration = std::max(2.0 * plannerConfig_.previewDt, approachDuration);
@@ -2093,8 +2095,10 @@ HandoverInterceptionController::makeInterceptionPlan(
       W_T_O_presentation, candidate.W_T_M_pre);
   plan.O_T_M_retreat = relativePose(
       W_T_O_presentation, candidate.W_T_M_retreat);
-  plan.objectLinearVelocity = objectLinearVelocityEstimate_;
-  plan.objectAngularVelocity = objectAngularVelocityEstimate_;
+  plan.objectLinearVelocity = plannerWorkerThreadActive()
+      ? plannerConfig_.objectLinearVelocity : objectLinearVelocityEstimate_;
+  plan.objectAngularVelocity = plannerWorkerThreadActive()
+      ? plannerConfig_.objectAngularVelocity : objectAngularVelocityEstimate_;
   return plan;
 }
 
@@ -3829,6 +3833,35 @@ void HandoverInterceptionController::refreshPlannerConfig()
   plannerConfig_.transitRouteApexOffsets = transitRouteApexOffsets_;
   plannerConfig_.transitRouteDirections = transitRouteDirections_;
   plannerConfig_.worldUp = worldUp_;
+
+  // Worker snapshot (control thread only). See PlannerConfig.
+  plannerConfig_.frozenMouthHalfGap = liveMouthHalfGap();
+  plannerConfig_.jointPositionLower = robot().ql();
+  plannerConfig_.jointPositionUpper = robot().qu();
+  plannerConfig_.jointVelocityLower = robot().vl();
+  plannerConfig_.jointVelocityUpper = robot().vu();
+  plannerConfig_.observedObjectMode = observedObjectMode_;
+  plannerConfig_.objectLinearVelocity = objectLinearVelocityEstimate_;
+  plannerConfig_.objectAngularVelocity = objectAngularVelocityEstimate_;
+  plannerConfig_.objectMotionEstimateValid = objectMotionEstimateValid_;
+  plannerConfig_.presentationMode = presentationMode_;
+  plannerConfig_.previewMovingInterception = previewMovingInterception_;
+}
+
+namespace
+{
+thread_local bool tlsPlannerWorkerThread = false;
+
+struct PlannerWorkerThreadScope
+{
+  PlannerWorkerThreadScope() { tlsPlannerWorkerThread = true; }
+  ~PlannerWorkerThreadScope() { tlsPlannerWorkerThread = false; }
+};
+} // namespace
+
+bool HandoverInterceptionController::plannerWorkerThreadActive()
+{
+  return tlsPlannerWorkerThread;
 }
 
 void HandoverInterceptionController::refreshPlannerModel()
@@ -3852,8 +3885,10 @@ void HandoverInterceptionController::refreshPreviewKinematicCache() const
   }
   // Joint velocity limits are constants of the robot model, so the dof-ordered
   // vectors the preview clamps against are built once rather than per call.
-  plannerContext_.previewJointVelocityLower = rbd::dofToVector(mb, robot().vl());
-  plannerContext_.previewJointVelocityUpper = rbd::dofToVector(mb, robot().vu());
+  plannerContext_.previewJointVelocityLower = rbd::dofToVector(
+      mb, plannerWorkerThreadActive() ? plannerConfig_.jointVelocityLower : robot().vl());
+  plannerContext_.previewJointVelocityUpper = rbd::dofToVector(
+      mb, plannerWorkerThreadActive() ? plannerConfig_.jointVelocityUpper : robot().vu());
   // The tool Jacobian's structure depends only on the multibody and the tool
   // frame; only its numeric evaluation depends on the configuration.
   plannerContext_.previewToolJacobian = std::make_unique<rbd::Jacobian>(mb, plannerConfig_.toolFrame);
@@ -3932,7 +3967,9 @@ bool HandoverInterceptionController::graspCorridorSafeWith(
 
   const double alignment = clampUnit(std::abs(aH_M.dot(Eigen::Vector3d::UnitZ())));
   const double angle = std::acos(alignment);
-  const double usableHalfGap = liveMouthHalfGap() - plannerConfig_.corridorFingerInset;
+  const double mouthHalfGap = plannerWorkerThreadActive()
+      ? plannerConfig_.frozenMouthHalfGap : liveMouthHalfGap();
+  const double usableHalfGap = mouthHalfGap - plannerConfig_.corridorFingerInset;
 
   // x_M: finger-closing direction, y_M: outward toward the gripper base,
   // z_M: blue-handle axis. At standoff the handle is at negative y_M; at
@@ -5088,8 +5125,10 @@ bool HandoverInterceptionController::previewJointLimitsSafe(
     const rbd::MultiBodyConfig & mbc,
     std::string & reason) const
 {
-  const auto & ql = robot().ql();
-  const auto & qu = robot().qu();
+  const auto & ql = plannerWorkerThreadActive()
+      ? plannerConfig_.jointPositionLower : robot().ql();
+  const auto & qu = plannerWorkerThreadActive()
+      ? plannerConfig_.jointPositionUpper : robot().qu();
   const auto & mb = plannerModel();
   const size_t n = std::min(mbc.q.size(), std::min(ql.size(), qu.size()));
   for(size_t j = 0; j < n; ++j)
@@ -5423,8 +5462,10 @@ HandoverInterceptionController::previewReachStep(
   // limit and falsely declaring the whole grasp unreachable.
   Eigen::VectorXd mobility = Eigen::VectorXd::Ones(mb.nrDof());
   Eigen::VectorXd qLimitAvoidance = Eigen::VectorXd::Zero(mb.nrDof());
-  const auto & ql = robot().ql();
-  const auto & qu = robot().qu();
+  const auto & ql = plannerWorkerThreadActive()
+      ? plannerConfig_.jointPositionLower : robot().ql();
+  const auto & qu = plannerWorkerThreadActive()
+      ? plannerConfig_.jointPositionUpper : robot().qu();
   for(size_t j = 0; j < mb.joints().size() && j < mbc.q.size()
       && j < ql.size() && j < qu.size(); ++j)
   {
@@ -6307,8 +6348,12 @@ HandoverInterceptionController::beginPredictiveRouteCandidate(
   plannerContext_.routeStepCandidate = candidate;
   plannerContext_.routeStepCandidate.transitRouteName = routeName;
   plannerContext_.routeStepCandidate.reachCurveOffsetWorld = curveOffsetWorld;
-  if(!previewMovingInterception_) { return RouteStepOutcome::Feasible; }
-  if(!presentationMode_)
+  const bool movingInterceptionEnabled = plannerWorkerThreadActive()
+      ? plannerConfig_.previewMovingInterception : previewMovingInterception_;
+  const bool presentationModeEnabled = plannerWorkerThreadActive()
+      ? plannerConfig_.presentationMode : presentationMode_;
+  if(!movingInterceptionEnabled) { return RouteStepOutcome::Feasible; }
+  if(!presentationModeEnabled)
   {
     plannerContext_.routeStepCandidate.failureReason =
         "predictive_static/presentation_mode_required";
@@ -7572,8 +7617,11 @@ bool HandoverInterceptionController::finishCurrentPlanningCandidate(bool feasibl
   c.contactClosure = plannerContext_.planningResult.contactClosure;
 
   const bool movingVerificationRequested =
-      previewMovingInterception_ && plannerContext_.plannerWorldActive
-      && objectMotionEstimateValid_;
+      (plannerWorkerThreadActive() ? plannerConfig_.previewMovingInterception
+                                   : previewMovingInterception_)
+      && plannerContext_.plannerWorldActive
+      && (plannerWorkerThreadActive() ? plannerConfig_.objectMotionEstimateValid
+                                      : objectMotionEstimateValid_);
   if(feasible && movingVerificationRequested)
   {
     // Start the route bank instead of certifying it here. The bank is advanced
@@ -8108,11 +8156,16 @@ void HandoverInterceptionController::runPlannerWorker(
     int previewSteps,
     int routeWorkUnits)
 {
+  PlannerWorkerThreadScope workerThreadScope;
   try
   {
     if(plannerInjectFailure_)
     {
       throw std::runtime_error("injected planner worker failure");
+    }
+    if(!planningSnapshot_.frozenRobotStateValid)
+    {
+      throw std::runtime_error("planner worker requires a frozen robot state");
     }
     const double admission = finiteSearch_.bank.searchEpoch;
     FiniteSearchStatus status = FiniteSearchStatus::Running;
