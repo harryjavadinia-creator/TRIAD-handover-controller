@@ -1062,13 +1062,20 @@ bool HandoverInterceptionController::adoptFullSearchResultV2(double now)
   }
   const double minimumSafeCommitLead = std::max(
       v2Params_.minimumCommitRemainingTime, presentationDecelerationDuration_ + 0.25);
+  const auto selectionStart = std::chrono::steady_clock::now();
   const auto selection = call_handover::selectFiniteEventPlan(
       records, now, v2Params_.minimumReachEntryLead, minimumSafeCommitLead,
       decisionCostTieTolerance_);
+  const double selectionWall = std::chrono::duration<double>(
+      std::chrono::steady_clock::now() - selectionStart).count();
   mc_rtc::log::success(
-      "[V2FullSearchSelection] success={} reason={} completePlans={} costValidPlans={} timingAdmissiblePlans={} t={:.6f} selector=selectFiniteEventPlan(unchanged)",
+      "[V2FullSearchSelection] success={} reason={} completePlans={} costValidPlans={} timingAdmissiblePlans={} selectionWall={:.9f}s selectedHypothesis={} selectedCandidate={} selectedRoute={} t={:.6f} selector=selectFiniteEventPlan(unchanged)",
       selection.success, selection.reason, selection.completePlanCount,
-      selection.costValidCount, selection.timingAdmissibleCount, now);
+      selection.costValidCount, selection.timingAdmissibleCount, selectionWall,
+      selection.success && selection.selectedRecord < records.size() ? records[selection.selectedRecord].hypothesisIndex : 0,
+      selection.success && selection.selectedRecord < records.size() ? records[selection.selectedRecord].candidateName : std::string("none"),
+      selection.success && selection.selectedRecord < records.size() ? records[selection.selectedRecord].routeName : std::string("none"),
+      now);
   if(!selection.success || selection.selectedRecord >= records.size())
   {
     return false;
@@ -1672,6 +1679,7 @@ void HandoverInterceptionController::resetStageProfileV2(
   plannerContext_.stageWall.fill(0.0);
   plannerContext_.stageCount.fill(0);
   plannerContext_.certJobGeneration = generation;
+  plannerContext_.certJobStart = std::chrono::steady_clock::now();
   plannerContext_.certJobType = jobType;
   plannerContext_.certJobWall = 0.0;
   plannerContext_.certStaticRecords = 0;
@@ -1725,23 +1733,58 @@ void HandoverInterceptionController::logCertStageV2(
 {
   const bool search = plannerContext_.certJobType == "FULL_SEARCH";
   const bool isStatic = std::string(path) == "static";
+  const bool isMemo = std::string(path) == "memo";
   if(isStatic) { ++plannerContext_.certStaticRecords; }
-  else { ++plannerContext_.certRouteRecords; }
+  else if(!isMemo) { ++plannerContext_.certRouteRecords; }
+  // Replay fields: time and work since job start, and the exact global
+  // objective the selector will use for this record.
+  const double jobWall = std::chrono::duration<double>(
+      std::chrono::steady_clock::now() - plannerContext_.certJobStart).count();
+  const double lead = search ? finiteSearch_.currentLead : std::numeric_limits<double>::quiet_NaN();
+  const double globalJ = (!isStatic && feasible)
+      ? call_handover::extendMotionCostToSearchEpoch(
+            candidate.completeCostAudit, plannerConfig_.decisionTimeWeight,
+            plannerConfig_.decisionTimeReference, lead, candidate.predictedPresentationTime)
+      : std::numeric_limits<double>::quiet_NaN();
   std::string why = reason;
   for(auto & ch : why) { if(ch == ' ') { ch = '_'; } }
   mc_rtc::log::info(
-      "[CertStage] job={} planningGeneration={} hypothesis={} lead={:.3f} eventTime={:.6f} path={} grasp={}/{} candidate={} route={} feasible={} deepest={} costValid={} staticReachTime={:.6f} routeReachDuration={:.6f} reachClear={:.5f} retreatClear={:.5f} reason={}",
+      "[CertStage] job={} planningGeneration={} hypothesis={} lead={:.3f} eventTime={:.9f} path={} grasp={}/{} candidate={} route={} feasible={} deepest={} costValid={} staticReachTime={:.6f} routeReachDuration={:.6f} reachClear={:.9f} retreatClear={:.9f} reason={} jobWall={:.6f} workUnits={} motionJ={:.12g} globalJ={:.12g} presentationDuration={:.12g} executionDuration={:.12g} prof={}",
       plannerContext_.certJobType, plannerContext_.certJobGeneration,
       search ? finiteSearch_.evaluatedHypotheses : 0,
       search ? finiteSearch_.currentLead : std::numeric_limits<double>::quiet_NaN(),
       search ? finiteSearch_.currentPresentationTime : v2Request_.plan.presentationTime,
-      path, search ? plannerContext_.planningCandidateIndex : -1,
+      path, (search && !isMemo) ? plannerContext_.planningCandidateIndex : -1,
       search ? plannerContext_.planningCandidateCount : 0,
       candidate.name, isStatic ? std::string("-") : candidate.transitRouteName,
       feasible, deepest, isStatic ? false : candidate.completeCostAuditValid,
       staticReach, routeReachDuration,
       isStatic ? plannerContext_.certStaticReachClearance : candidate.predictiveReachClearance,
-      candidate.predictiveRetreatClearance, why.empty() ? std::string("none") : why);
+      candidate.predictiveRetreatClearance, why.empty() ? std::string("none") : why,
+      jobWall, workUnitsV2(), candidate.completeCostAudit, globalJ,
+      candidate.predictedPresentationTime, candidate.auditEstimatedTime, stageSnapshotV2());
+}
+
+void HandoverInterceptionController::logMemoRecordsV2(const std::vector<CaptureCandidate> & completePlans) const
+{
+  if(!stageProfilingActiveV2()) { return; }
+  for(const auto & candidate : completePlans)
+  {
+    logCertStageV2("memo", candidate, true, "CARRIED_RETREAT",
+                   std::numeric_limits<double>::quiet_NaN(),
+                   std::numeric_limits<double>::quiet_NaN(), "memo_reuse");
+  }
+}
+
+std::string HandoverInterceptionController::stageSnapshotV2() const
+{
+  std::string out;
+  for(int b = 0; b < PlannerContext::StageBucketCount; ++b)
+  {
+    if(b) { out += ','; }
+    out += fmt::format("{}:{:.6f}", plannerContext_.stageCount[b], plannerContext_.stageWall[b]);
+  }
+  return out;
 }
 
 void HandoverInterceptionController::logJobProfileV2(const PendingJobV2 & pending, double now) const

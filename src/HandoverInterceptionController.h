@@ -2303,6 +2303,9 @@ private:
                       const char * deepest, double staticReach, double routeReachDuration,
                       const std::string & reason) const;
   const char * routeDeepestStageV2(bool feasible) const;
+  // Phase D search-policy replay logging (V2 worker only, no decision reads it).
+  void logMemoRecordsV2(const std::vector<CaptureCandidate> & completePlans) const;
+  std::string stageSnapshotV2() const;
   const char * staticDeepestStageV2(bool feasible) const;
 
   /** Mutable state owned by one finite TRIAD search.
@@ -2415,6 +2418,7 @@ private:
     std::array<double, StageBucketCount> stageWall{};
     std::array<long long, StageBucketCount> stageCount{};
     std::uint64_t certJobGeneration = 0;
+    std::chrono::steady_clock::time_point certJobStart;
     std::string certJobType;
     double certJobWall = 0.0;
     long long certStaticRecords = 0;

@@ -129,7 +129,9 @@ def load(log):
 def expand_search_records(data, gen):
     """CertStage records of one FULL_SEARCH, with memoized hypotheses expanded
     from their bitwise-identical source hypothesis."""
-    recs = [r for r in data["cert"] if r.get("job") == "FULL_SEARCH" and r.get("planningGeneration") == gen]
+    # path=memo lines (Phase D logging) duplicate the expansion below; skip them.
+    recs = [r for r in data["cert"] if r.get("job") == "FULL_SEARCH" and r.get("planningGeneration") == gen
+            and r.get("path") != "memo"]
     by_hyp = defaultdict(list)
     for r in recs:
         by_hyp[r["hypothesis"]].append(r)

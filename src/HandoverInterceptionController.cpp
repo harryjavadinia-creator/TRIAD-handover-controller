@@ -8460,6 +8460,7 @@ HandoverInterceptionController::stepFiniteTriadSearch(
             plannerContext_.certJobGeneration, search.evaluatedHypotheses, search.currentLead,
             search.currentPresentationTime, memo.hypothesis,
             memo.completePlans.size(), memo.foundFeasible);
+        logMemoRecordsV2(memo.completePlans);
         if(!memo.foundFeasible || memo.completePlans.empty())
         {
           ++search.geometryFailures;
