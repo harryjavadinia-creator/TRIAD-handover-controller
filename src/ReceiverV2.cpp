@@ -190,6 +190,9 @@ bool HandoverInterceptionController::beginReceiverV2(
   v2Params_.injectStaleTerminalResultOnce = readBool(stateConfig, "injectStaleTerminalResultOnce", false);
   v2Params_.injectStaleRecertifyResultOnce = readBool(stateConfig, "injectStaleRecertifyResultOnce", false);
   v2Params_.injectSupersedeFullSearchOnce = readBool(stateConfig, "injectSupersedeFullSearchOnce", false);
+  v2Params_.characterizeOnly = readBool(stateConfig, "characterizeOnly", false);
+  v2Params_.characterizationRestDwell = readDouble(stateConfig, "characterizationRestDwell", v2Params_.characterizationRestDwell);
+  v2CharacterizationStage_ = 0;
 
   v2Active_ = true;
   v2EstimationActive_ = true;
@@ -275,7 +278,7 @@ HandoverInterceptionController::stepReceiverV2()
   v2PreviousMouthPose_ = mouth;
   v2PreviousMouthTime_ = now;
 
-  if(v2Pending_.active && !v2Pending_.cancelRequested)
+  if(v2Pending_.active && !v2Pending_.cancelRequested && !v2Params_.characterizeOnly)
   {
     checkSupersessionV2(now);
   }
@@ -320,6 +323,31 @@ HandoverInterceptionController::stepReceiverV2()
           && objectAngularVelocityEstimate_.norm() <= presentationMaximumAngularSpeed_;
       if(!objectQuasiStatic) { v2ObjectQuasiStaticSince_ = -1.0; }
       else if(v2ObjectQuasiStaticSince_ < 0.0) { v2ObjectQuasiStaticSince_ = now; }
+      if(v2Params_.characterizeOnly)
+      {
+        const bool settledArm = v2MouthLinearSpeed_ <= v2Params_.settleLinearSpeedTolerance
+            && v2MouthAngularSpeed_ <= v2Params_.settleAngularSpeedTolerance;
+        if(workerIdle && settledArm && v2CharacterizationStage_ == 0)
+        {
+          v2CharacterizationStage_ = 1;
+          submitReceiverFullSearchV2(now);
+        }
+        else if(workerIdle && settledArm && v2CharacterizationStage_ == 2
+                && v2ObjectQuasiStaticSince_ >= 0.0
+                && now - v2ObjectQuasiStaticSince_ >= v2Params_.characterizationRestDwell)
+        {
+          v2CharacterizationStage_ = 3;
+          submitReceiverFullSearchV2(now);
+        }
+        else if(workerIdle && v2CharacterizationStage_ >= 4)
+        {
+          mc_rtc::log::warning(
+              "[V2CharacterizationComplete] searches=2 adopted=0 t={:.6f} outcome=FAIL_BY_DESIGN", now);
+          v2Phase_ = ReceiverPhaseV2::Failed;
+          return ReceiverStepStatusV2::Failed;
+        }
+        break;
+      }
       if(v2ObjectQuasiStaticSince_ >= 0.0
          && now - v2ObjectQuasiStaticSince_ > presentationAcquisitionWindow_)
       {
@@ -465,6 +493,12 @@ bool HandoverInterceptionController::submitReceiverFullSearchV2(double now)
   bank.maximumSearchWallTime = v2Params_.maximumEventSearchWallTime;
   bank.minimumSafeCommitLead = std::max(v2Params_.minimumCommitRemainingTime,
                                         presentationDecelerationDuration_ + 0.25);
+  if(v2Params_.characterizeOnly)
+  {
+    // Characterization evaluates geometry at every lead; timing admission is
+    // applied afterwards by the analysis with the same selector constants.
+    bank.minimumSafeCommitLead = 0.0;
+  }
   bank.source = "v2_receding_fixed_schedule";
   for(const double lead : v2Leads_)
   {
@@ -893,6 +927,12 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
         jobFailed ? plannerFailureReason() : std::string("complete"),
         jobFailed ? 0 : set.alternatives.size(), plannerWorkerWallDuration(),
         now - pending.submitTime, now);
+    if(v2Params_.characterizeOnly)
+    {
+      if(!jobFailed) { logCharacterizationSearchV2(pending, now); }
+      ++v2CharacterizationStage_;
+      return;
+    }
     if(jobFailed || !adoptFullSearchResultV2(now))
     {
       ++v2Counters_.searchFailures;
@@ -1591,4 +1631,58 @@ void HandoverInterceptionController::logJobProfileV2(const PendingJobV2 & pendin
       pending.type == ReceiverJobTypeV2::FullSearch ? finiteSearch_.evaluatedHypotheses : 0,
       plannerContext_.certMemoReuses, plannerContext_.certStaticRecords,
       plannerContext_.certRouteRecords, now - pending.submitTime, buckets, now);
+}
+
+// Characterization: every complete (tau, g, r) record of one search, and the
+// unchanged selector's choice evaluated both at the search epoch and at receipt.
+void HandoverInterceptionController::logCharacterizationSearchV2(const PendingJobV2 & pending, double now)
+{
+  const FrozenPlanSet & set = plannerResult();
+  std::vector<call_handover::FiniteEventPlanRecord> records;
+  for(std::size_t i = 0; i < set.alternatives.size(); ++i)
+  {
+    const auto & a = set.alternatives[i];
+    call_handover::FiniteEventPlanRecord record;
+    record.sourceIndex = i;
+    record.hypothesisIndex = a.hypothesisIndex;
+    record.costValid = a.candidate.completeCostAuditValid;
+    record.motionCost = a.candidate.completeCostAudit;
+    record.globalCost = a.globalObjectiveCost;
+    record.eventLead = a.eventLeadFromSearchEpoch;
+    record.eventPresentationTime = a.eventPresentationTime;
+    record.predictedPresentationDuration = a.candidate.predictedPresentationTime;
+    record.predictedExecutionDuration = a.candidate.auditEstimatedTime;
+    record.clearance = a.candidate.predictiveReachClearance;
+    record.candidateName = a.candidate.name;
+    record.routeName = a.candidate.transitRouteName;
+    records.push_back(record);
+    const Eigen::Vector3d p = a.W_T_O_presentation.translation();
+    mc_rtc::log::info(
+        "[V2CompleteRecord] planningGeneration={} hypothesis={} lead={:.3f} eventTime={:.6f} candidate={} route={} costValid={} motionJ={:.9f} globalJ={:.9f} presentationDuration={:.6f} executionDuration={:.6f} reachClear={:.5f} retreatClear={:.5f} presentation=[{:.5f},{:.5f},{:.5f}]",
+        pending.planningGeneration, a.hypothesisIndex, a.eventLeadFromSearchEpoch,
+        a.eventPresentationTime, a.candidate.name, a.candidate.transitRouteName,
+        a.candidate.completeCostAuditValid, a.candidate.completeCostAudit, a.globalObjectiveCost,
+        a.candidate.predictedPresentationTime, a.candidate.auditEstimatedTime,
+        a.candidate.predictiveReachClearance, a.candidate.predictiveRetreatClearance,
+        p.x(), p.y(), p.z());
+  }
+  const double minimumSafeCommitLead = std::max(
+      v2Params_.minimumCommitRemainingTime, presentationDecelerationDuration_ + 0.25);
+  for(const auto & when : {std::make_pair("epoch", pending.submitTime), std::make_pair("receipt", now)})
+  {
+    const auto selection = call_handover::selectFiniteEventPlan(
+        records, when.second, v2Params_.minimumReachEntryLead, minimumSafeCommitLead,
+        decisionCostTieTolerance_);
+    const bool ok = selection.success && selection.selectedRecord < set.alternatives.size();
+    mc_rtc::log::success(
+        "[V2CharacterizationSelection] planningGeneration={} evaluatedAt={} t={:.6f} success={} reason={} completePlans={} costValidPlans={} timingAdmissiblePlans={} hypothesis={} lead={:.3f} candidate={} route={} globalJ={:.9f} minimumSafeCommitLead={:.3f} minimumReachEntryLead={:.3f}",
+        pending.planningGeneration, when.first, when.second, selection.success, selection.reason,
+        selection.completePlanCount, selection.costValidCount, selection.timingAdmissibleCount,
+        ok ? set.alternatives[selection.selectedRecord].hypothesisIndex : 0,
+        ok ? set.alternatives[selection.selectedRecord].eventLeadFromSearchEpoch : 0.0,
+        ok ? set.alternatives[selection.selectedRecord].candidate.name : std::string("none"),
+        ok ? set.alternatives[selection.selectedRecord].candidate.transitRouteName : std::string("none"),
+        ok ? set.alternatives[selection.selectedRecord].globalObjectiveCost : 0.0,
+        minimumSafeCommitLead, v2Params_.minimumReachEntryLead);
+  }
 }

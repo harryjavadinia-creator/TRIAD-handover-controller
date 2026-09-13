@@ -21,6 +21,7 @@
 #   TRIAD_RECEIVER_MODE=v1-independent   TRIAD V1 against the robot-independent giver
 #   TRIAD_RECEIVER_MODE=v2               TRIAD V2 receding receiver, independent giver
 #   TRIAD_EXTRA_OVERRIDE=<file>          YAML appended to the override (fault injection)
+#   TRIAD_MAX_WAIT=<seconds>             wall-clock bound for the ticker (default 180)
 #
 # Requires:
 #   - the controller already built and installed (see docs/simulation.md)
@@ -48,7 +49,7 @@ run_ticker_autonomous() {
   local home_dir="$1" global_config="$2" log_file="$3"
   local terminal_re='\[Completed\] full plan-once handover completed|Starting state HandoverInterceptionController_Failure'
   local grace_seconds=2
-  local max_wait_seconds=180
+  local max_wait_seconds="${TRIAD_MAX_WAIT:-180}"
 
   HOME="${home_dir}" mc_rtc_ticker -f "${global_config}" > "${log_file}" 2>&1 &
   local ticker_pid=$!

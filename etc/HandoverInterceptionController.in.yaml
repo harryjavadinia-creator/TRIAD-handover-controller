@@ -625,6 +625,11 @@ configs:
     injectStaleTerminalResultOnce: false
     injectStaleRecertifyResultOnce: false
     injectSupersedeFullSearchOnce: false
+    # Characterization only (never used for a handover): one FULL_SEARCH at
+    # the moving epoch and one after the object rests, log all records, adopt
+    # nothing, then fail by design.
+    characterizeOnly: false
+    characterizationRestDwell: 1.0
 
 transitions:
 - [HandoverInterceptionController_Initial, OK, HandoverInterceptionController_ObserveObject, Auto]

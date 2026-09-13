@@ -2160,6 +2160,11 @@ private:
     // Development-only: advance the state generation once while a FULL_SEARCH
     // is in flight, to exercise supersession cancellation.
     bool injectSupersedeFullSearchOnce = false;
+    // Characterization only: run one FULL_SEARCH at the first (moving) epoch
+    // and one after the object has been quasi-static for
+    // characterizationRestDwell, log every record, adopt nothing, then fail.
+    bool characterizeOnly = false;
+    double characterizationRestDwell = 1.0;
   };
 
   bool submitReceiverFullSearchV2(double now);
@@ -2231,6 +2236,8 @@ private:
   bool v2StaleTerminalInjected_ = false;
   bool v2StaleRecertifyInjected_ = false;
   bool v2SupersedeInjected_ = false;
+  int v2CharacterizationStage_ = 0;
+  void logCharacterizationSearchV2(const PendingJobV2 & pending, double now);
   double v2FirstMotionTime_ = -1.0;
 
   PlannerConfig plannerConfig_;
