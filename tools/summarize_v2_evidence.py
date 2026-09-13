@@ -7,6 +7,7 @@ Layout expected (produced by the evidence batch):
   <dir>/v2/<scenario>/<scenario>.log              V2 receding receiver
   <dir>/v2_repeat/<scenario>/<scenario>.log       V2 repeat
   <dir>/v2_inject_stale/<scenario>/<scenario>.log V2 with injected stale terminal results
+  <dir>/v2_inject_supersede/<scenario>/<scenario>.log V2 with an injected supersession of the first search
 
 Outputs markdown to stdout: V1 regression, V2 invariant/coverage table,
 cross-run giver independence, and the V1-independent vs V2 comparison. Exit 1
@@ -162,8 +163,8 @@ def main(argv):
     out.append("\n## V2 invariants and demonstrations\n")
     out.append("| run | completed | I1 | I2 | I3 | I4 | I5 | I6 | I7 | I8 | D1 concurrent motion | D2 gens while moving | D3 update/replacement | D4 stale rejected |")
     out.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
-    coverage = {"D1": [], "D2": [], "D3_replacement": [], "D3_update": [], "D4": []}
-    for tag in ("v2", "v2_repeat", "v2_inject_stale"):
+    coverage = {"D1": [], "D2": [], "D3_replacement": [], "D3_update": [], "D4": [], "cancel": []}
+    for tag in ("v2", "v2_repeat", "v2_inject_stale", "v2_inject_supersede"):
         for s in SCENARIOS:
             log = base / tag / s / f"{s}.log"
             if not log.is_file():
@@ -196,6 +197,8 @@ def main(argv):
                 coverage["D3_update"].append(name)
             if d["D4_stale_results_rejected"]:
                 coverage["D4"].append(name)
+            if r["metrics"].get("cancelled"):
+                coverage["cancel"].append(name)
             cells = ["PASS" if inv[k] else ("FAIL" if completed else "—") for k in sorted(inv)]
             out.append(f"| {name} | {fmt(completed)} | " + " | ".join(cells) + " | "
                        + " | ".join("yes" if d[k] else "no" for k in sorted(d)) + " |")
@@ -205,7 +208,8 @@ def main(argv):
                        ("D2", "planning generations while robot moves"),
                        ("D3_replacement", "provisional plan replaced before commitment"),
                        ("D3_update", "provisional plan retained with prediction update"),
-                       ("D4", "stale worker results rejected")):
+                       ("D4", "stale worker results rejected"),
+                       ("cancel", "superseded generations cancelled without effect (I9)")):
         ok = bool(coverage[key])
         if not ok:
             bad.append(f"coverage {key}")

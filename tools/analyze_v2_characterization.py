@@ -12,6 +12,10 @@ not contain; every number is a count or a logged value.
                           ([CertStage], memoized hypotheses expanded), downstream-
                           only rejections, and the reach-only counterfactual
                           selectors versus complete-action certification
+  subset --search moving|rest DEFAULT_LOG SUPERSET_LOG
+                          reproducibility check: every complete record of the
+                          default-bank characterization run appears with the same
+                          lead, grasp, route and objective in the superset run
   tgr --search moving|rest LOG
                           T/G/R resolution study on a characterization run
                           (characterizeOnly: true) whose bank is a superset grid:
@@ -523,6 +527,49 @@ def tgr(log, which):
     return 0
 
 
+def pick_search(data, which):
+    fulls = sorted((int(g), j) for g, j in data["jobs"].items()
+                   if j.get("type") == "FULL_SEARCH" and j.get("outcome") == "accepted")
+    if not fulls:
+        return None, None
+    g, j = fulls[0] if which == "moving" else fulls[-1]
+    return str(g), j
+
+
+def subset_check(default_log, superset_log, which):
+    a, b = load(default_log), load(superset_log)
+    ga, ja = pick_search(a, which)
+    gb, jb = pick_search(b, which)
+    ta, tb = fnum(ja["submit"]["t"]), fnum(jb["submit"]["t"])
+    def keyed(data, gen):
+        grasp = {}
+        for r in data["cert"]:
+            if r.get("path") == "static" and r.get("planningGeneration") == gen:
+                k, n = (int(x) for x in r["grasp"].split("/"))
+                ring = n // 2
+                grasp[r["candidate"]] = (k // ring, round((k % ring) / ring, 9))
+        out = {}
+        for c in data["complete"]:
+            if c["planningGeneration"] != gen:
+                continue
+            rad, frac = route_geometry(c["route"])
+            out[(round(fnum(c["lead"]), 3), grasp.get(c["candidate"], c["candidate"]), (rad, round(frac, 9)))] = fnum(c["globalJ"])
+        return out
+    ra = keyed(a, ga)
+    rb = keyed(b, gb)
+    missing = [k for k in ra if k not in rb]
+    differ = [k for k in ra if k in rb and abs(ra[k] - rb[k]) > 1e-6]
+    leads_a = {k[0] for k in ra}
+    extra_same_leads = [k for k in rb if k[0] in leads_a and k not in ra]
+    ok = not missing and not differ and abs(ta - tb) < 1e-9
+    print(f"subset {which}: epoch {ta:.3f} vs {tb:.3f}; default complete records {len(ra)}, superset {len(rb)}; "
+          f"missing {len(missing)}, objective differs {len(differ)}, superset-only records at default leads {len(extra_same_leads)} "
+          f"-> {'PASS' if ok else 'FAIL'}")
+    for k in (missing + differ)[:5]:
+        print("   ", k, ra.get(k), rb.get(k))
+    return 0 if ok else 1
+
+
 def main(argv):
     if len(argv) < 3:
         print(__doc__)
@@ -532,6 +579,13 @@ def main(argv):
         timing(argv[2:])
     elif mode == "stages":
         stages(argv[2:])
+    elif mode == "subset":
+        args = argv[2:]
+        which = "moving"
+        if args[0] == "--search":
+            which = args[1]
+            args = args[2:]
+        return subset_check(args[0], args[1], which)
     elif mode == "tgr":
         which = "moving"
         args = argv[2:]
