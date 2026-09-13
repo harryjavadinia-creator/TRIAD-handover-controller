@@ -68,14 +68,51 @@ ALLOWED = {
     ("commitCandidate", "*"): "unreachable on worker: commit disabled for frozen search",
     ("finalizeCapturePlanning", "committed plan"): "commit branch disabled for frozen search",
     ("selectPlanningBestForCommit", "*"): "diagnostic local selection; reads no live state",
+    # V2: reached from the worker only through the shared routeStepFail/validate
+    # helpers' name collisions; these control-thread functions are never called
+    # by runReceiverWorkerJobV2 (listed explicitly so any new call shows up).
 }
 
 
+SOURCES = [core.CPP, core.ROOT / "src" / "ReceiverV2.cpp"]
+
+
+def build_multi():
+    """Call graph over every controller translation unit (V1 + V2)."""
+    from collections import defaultdict
+    src, origin = [], []
+    for path in SOURCES:
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8").split("\n")
+        src.extend(text)
+        origin.extend((path.name, i + 1) for i in range(len(text)))
+    members = set(re.findall(r"\b([a-z][A-Za-z0-9_]*)\s*\(", core.HDR.read_text(encoding="utf-8")))
+    order = [(m.group(1), i) for i, line in enumerate(src, 1) if (m := core.DEF_RE.match(line))]
+    bounds = defaultdict(list)
+    for k, (name, start) in enumerate(order):
+        end = order[k + 1][1] - 1 if k + 1 < len(order) else len(src)
+        bounds[name].append((start, end))
+    calls = defaultdict(set)
+    for name, ranges in bounds.items():
+        for start, end in ranges:
+            for line in src[start:end]:
+                line = re.sub(r"//.*", "", line)
+                line = re.sub(r"\w+(?:\.|->)\w+\s*\(", " ", line)
+                for callee in core.CALL_RE.findall(line):
+                    if callee in members and callee != name and callee in bounds:
+                        calls[name].add(callee)
+    return src, origin, bounds, calls
+
+
 def main() -> int:
-    src, bounds, calls = core.build()
+    src, origin, bounds, calls = build_multi()
     roots = [r for r in WORKER_ROOTS if r in bounds]
     if "runPlannerWorker" not in roots:
         print("worker snapshot purity: FAIL runPlannerWorker not found")
+        return 1
+    if (core.ROOT / "src" / "ReceiverV2.cpp").is_file() and "runReceiverWorkerJobV2" not in roots:
+        print("worker snapshot purity: FAIL V2 worker root runReceiverWorkerJobV2 not found")
         return 1
     reach = core.reachable(calls, roots)
     failures = []
@@ -91,9 +128,9 @@ def main() -> int:
                         continue
                     if (name, label) in ALLOWED or (name, "*") in ALLOWED:
                         continue
+                    fname, fline = origin[start + off]
                     failures.append(
-                        f"{name}() {label} at HandoverInterceptionController.cpp:"
-                        f"{start + off + 1}: {raw.strip()}")
+                        f"{name}() {label} at {fname}:{fline}: {raw.strip()}")
     if "--list" in sys.argv:
         print("\n".join(sorted(reach)))
     if failures:

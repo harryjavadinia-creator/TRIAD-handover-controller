@@ -16,6 +16,12 @@
 # Usage:
 #   scripts/run_scenario.sh <near-ground|longitudinal|lateral-low|diagonal> [output-dir]
 #
+# Optional environment:
+#   TRIAD_RECEIVER_MODE=v1 (default)     historical TRIAD V1, giver follows the commit
+#   TRIAD_RECEIVER_MODE=v1-independent   TRIAD V1 against the robot-independent giver
+#   TRIAD_RECEIVER_MODE=v2               TRIAD V2 receding receiver, independent giver
+#   TRIAD_EXTRA_OVERRIDE=<file>          YAML appended to the override (fault injection)
+#
 # Requires:
 #   - the controller already built and installed (see docs/simulation.md)
 #   - MAIN_ROBOT_MODULE_PATH set to a local Kinova Gen3 + Robotiq 2F-85
@@ -159,6 +165,26 @@ movingObject:
   simulatedLinearVelocity: ${VELOCITY}
 EOF
 
+RECEIVER_MODE="${TRIAD_RECEIVER_MODE:-v1}"
+case "$RECEIVER_MODE" in
+  v1) ;;
+  v1-independent)
+    echo "  giverTruthModel: independent_scripted" >> "${RUN_HOME}/.config/mc_rtc/controllers/HandoverInterceptionController.yaml"
+    ;;
+  v2)
+    echo "  giverTruthModel: independent_scripted" >> "${RUN_HOME}/.config/mc_rtc/controllers/HandoverInterceptionController.yaml"
+    echo "receiverArchitecture: v2_receding" >> "${RUN_HOME}/.config/mc_rtc/controllers/HandoverInterceptionController.yaml"
+    ;;
+  *)
+    echo "unknown TRIAD_RECEIVER_MODE=${RECEIVER_MODE}" >&2
+    exit 2
+    ;;
+esac
+if [[ -n "${TRIAD_EXTRA_OVERRIDE:-}" ]]; then
+  cat "${TRIAD_EXTRA_OVERRIDE}" >> "${RUN_HOME}/.config/mc_rtc/controllers/HandoverInterceptionController.yaml"
+fi
+echo "  receiver mode:      ${RECEIVER_MODE}"
+
 GLOBAL_CONFIG="${RUN_HOME}/mc_rtc.yaml"
 sed "s#\${MAIN_ROBOT_MODULE_PATH}#${MAIN_ROBOT_MODULE_PATH}#" \
   "${REPO_ROOT}/configs/mc_rtc.yaml.example" > "${GLOBAL_CONFIG}"
@@ -187,8 +213,12 @@ if grep -q "\[Completed\] full plan-once handover completed" "${LOG_FILE}"; then
 fi
 
 RUNTIME_CHECKER_RESULT=SKIPPED
+RUNTIME_CHECKER="${REPO_ROOT}/tools/check_global_time_plan_log.py"
+if [[ "${RECEIVER_MODE}" == v2 ]]; then
+  RUNTIME_CHECKER="${REPO_ROOT}/tools/check_v2_run_log.py"
+fi
 if [[ "${HANDOVER_COMPLETED}" == true ]]; then
-  if python3 "${REPO_ROOT}/tools/check_global_time_plan_log.py" "${LOG_FILE}" > "${OUT_DIR}/checker_output.txt" 2>&1; then
+  if python3 "${RUNTIME_CHECKER}" "${LOG_FILE}" > "${OUT_DIR}/checker_output.txt" 2>&1; then
     RUNTIME_CHECKER_RESULT=PASS
   else
     RUNTIME_CHECKER_RESULT=FAIL
