@@ -29,8 +29,9 @@ INVARIANTS (any failure -> exit 1):
       adopted presentation pose within the commit-freshness tube of the
       prediction at adoption), and every adoption from a re-certified selected
       action (adoptionSource=certified) cites a certificate generation that
-      succeeded ([V2SelectedCertification] success=true) before the adoption
-      (holds on failed runs too)
+      succeeded ([V2SelectedCertification] success=true) before the adoption;
+      a record whose selected-action certificate failed is never selected again
+      in the same search (holds on failed runs too)
 
 DEMONSTRATIONS (reported per run; coverage is required across the evidence set,
 see tools/summarize_v2_evidence.py):
@@ -198,10 +199,19 @@ def main(argv):
                        and "success=true" in l for l in lines[:i]):
                 uncertified.append(g)
     certified_adoptions = sum(1 for i in adopt_idx if kv(lines[i], "adoptionSource") == "certified")
+    # A record whose selected-action certificate failed is excluded from its search.
+    failed_records, reselected_failed = set(), []
+    for l in lines:
+        if "[V2PlanningJobResult] type=FULL_SEARCH" in l:
+            failed_records = set()
+        elif "[V2SelectedCertification]" in l and "success=false" in l and kv(l, "record") is not None:
+            failed_records.add(kv(l, "record"))
+        elif "[V2SelectedTargetMoved]" in l and kv(l, "record") in failed_records:
+            reselected_failed.append(kv(l, "record"))
     inv("I10_prediction_updates_cannot_adopt_stale_targets",
-        not not_fresh and not uncertified and len(fresh_lines) >= len(adopt_idx),
+        not not_fresh and not uncertified and not reselected_failed and len(fresh_lines) >= len(adopt_idx),
         f"adoptions={len(adopt_idx)} certifiedAdoptions={certified_adoptions} adoptFreshnessLines={len(fresh_lines)} "
-        f"notFresh={len(not_fresh)} uncertifiedCertifiedAdoptions={uncertified}")
+        f"notFresh={len(not_fresh)} uncertifiedCertifiedAdoptions={uncertified} reselectedFailedRecords={reselected_failed}")
 
     # Demonstrations
     motion = [l for l in before if "[V2Motion]" in l]

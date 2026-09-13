@@ -100,6 +100,11 @@ with tempfile.TemporaryDirectory() as tmp:
             "certified adoption without a successful certificate": lines[:ci] + [
                 "[info] [V2AdoptFreshness] planningGeneration=1 hypothesis=1 source=certified certificateGeneration=999998 fresh=true",
                 "[success] [V2ProvisionalAdopt] planId=7 kind=REPLACEMENT sourcePlanningGeneration=1 adoptionSource=certified adoptionCertificateGeneration=999998 t=1.0"] + lines[ci:],
+            "re-selection of a record whose certificate failed": lines[:ci] + [
+                "[success] [V2PlanningJobResult] type=FULL_SEARCH planningGeneration=999990 failed=false",
+                "[info] [V2SelectedTargetMoved] searchGeneration=999990 record=5 action=certify_selected",
+                "[info] [V2SelectedCertification] certificateGeneration=999991 searchGeneration=999990 record=5 success=false reason=x",
+                "[info] [V2SelectedTargetMoved] searchGeneration=999990 record=5 action=certify_selected"] + lines[ci:],
             "adoption outside the freshness tube": [
                 l.replace("fresh=true", "fresh=false") if "[V2AdoptFreshness]" in l else l for l in lines],
         }

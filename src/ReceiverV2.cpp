@@ -1069,11 +1069,14 @@ bool HandoverInterceptionController::adoptFullSearchResultV2(double now)
       "[V2FullSearchSelection] success={} reason={} completePlans={} costValidPlans={} timingAdmissiblePlans={} t={:.6f} selector=selectFiniteEventPlan(unchanged)",
       selection.success, selection.reason, selection.completePlanCount,
       selection.costValidCount, selection.timingAdmissibleCount, now);
-  if(!selection.success || selection.selectedRecord >= set.alternatives.size())
+  if(!selection.success || selection.selectedRecord >= records.size())
   {
     return false;
   }
-  const auto & alternative = set.alternatives[selection.selectedRecord];
+  // The selector indexes the record vector; map back to the plan set (records
+  // skip excluded alternatives under select-then-certify).
+  const std::size_t chosen = records[selection.selectedRecord].sourceIndex;
+  const auto & alternative = set.alternatives[chosen];
   // Start-state premise: the certified reach begins at the snapshot mouth pose.
   const sva::PTransformd mouth = actualMouthPose();
   const double startError = (mouth.translation() - alternative.planningStartMouthPose.translation()).norm();
@@ -1119,7 +1122,7 @@ bool HandoverInterceptionController::adoptFullSearchResultV2(double now)
       && rotation <= predictiveReachPolicy_.maximumObjectRotationDeviation;
   if(!fresh && v2SelectThenCertify_)
   {
-    v2SelectedRecord_ = selection.selectedRecord;
+    v2SelectedRecord_ = chosen;
     if(!submitReceiverCertificationV2(ReceiverJobTypeV2::CertifySelected, now, &c, &plan))
     {
       return false;
@@ -1127,7 +1130,7 @@ bool HandoverInterceptionController::adoptFullSearchResultV2(double now)
     v2SelectedCertificationPending_ = true;
     mc_rtc::log::info(
         "[V2SelectedTargetMoved] searchGeneration={} record={} hypothesis={} eventTime={:.6f} candidate={} route={} deviation={:.6f}m rotation={:.6f}rad tolerance={:.3f}m/{:.3f}rad action=certify_selected certificateGeneration={} t={:.6f}",
-        v2SelectedSearchGeneration_, selection.selectedRecord, alternative.hypothesisIndex,
+        v2SelectedSearchGeneration_, chosen, alternative.hypothesisIndex,
         alternative.eventPresentationTime, c.name, c.transitRouteName, deviation, rotation,
         predictiveReachPolicy_.maximumObjectTranslationDeviation,
         predictiveReachPolicy_.maximumObjectRotationDeviation, plannerRequestGeneration(), now);
