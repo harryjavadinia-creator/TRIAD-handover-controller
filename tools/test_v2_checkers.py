@@ -4,7 +4,8 @@
   * worker snapshot purity fails when the V2 worker reads the live world
   * giver independence (static) fails when the truth path reads a commit
   * V2 run-log checker fails on a second commitment, on post-commit
-    reselection and on closure authority before commitment
+    reselection, on closure authority before commitment, and on a stale or
+    cancelled generation affecting adoption or commitment
 """
 import contextlib
 import io
@@ -87,6 +88,14 @@ with tempfile.TemporaryDirectory() as tmp:
                 "[warning] [V2StaleResultRejected] type=TERMINAL_CERTIFY planningGeneration=" +
                 re.search(r"certificatePlanningGeneration=(\d+)", lines[ci]).group(1) +
                 " canCommit=false canReplacePlan=false"] + lines[ci:],
+            "cancelled generation adopted": lines[:ci] + [
+                "[warning] [V2JobCancelRequested] type=FULL_SEARCH planningGeneration=999999 reason=prediction_superseded",
+                "[warning] [V2JobCancelled] type=FULL_SEARCH planningGeneration=999999 effect=none canCommit=false canReplacePlan=false",
+                "[success] [V2ProvisionalAdopt] planId=8 kind=REPLACEMENT sourcePlanningGeneration=999999 t=1.0"] + lines[ci:],
+            "cancelled certificate used for commit": lines[:ci] + [
+                "[warning] [V2JobCancelled] type=TERMINAL_CERTIFY planningGeneration=" +
+                re.search(r"certificatePlanningGeneration=(\d+)", lines[ci]).group(1) +
+                " effect=none canCommit=false canReplacePlan=false"] + lines[ci:],
         }
         for name, content in cases.items():
             path = tmp / (name.replace(" ", "_") + ".log")

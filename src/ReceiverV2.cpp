@@ -189,6 +189,7 @@ bool HandoverInterceptionController::beginReceiverV2(
   v2Params_.logEvery = std::max(1, readInt(stateConfig, "logEvery", v2Params_.logEvery));
   v2Params_.injectStaleTerminalResultOnce = readBool(stateConfig, "injectStaleTerminalResultOnce", false);
   v2Params_.injectStaleRecertifyResultOnce = readBool(stateConfig, "injectStaleRecertifyResultOnce", false);
+  v2Params_.injectSupersedeFullSearchOnce = readBool(stateConfig, "injectSupersedeFullSearchOnce", false);
 
   v2Active_ = true;
   v2EstimationActive_ = true;
@@ -214,6 +215,7 @@ bool HandoverInterceptionController::beginReceiverV2(
   v2ReplacementReason_ = "initial";
   v2StaleTerminalInjected_ = false;
   v2StaleRecertifyInjected_ = false;
+  v2SupersedeInjected_ = false;
   v2FirstMotionTime_ = -1.0;
 
   setGripperClosureAuthorized(false);
@@ -240,10 +242,11 @@ void HandoverInterceptionController::endReceiverV2()
   v2Active_ = false;
   if(!v2CommitLatched_) { v2EstimationActive_ = false; }
   mc_rtc::log::success(
-      "[V2ReceiverSummary] phase={} commitCount={} adoptions={} replacements={} retained={} updated={} staleRejected={} fullSearches={} recertifications={} terminalCertifications={} generationsWhileRobotMoving={} generationsWhileObjectMoving={} searchFailures={} minRuntimeClearance={:.4f} reselectionLocked={}",
+      "[V2ReceiverSummary] phase={} commitCount={} adoptions={} replacements={} retained={} updated={} staleRejected={} cancelRequested={} cancelled={} fullSearches={} recertifications={} terminalCertifications={} generationsWhileRobotMoving={} generationsWhileObjectMoving={} searchFailures={} minRuntimeClearance={:.4f} reselectionLocked={}",
       receiverPhaseNameV2(v2Phase_), v2CommitCount_, v2Counters_.adoptions,
       v2Counters_.replacements, v2Counters_.retained, v2Counters_.updated,
-      v2Counters_.staleRejected, v2Counters_.fullSearchSubmitted,
+      v2Counters_.staleRejected, v2Counters_.cancelRequested, v2Counters_.cancelled,
+      v2Counters_.fullSearchSubmitted,
       v2Counters_.recertifySubmitted, v2Counters_.terminalSubmitted,
       v2Counters_.generationsWhileRobotMoving, v2Counters_.generationsWhileObjectMoving,
       v2Counters_.searchFailures, v2Counters_.minimumRuntimeClearance, v2ReselectionLocked_);
@@ -272,6 +275,10 @@ HandoverInterceptionController::stepReceiverV2()
   v2PreviousMouthPose_ = mouth;
   v2PreviousMouthTime_ = now;
 
+  if(v2Pending_.active && !v2Pending_.cancelRequested)
+  {
+    checkSupersessionV2(now);
+  }
   if(v2Pending_.active)
   {
     const auto job = plannerJobState();
@@ -467,12 +474,20 @@ bool HandoverInterceptionController::submitReceiverFullSearchV2(double now)
   submitFiniteTriadSearch(bank, now, v2Params_.planningStepsPerCycle,
                           v2Params_.routeWorkUnitsPerCycle);
 
+  v2Pending_ = PendingJobV2{};
   v2Pending_.active = true;
   v2Pending_.type = ReceiverJobTypeV2::FullSearch;
   v2Pending_.planningGeneration = plannerRequestGeneration();
   v2Pending_.stateGeneration = v2StateGeneration_;
   v2Pending_.planId = provisionalReceiverPlan_.planId;
   v2Pending_.submitTime = now;
+  v2Pending_.prediction = prediction;
+  if(!previewMouthPose(planningSnapshot_.frozenRobotState, v2Pending_.snapshotMouthPose))
+  {
+    v2Pending_.snapshotMouthPose = actualMouthPose();
+  }
+  v2Pending_.bankPoses = bank.presentationPoses;
+  for(const double lead : bank.leads) { v2Pending_.bankEventTimes.push_back(now + lead); }
   ++v2Counters_.fullSearchSubmitted;
   const bool robotMoving = v2MouthLinearSpeed_ > v2Params_.settleLinearSpeedTolerance;
   const bool objectMoving = prediction.linearVelocity.norm() > presentationMaximumLinearSpeed_;
@@ -529,6 +544,7 @@ bool HandoverInterceptionController::submitReceiverCertificationV2(
     request.snapshotMouthPose = actualMouthPose();
   }
   request.terminalObjectPose = predictionPoseAtV2(prediction, now);
+  request.routeWorkUnits = v2Params_.routeWorkUnitsPerCycle;
 
   const std::uint64_t generation =
       plannerRequestGeneration_.fetch_add(1, std::memory_order_acq_rel) + 1;
@@ -540,12 +556,25 @@ bool HandoverInterceptionController::submitReceiverCertificationV2(
   plannerJobState_.store(static_cast<int>(PlannerJobState::Running), std::memory_order_release);
   plannerThread_ = std::thread([this, generation]() { runReceiverWorkerJobV2(generation); });
 
+  v2Pending_ = PendingJobV2{};
   v2Pending_.active = true;
   v2Pending_.type = type;
   v2Pending_.planningGeneration = generation;
   v2Pending_.stateGeneration = v2StateGeneration_;
   v2Pending_.planId = provisionalReceiverPlan_.planId;
   v2Pending_.submitTime = now;
+  v2Pending_.prediction = prediction;
+  v2Pending_.snapshotMouthPose = request.snapshotMouthPose;
+  if(type == ReceiverJobTypeV2::RecertifyActive)
+  {
+    v2Pending_.bankEventTimes.push_back(request.plan.presentationTime);
+    v2Pending_.bankPoses.push_back(predictionPoseAtV2(prediction, request.plan.presentationTime));
+  }
+  else
+  {
+    v2Pending_.bankEventTimes.push_back(now);
+    v2Pending_.bankPoses.push_back(request.terminalObjectPose);
+  }
   if(type == ReceiverJobTypeV2::RecertifyActive) { ++v2Counters_.recertifySubmitted; }
   else { ++v2Counters_.terminalSubmitted; }
   const bool robotMoving = v2MouthLinearSpeed_ > v2Params_.settleLinearSpeedTolerance;
@@ -623,7 +652,7 @@ HandoverInterceptionController::runRouteStepToCompletionV2()
     {
       return routeStepFail("v2/cancelled");
     }
-    outcome = stepPredictiveRouteCandidate(4096);
+    outcome = stepPredictiveRouteCandidate(std::max(1, v2Request_.routeWorkUnits));
   }
   return outcome;
 }
@@ -783,6 +812,24 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
   const bool jobFailed = plannerJobState() == PlannerJobState::Failed;
   v2Pending_.active = false;
 
+  if(pending.cancelRequested)
+  {
+    // A superseded generation never reaches plan adoption, retention,
+    // certification or commitment, whether or not the worker finished first.
+    ++v2Counters_.cancelled;
+    plannerCancel_.store(false, std::memory_order_relaxed);
+    mc_rtc::log::warning(
+        "[V2JobCancelled] type={} planningGeneration={} reason={} cancelLatency={:.6f}s workerStoppedByCancel={} effect=none canCommit=false canReplacePlan=false t={:.6f}",
+        receiverJobTypeNameV2(pending.type), pending.planningGeneration, pending.cancelReason,
+        now - pending.cancelRequestTime,
+        pending.type == ReceiverJobTypeV2::FullSearch
+            ? (jobFailed && plannerFailureReason_ == "cancelled")
+            : (v2Result_.reason.find("v2/cancelled") != std::string::npos),
+        now);
+    logSnapshotAuditV2(pending, now, "cancelled");
+    return;
+  }
+
   bool injected = false;
   if(pending.type == ReceiverJobTypeV2::TerminalCertify
      && v2Params_.injectStaleTerminalResultOnce && !v2StaleTerminalInjected_)
@@ -808,6 +855,7 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
   if(generationMismatch || stateMismatch || planMismatch)
   {
     ++v2Counters_.staleRejected;
+    logSnapshotAuditV2(pending, now, "stale");
     mc_rtc::log::warning(
         "[V2StaleResultRejected] type={} planningGeneration={} resultGeneration={} jobStateGeneration={} currentStateGeneration={} jobPlanId={} activePlanId={} generationMismatch={} stateMismatch={} planMismatch={} injected={} effect=none canCommit=false canReplacePlan=false t={:.6f}",
         receiverJobTypeNameV2(pending.type), pending.planningGeneration, resultGeneration,
@@ -817,6 +865,7 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
     return;
   }
 
+  logSnapshotAuditV2(pending, now, "accepted");
   if(pending.type == ReceiverJobTypeV2::FullSearch)
   {
     const auto & set = plannerResult();
@@ -1329,4 +1378,92 @@ bool HandoverInterceptionController::commitProvisionalReceiverPlanV2(
       active.planId, giverTruthModel_);
   logReceiverMotionV2(now, true);
   return true;
+}
+
+// =============================================================================
+// Supersession cancellation and snapshot audit (control thread)
+// =============================================================================
+
+void HandoverInterceptionController::checkSupersessionV2(double now)
+{
+  PendingJobV2 & pending = v2Pending_;
+  if(pending.type == ReceiverJobTypeV2::FullSearch
+     && v2Params_.injectSupersedeFullSearchOnce && !v2SupersedeInjected_
+     && now - pending.submitTime > 0.5)
+  {
+    v2SupersedeInjected_ = true;
+    ++v2StateGeneration_;
+    mc_rtc::log::warning(
+        "[V2FaultInjection] kind=supersede_full_search planningGeneration={} newStateGeneration={} t={:.6f}",
+        pending.planningGeneration, v2StateGeneration_, now);
+  }
+
+  const auto & policy = predictiveReachPolicy_;
+  std::string reason;
+  double maxTranslation = 0.0;
+  double maxRotation = 0.0;
+  const sva::PTransformd mouth = actualMouthPose();
+  const double robotDrift = (mouth.translation() - pending.snapshotMouthPose.translation()).norm();
+  const double robotRotationDrift = orientationError(mouth, pending.snapshotMouthPose);
+  if(pending.stateGeneration != v2StateGeneration_)
+  {
+    reason = "state_generation_advanced";
+  }
+  else if(pending.type == ReceiverJobTypeV2::FullSearch)
+  {
+    // The bank certified these poses at these instants. If the newest
+    // independent prediction disagrees at any instant by more than the
+    // commit-freshness tube, the generation is obsolete.
+    const ObjectPredictionRecordV2 prediction = currentObjectPredictionV2();
+    if(prediction.valid)
+    {
+      for(std::size_t i = 0; i < pending.bankPoses.size() && i < pending.bankEventTimes.size(); ++i)
+      {
+        const sva::PTransformd latest = predictionPoseAtV2(prediction, pending.bankEventTimes[i]);
+        maxTranslation = std::max(maxTranslation,
+            (latest.translation() - pending.bankPoses[i].translation()).norm());
+        maxRotation = std::max(maxRotation, orientationError(latest, pending.bankPoses[i]));
+      }
+      if(maxTranslation > policy.maximumObjectTranslationDeviation
+         || maxRotation > policy.maximumObjectRotationDeviation)
+      {
+        reason = "prediction_superseded";
+      }
+    }
+    if(reason.empty()
+       && (robotDrift > policy.positionTolerance || robotRotationDrift > policy.orientationTolerance))
+    {
+      reason = "robot_left_snapshot_start";
+    }
+  }
+  if(reason.empty()) { return; }
+
+  pending.cancelRequested = true;
+  pending.cancelReason = reason;
+  pending.cancelRequestTime = now;
+  plannerCancel_.store(true, std::memory_order_relaxed);
+  ++v2Counters_.cancelRequested;
+  mc_rtc::log::warning(
+      "[V2JobCancelRequested] type={} planningGeneration={} jobStateGeneration={} currentStateGeneration={} reason={} maxPredictionDeviation={:.6f}m/{:.6f}rad tolerance={:.3f}m/{:.3f}rad robotDrift={:.6f}m/{:.6f}rad snapshotAge={:.6f}s nonBlocking=true t={:.6f}",
+      receiverJobTypeNameV2(pending.type), pending.planningGeneration, pending.stateGeneration,
+      v2StateGeneration_, reason, maxTranslation, maxRotation,
+      policy.maximumObjectTranslationDeviation, policy.maximumObjectRotationDeviation,
+      robotDrift, robotRotationDrift, now - pending.submitTime, now);
+}
+
+void HandoverInterceptionController::logSnapshotAuditV2(
+    const PendingJobV2 & pending, double now, const char * outcome)
+{
+  const sva::PTransformd mouth = actualMouthPose();
+  const double objectDisplacement =
+      (W_T_O_.translation() - pending.prediction.pose.translation()).norm();
+  const double predictionError =
+      (W_T_O_.translation() - predictionPoseAtV2(pending.prediction, now).translation()).norm();
+  mc_rtc::log::info(
+      "[V2SnapshotAudit] type={} planningGeneration={} outcome={} snapshotAge={:.6f}s robotDrift={:.6f}m robotRotationDrift={:.6f}rad objectDisplacementSinceSnapshot={:.6f}m snapshotPredictionError={:.6f}m objectEstimateSpeed={:.6f} t={:.6f}",
+      receiverJobTypeNameV2(pending.type), pending.planningGeneration, outcome,
+      now - pending.submitTime,
+      (mouth.translation() - pending.snapshotMouthPose.translation()).norm(),
+      orientationError(mouth, pending.snapshotMouthPose), objectDisplacement,
+      predictionError, objectLinearVelocityEstimate_.norm(), now);
 }

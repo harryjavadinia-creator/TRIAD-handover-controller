@@ -18,6 +18,12 @@ INVARIANTS (any failure -> exit 1):
       -> Retreat -> Completed, with no V1 solve/reach/hold states
   I8  capture (bilateral grasp confirmed), load transfer and carried-object
       retreat all succeed after the commitment
+  I9  cancelled or stale generations have no effect: no generation that was
+      cancel-requested, cancelled or rejected as stale appears as an accepted
+      job result, provisional adoption, retention, terminal certificate or
+      commitment certificate; every cancellation reports canCommit=false
+      canReplacePlan=false; every cancel request is resolved by a cancellation
+      (holds on failed runs too)
 
 DEMONSTRATIONS (reported per run; coverage is required across the evidence set,
 see tools/summarize_v2_evidence.py):
@@ -149,6 +155,29 @@ def main(argv):
     inv("I8_capture_transfer_retreat", ordered,
         f"capture={bool(capture)} transfer={bool(transfer)} retreat={bool(retreat)} completed={bool(completed)} ordered={ordered}")
 
+    # I9
+    cancel_req = {kv(l, "planningGeneration") for l in lines if "[V2JobCancelRequested]" in l}
+    cancelled_lines = [l for l in lines if "[V2JobCancelled]" in l]
+    cancelled = {kv(l, "planningGeneration") for l in cancelled_lines}
+    cancelled_bad = [l for l in cancelled_lines if "canCommit=false" not in l or "canReplacePlan=false" not in l]
+    obsolete = cancel_req | cancelled | stale_gens
+    effect_sites = []
+    for l in lines:
+        if "[V2PlanningJobResult]" in l or "[V2ProvisionalRetain]" in l or "[V2TerminalCertificate]" in l:
+            effect_sites.append(("result/retain/certificate", kv(l, "planningGeneration")))
+        elif "[V2ProvisionalAdopt]" in l:
+            effect_sites.append(("adopt", kv(l, "sourcePlanningGeneration")))
+        elif "[V2TerminalCommit] committed=true" in l:
+            effect_sites.append(("commit", kv(l, "certificatePlanningGeneration")))
+    leaked = [(k, g) for k, g in effect_sites if g is not None and g in obsolete]
+    unresolved = cancel_req - cancelled
+    # A cancel request still pending when the log ends (e.g. the run failed) is not a leak.
+    ended_pending = bool(unresolved) and not any("[V2ReceiverSummary]" in l for l in lines)
+    inv("I9_obsolete_generations_have_no_effect",
+        not leaked and not cancelled_bad and (not unresolved or ended_pending),
+        f"cancelRequests={len(cancel_req)} cancelled={len(cancelled)} stale={len(stale_gens)} "
+        f"leaked={leaked} badCancelLines={len(cancelled_bad)} unresolvedCancelRequests={sorted(unresolved)}")
+
     # Demonstrations
     motion = [l for l in before if "[V2Motion]" in l]
     concurrent = [l for l in motion if "robotMoving=true" in l and "objectMoving=true" in l]
@@ -185,6 +214,9 @@ def main(argv):
         "provisionalReplacements": len(replacements),
         "retainsWithPredictionUpdate": len(updates),
         "staleRejections": len(stale),
+        "cancelRequests": len(cancel_req),
+        "cancelled": len(cancelled),
+        "cancelLatencies": [kv(l, "cancelLatency", lambda v: float(v.rstrip("s"))) for l in cancelled_lines],
         "minRuntimeClearance": kv(summary[-1], "minRuntimeClearance", float) if summary else None,
         "fullSearchLatencies": [kv(l, "latency", lambda s: float(s.rstrip("s")))
                                 for l in before if "[V2PlanningJobResult] type=FULL_SEARCH" in l],

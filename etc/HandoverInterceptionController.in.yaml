@@ -624,6 +624,7 @@ configs:
     # Development-only fault injection for stale-result evidence runs.
     injectStaleTerminalResultOnce: false
     injectStaleRecertifyResultOnce: false
+    injectSupersedeFullSearchOnce: false
 
 transitions:
 - [HandoverInterceptionController_Initial, OK, HandoverInterceptionController_ObserveObject, Auto]

@@ -2093,6 +2093,9 @@ private:
     InterceptionPlan plan;
     sva::PTransformd snapshotMouthPose = sva::PTransformd::Identity();
     sva::PTransformd terminalObjectPose = sva::PTransformd::Identity();
+    // Work units per cancellation check in the worker rollout. The rollout is
+    // invariant to this suspension granularity (see stepPredictiveRouteCandidate).
+    int routeWorkUnits = 128;
   };
 
   struct ReceiverJobResultV2
@@ -2120,6 +2123,15 @@ private:
     std::uint64_t stateGeneration = 0;
     std::uint64_t planId = 0;
     double submitTime = 0.0;
+    // Snapshot the job was planned from (for supersession and drift audit).
+    ObjectPredictionRecordV2 prediction;
+    sva::PTransformd snapshotMouthPose = sva::PTransformd::Identity();
+    std::vector<double> bankEventTimes;
+    std::vector<sva::PTransformd> bankPoses;
+    // Non-blocking cancellation of a superseded generation.
+    bool cancelRequested = false;
+    std::string cancelReason;
+    double cancelRequestTime = 0.0;
   };
 
   struct ReceiverV2Parameters
@@ -2144,6 +2156,9 @@ private:
     int logEvery = 50;
     bool injectStaleTerminalResultOnce = false;
     bool injectStaleRecertifyResultOnce = false;
+    // Development-only: advance the state generation once while a FULL_SEARCH
+    // is in flight, to exercise supersession cancellation.
+    bool injectSupersedeFullSearchOnce = false;
   };
 
   bool submitReceiverFullSearchV2(double now);
@@ -2159,6 +2174,8 @@ private:
   bool executeTerminalTrackV2(double now, bool & gateSatisfied);
   bool commitProvisionalReceiverPlanV2(const ReceiverJobResultV2 & certificate, double now);
   void logReceiverMotionV2(double now, bool force);
+  void checkSupersessionV2(double now);
+  void logSnapshotAuditV2(const PendingJobV2 & pending, double now, const char * outcome);
   double independentGiverSpeedForLogV2(double now) const;
 
   ReceiverV2Parameters v2Params_;
@@ -2205,10 +2222,13 @@ private:
     int replacements = 0;
     int adoptions = 0;
     int searchFailures = 0;
+    int cancelRequested = 0;
+    int cancelled = 0;
     double minimumRuntimeClearance = 1e9;
   } v2Counters_;
   bool v2StaleTerminalInjected_ = false;
   bool v2StaleRecertifyInjected_ = false;
+  bool v2SupersedeInjected_ = false;
   double v2FirstMotionTime_ = -1.0;
 
   PlannerConfig plannerConfig_;
