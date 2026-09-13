@@ -489,7 +489,11 @@ bool HandoverInterceptionController::submitReceiverFullSearchV2(double now)
   FrozenEventBank bank;
   bank.searchEpoch = now;
   bank.configuredHypotheses = v2Leads_.size();
-  bank.maximumHypotheses = static_cast<int>(std::max<std::size_t>(v2Leads_.size(), 15));
+  // The shared search checks the hypothesis budget before it detects the end
+  // of the schedule, so the budget must exceed the lead count for the search
+  // to complete (V1: maximumEventHypotheses 15 for 14 leads). leads + 1 equals
+  // the previous value (15) for the default 14-lead bank.
+  bank.maximumHypotheses = static_cast<int>(v2Leads_.size()) + 1;
   bank.maximumSearchWallTime = v2Params_.maximumEventSearchWallTime;
   bank.minimumSafeCommitLead = std::max(v2Params_.minimumCommitRemainingTime,
                                         presentationDecelerationDuration_ + 0.25);
