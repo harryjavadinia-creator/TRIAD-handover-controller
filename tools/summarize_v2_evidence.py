@@ -161,8 +161,8 @@ def main(argv):
         out.append(f"| {s} | `{rec[:16]}…` | `{h[:16]}…` | {n} | {'YES' if same else 'NO'} | {fmt(done)} |")
 
     out.append("\n## V2 invariants and demonstrations\n")
-    out.append("| run | completed | I1 | I2 | I3 | I4 | I5 | I6 | I7 | I8 | D1 concurrent motion | D2 gens while moving | D3 update/replacement | D4 stale rejected |")
-    out.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    out.append("| run | completed | I1 | I2 | I3 | I4 | I5 | I6 | I7 | I8 | I9 | D1 concurrent motion | D2 gens while moving | D3 update/replacement | D4 stale rejected |")
+    out.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     coverage = {"D1": [], "D2": [], "D3_replacement": [], "D3_update": [], "D4": [], "cancel": []}
     for tag in ("v2", "v2_repeat", "v2_inject_stale", "v2_inject_supersede"):
         for s in SCENARIOS:

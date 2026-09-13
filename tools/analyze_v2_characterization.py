@@ -286,7 +286,7 @@ def counterfactual(log, gen, recs, min_commit, min_entry):
 
     s_adm = [r for r in static if admissible(fnum(r["lead"]), fnum(r["staticReachTime"]), min_commit, min_entry)]
     r_adm = [r for r in route if admissible(fnum(r["lead"]), fnum(r["routeReachDuration"]), min_commit, min_entry)]
-    name = log.split("/")[-1]
+    name = "/".join(log.split("/")[-3:-1])
     cells = [name, gen]
     if s_adm:
         s = min(s_adm, key=key_static)
