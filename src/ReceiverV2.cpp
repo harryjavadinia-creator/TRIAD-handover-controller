@@ -1568,6 +1568,40 @@ void HandoverInterceptionController::checkSupersessionV2(double now)
     {
       reason = "robot_left_snapshot_start";
     }
+    else
+    {
+      // The job stays useful while at least one hypothesis that can still be
+      // admitted (event time - now >= the selector's minimum safe commit lead)
+      // keeps its target inside the tube. When none does, no unaffected work
+      // remains: the job is obsolete and a new epoch is searched.
+      const ObjectPredictionRecordV2 prediction = currentObjectPredictionV2();
+      if(prediction.valid)
+      {
+        const double minimumSafeCommitLead = std::max(
+            v2Params_.minimumCommitRemainingTime, presentationDecelerationDuration_ + 0.25);
+        bool anyAdmissible = false;
+        bool anyUnaffectedAdmissible = false;
+        for(std::size_t i = 0; i < pending.bankPoses.size() && i < pending.bankEventTimes.size(); ++i)
+        {
+          if(pending.bankEventTimes[i] - now + 1e-12 < minimumSafeCommitLead) { continue; }
+          anyAdmissible = true;
+          const sva::PTransformd latest = predictionPoseAtV2(prediction, pending.bankEventTimes[i]);
+          const double d = (latest.translation() - pending.bankPoses[i].translation()).norm();
+          const double r = orientationError(latest, pending.bankPoses[i]);
+          maxTranslation = std::max(maxTranslation, d);
+          maxRotation = std::max(maxRotation, r);
+          if(d <= policy.maximumObjectTranslationDeviation && r <= policy.maximumObjectRotationDeviation)
+          {
+            anyUnaffectedAdmissible = true;
+            break;
+          }
+        }
+        if(!anyUnaffectedAdmissible)
+        {
+          reason = anyAdmissible ? "no_unaffected_admissible_hypothesis" : "no_admissible_hypothesis";
+        }
+      }
+    }
   }
   else if(pending.type == ReceiverJobTypeV2::FullSearch)
   {
@@ -1798,6 +1832,8 @@ void HandoverInterceptionController::logCharacterizationSearchV2(const PendingJo
 // runs (tolerances are the existing ones):
 //  - unsafe/stale job: the held arm left the snapshot or the receiver state
 //    generation advanced -> the job is cancelled (unchanged);
+//  - obsolete job: no hypothesis that can still be admitted keeps its target
+//    inside the tube -> nothing unaffected remains; cancelled, new epoch;
 //  - record whose target moved: its certified presentation pose is outside the
 //    commit-freshness tube of the prediction at its event instant -> not
 //    adoptable as is; if the unchanged selector picks it, that single action is
