@@ -30,6 +30,11 @@ StatesFiles:
 VerboseStateFactory: false
 
 toolFrame: "gen3_robotiq_85_base_link"
+
+# Receiver architecture: v1_frozen_prereach (default, historical TRIAD V1) or
+# v2_receding (TRIAD V2 receding complete-action receiver; requires
+# movingObject.giverTruthModel: independent_scripted).
+receiverArchitecture: v1_frozen_prereach
 objectRobot: "call_object"
 objectFrame: "call_object"
 
@@ -238,6 +243,11 @@ executionTiming:
 # stable, and then continuously owns closure, confirmation and load transfer.
 movingObject:
   simulateMotion: true
+  # committed_plan (default, V1 history): after commitment the simulated object
+  # follows the committed presentation time. independent_scripted: the object
+  # follows a robot-independent script (constant twist, then a smooth stop to
+  # rest after maximumSimulatedTravel over presentationDecelerationDuration).
+  giverTruthModel: committed_plan
   observationDuration: 0.90
   minimumObservationTime: 0.70
   minimumObservationSamples: 350
@@ -606,12 +616,25 @@ configs:
   HandoverInterceptionController_Completed:
     safetyCheckEvery: 50
 
+  # TRIAD V2 supervisor. Planning bank, selector, reach governor and terminal
+  # tolerances are read from the SolveInterception, predictiveReachPolicy,
+  # PresentationHold and ObserveObject sections so V1 and V2 share values.
+  HandoverInterceptionController_ReceiverV2:
+    logEvery: 50
+    # Development-only fault injection for stale-result evidence runs.
+    injectStaleTerminalResultOnce: false
+    injectStaleRecertifyResultOnce: false
+
 transitions:
 - [HandoverInterceptionController_Initial, OK, HandoverInterceptionController_ObserveObject, Auto]
 - [HandoverInterceptionController_Initial, FAIL, HandoverInterceptionController_Failure, Auto]
 
 - [HandoverInterceptionController_ObserveObject, OK, HandoverInterceptionController_SolveInterception, Auto]
 - [HandoverInterceptionController_ObserveObject, FAIL, HandoverInterceptionController_Failure, Auto]
+- [HandoverInterceptionController_ObserveObject, V2, HandoverInterceptionController_ReceiverV2, Auto]
+
+- [HandoverInterceptionController_ReceiverV2, OK, HandoverInterceptionController_MovePregrasp, Auto]
+- [HandoverInterceptionController_ReceiverV2, FAIL, HandoverInterceptionController_Failure, Auto]
 
 - [HandoverInterceptionController_SolveInterception, OK, HandoverInterceptionController_ExecuteCommittedReach, Auto]
 - [HandoverInterceptionController_SolveInterception, FAIL, HandoverInterceptionController_Failure, Auto]

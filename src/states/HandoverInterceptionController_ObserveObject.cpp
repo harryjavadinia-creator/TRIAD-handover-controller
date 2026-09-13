@@ -395,7 +395,9 @@ bool HandoverInterceptionController_ObserveObject::run(
     }
     ctl.finishForceTransferBiasCalibration();
 
-    output("OK");
+    // TRIAD V2 enters the receding receiver supervisor instead of V1's frozen
+    // pre-reach solve. V1 (default configuration) is unchanged.
+    output(ctl.receiverArchitectureV2() ? "V2" : "OK");
     completed_ = true;
     return true;
   }

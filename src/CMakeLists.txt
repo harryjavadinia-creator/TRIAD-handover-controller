@@ -1,9 +1,13 @@
 set(controller_SRC
   HandoverInterceptionController.cpp
+  ReceiverV2.cpp
 )
 
 set(controller_HDR
   FinitePlanSelector.h
+  FiniteEventPlanSelector.h
+  BoundedEventLeadSchedule.h
+  IndependentGiverModel.h
   HandoverInterceptionController.h
 )
 

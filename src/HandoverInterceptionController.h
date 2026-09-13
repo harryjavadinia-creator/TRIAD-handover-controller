@@ -1,5 +1,7 @@
 #pragma once
 
+#include "IndependentGiverModel.h"
+
 #include <mc_control/fsm/Controller.h>
 #include <mc_tasks/TransformTask.h>
 
@@ -169,6 +171,15 @@ public:
 
     Eigen::Vector3d objectLinearVelocity = Eigen::Vector3d::Zero();
     Eigen::Vector3d objectAngularVelocity = Eigen::Vector3d::Zero();
+
+    // TRIAD V2 conditional presentation model. The object follows the
+    // independent constant-twist prediction up to presentationTime and is
+    // treated as presented at rest from then on: the certificate is "if the
+    // object is presented at the predicted pose, the complete action is
+    // feasible". There is no modelled deceleration (decelerationDuration = 0);
+    // the premise is verified from measurements at the commit gate. Always
+    // false in V1.
+    bool conditionalPresentationV2 = false;
   };
 
   struct PredictiveReachPolicy
@@ -468,6 +479,34 @@ public:
                       Eigen::Vector3d & angularVelocityWorld) const;
   double orientationError(const sva::PTransformd & A,
                           const sva::PTransformd & B) const;
+
+  // ---------------------------------------------------------------------------
+  // Simulated giver truth model.
+  //   committed_plan        V1 history: after commitment the simulated object
+  //                         follows the committed presentation time.
+  //   independent_scripted  The object follows a robot-independent script
+  //                         (IndependentGiverModel.h). No receiver plan, event
+  //                         time, grasp or route can reach the simulated truth.
+  // ---------------------------------------------------------------------------
+  bool independentGiverTruth() const
+  {
+    return giverTruthModel_ == "independent_scripted";
+  }
+  const std::string & giverTruthModel() const { return giverTruthModel_; }
+  /** Receiver architecture: v1_frozen_prereach (default) or v2_receding. */
+  bool receiverArchitectureV2() const
+  {
+    return receiverArchitecture_ == "v2_receding";
+  }
+  const std::string & receiverArchitecture() const { return receiverArchitecture_; }
+  bool receiverArchitectureConfigurationValid() const
+  {
+    return receiverArchitectureConfigurationValid_;
+  }
+  const call_handover::IndependentGiverScript & independentGiverScript() const
+  {
+    return independentGiverScript_;
+  }
 
   void refreshObjectPose();
   void recordObjectPerceptionTruthSample(const sva::PTransformd & truthPose);
@@ -953,6 +992,32 @@ public:
   void finishPhaseTiming(const std::string & phase);
   double phaseDuration(const std::string & phase) const;
   void logPhaseTimingSummary() const;
+
+public:
+  // ===========================================================================
+  // TRIAD V2: receding complete-action receiver control (src/ReceiverV2.cpp).
+  //
+  // Before terminal commitment the receiver executes an ACTIVE PROVISIONAL
+  // plan while the object moves; the plan is re-certified from the current
+  // state and newest prediction, retained while certified and replaced only
+  // when it becomes infeasible or invalid. Provisional plans never authorize
+  // gripper closure. At the terminal standoff/capture boundary a final
+  // current-state check and a fresh terminal certificate promote the active
+  // plan to committedInterceptionPlan_ exactly once; afterwards no global
+  // reselection is possible and the existing capture/transfer/retreat states
+  // run unchanged.
+  // ===========================================================================
+  enum class ReceiverStepStatusV2
+  {
+    Running,
+    Committed,
+    Failed
+  };
+  bool beginReceiverV2(const mc_rtc::Configuration & stateConfig);
+  ReceiverStepStatusV2 stepReceiverV2();
+  void endReceiverV2();
+  bool receiverV2CommitLatched() const { return v2CommitLatched_; }
+  int receiverV2CommitCount() const { return v2CommitCount_; }
 
 public:
   std::shared_ptr<mc_tasks::TransformTask> toolTask_;
@@ -1956,7 +2021,195 @@ private:
     bool objectMotionEstimateValid = false;
     bool presentationMode = true;
     bool previewMovingInterception = true;
+    bool conditionalPresentationV2 = false;
   };
+
+  // ---------------------------- TRIAD V2 state ------------------------------
+  enum class ReceiverJobTypeV2
+  {
+    None,
+    FullSearch,
+    RecertifyActive,
+    TerminalCertify
+  };
+  static const char * receiverJobTypeNameV2(ReceiverJobTypeV2 type);
+
+  enum class ReceiverPhaseV2
+  {
+    Idle,
+    SearchHeld,
+    ProvisionalReach,
+    TerminalTrack,
+    Committed,
+    Failed
+  };
+  static const char * receiverPhaseNameV2(ReceiverPhaseV2 phase);
+
+  /** Abstract object-prediction record consumed by V2 planning. The default
+   * source is constant-twist extrapolation of the estimator, with no stop
+   * assumption; any predictor producing poseAt() can replace it. */
+  struct ObjectPredictionRecordV2
+  {
+    bool valid = false;
+    std::uint64_t generation = 0;
+    double stamp = 0.0;
+    double measurementAge = 0.0;
+    sva::PTransformd pose = sva::PTransformd::Identity();
+    Eigen::Vector3d linearVelocity = Eigen::Vector3d::Zero();
+    Eigen::Vector3d angularVelocity = Eigen::Vector3d::Zero();
+  };
+  sva::PTransformd predictionPoseAtV2(const ObjectPredictionRecordV2 & record,
+                                      double absoluteTime) const;
+  ObjectPredictionRecordV2 currentObjectPredictionV2() const;
+
+  /** Provisional receiver plan: may drive the robot, may be updated or
+   * replaced before the terminal boundary, never authorizes closure and is
+   * never a commitment. Owned by the control thread. */
+  struct ProvisionalReceiverPlanV2
+  {
+    bool valid = false;
+    std::uint64_t planId = 0;
+    std::uint64_t sourcePlanningGeneration = 0;
+    std::uint64_t adoptedStateGeneration = 0;
+    CaptureCandidate candidate;
+    InterceptionPlan plan;
+    std::size_t hypothesisIndex = 0;
+    double eventLead = 0.0;
+    double globalCost = 1e9;
+    double adoptedTime = 0.0;
+    int certifications = 0;
+    std::map<std::string, std::vector<double>> holdPosture;
+  };
+
+  struct ReceiverJobRequestV2
+  {
+    ReceiverJobTypeV2 type = ReceiverJobTypeV2::None;
+    std::uint64_t planningGeneration = 0;
+    std::uint64_t stateGeneration = 0;
+    std::uint64_t planId = 0;
+    double snapshotTime = 0.0;
+    ObjectPredictionRecordV2 prediction;
+    CaptureCandidate candidate;
+    InterceptionPlan plan;
+    sva::PTransformd snapshotMouthPose = sva::PTransformd::Identity();
+    sva::PTransformd terminalObjectPose = sva::PTransformd::Identity();
+  };
+
+  struct ReceiverJobResultV2
+  {
+    ReceiverJobTypeV2 type = ReceiverJobTypeV2::None;
+    std::uint64_t planningGeneration = 0;
+    std::uint64_t stateGeneration = 0;
+    std::uint64_t planId = 0;
+    double snapshotTime = 0.0;
+    bool success = false;
+    std::string reason = "not_run";
+    double wallDuration = 0.0;
+    ObjectPredictionRecordV2 prediction;
+    CaptureCandidate candidate;
+    InterceptionPlan plan;
+    sva::PTransformd snapshotMouthPose = sva::PTransformd::Identity();
+    sva::PTransformd objectPose = sva::PTransformd::Identity();
+  };
+
+  struct PendingJobV2
+  {
+    bool active = false;
+    ReceiverJobTypeV2 type = ReceiverJobTypeV2::None;
+    std::uint64_t planningGeneration = 0;
+    std::uint64_t stateGeneration = 0;
+    std::uint64_t planId = 0;
+    double submitTime = 0.0;
+  };
+
+  struct ReceiverV2Parameters
+  {
+    int planningStepsPerCycle = 96;
+    int routeWorkUnitsPerCycle = 128;
+    double minimumCommitRemainingTime = 1.6;
+    double minimumReachEntryLead = 0.050;
+    double maximumEventSearchWallTime = 7.0;
+    double holdTaskStiffness = 18.0;
+    double holdTaskWeight = 4200.0;
+    double terminalLinearTrackingLead = 0.030;
+    double terminalAngularTrackingLead = 0.10;
+    double terminalPositionTolerance = 0.012;
+    double terminalOrientationTolerance = 0.050;
+    double terminalMaximumOpenClosure = 0.050;
+    double terminalStableDwell = 0.10;
+    double terminalTaskStiffness = 40.0;
+    double terminalTaskWeight = 5400.0;
+    double settleLinearSpeedTolerance = 0.0025;
+    double settleAngularSpeedTolerance = 0.015;
+    int logEvery = 50;
+    bool injectStaleTerminalResultOnce = false;
+    bool injectStaleRecertifyResultOnce = false;
+  };
+
+  bool submitReceiverFullSearchV2(double now);
+  bool submitReceiverCertificationV2(ReceiverJobTypeV2 type, double now);
+  void runReceiverWorkerJobV2(std::uint64_t generation);
+  void runRecertifyActiveRolloutV2(ReceiverJobResultV2 & result);
+  void runTerminalCertificationV2(ReceiverJobResultV2 & result);
+  RouteStepOutcome runRouteStepToCompletionV2();
+  void processReceiverJobResultV2(double now);
+  bool adoptFullSearchResultV2(double now);
+  void invalidateProvisionalPlanV2(const std::string & reason, double now);
+  bool executeProvisionalReachV2(double now);
+  bool executeTerminalTrackV2(double now, bool & gateSatisfied);
+  bool commitProvisionalReceiverPlanV2(const ReceiverJobResultV2 & certificate, double now);
+  void logReceiverMotionV2(double now, bool force);
+  double independentGiverSpeedForLogV2(double now) const;
+
+  ReceiverV2Parameters v2Params_;
+  bool v2Active_ = false;
+  bool v2EstimationActive_ = false;
+  ReceiverPhaseV2 v2Phase_ = ReceiverPhaseV2::Idle;
+  std::uint64_t v2StateGeneration_ = 0;
+  std::uint64_t v2PredictionGeneration_ = 0;
+  std::uint64_t v2PlanIdCounter_ = 0;
+  ProvisionalReceiverPlanV2 provisionalReceiverPlan_;
+  PendingJobV2 v2Pending_;
+  ReceiverJobRequestV2 v2Request_;
+  ReceiverJobResultV2 v2Result_;
+  ReceiverJobResultV2 v2LatestTerminalCertificate_;
+  bool v2LatestTerminalCertificateValid_ = false;
+  bool v2CommitLatched_ = false;
+  int v2CommitCount_ = 0;
+  bool v2ReselectionLocked_ = false;
+  std::vector<double> v2Leads_;
+  double v2SearchBudgetStart_ = 0.0;
+  double v2ObjectQuasiStaticSince_ = -1.0;
+  double v2GateStableSince_ = -1.0;
+  double v2PhaseEntryTime_ = 0.0;
+  sva::PTransformd v2HoldPose_ = sva::PTransformd::Identity();
+  sva::PTransformd v2ReferencePose_ = sva::PTransformd::Identity();
+  sva::PTransformd v2PreviousMouthPose_ = sva::PTransformd::Identity();
+  double v2PreviousMouthTime_ = -1.0;
+  double v2MouthLinearSpeed_ = 0.0;
+  double v2MouthAngularSpeed_ = 0.0;
+  double v2ClearanceScale_ = 1.0;
+  double v2LastMotionLogTime_ = -1.0;
+  std::string v2ReplacementReason_ = "initial";
+  std::map<std::string, std::vector<double>> v2HoldArmPosture_;
+  struct ReceiverV2Counters
+  {
+    int fullSearchSubmitted = 0;
+    int recertifySubmitted = 0;
+    int terminalSubmitted = 0;
+    int generationsWhileRobotMoving = 0;
+    int generationsWhileObjectMoving = 0;
+    int staleRejected = 0;
+    int retained = 0;
+    int updated = 0;
+    int replacements = 0;
+    int adoptions = 0;
+    int searchFailures = 0;
+    double minimumRuntimeClearance = 1e9;
+  } v2Counters_;
+  bool v2StaleTerminalInjected_ = false;
+  bool v2StaleRecertifyInjected_ = false;
+  double v2FirstMotionTime_ = -1.0;
 
   PlannerConfig plannerConfig_;
   void refreshPlannerConfig();
@@ -1964,6 +2217,7 @@ private:
    * that are shared with control-thread callers use this to read the frozen
    * snapshot instead of live robot or estimator state. */
   static bool plannerWorkerThreadActive();
+  static void setPlannerWorkerThreadFlag(bool active);
 
   /** Mutable state owned by one finite TRIAD search.
    *
@@ -2047,6 +2301,20 @@ private:
     PreviewResult routeStepTerminalResult;
     rbd::MultiBodyConfig routeStepTimingAuditStartMbc;
     bool routeStepTransitPostureSaved = false;
+
+    // TRIAD V2 exact memoization inside one frozen search: a hypothesis whose
+    // predicted presentation pose is bitwise identical to an already evaluated
+    // hypothesis has an identical copied-state certification (rollouts use
+    // times relative to the presentation). Only lead-dependent fields are
+    // recomputed by captureCurrentEventPlanAlternatives(). Never used in V1.
+    struct HypothesisCertificationMemo
+    {
+      sva::PTransformd pose = sva::PTransformd::Identity();
+      std::size_t hypothesis = 0;
+      bool foundFeasible = false;
+      std::vector<CaptureCandidate> completePlans;
+    };
+    std::vector<HypothesisCertificationMemo> v2HypothesisMemo;
   };
 
   /** Immutable inputs frozen at the decision epoch.
@@ -2231,6 +2499,14 @@ private:
     double time = 0.0;
     sva::PTransformd pose = sva::PTransformd::Identity();
   };
+
+  std::string giverTruthModel_ = "committed_plan";
+  std::string receiverArchitecture_ = "v1_frozen_prereach";
+  bool receiverArchitectureConfigurationValid_ = true;
+  call_handover::IndependentGiverScript independentGiverScript_;
+  bool independentGiverScriptArmed_ = false;
+  double independentGiverStartTime_ = 0.0;
+  double lastGiverTruthSampleLogTime_ = -1.0;
 
   bool objectObservationActive_ = false;
   bool simulatedObjectMotionActive_ = false;

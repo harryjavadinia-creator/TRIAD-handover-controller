@@ -380,9 +380,10 @@ bool HandoverInterceptionController::run()
     // estimating the *live* twist only for event validation and bounded
     // terminal correction. The committed candidate, contact time and nominal
     // twist remain immutable.
-    if(objectObservationActive_ || interceptionCommitted_)
+    if(objectObservationActive_ || interceptionCommitted_ || v2EstimationActive_)
     {
       updateObjectMotionEstimate();
+      if(v2EstimationActive_) { ++v2PredictionGeneration_; }
     }
   }
   updateForceTransferMeasurement();
@@ -688,6 +689,10 @@ void HandoverInterceptionController::loadHandoverConfig(
     const mc_rtc::Configuration & config)
 {
   if(config.has("toolFrame")) { config("toolFrame", toolFrame_); }
+  if(config.has("receiverArchitecture"))
+  {
+    config("receiverArchitecture", receiverArchitecture_);
+  }
   if(config.has("objectRobot")) { config("objectRobot", objectRobotName_); }
   if(config.has("objectFrame")) { config("objectFrame", objectFrameName_); }
 
@@ -1284,6 +1289,10 @@ void HandoverInterceptionController::loadHandoverConfig(
     {
       moving("maximumSimulatedTravel", objectMaximumSimulatedTravel_);
     }
+    if(moving.has("giverTruthModel"))
+    {
+      moving("giverTruthModel", giverTruthModel_);
+    }
     if(moving.has("simulatedLinearVelocity"))
     {
       std::vector<double> v;
@@ -1694,6 +1703,20 @@ void HandoverInterceptionController::loadHandoverConfig(
   B_T_M_config_ = makePose(B_M_translation, B_M_rpy);
   B_T_M_control_ = B_T_M_config_;
   W_T_H_ = compose(W_T_O_, O_T_H_);
+
+  // Receiver architecture and giver truth model. V2 is only meaningful with a
+  // giver the receiver cannot influence, so that combination is enforced.
+  const bool architectureKnown = receiverArchitecture_ == "v1_frozen_prereach"
+      || receiverArchitecture_ == "v2_receding";
+  const bool giverKnown = giverTruthModel_ == "committed_plan"
+      || giverTruthModel_ == "independent_scripted";
+  receiverArchitectureConfigurationValid_ = architectureKnown && giverKnown
+      && (receiverArchitecture_ != "v2_receding"
+          || giverTruthModel_ == "independent_scripted");
+  mc_rtc::log::info(
+      "[ReceiverArchitecture] architecture={} giverTruthModel={} valid={}",
+      receiverArchitecture_, giverTruthModel_,
+      receiverArchitectureConfigurationValid_);
 }
 
 double HandoverInterceptionController::acquisitionCenterTolerance(
@@ -2061,6 +2084,14 @@ HandoverInterceptionController::makeInterceptionPlan(
     plan.reachStartTime = plan.standoffTime - plan.reachDuration;
     if(plan.objectMode == ObservedObjectMode::Static)
     {
+      plan.decelerationDuration = 0.0;
+      plan.decelerationStartTime = plan.presentationTime;
+    }
+    else if(plannerWorkerThreadActive() && plannerConfig_.conditionalPresentationV2)
+    {
+      // TRIAD V2 conditional presentation: independent prediction up to the
+      // candidate instant, presented at rest from it; no modelled stop.
+      plan.conditionalPresentationV2 = true;
       plan.decelerationDuration = 0.0;
       plan.decelerationStartTime = plan.presentationTime;
     }
@@ -2510,6 +2541,14 @@ bool HandoverInterceptionController::validateInterceptionPlan(
         return fail("static_presentation_contract");
       }
     }
+    else if(plan.conditionalPresentationV2)
+    {
+      if(std::abs(plan.decelerationDuration) > 1e-12
+         || std::abs(plan.decelerationStartTime - plan.presentationTime) > 1e-9)
+      {
+        return fail("conditional_presentation_contract");
+      }
+    }
     else
     {
       if(plan.decelerationDuration <= 0.0
@@ -2859,6 +2898,32 @@ void HandoverInterceptionController::beginObjectObservation()
   W_T_O_observationStart_ = W_T_O_;
   W_T_O_simulated_ = W_T_O_truth_;
   simulatedObjectMotionActive_ = simulateMovingObject_;
+  if(independentGiverTruth() && !independentGiverScriptArmed_)
+  {
+    // The script is fixed once, from scenario configuration and the true object
+    // pose at the start of observation. It is never re-armed or edited.
+    independentGiverScript_.startPosition = W_T_O_truth_.translation();
+    independentGiverScript_.startRotation = worldRotation(W_T_O_truth_);
+    independentGiverScript_.linearVelocity = simulatedObjectLinearVelocity_;
+    independentGiverScript_.angularVelocity = simulatedObjectAngularVelocity_;
+    independentGiverScript_.travelDistance = objectMaximumSimulatedTravel_;
+    independentGiverScript_.stopDuration = presentationDecelerationDuration_;
+    independentGiverStartTime_ = controllerTime_;
+    independentGiverScriptArmed_ = simulateMovingObject_;
+    double cruise = 0.0;
+    double stop = 0.0;
+    call_handover::independentGiverSchedule(independentGiverScript_, cruise, stop);
+    const Eigen::Vector3d & p0 = independentGiverScript_.startPosition;
+    const Eigen::Vector3d & v0 = independentGiverScript_.linearVelocity;
+    const Eigen::Vector3d & w0 = independentGiverScript_.angularVelocity;
+    const Eigen::Quaterniond q0(independentGiverScript_.startRotation);
+    mc_rtc::log::success(
+        "[GiverTruthScript] model=independent_scripted startTime={:.6f} p0=[{:.17g},{:.17g},{:.17g}] q0=[{:.17g},{:.17g},{:.17g},{:.17g}] v=[{:.17g},{:.17g},{:.17g}] w=[{:.17g},{:.17g},{:.17g}] travelDistance={:.17g} stopDuration={:.17g} cruiseDuration={:.17g} effectiveStop={:.17g} receiverPlanInputs=none",
+        independentGiverStartTime_, p0.x(), p0.y(), p0.z(),
+        q0.w(), q0.x(), q0.y(), q0.z(), v0.x(), v0.y(), v0.z(),
+        w0.x(), w0.y(), w0.z(), independentGiverScript_.travelDistance,
+        independentGiverScript_.stopDuration, cruise, stop);
+  }
   W_T_O_previousObservation_ = W_T_O_;
   W_T_O_predicted_ = W_T_O_;
   objectLinearVelocityEstimate_.setZero();
@@ -2883,7 +2948,16 @@ void HandoverInterceptionController::beginObjectObservation()
 void HandoverInterceptionController::endObjectObservation(
     bool freezeSimulatedObject)
 {
-  if(simulateMovingObject_)
+  if(simulateMovingObject_ && independentGiverTruth())
+  {
+    // An independent giver keeps following its own script regardless of what
+    // the receiver does, including receiver failure.
+    simulatedObjectMotionActive_ = independentGiverScriptArmed_;
+    simulatedObjectPoseFrozen_ = false;
+    W_T_O_ = W_T_O_simulated_;
+    W_T_H_ = compose(W_T_O_, O_T_H_);
+  }
+  else if(simulateMovingObject_)
   {
     // V4A.2 distinguishes "observation ended" from "object stopped". When
     // freezeSimulatedObject is false, the deterministic object trajectory
@@ -3010,7 +3084,27 @@ void HandoverInterceptionController::updateSimulatedObjectMotion()
   if(!robots().hasRobot(objectRobotName_)) { return; }
 
   sva::PTransformd target = sva::PTransformd::Identity();
-  if(committedPlanValid() && committedInterceptionPlan_.presentationMode)
+  // GIVER_INDEPENDENT_BEGIN (checked by tools/check_giver_truth_independence.py)
+  if(independentGiverTruth())
+  {
+    if(!independentGiverScriptArmed_) { return; }
+    const double elapsed = controllerTime_ - independentGiverStartTime_;
+    const call_handover::IndependentGiverState giver =
+        call_handover::independentGiverStateAt(independentGiverScript_, elapsed);
+    target = fromWorldPose(giver.rotation, giver.position);
+    if(lastGiverTruthSampleLogTime_ < 0.0
+       || controllerTime_ >= lastGiverTruthSampleLogTime_ + 0.01 - 1e-9)
+    {
+      lastGiverTruthSampleLogTime_ = controllerTime_;
+      const Eigen::Quaterniond q(giver.rotation);
+      mc_rtc::log::info(
+          "[GiverTruthSample] elapsed={:.6f} p=[{:.17g},{:.17g},{:.17g}] q=[{:.17g},{:.17g},{:.17g},{:.17g}] speed={:.9f} atRest={} model=independent_scripted",
+          elapsed, giver.position.x(), giver.position.y(), giver.position.z(),
+          q.w(), q.x(), q.y(), q.z(), giver.linearVelocity.norm(), giver.atRest);
+    }
+  }
+  // GIVER_INDEPENDENT_END
+  else if(committedPlanValid() && committedInterceptionPlan_.presentationMode)
   {
     // The visible simulation truth follows the same committed timing and
     // deceleration law, but its trajectory is anchored to the actual object
@@ -3058,7 +3152,10 @@ void HandoverInterceptionController::updateSimulatedObjectMotion()
 
 void HandoverInterceptionController::updateObjectMotionEstimate()
 {
-  if(!objectObservationActive_ && !interceptionCommitted_) { return; }
+  if(!objectObservationActive_ && !interceptionCommitted_ && !v2EstimationActive_)
+  {
+    return;
+  }
   if(!objectPerceptionMeasurementValid_) { return; }
 
   if(!havePreviousObjectObservation_)
@@ -3846,6 +3943,7 @@ void HandoverInterceptionController::refreshPlannerConfig()
   plannerConfig_.objectMotionEstimateValid = objectMotionEstimateValid_;
   plannerConfig_.presentationMode = presentationMode_;
   plannerConfig_.previewMovingInterception = previewMovingInterception_;
+  plannerConfig_.conditionalPresentationV2 = receiverArchitectureV2();
 }
 
 namespace
@@ -3862,6 +3960,11 @@ struct PlannerWorkerThreadScope
 bool HandoverInterceptionController::plannerWorkerThreadActive()
 {
   return tlsPlannerWorkerThread;
+}
+
+void HandoverInterceptionController::setPlannerWorkerThreadFlag(bool active)
+{
+  tlsPlannerWorkerThread = active;
 }
 
 void HandoverInterceptionController::refreshPlannerModel()
@@ -8232,6 +8335,7 @@ void HandoverInterceptionController::beginFiniteTriadSearch(
   finiteSearch_ = FiniteTriadSearchState();
   finiteSearch_.bank = bank;
   finiteSearch_.active = true;
+  plannerContext_.v2HypothesisMemo.clear();
   // The frozen search never commits. Commitment is a control-thread decision
   // taken once, after selection, against the clock at result receipt.
   capturePlanningCommitOnSuccess_ = false;
@@ -8292,6 +8396,39 @@ HandoverInterceptionController::stepFiniteTriadSearch(
       return FiniteSearchStatus::Running;
     }
 
+    if(plannerConfig_.conditionalPresentationV2)
+    {
+      const sva::PTransformd & pose = search.currentPresentationPose;
+      for(const auto & memo : plannerContext_.v2HypothesisMemo)
+      {
+        if(memo.pose.translation() != pose.translation()
+           || memo.pose.rotation() != pose.rotation())
+        {
+          continue;
+        }
+        plannerContext_.planningCompletePlanAuditCandidates = memo.completePlans;
+        plannerContext_.planningFoundFeasible = memo.foundFeasible;
+        mc_rtc::log::info(
+            "[V2HypothesisCertificationReused] hypothesis={} lead={:.3f}s sourceHypothesis={} completePlans={} feasible={} identicalPresentationPose=bitwise exact=true",
+            search.evaluatedHypotheses, search.currentLead, memo.hypothesis,
+            memo.completePlans.size(), memo.foundFeasible);
+        if(!memo.foundFeasible || memo.completePlans.empty())
+        {
+          ++search.geometryFailures;
+          return FiniteSearchStatus::Running;
+        }
+        ++search.feasibleHypotheses;
+        if(!captureCurrentEventPlanAlternatives(
+               static_cast<std::size_t>(search.evaluatedHypotheses),
+               search.currentLead, search.currentPresentationTime, pose))
+        {
+          search.failureReason = "event_alternative_capture_failed";
+          return FiniteSearchStatus::Failed;
+        }
+        return FiniteSearchStatus::Running;
+      }
+    }
+
     // Establish the hypothesis world directly in the planner's own state. The
     // search used to route this through the controller's planning-object
     // snapshot, whose clear path calls refreshObjectPose() and
@@ -8334,6 +8471,16 @@ HandoverInterceptionController::stepFiniteTriadSearch(
   }
 
   search.hypothesisActive = false;
+  if(plannerConfig_.conditionalPresentationV2)
+  {
+    PlannerContext::HypothesisCertificationMemo memo;
+    memo.pose = search.currentPresentationPose;
+    memo.hypothesis = static_cast<std::size_t>(search.evaluatedHypotheses);
+    memo.foundFeasible = status != CapturePlanningStatus::Failure
+        && planningBestCandidateAvailable();
+    memo.completePlans = plannerContext_.planningCompletePlanAuditCandidates;
+    plannerContext_.v2HypothesisMemo.push_back(memo);
+  }
   if(status == CapturePlanningStatus::Failure
      || !planningBestCandidateAvailable())
   {
@@ -8867,7 +9014,13 @@ void HandoverInterceptionController::commitCandidate(
     committedObjectLinearVelocity_ = plan.objectLinearVelocity;
     committedObjectAngularVelocity_ = plan.objectAngularVelocity;
 
-    if(plannerConfig_.simulateMovingObject)
+    if(plannerConfig_.simulateMovingObject && independentGiverTruth())
+    {
+      mc_rtc::log::success(
+          "[GiverTruthIndependence] commit candidate={} route={} simulatedTruthPlanCreated=false model=independent_scripted",
+          best.name, best.transitRouteName);
+    }
+    else if(plannerConfig_.simulateMovingObject)
     {
       simulatedTruthInterceptionPlan_ = plan;
       const sva::PTransformd nominalAtCommit = interceptionObjectPoseAt(

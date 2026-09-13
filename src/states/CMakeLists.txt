@@ -11,3 +11,5 @@ add_fsm_state_simple(HandoverInterceptionController_CaptureTransfer)
 add_fsm_state_simple(HandoverInterceptionController_Retreat)
 add_fsm_state_simple(HandoverInterceptionController_Completed)
 add_fsm_state_simple(HandoverInterceptionController_Failure)
+# TRIAD V2 receding receiver supervisor (entered only when receiverArchitecture: v2_receding).
+add_fsm_state_simple(HandoverInterceptionController_ReceiverV2)
