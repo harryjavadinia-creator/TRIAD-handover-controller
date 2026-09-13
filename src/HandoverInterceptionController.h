@@ -18,6 +18,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cstdint>
@@ -2176,6 +2177,7 @@ private:
   void logReceiverMotionV2(double now, bool force);
   void checkSupersessionV2(double now);
   void logSnapshotAuditV2(const PendingJobV2 & pending, double now, const char * outcome);
+  void logJobProfileV2(const PendingJobV2 & pending, double now) const;
   double independentGiverSpeedForLogV2(double now) const;
 
   ReceiverV2Parameters v2Params_;
@@ -2238,6 +2240,44 @@ private:
    * snapshot instead of live robot or estimator state. */
   static bool plannerWorkerThreadActive();
   static void setPlannerWorkerThreadFlag(bool active);
+
+  /** TRIAD V2 characterization timer: adds the scope's wall time and one count
+   * to a worker stage bucket. Disabled (no clock read) unless the caller is the
+   * worker thread of a V2 run, so V1 and control-thread callers are unaffected.
+   * Never read by any decision. */
+  struct StageTimerV2
+  {
+    StageTimerV2(double * wall, long long * count) : wall_(wall), count_(count)
+    {
+      if(wall_) { start_ = std::chrono::steady_clock::now(); }
+    }
+    ~StageTimerV2()
+    {
+      if(!wall_) { return; }
+      *wall_ += std::chrono::duration<double>(std::chrono::steady_clock::now() - start_).count();
+      ++*count_;
+    }
+    StageTimerV2(const StageTimerV2 &) = delete;
+    StageTimerV2 & operator=(const StageTimerV2 &) = delete;
+  private:
+    double * wall_;
+    long long * count_;
+    std::chrono::steady_clock::time_point start_;
+  };
+  bool stageProfilingActiveV2() const
+  {
+    return plannerWorkerThreadActive() && plannerConfig_.conditionalPresentationV2;
+  }
+#define TRIAD_V2_STAGE_TIMER(bucket) \
+  StageTimerV2 triadV2StageTimer(stageProfilingActiveV2() \
+      ? &plannerContext_.stageWall[PlannerContext::bucket] : nullptr, \
+      &plannerContext_.stageCount[PlannerContext::bucket])
+  void resetStageProfileV2(std::uint64_t generation, const char * jobType) const;
+  void logCertStageV2(const char * path, const CaptureCandidate & candidate, bool feasible,
+                      const char * deepest, double staticReach, double routeReachDuration,
+                      const std::string & reason) const;
+  const char * routeDeepestStageV2(bool feasible) const;
+  const char * staticDeepestStageV2(bool feasible) const;
 
   /** Mutable state owned by one finite TRIAD search.
    *
@@ -2321,6 +2361,42 @@ private:
     PreviewResult routeStepTerminalResult;
     rbd::MultiBodyConfig routeStepTimingAuditStartMbc;
     bool routeStepTransitPostureSaved = false;
+
+    // TRIAD V2 characterization only (never read by any decision; written only
+    // when stageProfilingActiveV2()). Stage buckets partition the worker's time
+    // except the Nested* buckets, which are nested inside the phase buckets.
+    enum StageBucket : int
+    {
+      StageStaticReachStandoff = 0,
+      StageStaticReachCapture,
+      StageStaticClosure,
+      StageStaticRetreat,
+      StageRouteSetup, // RouteStepPhase::Idle
+      StageRouteReach,
+      StageRouteApproach,
+      StageRouteDwell,
+      StageRouteClosure,
+      StageRouteRetreat,
+      StageRouteFinalize,
+      StageHypothesisSetup,
+      StageTerminalStandoff,
+      StageNestedIkStep,
+      StageNestedSweptQuery,
+      StageNestedConfigurationSafety,
+      StageNestedClosureSafety,
+      StageBucketCount
+    };
+    std::array<double, StageBucketCount> stageWall{};
+    std::array<long long, StageBucketCount> stageCount{};
+    std::uint64_t certJobGeneration = 0;
+    std::string certJobType;
+    double certJobWall = 0.0;
+    long long certStaticRecords = 0;
+    long long certRouteRecords = 0;
+    long long certMemoReuses = 0;
+    double certStaticReachClearance = std::numeric_limits<double>::quiet_NaN();
+    double certRouteReachDuration = std::numeric_limits<double>::quiet_NaN();
+    RouteStepPhase routeStepFailedPhase = RouteStepPhase::Idle;
 
     // TRIAD V2 exact memoization inside one frozen search: a hypothesis whose
     // predicted presentation pose is bitwise identical to an already evaluated

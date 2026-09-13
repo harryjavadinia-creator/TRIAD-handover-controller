@@ -600,6 +600,7 @@ void HandoverInterceptionController::runReceiverWorkerJobV2(std::uint64_t genera
   setPlannerWorkerThreadFlag(true);
   const auto start = std::chrono::steady_clock::now();
   const ReceiverJobRequestV2 & request = v2Request_;
+  resetStageProfileV2(generation, receiverJobTypeNameV2(request.type));
   ReceiverJobResultV2 result;
   result.type = request.type;
   result.planningGeneration = request.planningGeneration;
@@ -637,6 +638,7 @@ void HandoverInterceptionController::runReceiverWorkerJobV2(std::uint64_t genera
       std::chrono::steady_clock::now() - start).count();
   v2Result_ = result;
   plannerWorkerWallDuration_ = result.wallDuration;
+  plannerContext_.certJobWall = result.wallDuration;
   plannerResultGeneration_.store(generation, std::memory_order_release);
   plannerJobState_.store(static_cast<int>(PlannerJobState::Ready), std::memory_order_release);
   setPlannerWorkerThreadFlag(false);
@@ -725,6 +727,9 @@ void HandoverInterceptionController::runRecertifyActiveRolloutV2(ReceiverJobResu
   result.reason = result.success ? "certified"
       : (outcome != RouteStepOutcome::Feasible ? result.candidate.failureReason
                                               : std::string("cost_invalid/") + result.candidate.terminalTimingAuditReason);
+  logCertStageV2("recert", result.candidate, outcome == RouteStepOutcome::Feasible,
+                 routeDeepestStageV2(outcome == RouteStepOutcome::Feasible),
+                 std::numeric_limits<double>::quiet_NaN(), plan.reachDuration, result.reason);
   mc_rtc::log::info(
       "[V2CertificationDetail] type=RECERTIFY_ACTIVE planId={} planningGeneration={} candidate={} route={} resumeIndex={}/{} success={} reason={} stageReached={}",
       request.planId, request.planningGeneration, candidate.name, candidate.transitRouteName,
@@ -764,8 +769,16 @@ void HandoverInterceptionController::runTerminalCertificationV2(ReceiverJobResul
   // terminal timing audit).
   PreviewResult reach;
   reach.minClearance = std::numeric_limits<double>::infinity();
-  if(!previewReachSegment(mbc, candidate.W_T_M_standoff, false, false, reach, true))
+  bool standoffReached = false;
   {
+    TRIAD_V2_STAGE_TIMER(StageTerminalStandoff);
+    standoffReached = previewReachSegment(mbc, candidate.W_T_M_standoff, false, false, reach, true);
+  }
+  if(!standoffReached)
+  {
+    candidate.predictiveReachClearance = reach.minClearance;
+    logCertStageV2("terminal", candidate, false, "NONE", std::numeric_limits<double>::quiet_NaN(),
+                   std::numeric_limits<double>::quiet_NaN(), "v2_terminal/standoff/" + reach.reason);
     result.reason = "v2_terminal/standoff/" + reach.reason;
     mc_rtc::log::info(
         "[V2CertificationDetail] type=TERMINAL_CERTIFY planId={} planningGeneration={} candidate={} success=false reason={} stageReached=standoff",
@@ -796,6 +809,10 @@ void HandoverInterceptionController::runTerminalCertificationV2(ReceiverJobResul
   result.reason = result.success ? "certified"
       : (outcome != RouteStepOutcome::Feasible ? result.candidate.failureReason
                                               : std::string("cost_invalid/") + result.candidate.terminalTimingAuditReason);
+  logCertStageV2("terminal", result.candidate, outcome == RouteStepOutcome::Feasible,
+                 routeDeepestStageV2(outcome == RouteStepOutcome::Feasible),
+                 std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+                 result.reason);
   mc_rtc::log::info(
       "[V2CertificationDetail] type=TERMINAL_CERTIFY planId={} planningGeneration={} candidate={} success={} reason={} stageReached={}",
       request.planId, request.planningGeneration, candidate.name, result.success, result.reason,
@@ -811,6 +828,7 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
   const PendingJobV2 pending = v2Pending_;
   const bool jobFailed = plannerJobState() == PlannerJobState::Failed;
   v2Pending_.active = false;
+  logJobProfileV2(pending, now);
 
   if(pending.cancelRequested)
   {
@@ -1466,4 +1484,111 @@ void HandoverInterceptionController::logSnapshotAuditV2(
       (mouth.translation() - pending.snapshotMouthPose.translation()).norm(),
       orientationError(mouth, pending.snapshotMouthPose), objectDisplacement,
       predictionError, objectLinearVelocityEstimate_.norm(), now);
+}
+
+// =============================================================================
+// Characterization instrumentation (never read by any decision)
+// =============================================================================
+
+void HandoverInterceptionController::resetStageProfileV2(
+    std::uint64_t generation, const char * jobType) const
+{
+  plannerContext_.stageWall.fill(0.0);
+  plannerContext_.stageCount.fill(0);
+  plannerContext_.certJobGeneration = generation;
+  plannerContext_.certJobType = jobType;
+  plannerContext_.certJobWall = 0.0;
+  plannerContext_.certStaticRecords = 0;
+  plannerContext_.certRouteRecords = 0;
+  plannerContext_.certMemoReuses = 0;
+  plannerContext_.certStaticReachClearance = std::numeric_limits<double>::quiet_NaN();
+  plannerContext_.certRouteReachDuration = std::numeric_limits<double>::quiet_NaN();
+  plannerContext_.routeStepFailedPhase = RouteStepPhase::Idle;
+}
+
+// Deepest successfully certified stage of the copied-state static screen
+// (reach standoff -> corridor insertion -> closure/contact -> carried retreat),
+// from the phase in which it stopped.
+const char * HandoverInterceptionController::staticDeepestStageV2(bool feasible) const
+{
+  if(feasible) { return "CARRIED_RETREAT"; }
+  switch(plannerContext_.planningPhase)
+  {
+    case PlanningPhase::ReachStandoff: return "NONE";
+    case PlanningPhase::ReachCapture: return "REACH";
+    case PlanningPhase::Closure: return "INSERTION";
+    case PlanningPhase::Retreat: return "CLOSURE_CONTACT";
+  }
+  return "NONE";
+}
+
+// Same for a route rollout (transit reach -> insertion + capture dwell ->
+// closure/contact -> carried retreat -> finalize), from the phase recorded by
+// routeStepFail(). Transfer readiness has no candidate-dependent test in the
+// certifier: it is implied by bilateral contact, so it is not a separate stage.
+const char * HandoverInterceptionController::routeDeepestStageV2(bool feasible) const
+{
+  if(feasible) { return "CARRIED_RETREAT"; }
+  switch(plannerContext_.routeStepFailedPhase)
+  {
+    case RouteStepPhase::Idle:
+    case RouteStepPhase::Reach: return "NONE";
+    case RouteStepPhase::Approach:
+    case RouteStepPhase::Dwell: return "REACH";
+    case RouteStepPhase::Closure: return "INSERTION";
+    case RouteStepPhase::Retreat: return "CLOSURE_CONTACT";
+    case RouteStepPhase::Finalize: return "CARRIED_RETREAT";
+  }
+  return "NONE";
+}
+
+void HandoverInterceptionController::logCertStageV2(
+    const char * path, const CaptureCandidate & candidate, bool feasible,
+    const char * deepest, double staticReach, double routeReachDuration,
+    const std::string & reason) const
+{
+  const bool search = plannerContext_.certJobType == "FULL_SEARCH";
+  const bool isStatic = std::string(path) == "static";
+  if(isStatic) { ++plannerContext_.certStaticRecords; }
+  else { ++plannerContext_.certRouteRecords; }
+  std::string why = reason;
+  for(auto & ch : why) { if(ch == ' ') { ch = '_'; } }
+  mc_rtc::log::info(
+      "[CertStage] job={} planningGeneration={} hypothesis={} lead={:.3f} eventTime={:.6f} path={} grasp={}/{} candidate={} route={} feasible={} deepest={} costValid={} staticReachTime={:.6f} routeReachDuration={:.6f} reachClear={:.5f} retreatClear={:.5f} reason={}",
+      plannerContext_.certJobType, plannerContext_.certJobGeneration,
+      search ? finiteSearch_.evaluatedHypotheses : 0,
+      search ? finiteSearch_.currentLead : std::numeric_limits<double>::quiet_NaN(),
+      search ? finiteSearch_.currentPresentationTime : v2Request_.plan.presentationTime,
+      path, search ? plannerContext_.planningCandidateIndex : -1,
+      search ? plannerContext_.planningCandidateCount : 0,
+      candidate.name, isStatic ? std::string("-") : candidate.transitRouteName,
+      feasible, deepest, isStatic ? false : candidate.completeCostAuditValid,
+      staticReach, routeReachDuration,
+      isStatic ? plannerContext_.certStaticReachClearance : candidate.predictiveReachClearance,
+      candidate.predictiveRetreatClearance, why.empty() ? std::string("none") : why);
+}
+
+void HandoverInterceptionController::logJobProfileV2(const PendingJobV2 & pending, double now) const
+{
+  static const char * names[PlannerContext::StageBucketCount] = {
+      "staticReachStandoff", "staticReachCapture", "staticClosure", "staticRetreat",
+      "routeSetup", "routeReach", "routeApproach", "routeDwell", "routeClosure", "routeRetreat",
+      "routeFinalize", "hypothesisSetup", "terminalStandoff",
+      "nestedIkStep", "nestedSweptQuery", "nestedConfigurationSafety", "nestedClosureSafety"};
+  std::string buckets;
+  double partition = 0.0;
+  for(int b = 0; b < PlannerContext::StageBucketCount; ++b)
+  {
+    if(b < PlannerContext::StageNestedIkStep) { partition += plannerContext_.stageWall[b]; }
+    buckets += fmt::format(" {}={:.6f}s/{}", names[b], plannerContext_.stageWall[b],
+                           plannerContext_.stageCount[b]);
+  }
+  mc_rtc::log::info(
+      "[V2JobProfile] type={} planningGeneration={} profileGeneration={} cancelRequested={} jobWall={:.6f}s partitionedWall={:.6f}s hypotheses={} memoReuses={} staticRecords={} routeRecords={} latency={:.6f}s{} t={:.6f}",
+      receiverJobTypeNameV2(pending.type), pending.planningGeneration,
+      plannerContext_.certJobGeneration, pending.cancelRequested, plannerContext_.certJobWall,
+      partition,
+      pending.type == ReceiverJobTypeV2::FullSearch ? finiteSearch_.evaluatedHypotheses : 0,
+      plannerContext_.certMemoReuses, plannerContext_.certStaticRecords,
+      plannerContext_.certRouteRecords, now - pending.submitTime, buckets, now);
 }

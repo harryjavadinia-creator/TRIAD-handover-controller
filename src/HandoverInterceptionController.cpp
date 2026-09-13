@@ -4527,6 +4527,7 @@ bool HandoverInterceptionController::sweptGripperPoseSafeWith(
     HandoverSafetyReport & report,
     bool requireCorridor) const
 {
+  TRIAD_V2_STAGE_TIMER(StageNestedSweptQuery);
   report = HandoverSafetyReport{};
   report.safe = true;
   report.minClearance = std::numeric_limits<double>::infinity();
@@ -5269,6 +5270,7 @@ bool HandoverInterceptionController::previewConfigurationSafe(
     bool requireCorridor,
     HandoverSafetyReport & report) const
 {
+  TRIAD_V2_STAGE_TIMER(StageNestedConfigurationSafety);
   report = HandoverSafetyReport{};
   report.safe = true;
   report.minClearance = std::numeric_limits<double>::infinity();
@@ -5325,6 +5327,7 @@ bool HandoverInterceptionController::previewDynamicClosureSafety(
     HandoverSafetyReport & report,
     bool allowDesignatedPadContact) const
 {
+  TRIAD_V2_STAGE_TIMER(StageNestedClosureSafety);
   report = HandoverSafetyReport{};
   report.safe = true;
   report.minClearance = std::numeric_limits<double>::infinity();
@@ -5458,6 +5461,7 @@ HandoverInterceptionController::previewReachStep(
     const std::map<std::string, std::vector<double>> * postureTarget,
     bool collectDecisionMetrics) const
 {
+  TRIAD_V2_STAGE_TIMER(StageNestedIkStep);
   if(segmentIteration >= plannerConfig_.previewMaxIterationsPerSegment)
   {
     result.reason = "ik_preview_no_convergence";
@@ -6410,6 +6414,7 @@ HandoverInterceptionController::RouteStepOutcome
 HandoverInterceptionController::routeStepFail(const std::string & reason)
 {
   plannerContext_.routeStepCandidate.failureReason = reason;
+  plannerContext_.routeStepFailedPhase = plannerContext_.routeStepPhase;
   routeStepRestorePlanningWorld();
   plannerContext_.routeStepPhase = RouteStepPhase::Idle;
   return RouteStepOutcome::Infeasible;
@@ -6447,7 +6452,10 @@ HandoverInterceptionController::beginPredictiveRouteCandidate(
     const std::string & routeName,
     const Eigen::Vector3d & curveOffsetWorld)
 {
+  TRIAD_V2_STAGE_TIMER(StageRouteSetup);
   plannerContext_.routeStepPhase = RouteStepPhase::Idle;
+  plannerContext_.routeStepFailedPhase = RouteStepPhase::Idle;
+  plannerContext_.certRouteReachDuration = std::numeric_limits<double>::quiet_NaN();
   plannerContext_.routeStepCandidate = candidate;
   plannerContext_.routeStepCandidate.transitRouteName = routeName;
   plannerContext_.routeStepCandidate.reachCurveOffsetWorld = curveOffsetWorld;
@@ -6509,6 +6517,7 @@ HandoverInterceptionController::beginPredictiveRouteCandidate(
   plannerContext_.routeStepPlan = makeInterceptionPlan(
       plannerContext_.routeStepCandidate, plannerContext_.routeStepPresentationAnchor, 0.0,
       reachDuration, approachDuration, acquireDuration, retreatDuration);
+  plannerContext_.certRouteReachDuration = plannerContext_.routeStepPlan.reachDuration;
   std::string invariantReason;
   if(!validateInterceptionPlan(plannerContext_.routeStepPlan, &invariantReason, false))
   {
@@ -6570,6 +6579,13 @@ HandoverInterceptionController::stepPredictiveRouteCandidate(int workUnits)
   const int budget = std::max(1, workUnits);
   for(int unit = 0; unit < budget; ++unit)
   {
+    StageTimerV2 routeUnitTimer(
+        stageProfilingActiveV2()
+            ? &plannerContext_.stageWall[PlannerContext::StageRouteSetup
+                                         + static_cast<int>(plannerContext_.routeStepPhase)]
+            : nullptr,
+        &plannerContext_.stageCount[PlannerContext::StageRouteSetup
+                                    + static_cast<int>(plannerContext_.routeStepPhase)]);
     if(plannerContext_.routeStepPhase == RouteStepPhase::Reach)
     {
       if(plannerContext_.routeStepReachIndex < plannerContext_.routeStepReachSteps)
@@ -7548,6 +7564,7 @@ bool HandoverInterceptionController::startNextPlanningCandidate()
   plannerContext_.planningResult = PreviewResult{};
   plannerContext_.planningResult.minClearance = std::numeric_limits<double>::infinity();
   plannerContext_.planningPhaseStartDuration = 0.0;
+  plannerContext_.certStaticReachClearance = std::numeric_limits<double>::quiet_NaN();
   plannerContext_.planningPhase = PlanningPhase::ReachStandoff;
   plannerContext_.planningSegmentIteration = 0;
   plannerContext_.planningClosureIndex = 0;
@@ -7694,6 +7711,16 @@ bool HandoverInterceptionController::finishCurrentPlanningCandidate(bool feasibl
   CaptureCandidate & c = plannerContext_.planningCurrentCandidate;
   c.previewFeasible = feasible;
   c.failureReason = feasible ? "feasible" : plannerContext_.planningResult.reason;
+  if(stageProfilingActiveV2())
+  {
+    const bool standoffReached = feasible
+        || plannerContext_.planningPhase != PlanningPhase::ReachStandoff;
+    logCertStageV2("static", c, feasible, staticDeepestStageV2(feasible),
+                   standoffReached ? plannerConfig_.timingArmScale
+                                         * plannerContext_.planningResult.reachStandoffDuration
+                                   : std::numeric_limits<double>::quiet_NaN(),
+                   std::numeric_limits<double>::quiet_NaN(), c.failureReason);
+  }
   c.minClearance = plannerContext_.planningResult.minClearance;
   c.rawRolloutTime = plannerContext_.planningResult.duration;
   c.estimatedTime = feasible ? predictedExecutionTime(plannerContext_.planningResult)
@@ -7758,6 +7785,13 @@ void HandoverInterceptionController::routeCertificationAcceptRouteResult(
 {
   CaptureCandidate & candidate = plannerContext_.planningCurrentCandidate;
   const CaptureCandidate & trial = plannerContext_.routeStepCandidate;
+  if(stageProfilingActiveV2())
+  {
+    logCertStageV2("route", trial, feasible, routeDeepestStageV2(feasible),
+                   plannerConfig_.timingArmScale * plannerContext_.planningResult.reachStandoffDuration,
+                   plannerContext_.certRouteReachDuration,
+                   feasible ? std::string("feasible") : trial.failureReason);
+  }
 
   if(!feasible)
   {
@@ -8260,6 +8294,13 @@ void HandoverInterceptionController::runPlannerWorker(
     int routeWorkUnits)
 {
   PlannerWorkerThreadScope workerThreadScope;
+  resetStageProfileV2(generation, "FULL_SEARCH");
+  const auto profileStart = std::chrono::steady_clock::now();
+  const auto markProfileWall = [this, profileStart]()
+  {
+    plannerContext_.certJobWall = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - profileStart).count();
+  };
   try
   {
     if(plannerInjectFailure_)
@@ -8280,6 +8321,7 @@ void HandoverInterceptionController::runPlannerWorker(
     if(plannerCancel_.load(std::memory_order_relaxed))
     {
       plannerFailureReason_ = "cancelled";
+      markProfileWall();
       plannerJobState_.store(static_cast<int>(PlannerJobState::Failed),
                              std::memory_order_release);
       return;
@@ -8288,6 +8330,7 @@ void HandoverInterceptionController::runPlannerWorker(
     {
       plannerFailureReason_ = finiteSearch_.failureReason.empty()
           ? std::string("search_failed") : finiteSearch_.failureReason;
+      markProfileWall();
       plannerJobState_.store(static_cast<int>(PlannerJobState::Failed),
                              std::memory_order_release);
       return;
@@ -8301,18 +8344,21 @@ void HandoverInterceptionController::runPlannerWorker(
     // Publish last: the result and its generation are fully written before the
     // control thread can observe Ready.
     plannerResultGeneration_.store(generation, std::memory_order_release);
+    markProfileWall();
     plannerJobState_.store(static_cast<int>(PlannerJobState::Ready),
                            std::memory_order_release);
   }
   catch(const std::exception & e)
   {
     plannerFailureReason_ = std::string("worker_exception/") + e.what();
+    markProfileWall();
     plannerJobState_.store(static_cast<int>(PlannerJobState::Failed),
                            std::memory_order_release);
   }
   catch(...)
   {
     plannerFailureReason_ = "worker_exception/unknown";
+    markProfileWall();
     plannerJobState_.store(static_cast<int>(PlannerJobState::Failed),
                            std::memory_order_release);
   }
@@ -8408,9 +8454,11 @@ HandoverInterceptionController::stepFiniteTriadSearch(
         }
         plannerContext_.planningCompletePlanAuditCandidates = memo.completePlans;
         plannerContext_.planningFoundFeasible = memo.foundFeasible;
+        ++plannerContext_.certMemoReuses;
         mc_rtc::log::info(
-            "[V2HypothesisCertificationReused] hypothesis={} lead={:.3f}s sourceHypothesis={} completePlans={} feasible={} identicalPresentationPose=bitwise exact=true",
-            search.evaluatedHypotheses, search.currentLead, memo.hypothesis,
+            "[V2HypothesisCertificationReused] planningGeneration={} hypothesis={} lead={:.3f}s eventTime={:.6f} sourceHypothesis={} completePlans={} feasible={} identicalPresentationPose=bitwise exact=true",
+            plannerContext_.certJobGeneration, search.evaluatedHypotheses, search.currentLead,
+            search.currentPresentationTime, memo.hypothesis,
             memo.completePlans.size(), memo.foundFeasible);
         if(!memo.foundFeasible || memo.completePlans.empty())
         {
@@ -8437,7 +8485,11 @@ HandoverInterceptionController::stepFiniteTriadSearch(
     plannerContext_.W_T_O = search.currentPresentationPose;
     plannerContext_.W_T_H = compose(plannerContext_.W_T_O, O_T_H_);
     plannerContext_.plannerWorldActive = true;
-    const auto status = beginCapturePlanningCore();
+    CapturePlanningStatus status = CapturePlanningStatus::Failure;
+    {
+      TRIAD_V2_STAGE_TIMER(StageHypothesisSetup);
+      status = beginCapturePlanningCore();
+    }
 
     const Eigen::Vector3d po = search.currentPresentationPose.translation();
     mc_rtc::log::warning(
@@ -9205,6 +9257,13 @@ HandoverInterceptionController::stepCapturePlanning(int maxInternalSteps,
       }
     }
 
+    StageTimerV2 staticStepTimer(
+        stageProfilingActiveV2()
+            ? &plannerContext_.stageWall[PlannerContext::StageStaticReachStandoff
+                                         + static_cast<int>(plannerContext_.planningPhase)]
+            : nullptr,
+        &plannerContext_.stageCount[PlannerContext::StageStaticReachStandoff
+                                    + static_cast<int>(plannerContext_.planningPhase)]);
     PreviewStepStatus status = PreviewStepStatus::Failed;
     if(plannerContext_.planningPhase == PlanningPhase::ReachStandoff)
     {
@@ -9216,6 +9275,10 @@ HandoverInterceptionController::stepCapturePlanning(int maxInternalSteps,
         plannerContext_.planningResult.reachStandoffDuration =
             plannerContext_.planningResult.duration - plannerContext_.planningPhaseStartDuration;
         plannerContext_.planningPhaseStartDuration = plannerContext_.planningResult.duration;
+        if(stageProfilingActiveV2())
+        {
+          plannerContext_.certStaticReachClearance = plannerContext_.planningResult.minClearance;
+        }
         // Preserve the redundancy branch at the end of the standoff segment.
         // Reach execution must not be pulled toward the later capture posture.
         plannerContext_.planningCurrentCandidate.plannedStandoffArmPosture =
