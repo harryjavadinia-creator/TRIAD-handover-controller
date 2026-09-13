@@ -195,7 +195,7 @@ bool HandoverInterceptionController::beginReceiverV2(
   {
     const std::string mode = stateConfig.has("fullSearchPredictionUpdate")
         ? static_cast<std::string>(stateConfig("fullSearchPredictionUpdate"))
-        : std::string("select_then_certify");
+        : std::string("cancel_and_restart");
     if(mode != "select_then_certify" && mode != "cancel_and_restart")
     {
       mc_rtc::log::error_and_throw<std::runtime_error>(

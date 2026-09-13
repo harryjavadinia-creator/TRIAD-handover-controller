@@ -626,6 +626,10 @@ def supersession_metrics(log):
     discarded_units = sum(units_of(p) for p in full_cancel) + sum(units_of(p) for p in failed_certs)
     discarded_wall = sum(fnum(p["jobWall"]) for p in full_cancel) + sum(fnum(p["jobWall"]) for p in failed_certs)
     before_first = [p for p in full if first_t is None or fnum(p["t"]) <= first_t + 1e-9]
+    source_gen = first.get("sourcePlanningGeneration") if first else None
+    cert_gen = first.get("adoptionCertificateGeneration") if first else None
+    useful_wall = sum(fnum(p["jobWall"]) for p in profiles
+                      if p["planningGeneration"] in (source_gen, cert_gen) and (first_t is None or fnum(p["t"]) <= first_t + 1e-9))
     concurrent = sum(1 for m in motion if m.get("robotMoving") == "true" and m.get("objectMoving") == "true") * 0.05
     all_wall = sum(fnum(p["jobWall"]) for p in profiles if horizon is None or fnum(p["t"]) <= horizon + 1e-9)
     return dict(
@@ -645,6 +649,8 @@ def supersession_metrics(log):
         fullUnits=sum(units_of(p) for p in full), fullWall=sum(fnum(p["jobWall"]) for p in full),
         fullWallToFirstPlan=sum(fnum(p["jobWall"]) for p in before_first),
         fullUnitsToFirstPlan=sum(units_of(p) for p in before_first),
+        usefulWallToFirstPlan=useful_wall,
+        unusedWallToFirstPlan=(sum(fnum(p["jobWall"]) for p in profiles if first_t is None or fnum(p["t"]) <= first_t + 1e-9) - useful_wall) if first_t is not None else None,
         allWorkerWallToCommit=all_wall,
         concurrentMotion=concurrent,
         replacements=sum(1 for a in adopts if a.get("kind") == "REPLACEMENT"),
@@ -654,14 +660,16 @@ def supersession_metrics(log):
 def supersession(logs):
     cols = ["mode", "completed", "timeToFirstPlan", "firstAdoptMinusRest", "firstAdoptWhileMoving", "firstAdoptLead",
             "firstAdoptSource", "fullSearches", "fullCancelled", "selectedTargetMoved", "selectedCertOk", "selectedCertFailed",
-            "discardedUnits", "discardedWall", "fullUnits", "fullWall", "fullWallToFirstPlan",
+            "discardedUnits", "discardedWall", "fullUnits", "fullWall", "fullWallToFirstPlan", "usefulWallToFirstPlan", "unusedWallToFirstPlan",
             "allWorkerWallToCommit", "concurrentMotion", "replacements"]
     print("## Prediction-update handling: per run\n")
     print("Times in s. timeToFirstPlan: first provisional adoption minus first FULL_SEARCH submission. "
           "firstAdoptMinusRest: negative means the plan was obtained before the giver came to rest. "
           "discardedUnits: bounded planner work units (static preview steps, route work units, hypothesis setups) "
           "belonging to cancelled searches or to failed/cancelled selected-action certifications. concurrentMotion: 50 ms samples "
-          "with robot and object truth both moving, before commitment.\n")
+          "with robot and object truth both moving, before commitment. usefulWallToFirstPlan: worker wall of the search "
+          "generation (and certificate) that produced the first plan; unusedWallToFirstPlan: all other worker wall before "
+          "the first plan, whether the work was cancelled or completed but not used.\n")
     print("| run | " + " | ".join(cols) + " |")
     print("|---|" + "---|" * len(cols))
     rows = []

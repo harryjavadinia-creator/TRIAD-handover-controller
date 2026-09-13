@@ -630,11 +630,14 @@ configs:
     # nothing, then fail by design.
     characterizeOnly: false
     # How a running FULL_SEARCH reacts to a changed object prediction:
-    # select_then_certify (the search is not cancelled; a selected record whose
-    # target left the commit-freshness tube is certified alone at the newest
-    # prediction before adoption) or cancel_and_restart (checkpoint
-    # triad-v2-checkpoint-cancel-restart behaviour).
-    fullSearchPredictionUpdate: select_then_certify
+    # cancel_and_restart (checkpoint triad-v2-checkpoint-cancel-restart
+    # behaviour, default) or select_then_certify (a search is cancelled only when
+    # the arm left the snapshot, the state generation advanced, or no admissible
+    # hypothesis keeps its target in the commit-freshness tube; a selected record
+    # whose target moved is certified alone at the newest prediction before
+    # adoption). The comparison in V2_PREDICTION_UPDATE_MECHANISM.md found no gain
+    # in time to first plan from select_then_certify, hence the default.
+    fullSearchPredictionUpdate: cancel_and_restart
     characterizationRestDwell: 1.0
 
 transitions:
