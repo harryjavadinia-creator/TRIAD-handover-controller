@@ -1,0 +1,16 @@
+Selected scenario: lateral-low
+  object translation: [0.55, -0.56, 0.15]
+  object velocity:    [0.0, 0.08, 0.0]
+  receiver mode:      v1-independent
+Running mc_rtc_ticker (log: /tmp/claude-1000/-home-harry-TRIAD-SCIENTIFIC-AUDIT/221bce68-7521-4cda-bc31-0b3ecc7a5c36/scratchpad/runs/evidence_d9e8886/v1_independent/lateral-low/lateral-low.log) ...
+scripts/run_scenario.sh: line 47: 393069 Aborted                 (core dumped) HOME="${home_dir}" mc_rtc_ticker -f "${global_config}" > "${log_file}" 2>&1
+
+=== run result ===
+TICKER_STOP_REASON=WRAPPER_TERMINATED
+TICKER_TERM_SENT=true
+TICKER_KILL_SENT=false
+TICKER_EXIT_STATUS=134
+HANDOVER_COMPLETED=false
+RUNTIME_CHECKER_RESULT=SKIPPED
+SCENARIO_IDENTITY_RESULT=FAIL
+Log, scenario override and checker output preserved in: /tmp/claude-1000/-home-harry-TRIAD-SCIENTIFIC-AUDIT/221bce68-7521-4cda-bc31-0b3ecc7a5c36/scratchpad/runs/evidence_d9e8886/v1_independent/lateral-low

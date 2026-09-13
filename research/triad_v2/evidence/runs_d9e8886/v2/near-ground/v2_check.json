@@ -1,0 +1,69 @@
+{
+  "I1_architecture": {
+    "pass": true,
+    "detail": "architecture=v2_receding giverTruthModel=independent_scripted valid=true"
+  },
+  "I2_giver_truth_independence": {
+    "pass": true,
+    "detail": "replay: PASS near-ground.log: 1679 samples, max |dp|=2.049e-13 m, max |dq|=0.000e+00; truth recomputed from script only; commitTruthLines=1 planDrivenTruth=0"
+  },
+  "I3_exactly_one_commit": {
+    "pass": true,
+    "detail": "v2Commits=1 v1CommitMarkers=0 secondCommitAttempts=0"
+  },
+  "I4_no_closure_authority_before_commit": {
+    "pass": true,
+    "detail": "provisionalMotionSamples=223 closureAuthorizedSamples=0"
+  },
+  "I5_no_global_reselection_after_commit": {
+    "pass": true,
+    "detail": "postCommitReselectionEvents=0"
+  },
+  "I6_stale_results_cannot_commit": {
+    "pass": true,
+    "detail": "certificateGeneration=747 certificateStateGeneration=717 commitStateGeneration=718 staleRejections=0 staleGenerations=[] stateChangedAfterCertificate=False"
+  },
+  "I7_fsm_path": {
+    "pass": true,
+    "detail": "states=['Initial', 'ObserveObject', 'ReceiverV2', 'MovePregrasp', 'CaptureTransfer', 'Retreat', 'Completed']"
+  },
+  "I8_capture_transfer_retreat": {
+    "pass": true,
+    "detail": "capture=True transfer=True retreat=True completed=True ordered=True"
+  },
+  "D1_robot_moves_while_object_moves": {
+    "observed": false,
+    "detail": "concurrentSamples=0 of 223 (50 ms sampling; object motion from giver truth)"
+  },
+  "D2_generations_while_robot_moving": {
+    "observed": true,
+    "detail": "jobs=748 whileRobotMoving=639 whileRobotAndObjectMoving=0"
+  },
+  "D3_provisional_update_or_replacement": {
+    "observed": true,
+    "detail": "adoptions=3 replacements=2 retains=710 retainsWithPredictionUpdate=23 replacementReasons=['recertification_infeasible/cost_invalid/timeout', 'recertification_infeasible/predictive_static/reach_tracking']"
+  },
+  "D4_stale_results_rejected": {
+    "observed": false,
+    "detail": "staleRejections=0"
+  },
+  "metrics": {
+    "completed": true,
+    "commitTime": 20.131,
+    "firstPlanningSubmitTime": 9.024,
+    "planningGenerations": 748,
+    "provisionalAdoptions": 3,
+    "provisionalReplacements": 2,
+    "retainsWithPredictionUpdate": 23,
+    "staleRejections": 0,
+    "minRuntimeClearance": 0.0795,
+    "fullSearchLatencies": [
+      3.186,
+      3.391,
+      0.169
+    ],
+    "commitObjectDrift": 0.0,
+    "commitMouthDrift": 4.7e-05,
+    "tauMinusCommit": -0.101
+  }
+}

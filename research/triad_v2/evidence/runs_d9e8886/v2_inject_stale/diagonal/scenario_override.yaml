@@ -1,0 +1,13 @@
+robots:
+  call_object:
+    init_pos:
+      translation: [0.90, 0.00, 0.30]
+object:
+  translation: [0.90, 0.00, 0.30]
+movingObject:
+  simulatedLinearVelocity: [-0.0565685, 0.0, 0.0565685]
+  giverTruthModel: independent_scripted
+receiverArchitecture: v2_receding
+configs:
+  HandoverInterceptionController_ReceiverV2:
+    injectStaleTerminalResultOnce: true
