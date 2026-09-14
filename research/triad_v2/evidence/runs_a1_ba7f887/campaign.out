@@ -1,0 +1,14 @@
+char near-ground exit=1 0
+v1 longitudinal exit=0 1
+v1 near-ground exit=0 1
+v1 lateral-low exit=1 0
+v1 diagonal exit=0 1
+char longitudinal exit=1 0
+char near-ground skipped(done)
+char lateral-low exit=1 0
+char diagonal exit=1 0
+insitu longitudinal exit=0 1
+insitu near-ground exit=0 1
+insitu lateral-low exit=1 0
+insitu diagonal exit=0 1
+CAMPAIGN_DONE
