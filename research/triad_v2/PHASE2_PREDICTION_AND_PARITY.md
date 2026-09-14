@@ -56,7 +56,7 @@ Branch `research/triad-v2-dynamic-control`.
      - the from-start rollout reaches the standoff within 1.6 mm;
      - the runtime arm tracks that rollout within 4.7 mm;
      - yet the rollout resumed from the runtime state at step 15–16/78 ends 142–249 mm from the standoff and invalidates the plan.
-   - Root cause (MEASURED + CODE): the preview IK's elbow joint (Gen3 joint 4) moves off its branch, −1.58 → −0.73 rad, while the reference and command are unchanged. The preview's null-space posture target (the final standoff posture) differs from the runtime's interpolated hold → transit → standoff posture task.
+   - Mechanism (MEASURED + CODE): the preview IK's elbow joint (Gen3 joint 4) moves off its branch, −1.58 → −0.73 rad, while the reference, command and posture target are unchanged. Both rollouts run with joint 6 at ≈ 91% of its ±2.23 rad range, inside the preview's joint-limit barrier (activation 0.65). There the weighted DLS redistributes the task, and a ≈ 0.02 rad difference in the start state selects a different branch. The runtime QP enforces the same limits as hard bounds with an interpolated posture task and does not flip.
    - Part of the "runtime invalidation" evidence used in A1 (stage verdicts) and Track 1 may therefore be certification artefacts rather than physical infeasibility.
 
 No result contradicts the frozen architecture. Results 1–3 constrain the T_k law, and result 7 must be repaired before the in-situ evidence of Phases 3–8 is trustworthy (section 3).
@@ -268,7 +268,9 @@ The remaining 38 hit plans adopted while moving, where prediction updates are a 
 - The preview IK (`previewReachStep`) uses weighted damped least squares with a joint-limit barrier and a null-space posture term toward the final standoff posture only.
 - The runtime (`executeProvisionalReachV2`) commands an arm posture interpolated from hold → transit → standoff by phase progress, as a QP task.
 
-(INFERENCE) The preview integrator has a bifurcation that its initial state can trigger. Because its posture regularization differs from the runtime's, a resumed rollout can reject a plan the runtime is executing correctly.
+**Joint-limit check** (CODE: `previewReachStep`; URDF joint 6 limit ±2.23 rad, margin 0.015, barrier activation s > 0.65). Joint 6 is 2.00–2.02 rad in both rollouts (s ≈ 0.91; logged minimum joint-margin ratio 0.092 rejected vs 0.095 accepted). The barrier multiplies the joint's DLS weight by 1/(1 + 0.8·s⁶/(1−s²)²) and adds an avoidance velocity. The posture targets are identical in both rollouts, so the posture-model difference is a parity difference but **not** the trigger here.
+
+(INFERENCE) Near a joint-limit barrier the preview integrator has a branch point that a small change in its initial state can cross. The runtime controller, which handles the limit differently, does not follow that branch. A rollout resumed from the runtime state can therefore reject a plan the runtime is executing correctly.
 
 **Consequence.** Retain-while-certified is only as valid as recertification. Some of the "runtime invalidations" counted as certification value in A1 (for example the lateral-low closure invalidations) and Track 1 may be artefacts of this inconsistency. A1's candidate-level stage statistics come from from-start FULL_SEARCH rollouts and are not affected. Its runtime-outcome connection is (INFERENCE; to re-examine in Phase 8).
 
@@ -283,7 +285,12 @@ The remaining 38 hit plans adopted while moving, where prediction updates are a 
 | Estimator valid only for noise-free 1 kHz measurement | A hardware or noisy-sensor claim needs an estimator change. No simulation claim beyond the envelope in 1.5. | 9, limitations |
 | Insertion timing accurate; acquire and retreat timing conservative by 0.5–1.8 s | L_commit and the timing admission reserve must be rederived from the measured components. | 3, 9 |
 | Reach clearance optimistic by up to 17 mm (direct lateral-low); retreat clearance by up to 13 mm | Clearance margins used as hard gates (runtime reserve 8 mm, transit 12 mm) need a parity allowance, or the preview must reproduce the runtime path. | 5, 9 |
-| **Recertification inconsistency (resumed rollout vs from-start and runtime)** | **Must be repaired before in-situ evidence in Phases 3–8 is used.** The minimal defensible repair is to make the copied-state rollout use the runtime's posture task (interpolated hold → transit → standoff) and resume from the runtime reference state. Then re-measure 2.4 with the same tools. This touches the certification implementation, not the architecture. It will be committed separately with before/after parity and V1 hash evidence. | next step, before Phase 3 in-situ work |
+| **Recertification inconsistency (resumed rollout vs from-start and runtime)** | **Must be repaired before in-situ evidence in Phases 3–8 is used.** The repair needs a decision on what recertification certifies. The candidates are:
+1. the remaining action integrated from the measured runtime state (current semantics, which exposes the integrator's branch sensitivity);
+2. the certified trajectory re-checked under the newest prediction, plus a runtime-conformance tube (needs a parity-derived tube; lateral-low direct deviates up to 164 mm time-aligned);
+3. a preview integrator that handles joint limits like the runtime QP (changes every certification, FULL_SEARCH included).
+
+It touches certification semantics and implementation, not the architecture. Whatever is chosen, re-measure 2.4 with the same tools, with V1 hash evidence. | next step, before Phase 3 in-situ work |
 
 No finding requires changing the frozen architecture: provisional motion, recertification, a single late commitment, and complete-action certification all remain.
 
