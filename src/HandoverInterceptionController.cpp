@@ -1069,6 +1069,10 @@ void HandoverInterceptionController::loadHandoverConfig(
     {
       transit("apexOffsets", transitRouteApexOffsets_);
     }
+    if(transit.has("directTimeStretch"))
+    {
+      transit("directTimeStretch", transitDirectTimeStretch_);
+    }
     if(transit.has("minimumPredictedClearance"))
     {
       transit("minimumPredictedClearance",
@@ -1888,6 +1892,12 @@ HandoverInterceptionController::transitRouteBank(
   std::vector<std::pair<std::string, Eigen::Vector3d>> routes;
   routes.emplace_back("direct", Eigen::Vector3d::Zero());
   if(!plannerConfig_.transitPlanningEnabled) { return routes; }
+  for(const double factor : plannerConfig_.transitDirectTimeStretch)
+  {
+    if(!(factor > 1.0)) { continue; }
+    routes.emplace_back("directx" + std::to_string(static_cast<int>(std::lround(100.0 * factor))),
+                        Eigen::Vector3d::Zero());
+  }
 
   Eigen::Vector3d chord = standoff.translation() - start.translation();
   if(chord.norm() < 1e-6) { return routes; }
@@ -3930,6 +3940,7 @@ void HandoverInterceptionController::refreshPlannerConfig()
   plannerConfig_.transitMinimumPredictedClearance = transitMinimumPredictedClearance_;
   plannerConfig_.transitPlanningEnabled = transitPlanningEnabled_;
   plannerConfig_.transitRouteApexOffsets = transitRouteApexOffsets_;
+  plannerConfig_.transitDirectTimeStretch = transitDirectTimeStretch_;
   plannerConfig_.transitRouteDirections = transitRouteDirections_;
   plannerConfig_.worldUp = worldUp_;
 
@@ -6507,7 +6518,14 @@ HandoverInterceptionController::beginPredictiveRouteCandidate(
   {
     return routeStepFail("transit_route/path_stretch_limit");
   }
-  const double reachDuration = baseReachDuration * std::max(1.0, pathStretch);
+  double timeStretch = 1.0;
+  const std::string & rn = plannerContext_.routeStepCandidate.transitRouteName;
+  if(rn.rfind("directx", 0) == 0)
+  {
+    // Phase 5 characterization route: same straight path, longer allotted time.
+    timeStretch = std::max(1.0, std::stod(rn.substr(7)) / 100.0);
+  }
+  const double reachDuration = baseReachDuration * std::max(1.0, pathStretch) * timeStretch;
   const double approachDuration = plannerConfig_.timingTerminalCaptureDwell + std::max(
       2.0 * plannerConfig_.previewDt,
       plannerConfig_.timingArmScale * staticResult.reachCaptureDuration);

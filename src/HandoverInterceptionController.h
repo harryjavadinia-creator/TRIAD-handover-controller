@@ -1738,6 +1738,9 @@ private:
   bool transitPlanningEnabled_ = true;
   int transitRouteDirections_ = 8;
   std::vector<double> transitRouteApexOffsets_ = {0.08, 0.14};
+  // Phase 5 characterization: direct routes with only the reach duration
+  // stretched (no spatial detour). Empty (default) adds nothing.
+  std::vector<double> transitDirectTimeStretch_;
   double transitMinimumPredictedClearance_ = 0.020;
   double transitClearancePreferenceBand_ = 0.010;
   double transitMaximumPathStretch_ = 1.90;
@@ -2008,6 +2011,7 @@ private:
     double transitMinimumPredictedClearance = 0.020;
     bool transitPlanningEnabled = true;
     std::vector<double> transitRouteApexOffsets = {0.08, 0.14};
+    std::vector<double> transitDirectTimeStretch;
     int transitRouteDirections = 8;
     Eigen::Vector3d worldUp = Eigen::Vector3d::UnitZ();
 
