@@ -105,6 +105,13 @@ with tempfile.TemporaryDirectory() as tmp:
                 "[info] [V2SelectedTargetMoved] searchGeneration=999990 record=5 action=certify_selected",
                 "[info] [V2SelectedCertification] certificateGeneration=999991 searchGeneration=999990 record=5 success=false reason=x",
                 "[info] [V2SelectedTargetMoved] searchGeneration=999990 record=5 action=certify_selected"] + lines[ci:],
+            "exact timing prune premise violation": lines[:ci] + [
+                "[error] [V2TimingPrunePremiseViolation] planningGeneration=1 hypothesis=1 candidate=x route=direct presentationDuration=1.0 staticReachTime=1.2"] + lines[ci:],
+            "route certified for a pruned (tau, grasp)": lines[:ci] + [
+                "[info] [V2TimingPrune] planningGeneration=999980 hypothesis=3 grasp=5/32 candidate=axisP_side_0deg tau=11.0 latestTauSamePose=11.0 clock=10.0 staticReachTime=1.5 remaining=1.0 commitLead=1.600 entryLead=0.050 commitFails=true entryFails=true",
+                "[info] [CertStage] job=FULL_SEARCH planningGeneration=999980 hypothesis=3 lead=2.000 eventTime=11.0 path=route grasp=5/32 candidate=axisP_side_0deg route=direct feasible=true"] + lines[ci:],
+            "prune line that does not fail the timing gate": lines[:ci] + [
+                "[info] [V2TimingPrune] planningGeneration=999981 hypothesis=3 grasp=5/32 candidate=axisP_side_0deg tau=15.0 latestTauSamePose=15.0 clock=10.0 staticReachTime=1.5 remaining=5.0 commitLead=1.600 entryLead=0.050 commitFails=false entryFails=false"] + lines[ci:],
             "adoption outside the freshness tube": [
                 l.replace("fresh=true", "fresh=false") if "[V2AdoptFreshness]" in l else l for l in lines],
         }

@@ -3944,6 +3944,7 @@ void HandoverInterceptionController::refreshPlannerConfig()
   plannerConfig_.presentationMode = presentationMode_;
   plannerConfig_.previewMovingInterception = previewMovingInterception_;
   plannerConfig_.conditionalPresentationV2 = receiverArchitectureV2();
+  plannerConfig_.v2ExactTimingPrune = receiverArchitectureV2() && v2ExactTimingPrune_;
 }
 
 namespace
@@ -7752,6 +7753,15 @@ bool HandoverInterceptionController::finishCurrentPlanningCandidate(bool feasibl
       && plannerContext_.plannerWorldActive
       && (plannerWorkerThreadActive() ? plannerConfig_.objectMotionEstimateValid
                                       : objectMotionEstimateValid_);
+  if(feasible && movingVerificationRequested && exactTimingPruneRoutesV2(c))
+  {
+    // TRIAD V2 exact timing prune: no route of this (tau, g) can pass the
+    // selector's timing gate at any later decision (see ReceiverV2.cpp).
+    c.previewFeasible = false;
+    c.failureReason = "v2_exact_timing_prune";
+    completeCurrentPlanningCandidate(false, movingVerificationRequested);
+    return false;
+  }
   if(feasible && movingVerificationRequested)
   {
     // Start the route bank instead of certifying it here. The bank is advanced

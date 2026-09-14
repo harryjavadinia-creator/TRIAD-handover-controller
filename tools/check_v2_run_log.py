@@ -33,6 +33,15 @@ INVARIANTS (any failure -> exit 1):
       a record whose selected-action certificate failed is never selected again
       in the same search (holds on failed runs too)
 
+  I11 exact timing prune is safe: no [V2TimingPrunePremiseViolation]
+      (every complete route record's presentation duration >= its static reach
+      time); no route of a pruned (generation, hypothesis, grasp) is certified;
+      no provisional adoption comes from a pruned (generation, hypothesis,
+      candidate); every [V2TimingPrune] line satisfies its own gate
+      (remaining + 1e-12 < commitLead or staticReachTime + entryLead >
+      remaining + 1e-12) and uses the latest event instant with the same pose
+      (holds on failed runs too; vacuous when the prune is disabled)
+
 DEMONSTRATIONS (reported per run; coverage is required across the evidence set,
 see tools/summarize_v2_evidence.py):
   D1  robot moves while the object truth is still moving
@@ -213,6 +222,26 @@ def main(argv):
         f"adoptions={len(adopt_idx)} certifiedAdoptions={certified_adoptions} adoptFreshnessLines={len(fresh_lines)} "
         f"notFresh={len(not_fresh)} uncertifiedCertifiedAdoptions={uncertified} reselectedFailedRecords={reselected_failed}")
 
+    # I11
+    violations = [l for l in lines if "[V2TimingPrunePremiseViolation]" in l]
+    prune_lines = [l for l in lines if "[V2TimingPrune]" in l]
+    pruned_keys = {(kv(l, "planningGeneration"), kv(l, "hypothesis"), kv(l, "grasp")) for l in prune_lines}
+    pruned_cands = {(kv(l, "planningGeneration"), kv(l, "hypothesis"), kv(l, "candidate")) for l in prune_lines}
+    routes_of_pruned = [l for l in lines if "[CertStage] job=FULL_SEARCH" in l and "path=route" in l
+                        and (kv(l, "planningGeneration"), kv(l, "hypothesis"), kv(l, "grasp")) in pruned_keys]
+    adopted_pruned = [l for l in lines if "[V2ProvisionalAdopt]" in l
+                      and (kv(l, "sourcePlanningGeneration"), kv(l, "hypothesis"), kv(l, "candidate")) in pruned_cands]
+    bad_gate = []
+    for l in prune_lines:
+        rem, cl, el, ts = (float(kv(l, k).rstrip("s")) for k in ("remaining", "commitLead", "entryLead", "staticReachTime"))
+        tau, latest = float(kv(l, "tau")), float(kv(l, "latestTauSamePose"))
+        if not ((rem + 1e-12 < cl) or (ts + el > rem + 1e-12)) or latest + 1e-9 < tau:
+            bad_gate.append(l[:120])
+    inv("I11_exact_timing_prune_safe",
+        not violations and not routes_of_pruned and not adopted_pruned and not bad_gate,
+        f"prunedGraspTau={len(prune_lines)} premiseViolations={len(violations)} routesOfPruned={len(routes_of_pruned)} "
+        f"adoptionsFromPruned={len(adopted_pruned)} inconsistentPruneLines={len(bad_gate)}")
+
     # Demonstrations
     motion = [l for l in before if "[V2Motion]" in l]
     concurrent = [l for l in motion if "robotMoving=true" in l and "objectMoving=true" in l]
@@ -252,6 +281,7 @@ def main(argv):
         "cancelRequests": len(cancel_req),
         "cancelled": len(cancelled),
         "certifiedAdoptions": certified_adoptions,
+        "timingPrunedGraspTau": len(prune_lines),
         "cancelLatencies": [kv(l, "cancelLatency", lambda v: float(v.rstrip("s"))) for l in cancelled_lines],
         "minRuntimeClearance": kv(summary[-1], "minRuntimeClearance", float) if summary else None,
         "fullSearchLatencies": [kv(l, "latency", lambda s: float(s.rstrip("s")))

@@ -202,6 +202,14 @@ bool HandoverInterceptionController::beginReceiverV2(
           "[V2ReceiverBegin] fullSearchPredictionUpdate must be select_then_certify or cancel_and_restart, got {}", mode);
     }
     v2SelectThenCertify_ = mode == "select_then_certify";
+    v2ExactTimingPrune_ = readBool(stateConfig, "fullSearchExactTimingPrune", false);
+    plannerConfig_.v2ExactTimingPrune = v2ExactTimingPrune_;
+    plannerConfig_.v2PruneCommitLead = std::max(
+        v2Params_.minimumCommitRemainingTime, presentationDecelerationDuration_ + 0.25);
+    plannerConfig_.v2PruneEntryLead = v2Params_.minimumReachEntryLead;
+    v2ControllerClockForWorker_.store(controllerTime_, std::memory_order_release);
+    mc_rtc::log::info("[V2ExactTimingPrune] enabled={} commitLead={:.3f}s entryLead={:.3f}s",
+                      v2ExactTimingPrune_, plannerConfig_.v2PruneCommitLead, plannerConfig_.v2PruneEntryLead);
     mc_rtc::log::info("[V2PredictionUpdateMode] fullSearchPredictionUpdate={}", mode);
   }
   v2Params_.characterizationRestDwell = readDouble(stateConfig, "characterizationRestDwell", v2Params_.characterizationRestDwell);
@@ -277,6 +285,7 @@ HandoverInterceptionController::stepReceiverV2()
 {
   const double now = controllerTime_;
   if(!v2Active_) { return ReceiverStepStatusV2::Failed; }
+  v2ControllerClockForWorker_.store(now, std::memory_order_release);
 
   // A provisional plan never authorizes closure.
   setGripperClosureAuthorized(false);
@@ -1685,6 +1694,7 @@ void HandoverInterceptionController::resetStageProfileV2(
   plannerContext_.certStaticRecords = 0;
   plannerContext_.certRouteRecords = 0;
   plannerContext_.certMemoReuses = 0;
+  plannerContext_.certTimingPruned = 0;
   plannerContext_.certStaticReachClearance = std::numeric_limits<double>::quiet_NaN();
   plannerContext_.certRouteReachDuration = std::numeric_limits<double>::quiet_NaN();
   plannerContext_.routeStepFailedPhase = RouteStepPhase::Idle;
@@ -1748,6 +1758,16 @@ void HandoverInterceptionController::logCertStageV2(
       : std::numeric_limits<double>::quiet_NaN();
   std::string why = reason;
   for(auto & ch : why) { if(ch == ' ') { ch = '_'; } }
+  if(search && std::string(path) == "route" && feasible
+     && candidate.predictedPresentationTime + 1e-12 < staticReach)
+  {
+    // Premise of the exact timing prune: route presentation duration is never
+    // shorter than the static reach time it was derived from.
+    mc_rtc::log::error(
+        "[V2TimingPrunePremiseViolation] planningGeneration={} hypothesis={} candidate={} route={} presentationDuration={:.12g} staticReachTime={:.12g}",
+        plannerContext_.certJobGeneration, finiteSearch_.evaluatedHypotheses, candidate.name,
+        candidate.transitRouteName, candidate.predictedPresentationTime, staticReach);
+  }
   mc_rtc::log::info(
       "[CertStage] job={} planningGeneration={} hypothesis={} lead={:.3f} eventTime={:.9f} path={} grasp={}/{} candidate={} route={} feasible={} deepest={} costValid={} staticReachTime={:.6f} routeReachDuration={:.6f} reachClear={:.9f} retreatClear={:.9f} reason={} jobWall={:.6f} workUnits={} motionJ={:.12g} globalJ={:.12g} presentationDuration={:.12g} executionDuration={:.12g} prof={}",
       plannerContext_.certJobType, plannerContext_.certJobGeneration,
@@ -1803,13 +1823,13 @@ void HandoverInterceptionController::logJobProfileV2(const PendingJobV2 & pendin
                            plannerContext_.stageCount[b]);
   }
   mc_rtc::log::info(
-      "[V2JobProfile] type={} planningGeneration={} profileGeneration={} cancelRequested={} jobWall={:.6f}s partitionedWall={:.6f}s hypotheses={} memoReuses={} staticRecords={} routeRecords={} workUnits={} latency={:.6f}s{} t={:.6f}",
+      "[V2JobProfile] type={} planningGeneration={} profileGeneration={} cancelRequested={} jobWall={:.6f}s partitionedWall={:.6f}s hypotheses={} memoReuses={} staticRecords={} routeRecords={} timingPrunedGraspTau={} workUnits={} latency={:.6f}s{} t={:.6f}",
       receiverJobTypeNameV2(pending.type), pending.planningGeneration,
       plannerContext_.certJobGeneration, pending.cancelRequested, plannerContext_.certJobWall,
       partition,
       pending.type == ReceiverJobTypeV2::FullSearch ? finiteSearch_.evaluatedHypotheses : 0,
       plannerContext_.certMemoReuses, plannerContext_.certStaticRecords,
-      plannerContext_.certRouteRecords, workUnitsV2(),
+      plannerContext_.certRouteRecords, plannerContext_.certTimingPruned, workUnitsV2(),
       now - pending.submitTime, buckets, now);
 }
 
@@ -1970,4 +1990,63 @@ void HandoverInterceptionController::handleSelectedCertificationV2(const Pending
   {
     ++v2Counters_.searchFailures;
   }
+}
+
+// =============================================================================
+// Exact timing prune of route certification (FULL_SEARCH, logging + decision)
+// =============================================================================
+//
+// The selector admits a record at decision time t_d iff
+//   (A) tau - t_d + eps >= L_commit      and
+//   (B) T_pres + L_entry <= tau - t_d + eps,          eps = 1e-12,
+// with T_pres the record's presentation duration. For a route of (tau, g):
+//   T_pres = max(2 dt, max(2 dt, T_s) * max(1, stretch)) >= T_s,
+// where T_s = timingArmScale * static reach-to-standoff duration of g at tau
+// (beginPredictiveRouteCandidate, makeInterceptionPlan, finalize). The route
+// record can only be selected at a time t_d >= t_k, the controller clock
+// published before this check (monotone). Hence if
+//   tau - t_k + eps < L_commit   or   T_s + L_entry > tau - t_k + eps,
+// then for every route of (tau, g) and every t_d >= t_k, (A) or (B) fails.
+// Memoized hypotheses reuse this hypothesis's routes for later events with a
+// bitwise identical presentation pose, so tau is taken as the latest such event.
+bool HandoverInterceptionController::exactTimingPruneRoutesV2(const CaptureCandidate & staticCandidate) const
+{
+  if(!stageProfilingActiveV2() || !plannerConfig_.v2ExactTimingPrune
+     || plannerContext_.certJobType != "FULL_SEARCH")
+  {
+    return false;
+  }
+  const auto & bank = finiteSearch_.bank;
+  if(finiteSearch_.cursor == 0 || finiteSearch_.cursor > bank.leads.size()
+     || bank.presentationPoses.size() != bank.leads.size())
+  {
+    return false;
+  }
+  const std::size_t h = finiteSearch_.cursor - 1;
+  const sva::PTransformd & pose = bank.presentationPoses[h];
+  double latestTau = bank.searchEpoch + bank.leads[h];
+  for(std::size_t i = h + 1; i < bank.leads.size(); ++i)
+  {
+    if(bank.presentationPoses[i].translation() == pose.translation()
+       && bank.presentationPoses[i].rotation() == pose.rotation())
+    {
+      latestTau = std::max(latestTau, bank.searchEpoch + bank.leads[i]);
+    }
+  }
+  const double tk = v2ControllerClockForWorker_.load(std::memory_order_acquire);
+  const double staticReachTime = staticCandidate.predictedPresentationTime;
+  const double remaining = latestTau - tk;
+  const bool commitFails = remaining + 1e-12 < plannerConfig_.v2PruneCommitLead;
+  const bool entryFails = staticReachTime + plannerConfig_.v2PruneEntryLead > remaining + 1e-12;
+  if(!(commitFails || entryFails)) { return false; }
+  ++plannerContext_.certTimingPruned;
+  mc_rtc::log::info(
+      "[V2TimingPrune] planningGeneration={} hypothesis={} grasp={}/{} candidate={} tau={:.9f} latestTauSamePose={:.9f} clock={:.6f} staticReachTime={:.9f} remaining={:.9f} commitLead={:.3f} entryLead={:.3f} commitFails={} entryFails={} jobWall={:.6f} workUnits={}",
+      plannerContext_.certJobGeneration, finiteSearch_.evaluatedHypotheses,
+      plannerContext_.planningCandidateIndex, plannerContext_.planningCandidateCount,
+      staticCandidate.name, bank.searchEpoch + bank.leads[h], latestTau, tk, staticReachTime, remaining,
+      plannerConfig_.v2PruneCommitLead, plannerConfig_.v2PruneEntryLead, commitFails, entryFails,
+      std::chrono::duration<double>(std::chrono::steady_clock::now() - plannerContext_.certJobStart).count(),
+      workUnitsV2());
+  return true;
 }

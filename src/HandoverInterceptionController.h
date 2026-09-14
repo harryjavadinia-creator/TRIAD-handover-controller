@@ -1289,6 +1289,10 @@ private:
   std::atomic<std::uint64_t> plannerResultGeneration_{0};
   std::atomic<bool> plannerCancel_{false};
   bool v2SelectThenCertify_ = false;
+  // Exact timing prune: the control thread publishes its clock; the worker uses
+  // it as a lower bound on any later selection time.
+  bool v2ExactTimingPrune_ = false;
+  std::atomic<double> v2ControllerClockForWorker_{-1.0e300};
   long long workUnitsV2() const;
   FrozenPlanSet plannerResult_;
   std::string plannerFailureReason_;
@@ -2025,6 +2029,10 @@ private:
     bool presentationMode = true;
     bool previewMovingInterception = true;
     bool conditionalPresentationV2 = false;
+    // TRIAD V2 exact timing prune of route certification (FULL_SEARCH only).
+    bool v2ExactTimingPrune = false;
+    double v2PruneCommitLead = 0.0;
+    double v2PruneEntryLead = 0.0;
   };
 
   // ---------------------------- TRIAD V2 state ------------------------------
@@ -2305,6 +2313,7 @@ private:
   const char * routeDeepestStageV2(bool feasible) const;
   // Phase D search-policy replay logging (V2 worker only, no decision reads it).
   void logMemoRecordsV2(const std::vector<CaptureCandidate> & completePlans) const;
+  bool exactTimingPruneRoutesV2(const CaptureCandidate & staticCandidate) const;
   std::string stageSnapshotV2() const;
   const char * staticDeepestStageV2(bool feasible) const;
 
@@ -2424,6 +2433,7 @@ private:
     long long certStaticRecords = 0;
     long long certRouteRecords = 0;
     long long certMemoReuses = 0;
+    long long certTimingPruned = 0;
     double certStaticReachClearance = std::numeric_limits<double>::quiet_NaN();
     double certRouteReachDuration = std::numeric_limits<double>::quiet_NaN();
     RouteStepPhase routeStepFailedPhase = RouteStepPhase::Idle;

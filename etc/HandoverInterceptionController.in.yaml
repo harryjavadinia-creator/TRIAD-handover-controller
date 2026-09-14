@@ -638,6 +638,10 @@ configs:
     # adoption). The comparison in V2_PREDICTION_UPDATE_MECHANISM.md found no gain
     # in time to first plan from select_then_certify, hence the default.
     fullSearchPredictionUpdate: cancel_and_restart
+    # Exact timing prune (default off): skip route certification of (tau, g)
+    # when its static reach time already fails the selector's timing gate at
+    # the current controller time. Lossless by construction (ReceiverV2.cpp).
+    fullSearchExactTimingPrune: false
     characterizationRestDwell: 1.0
 
 transitions:
