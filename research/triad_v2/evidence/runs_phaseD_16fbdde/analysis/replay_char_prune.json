@@ -1,0 +1,5744 @@
+[
+ {
+  "run": "char_a/diagonal [exact timing prune]",
+  "gen": "1",
+  "kind": "moving",
+  "outcome": "accepted",
+  "submit": 9.024,
+  "rest": 13.547003756058919,
+  "records": 267,
+  "fullWall": 2.817384,
+  "fullUnits": 222160,
+  "policies": {
+   "FULL_ARGMIN": {
+    "policy": "FULL_ARGMIN",
+    "available": true,
+    "decisionT": 11.841384,
+    "wallToPlan": 2.816028,
+    "unitsToPlan": 222159,
+    "tMinusRest": -1.705619756058919,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 12.17994615226,
+    "lead": 5.5,
+    "tau": 14.524,
+    "g": "axisP_side_337deg",
+    "r": "ring80mm_2of8",
+    "J": 0.774639182014,
+    "reachClear": 0.074236993,
+    "retreatClear": 0.223219739,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 14,
+    "graspScreens": 448,
+    "routeRollouts": 408,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 4.501260352895997e-06,
+    "fractionWallAvoided": 0.0004812975441047529,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      14,
+      0.000445
+     ],
+     "grasp/static reach screening": [
+      89105,
+      0.532543
+     ],
+     "insertion/closure certification": [
+      56528,
+      0.342104
+     ],
+     "route (transit reach) certification": [
+      50614,
+      1.5728959999999998
+     ],
+     "carried-retreat certification": [
+      25631,
+      0.18046800000000002
+     ],
+     "cost / terminal timing audit": [
+      267,
+      0.174675
+     ],
+     "nested: IK steps": [
+      195256,
+      1.219762
+     ],
+     "nested: swept-volume queries": [
+      49798,
+      1.057787
+     ],
+     "nested: configuration safety": [
+      220512,
+      0.317966
+     ],
+     "nested: closure/contact safety": [
+      53070,
+      0.263496
+     ]
+    },
+    "dJ": 0.0,
+    "sameTau": true,
+    "sameG": true,
+    "sameR": true,
+    "sameTuple": true,
+    "dReachClear": 0.0,
+    "dRetreatClear": 0.0,
+    "dJVsEpochFull": 0.09265393050299997,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": 0.0018809949999999964,
+    "dRetreatClearVsEpochFull": 0.005440031000000012
+   },
+   "FIRST_COMPLETE_FEASIBLE": {
+    "policy": "FIRST_COMPLETE_FEASIBLE",
+    "available": true,
+    "decisionT": 9.39335,
+    "wallToPlan": 0.36935,
+    "unitsToPlan": 59919,
+    "tMinusRest": -4.153653756058919,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 11.248999999999999,
+    "lead": 4.15,
+    "tau": 13.174,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.730966260042,
+    "reachClear": 0.069747321,
+    "retreatClear": 0.21714345,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 7,
+    "graspScreens": 208,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7302889809146561,
+    "fractionWallAvoided": 0.868903209502148,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      7,
+      9.9e-05
+     ],
+     "grasp/static reach screening": [
+      44564,
+      0.266426
+     ],
+     "insertion/closure certification": [
+      8847,
+      0.052724999999999994
+     ],
+     "route (transit reach) certification": [
+      99,
+      0.003281
+     ],
+     "carried-retreat certification": [
+      6401,
+      0.043845999999999996
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000739
+     ],
+     "nested: IK steps": [
+      53874,
+      0.324475
+     ],
+     "nested: swept-volume queries": [
+      97,
+      0.002148
+     ],
+     "nested: configuration safety": [
+      47527,
+      0.066672
+     ],
+     "nested: closure/contact safety": [
+      6206,
+      0.029893
+     ]
+    },
+    "dJ": -0.0436729219719999,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.004489672,
+    "dRetreatClear": -0.0060762890000000125,
+    "dJVsEpochFull": 0.04898100853100007,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.0026086770000000037,
+    "dRetreatClearVsEpochFull": -0.0006362580000000007
+   },
+   "FIRST_ADMISSIBLE_COMPLETE": {
+    "policy": "FIRST_ADMISSIBLE_COMPLETE",
+    "available": true,
+    "decisionT": 9.39335,
+    "wallToPlan": 0.36935,
+    "unitsToPlan": 59919,
+    "tMinusRest": -4.153653756058919,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 11.248999999999999,
+    "lead": 4.15,
+    "tau": 13.174,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.730966260042,
+    "reachClear": 0.069747321,
+    "retreatClear": 0.21714345,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 7,
+    "graspScreens": 208,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7302889809146561,
+    "fractionWallAvoided": 0.868903209502148,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      7,
+      9.9e-05
+     ],
+     "grasp/static reach screening": [
+      44564,
+      0.266426
+     ],
+     "insertion/closure certification": [
+      8847,
+      0.052724999999999994
+     ],
+     "route (transit reach) certification": [
+      99,
+      0.003281
+     ],
+     "carried-retreat certification": [
+      6401,
+      0.043845999999999996
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000739
+     ],
+     "nested: IK steps": [
+      53874,
+      0.324475
+     ],
+     "nested: swept-volume queries": [
+      97,
+      0.002148
+     ],
+     "nested: configuration safety": [
+      47527,
+      0.066672
+     ],
+     "nested: closure/contact safety": [
+      6206,
+      0.029893
+     ]
+    },
+    "dJ": -0.0436729219719999,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.004489672,
+    "dRetreatClear": -0.0060762890000000125,
+    "dJVsEpochFull": 0.04898100853100007,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.0026086770000000037,
+    "dRetreatClearVsEpochFull": -0.0006362580000000007
+   },
+   "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR": {
+    "policy": "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR",
+    "available": true,
+    "decisionT": 9.495645999999999,
+    "wallToPlan": 0.471646,
+    "unitsToPlan": 67595,
+    "tMinusRest": -4.05135775605892,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 10.24618555459,
+    "lead": 4.15,
+    "tau": 13.174,
+    "g": "axisP_side_337deg",
+    "r": "ring140mm_2of8",
+    "J": 0.681985251511,
+    "reachClear": 0.072355998,
+    "retreatClear": 0.217779708,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 7,
+    "graspScreens": 224,
+    "routeRollouts": 17,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.6957373064458048,
+    "fractionWallAvoided": 0.8325943499359689,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      7,
+      9.9e-05
+     ],
+     "grasp/static reach screening": [
+      46577,
+      0.278402
+     ],
+     "insertion/closure certification": [
+      11239,
+      0.066636
+     ],
+     "route (transit reach) certification": [
+      2058,
+      0.062404
+     ],
+     "carried-retreat certification": [
+      7700,
+      0.052614
+     ],
+     "cost / terminal timing audit": [
+      14,
+      0.008881
+     ],
+     "nested: IK steps": [
+      60531,
+      0.365359
+     ],
+     "nested: swept-volume queries": [
+      2024,
+      0.04226
+     ],
+     "nested: configuration safety": [
+      54865,
+      0.077266
+     ],
+     "nested: closure/contact safety": [
+      8508,
+      0.040961
+     ]
+    },
+    "dJ": -0.09265393050299997,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.0018809949999999964,
+    "dRetreatClear": -0.005440031000000012,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   },
+   "ANYTIME_INCUMBENT": {
+    "policy": "ANYTIME_INCUMBENT",
+    "available": true,
+    "decisionT": 9.39335,
+    "wallToPlan": 0.36935,
+    "unitsToPlan": 59919,
+    "tMinusRest": -4.153653756058919,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 11.248999999999999,
+    "lead": 4.15,
+    "tau": 13.174,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.730966260042,
+    "reachClear": 0.069747321,
+    "retreatClear": 0.21714345,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 7,
+    "graspScreens": 208,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7302889809146561,
+    "fractionWallAvoided": 0.868903209502148,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      7,
+      9.9e-05
+     ],
+     "grasp/static reach screening": [
+      44564,
+      0.266426
+     ],
+     "insertion/closure certification": [
+      8847,
+      0.052724999999999994
+     ],
+     "route (transit reach) certification": [
+      99,
+      0.003281
+     ],
+     "carried-retreat certification": [
+      6401,
+      0.043845999999999996
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000739
+     ],
+     "nested: IK steps": [
+      53874,
+      0.324475
+     ],
+     "nested: swept-volume queries": [
+      97,
+      0.002148
+     ],
+     "nested: configuration safety": [
+      47527,
+      0.066672
+     ],
+     "nested: closure/contact safety": [
+      6206,
+      0.029893
+     ]
+    },
+    "dJ": -0.0436729219719999,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.004489672,
+    "dRetreatClear": -0.0060762890000000125,
+    "dJVsEpochFull": 0.04898100853100007,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.0026086770000000037,
+    "dRetreatClearVsEpochFull": -0.0006362580000000007
+   }
+  },
+  "fullArgminAtEpoch": {
+   "source": 10,
+   "hyp": 7,
+   "lead": 4.15,
+   "eventTime": 13.174,
+   "cand": "axisP_side_337deg",
+   "route": "ring140mm_2of8",
+   "J": 0.681985251511,
+   "motionJ": 0.617659700831,
+   "Tpres": 2.92781444541,
+   "Texec": 8.13052277874,
+   "reachClear": 0.072355998,
+   "retreatClear": 0.217779708,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.452974999999999,
+   "wall": 0.428975,
+   "units": 63088,
+   "eventIdx": 219
+  },
+  "earliestTauAtEpoch": {
+   "source": 10,
+   "hyp": 7,
+   "lead": 4.15,
+   "eventTime": 13.174,
+   "cand": "axisP_side_337deg",
+   "route": "ring140mm_2of8",
+   "J": 0.681985251511,
+   "motionJ": 0.617659700831,
+   "Tpres": 2.92781444541,
+   "Texec": 8.13052277874,
+   "reachClear": 0.072355998,
+   "retreatClear": 0.217779708,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.452974999999999,
+   "wall": 0.428975,
+   "units": 63088,
+   "eventIdx": 219
+  },
+  "anytime": {
+   "firstIncumbentWall": 0.36935,
+   "firstIncumbentT": 9.39335,
+   "firstIncumbentMinusRest": -4.153653756058919,
+   "firstIncumbentUnits": 59919,
+   "changes": 9,
+   "losses": 0,
+   "trajectory": [
+    {
+     "t": 9.39335,
+     "wall": 0.36935,
+     "units": 59919,
+     "eventIdx": 208,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.730966260042,
+      "reachClear": 0.069747321,
+      "retreatClear": 0.21714345
+     }
+    },
+    {
+     "t": 9.404001999999998,
+     "wall": 0.380002,
+     "units": 60511,
+     "eventIdx": 210,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.706900401291,
+      "reachClear": 0.068850454,
+      "retreatClear": 0.217311266
+     }
+    },
+    {
+     "t": 9.409263,
+     "wall": 0.385263,
+     "units": 60807,
+     "eventIdx": 211,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_2of8",
+      "J": 0.69137289818,
+      "reachClear": 0.074485211,
+      "retreatClear": 0.217465078
+     }
+    },
+    {
+     "t": 9.452974999999999,
+     "wall": 0.428975,
+     "units": 63088,
+     "eventIdx": 219,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "ring140mm_2of8",
+      "J": 0.681985251511,
+      "reachClear": 0.072355998,
+      "retreatClear": 0.217779708
+     }
+    },
+    {
+     "t": 10.268338,
+     "wall": 1.244338,
+     "units": 124269,
+     "eventIdx": 452,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_2of8",
+      "J": 0.69137289818,
+      "reachClear": 0.074485211,
+      "retreatClear": 0.217465078
+     }
+    },
+    {
+     "t": 10.804298999999999,
+     "wall": 1.780299,
+     "units": 158819,
+     "eventIdx": 594,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_2of8",
+      "J": 0.719500800064,
+      "reachClear": 0.074429756,
+      "retreatClear": 0.220143534
+     }
+    },
+    {
+     "t": 11.272274,
+     "wall": 2.248274,
+     "units": 186819,
+     "eventIdx": 711,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_2of8",
+      "J": 0.747803779625,
+      "reachClear": 0.074375408,
+      "retreatClear": 0.221850844
+     }
+    },
+    {
+     "t": 11.722062999999999,
+     "wall": 2.698063,
+     "units": 213608,
+     "eventIdx": 824,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisP_side_315deg",
+      "r": "ring80mm_2of8",
+      "J": 0.770225375943,
+      "reachClear": 0.076942062,
+      "retreatClear": 0.211181
+     }
+    },
+    {
+     "t": 11.811250999999999,
+     "wall": 2.787251,
+     "units": 218130,
+     "eventIdx": 838,
+     "incumbent": {
+      "lead": 5.5,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_2of8",
+      "J": 0.774639182014,
+      "reachClear": 0.074236993,
+      "retreatClear": 0.223219739
+     }
+    }
+   ],
+   "atFractionOfFullWall": {
+    "0.1": null,
+    "0.25": {
+     "lead": 4.15,
+     "g": "axisP_side_337deg",
+     "r": "ring140mm_2of8",
+     "J": 0.681985251511,
+     "dJ": -0.09265393050299997,
+     "reachClear": 0.072355998,
+     "retreatClear": 0.217779708
+    },
+    "0.5": {
+     "lead": 4.15,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_2of8",
+     "J": 0.69137289818,
+     "dJ": -0.08326628383399992,
+     "reachClear": 0.074485211,
+     "retreatClear": 0.217465078
+    },
+    "0.75": {
+     "lead": 4.6,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_2of8",
+     "J": 0.719500800064,
+     "dJ": -0.05513838194999998,
+     "reachClear": 0.074429756,
+     "retreatClear": 0.220143534
+    },
+    "1.0": {
+     "lead": 5.5,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_2of8",
+     "J": 0.774639182014,
+     "dJ": 0.0,
+     "reachClear": 0.074236993,
+     "retreatClear": 0.223219739
+    }
+   }
+  },
+  "beforeFirstComplete": {
+   "staticScreensFailed": 207,
+   "wallStaticFailed": 0.362367,
+   "staticScreensPassed": 1,
+   "wallStaticPassed": 0.001811000000000007,
+   "routeRolloutsFailed": 0,
+   "wallRouteFailed": 0.0,
+   "wallSuccessfulRoute": 0.00517200000000001,
+   "hypothesesTouched": 7
+  },
+  "perCandidateWall": {
+   "static/rejected": {
+    "n": 424,
+    "median": 0.001193999999999959,
+    "total": 0.7180709999999997
+   },
+   "static/feasible": {
+    "n": 24,
+    "median": 0.0016700000000001713,
+    "total": 0.040965000000000806
+   },
+   "route/feasible": {
+    "n": 267,
+    "median": 0.005818000000000101,
+    "total": 1.5573139999999999
+   },
+   "route/rejected": {
+    "n": 141,
+    "median": 0.003357999999999972,
+    "total": 0.499678
+   }
+  },
+  "exactTimingPrune": {
+   "prunedGraspTau": 0,
+   "savedWall": 0.0,
+   "savedUnits": 0,
+   "originalFullWall": 2.817384
+  },
+  "fullArgminAtEpochUnpruned": {
+   "source": 10,
+   "hyp": 7,
+   "lead": 4.15,
+   "eventTime": 13.174,
+   "cand": "axisP_side_337deg",
+   "route": "ring140mm_2of8",
+   "J": 0.681985251511,
+   "motionJ": 0.617659700831,
+   "Tpres": 2.92781444541,
+   "Texec": 8.13052277874,
+   "reachClear": 0.072355998,
+   "retreatClear": 0.217779708,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.452974999999999,
+   "wall": 0.428975,
+   "units": 63088,
+   "eventIdx": 219
+  }
+ },
+ {
+  "run": "char_a/lateral-low [exact timing prune]",
+  "gen": "1",
+  "kind": "moving",
+  "outcome": "accepted",
+  "submit": 9.024,
+  "rest": 13.546999999999999,
+  "records": 310,
+  "fullWall": 3.9845850000000005,
+  "fullUnits": 232028,
+  "policies": {
+   "FULL_ARGMIN": {
+    "policy": "FULL_ARGMIN",
+    "available": true,
+    "decisionT": 13.008585,
+    "wallToPlan": 3.9825649999999997,
+    "unitsToPlan": 232028,
+    "tMinusRest": -0.5384149999999988,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 14.112901958530001,
+    "lead": 8.0,
+    "tau": 17.024,
+    "g": "axisN_side_23deg",
+    "r": "ring80mm_6of8",
+    "J": 0.932116758348,
+    "reachClear": 0.068966063,
+    "retreatClear": 0.099211474,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 14,
+    "graspScreens": 448,
+    "routeRollouts": 612,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.0,
+    "fractionWallAvoided": 0.0005069536727164703,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      14,
+      0.000615
+     ],
+     "grasp/static reach screening": [
+      50616,
+      0.317798
+     ],
+     "insertion/closure certification": [
+      74623,
+      0.47458
+     ],
+     "route (transit reach) certification": [
+      111001,
+      3.364995
+     ],
+     "carried-retreat certification": [
+      26420,
+      0.196777
+     ],
+     "cost / terminal timing audit": [
+      382,
+      0.265509
+     ],
+     "nested: IK steps": [
+      227759,
+      1.494783
+     ],
+     "nested: swept-volume queries": [
+      109551,
+      2.219909
+     ],
+     "nested: configuration safety": [
+      312528,
+      0.453182
+     ],
+     "nested: closure/contact safety": [
+      73015,
+      0.385282
+     ]
+    },
+    "dJ": 0.0,
+    "sameTau": true,
+    "sameG": true,
+    "sameR": true,
+    "sameTuple": true,
+    "dReachClear": 0.0,
+    "dRetreatClear": 0.0,
+    "dJVsEpochFull": 0.254396927278,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": false,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.012621662000000006,
+    "dRetreatClearVsEpochFull": 0.02191945699999999
+   },
+   "FIRST_COMPLETE_FEASIBLE": {
+    "policy": "FIRST_COMPLETE_FEASIBLE",
+    "available": true,
+    "decisionT": 9.237969,
+    "wallToPlan": 0.21396899999999996,
+    "unitsToPlan": 28977,
+    "tMinusRest": -4.309030999999999,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": false,
+    "reachStart": 9.283126012099999,
+    "lead": 3.25,
+    "tau": 12.274,
+    "g": "axisN_side_68deg",
+    "r": "ring80mm_5of8",
+    "J": 0.808567482623,
+    "reachClear": 0.047908407,
+    "retreatClear": 0.107730975,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 5,
+    "graspScreens": 148,
+    "routeRollouts": 7,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.8751142103539228,
+    "fractionWallAvoided": 0.946300806733951,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      5,
+      0.000171
+     ],
+     "grasp/static reach screening": [
+      20375,
+      0.128872
+     ],
+     "insertion/closure certification": [
+      13711,
+      0.086254
+     ],
+     "route (transit reach) certification": [
+      15408,
+      0.440365
+     ],
+     "carried-retreat certification": [
+      3509,
+      0.024327
+     ],
+     "cost / terminal timing audit": [
+      56,
+      0.036833
+     ],
+     "nested: IK steps": [
+      45945,
+      0.28935
+     ],
+     "nested: swept-volume queries": [
+      15192,
+      0.289943
+     ],
+     "nested: configuration safety": [
+      57851,
+      0.080153
+     ],
+     "nested: closure/contact safety": [
+      12631,
+      0.065264
+     ]
+    },
+    "dJ": -0.12354927572499996,
+    "sameTau": false,
+    "sameG": false,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.021057655999999994,
+    "dRetreatClear": 0.008519501000000013,
+    "dJVsEpochFull": 0.13084765155300004,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": false,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.033679318,
+    "dRetreatClearVsEpochFull": 0.030438958000000002
+   },
+   "FIRST_ADMISSIBLE_COMPLETE": {
+    "policy": "FIRST_ADMISSIBLE_COMPLETE",
+    "available": true,
+    "decisionT": 9.355369999999999,
+    "wallToPlan": 0.33136999999999994,
+    "unitsToPlan": 39472,
+    "tMinusRest": -4.19163,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 10.00550014407,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisN_side_45deg",
+    "r": "ring80mm_1of8",
+    "J": 0.974122233808,
+    "reachClear": 0.077780958,
+    "retreatClear": 0.105309909,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 179,
+    "routeRollouts": 20,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.8298826003758167,
+    "fractionWallAvoided": 0.9168370106297143,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000187
+     ],
+     "grasp/static reach screening": [
+      25428,
+      0.159597
+     ],
+     "insertion/closure certification": [
+      16068,
+      0.101176
+     ],
+     "route (transit reach) certification": [
+      17454,
+      0.499466
+     ],
+     "carried-retreat certification": [
+      4541,
+      0.031821999999999996
+     ],
+     "cost / terminal timing audit": [
+      62,
+      0.041447
+     ],
+     "nested: IK steps": [
+      55093,
+      0.346505
+     ],
+     "nested: swept-volume queries": [
+      17213,
+      0.328703
+     ],
+     "nested: configuration safety": [
+      68011,
+      0.094564
+     ],
+     "nested: closure/contact safety": [
+      14666,
+      0.075891
+     ]
+    },
+    "dJ": 0.04200547546,
+    "sameTau": false,
+    "sameG": false,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": 0.008814895000000003,
+    "dRetreatClear": 0.006098434999999999,
+    "dJVsEpochFull": 0.296402402738,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": false,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.0038067670000000026,
+    "dRetreatClearVsEpochFull": 0.02801789199999999
+   },
+   "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR": {
+    "policy": "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR",
+    "available": true,
+    "decisionT": 9.648266999999999,
+    "wallToPlan": 0.6242669999999999,
+    "unitsToPlan": 56378,
+    "tMinusRest": -3.898733,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 10.599,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisN_side_337deg",
+    "r": "direct",
+    "J": 0.67771983107,
+    "reachClear": 0.081587725,
+    "retreatClear": 0.077292017,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 192,
+    "routeRollouts": 68,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.757020704397745,
+    "fractionWallAvoided": 0.843329480987355,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000187
+     ],
+     "grasp/static reach screening": [
+      28101,
+      0.175886
+     ],
+     "insertion/closure certification": [
+      20997,
+      0.132328
+     ],
+     "route (transit reach) certification": [
+      24403,
+      0.7033929999999999
+     ],
+     "carried-retreat certification": [
+      6862,
+      0.048825
+     ],
+     "cost / terminal timing audit": [
+      96,
+      0.065154
+     ],
+     "nested: IK steps": [
+      70087,
+      0.444231
+     ],
+     "nested: swept-volume queries": [
+      24067,
+      0.46261
+     ],
+     "nested: configuration safety": [
+      87673,
+      0.122079
+     ],
+     "nested: closure/contact safety": [
+      19945,
+      0.103786
+     ]
+    },
+    "dJ": -0.254396927278,
+    "sameTau": false,
+    "sameG": false,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": 0.012621662000000006,
+    "dRetreatClear": -0.02191945699999999,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   },
+   "ANYTIME_INCUMBENT": {
+    "policy": "ANYTIME_INCUMBENT",
+    "available": true,
+    "decisionT": 9.355369999999999,
+    "wallToPlan": 0.33136999999999994,
+    "unitsToPlan": 39472,
+    "tMinusRest": -4.19163,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 10.00550014407,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisN_side_45deg",
+    "r": "ring80mm_1of8",
+    "J": 0.974122233808,
+    "reachClear": 0.077780958,
+    "retreatClear": 0.105309909,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 179,
+    "routeRollouts": 20,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.8298826003758167,
+    "fractionWallAvoided": 0.9168370106297143,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000187
+     ],
+     "grasp/static reach screening": [
+      25428,
+      0.159597
+     ],
+     "insertion/closure certification": [
+      16068,
+      0.101176
+     ],
+     "route (transit reach) certification": [
+      17454,
+      0.499466
+     ],
+     "carried-retreat certification": [
+      4541,
+      0.031821999999999996
+     ],
+     "cost / terminal timing audit": [
+      62,
+      0.041447
+     ],
+     "nested: IK steps": [
+      55093,
+      0.346505
+     ],
+     "nested: swept-volume queries": [
+      17213,
+      0.328703
+     ],
+     "nested: configuration safety": [
+      68011,
+      0.094564
+     ],
+     "nested: closure/contact safety": [
+      14666,
+      0.075891
+     ]
+    },
+    "dJ": 0.04200547546,
+    "sameTau": false,
+    "sameG": false,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": 0.008814895000000003,
+    "dRetreatClear": 0.006098434999999999,
+    "dJVsEpochFull": 0.296402402738,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": false,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.0038067670000000026,
+    "dRetreatClearVsEpochFull": 0.02801789199999999
+   }
+  },
+  "fullArgminAtEpoch": {
+   "source": 79,
+   "hyp": 6,
+   "lead": 3.7,
+   "eventTime": 12.724,
+   "cand": "axisN_side_337deg",
+   "route": "direct",
+   "J": 0.67771983107,
+   "motionJ": 0.594825100445,
+   "Tpres": 2.125,
+   "Texec": 7.30270833333,
+   "reachClear": 0.081587725,
+   "retreatClear": 0.077292017,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 10.065866999999999,
+   "wall": 1.041867,
+   "units": 75594,
+   "eventIdx": 345
+  },
+  "earliestTauAtEpoch": {
+   "source": 0,
+   "hyp": 5,
+   "lead": 3.25,
+   "eventTime": 12.274,
+   "cand": "axisN_side_68deg",
+   "route": "ring80mm_5of8",
+   "J": 0.808567482623,
+   "motionJ": 0.794929272483,
+   "Tpres": 2.9908739879,
+   "Texec": 8.21358232124,
+   "reachClear": 0.047908407,
+   "retreatClear": 0.107730975,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.237969,
+   "wall": 0.21396899999999996,
+   "units": 28977,
+   "eventIdx": 154
+  },
+  "anytime": {
+   "firstIncumbentWall": 0.33136999999999994,
+   "firstIncumbentT": 9.355369999999999,
+   "firstIncumbentMinusRest": -4.19163,
+   "firstIncumbentUnits": 39472,
+   "changes": 16,
+   "losses": 0,
+   "trajectory": [
+    {
+     "t": 9.355369999999999,
+     "wall": 0.33136999999999994,
+     "units": 39472,
+     "eventIdx": 198,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_1of8",
+      "J": 0.974122233808,
+      "reachClear": 0.077780958,
+      "retreatClear": 0.105309909
+     }
+    },
+    {
+     "t": 9.36163,
+     "wall": 0.33763,
+     "units": 39785,
+     "eventIdx": 199,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_2of8",
+      "J": 0.893990124998,
+      "reachClear": 0.07976314,
+      "retreatClear": 0.105397893
+     }
+    },
+    {
+     "t": 9.371747999999998,
+     "wall": 0.34774799999999995,
+     "units": 40228,
+     "eventIdx": 201,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_4of8",
+      "J": 0.752310364201,
+      "reachClear": 0.071224809,
+      "retreatClear": 0.105420381
+     }
+    },
+    {
+     "t": 9.378051,
+     "wall": 0.354051,
+     "units": 40541,
+     "eventIdx": 202,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_5of8",
+      "J": 0.737777652147,
+      "reachClear": 0.070942467,
+      "retreatClear": 0.105396867
+     }
+    },
+    {
+     "t": 9.430433999999998,
+     "wall": 0.40643399999999996,
+     "units": 42966,
+     "eventIdx": 211,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_45deg",
+      "r": "ring140mm_6of8",
+      "J": 0.719130252351,
+      "reachClear": 0.080183963,
+      "retreatClear": 0.105365141
+     }
+    },
+    {
+     "t": 9.559610999999999,
+     "wall": 0.5356110000000001,
+     "units": 51507,
+     "eventIdx": 243,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_337deg",
+      "r": "direct",
+      "J": 0.67771983107,
+      "reachClear": 0.081587725,
+      "retreatClear": 0.077292017
+     }
+    },
+    {
+     "t": 10.553545,
+     "wall": 1.5295450000000002,
+     "units": 108986,
+     "eventIdx": 484,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisN_side_337deg",
+      "r": "direct",
+      "J": 0.69260073044,
+      "reachClear": 0.081581668,
+      "retreatClear": 0.081231952
+     }
+    },
+    {
+     "t": 10.952504999999999,
+     "wall": 1.928505,
+     "units": 129956,
+     "eventIdx": 574,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisN_side_337deg",
+      "r": "ring80mm_4of8",
+      "J": 0.719787174099,
+      "reachClear": 0.081347105,
+      "retreatClear": 0.086093343
+     }
+    },
+    {
+     "t": 11.098225,
+     "wall": 2.074225,
+     "units": 136258,
+     "eventIdx": 600,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisN_side_337deg",
+      "r": "direct",
+      "J": 0.721678422651,
+      "reachClear": 0.081561861,
+      "retreatClear": 0.086120993
+     }
+    },
+    {
+     "t": 11.35338,
+     "wall": 2.32938,
+     "units": 151728,
+     "eventIdx": 668,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisN_side_337deg",
+      "r": "ring80mm_4of8",
+      "J": 0.747676524773,
+      "reachClear": 0.081424436,
+      "retreatClear": 0.091656233
+     }
+    },
+    {
+     "t": 11.460327999999999,
+     "wall": 2.436328,
+     "units": 156514,
+     "eventIdx": 687,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisN_side_337deg",
+      "r": "direct",
+      "J": 0.751211884769,
+      "reachClear": 0.081478867,
+      "retreatClear": 0.091936556
+     }
+    },
+    {
+     "t": 11.754548999999999,
+     "wall": 2.730549,
+     "units": 171396,
+     "eventIdx": 769,
+     "incumbent": {
+      "lead": 5.5,
+      "g": "axisN_side_337deg",
+      "r": "ring80mm_3of8",
+      "J": 0.777347681105,
+      "reachClear": 0.08102028,
+      "retreatClear": 0.091381593
+     }
+    },
+    {
+     "t": 11.804253,
+     "wall": 2.780253,
+     "units": 173543,
+     "eventIdx": 777,
+     "incumbent": {
+      "lead": 5.5,
+      "g": "axisN_side_337deg",
+      "r": "direct",
+      "J": 0.783093002073,
+      "reachClear": 0.081429373,
+      "retreatClear": 0.091660638
+     }
+    },
+    {
+     "t": 12.127268999999998,
+     "wall": 3.103269,
+     "units": 188936,
+     "eventIdx": 864,
+     "incumbent": {
+      "lead": 6.4,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_6of8",
+      "J": 0.867886332777,
+      "reachClear": 0.066614968,
+      "retreatClear": 0.103170867
+     }
+    },
+    {
+     "t": 12.458231,
+     "wall": 3.434231,
+     "units": 203410,
+     "eventIdx": 924,
+     "incumbent": {
+      "lead": 6.85,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_6of8",
+      "J": 0.896050818407,
+      "reachClear": 0.063501752,
+      "retreatClear": 0.099628404
+     }
+    },
+    {
+     "t": 12.913853999999999,
+     "wall": 3.889854,
+     "units": 227813,
+     "eventIdx": 1046,
+     "incumbent": {
+      "lead": 8.0,
+      "g": "axisN_side_23deg",
+      "r": "ring80mm_6of8",
+      "J": 0.932116758348,
+      "reachClear": 0.068966063,
+      "retreatClear": 0.099211474
+     }
+    }
+   ],
+   "atFractionOfFullWall": {
+    "0.1": {
+     "lead": 3.7,
+     "g": "axisN_side_45deg",
+     "r": "ring80mm_5of8",
+     "J": 0.737777652147,
+     "dJ": -0.19433910620100003,
+     "reachClear": 0.070942467,
+     "retreatClear": 0.105396867
+    },
+    "0.25": {
+     "lead": 3.7,
+     "g": "axisN_side_337deg",
+     "r": "direct",
+     "J": 0.67771983107,
+     "dJ": -0.254396927278,
+     "reachClear": 0.081587725,
+     "retreatClear": 0.077292017
+    },
+    "0.5": {
+     "lead": 4.6,
+     "g": "axisN_side_337deg",
+     "r": "ring80mm_4of8",
+     "J": 0.719787174099,
+     "dJ": -0.21232958424900006,
+     "reachClear": 0.081347105,
+     "retreatClear": 0.086093343
+    },
+    "0.75": {
+     "lead": 5.5,
+     "g": "axisN_side_337deg",
+     "r": "direct",
+     "J": 0.783093002073,
+     "dJ": -0.14902375627499997,
+     "reachClear": 0.081429373,
+     "retreatClear": 0.091660638
+    },
+    "1.0": {
+     "lead": 8.0,
+     "g": "axisN_side_23deg",
+     "r": "ring80mm_6of8",
+     "J": 0.932116758348,
+     "dJ": 0.0,
+     "reachClear": 0.068966063,
+     "retreatClear": 0.099211474
+    }
+   }
+  },
+  "beforeFirstComplete": {
+   "staticScreensFailed": 141,
+   "wallStaticFailed": 0.16802899999999993,
+   "staticScreensPassed": 7,
+   "wallStaticPassed": 0.012649000000000077,
+   "routeRolloutsFailed": 6,
+   "wallRouteFailed": 0.02671799999999991,
+   "wallSuccessfulRoute": 0.006573000000000051,
+   "hypothesesTouched": 5
+  },
+  "perCandidateWall": {
+   "static/rejected": {
+    "n": 405,
+    "median": 0.00042799999999942884,
+    "total": 0.4722609999999991
+   },
+   "static/feasible": {
+    "n": 43,
+    "median": 0.0018250000000001876,
+    "total": 0.07926699999999992
+   },
+   "route/rejected": {
+    "n": 302,
+    "median": 0.004496999999999918,
+    "total": 1.3454949999999994
+   },
+   "route/feasible": {
+    "n": 310,
+    "median": 0.006637000000000004,
+    "total": 2.085542000000001
+   }
+  },
+  "exactTimingPrune": {
+   "prunedGraspTau": 7,
+   "savedWall": 0.6559349999999999,
+   "savedUnits": 31028,
+   "originalFullWall": 4.64052
+  },
+  "fullArgminAtEpochUnpruned": {
+   "source": 79,
+   "hyp": 6,
+   "lead": 3.7,
+   "eventTime": 12.724,
+   "cand": "axisN_side_337deg",
+   "route": "direct",
+   "J": 0.67771983107,
+   "motionJ": 0.594825100445,
+   "Tpres": 2.125,
+   "Texec": 7.30270833333,
+   "reachClear": 0.081587725,
+   "retreatClear": 0.077292017,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 10.065866999999999,
+   "wall": 1.041867,
+   "units": 75594,
+   "eventIdx": 345
+  }
+ },
+ {
+  "run": "char_a/longitudinal [exact timing prune]",
+  "gen": "1",
+  "kind": "moving",
+  "outcome": "accepted",
+  "submit": 9.024,
+  "rest": 13.546999999999999,
+  "records": 227,
+  "fullWall": 3.306936,
+  "fullUnits": 240905,
+  "policies": {
+   "FULL_ARGMIN": {
+    "policy": "FULL_ARGMIN",
+    "available": true,
+    "decisionT": 12.330936,
+    "wallToPlan": 3.305928,
+    "unitsToPlan": 240904,
+    "tMinusRest": -1.2160639999999994,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 12.43058006859,
+    "lead": 5.95,
+    "tau": 14.974,
+    "g": "axisP_side_337deg",
+    "r": "ring80mm_1of8",
+    "J": 0.851519463318,
+    "reachClear": 0.081265615,
+    "retreatClear": 0.176686628,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 14,
+    "graspScreens": 448,
+    "routeRollouts": 476,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 4.151013885178578e-06,
+    "fractionWallAvoided": 0.000304813882095023,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      14,
+      0.000482
+     ],
+     "grasp/static reach screening": [
+      99852,
+      0.640119
+     ],
+     "insertion/closure certification": [
+      60867,
+      0.389586
+     ],
+     "route (transit reach) certification": [
+      74270,
+      2.429034
+     ],
+     "carried-retreat certification": [
+      20907,
+      0.155094
+     ],
+     "cost / terminal timing audit": [
+      232,
+      0.160601
+     ],
+     "nested: IK steps": [
+      230244,
+      1.508999
+     ],
+     "nested: swept-volume queries": [
+      73110,
+      1.650817
+     ],
+     "nested: configuration safety": [
+      283492,
+      0.420853
+     ],
+     "nested: closure/contact safety": [
+      48311,
+      0.253641
+     ]
+    },
+    "dJ": 0.0,
+    "sameTau": true,
+    "sameG": true,
+    "sameR": true,
+    "sameTuple": true,
+    "dReachClear": 0.0,
+    "dRetreatClear": 0.0,
+    "dJVsEpochFull": 0.23015113045299995,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": 0.0018350379999999972,
+    "dRetreatClearVsEpochFull": -0.033702681999999984
+   },
+   "FIRST_COMPLETE_FEASIBLE": {
+    "policy": "FIRST_COMPLETE_FEASIBLE",
+    "available": true,
+    "decisionT": 9.191930999999999,
+    "wallToPlan": 0.167931,
+    "unitsToPlan": 22359,
+    "tMinusRest": -4.355069,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.549000000000001,
+    "lead": 2.35,
+    "tau": 11.374,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.621368332865,
+    "reachClear": 0.079430577,
+    "retreatClear": 0.21038931,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 3,
+    "graspScreens": 80,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.9071874805421224,
+    "fractionWallAvoided": 0.9492185515534621,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      3,
+      0.000111
+     ],
+     "grasp/static reach screening": [
+      17601,
+      0.127557
+     ],
+     "insertion/closure certification": [
+      3851,
+      0.028513999999999998
+     ],
+     "route (transit reach) certification": [
+      94,
+      0.003443
+     ],
+     "carried-retreat certification": [
+      809,
+      0.006267
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000816
+     ],
+     "nested: IK steps": [
+      19764,
+      0.142018
+     ],
+     "nested: swept-volume queries": [
+      92,
+      0.002164
+     ],
+     "nested: configuration safety": [
+      19033,
+      0.031895
+     ],
+     "nested: closure/contact safety": [
+      2723,
+      0.016444
+     ]
+    },
+    "dJ": -0.23015113045299995,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.0018350379999999972,
+    "dRetreatClear": 0.033702681999999984,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   },
+   "FIRST_ADMISSIBLE_COMPLETE": {
+    "policy": "FIRST_ADMISSIBLE_COMPLETE",
+    "available": true,
+    "decisionT": 9.191930999999999,
+    "wallToPlan": 0.167931,
+    "unitsToPlan": 22359,
+    "tMinusRest": -4.355069,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.549000000000001,
+    "lead": 2.35,
+    "tau": 11.374,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.621368332865,
+    "reachClear": 0.079430577,
+    "retreatClear": 0.21038931,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 3,
+    "graspScreens": 80,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.9071874805421224,
+    "fractionWallAvoided": 0.9492185515534621,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      3,
+      0.000111
+     ],
+     "grasp/static reach screening": [
+      17601,
+      0.127557
+     ],
+     "insertion/closure certification": [
+      3851,
+      0.028513999999999998
+     ],
+     "route (transit reach) certification": [
+      94,
+      0.003443
+     ],
+     "carried-retreat certification": [
+      809,
+      0.006267
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000816
+     ],
+     "nested: IK steps": [
+      19764,
+      0.142018
+     ],
+     "nested: swept-volume queries": [
+      92,
+      0.002164
+     ],
+     "nested: configuration safety": [
+      19033,
+      0.031895
+     ],
+     "nested: closure/contact safety": [
+      2723,
+      0.016444
+     ]
+    },
+    "dJ": -0.23015113045299995,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.0018350379999999972,
+    "dRetreatClear": 0.033702681999999984,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   },
+   "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR": {
+    "policy": "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR",
+    "available": true,
+    "decisionT": 9.330694999999999,
+    "wallToPlan": 0.30669500000000005,
+    "unitsToPlan": 31809,
+    "tMinusRest": -4.216305,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.549000000000001,
+    "lead": 2.35,
+    "tau": 11.374,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.621368332865,
+    "reachClear": 0.079430577,
+    "retreatClear": 0.21038931,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 3,
+    "graspScreens": 96,
+    "routeRollouts": 17,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.8679603993275358,
+    "fractionWallAvoided": 0.9072570500306023,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      3,
+      0.000111
+     ],
+     "grasp/static reach screening": [
+      20664,
+      0.148236
+     ],
+     "insertion/closure certification": [
+      6672,
+      0.047354
+     ],
+     "route (transit reach) certification": [
+      4631,
+      0.15449200000000002
+     ],
+     "carried-retreat certification": [
+      2455,
+      0.019505
+     ],
+     "cost / terminal timing audit": [
+      18,
+      0.013751
+     ],
+     "nested: IK steps": [
+      30636,
+      0.221579
+     ],
+     "nested: swept-volume queries": [
+      4564,
+      0.098848
+     ],
+     "nested: configuration safety": [
+      32805,
+      0.053499
+     ],
+     "nested: closure/contact safety": [
+      5567,
+      0.03212
+     ]
+    },
+    "dJ": -0.23015113045299995,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.0018350379999999972,
+    "dRetreatClear": 0.033702681999999984,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   },
+   "ANYTIME_INCUMBENT": {
+    "policy": "ANYTIME_INCUMBENT",
+    "available": true,
+    "decisionT": 9.191930999999999,
+    "wallToPlan": 0.167931,
+    "unitsToPlan": 22359,
+    "tMinusRest": -4.355069,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.549000000000001,
+    "lead": 2.35,
+    "tau": 11.374,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.621368332865,
+    "reachClear": 0.079430577,
+    "retreatClear": 0.21038931,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 3,
+    "graspScreens": 80,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.9071874805421224,
+    "fractionWallAvoided": 0.9492185515534621,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      3,
+      0.000111
+     ],
+     "grasp/static reach screening": [
+      17601,
+      0.127557
+     ],
+     "insertion/closure certification": [
+      3851,
+      0.028513999999999998
+     ],
+     "route (transit reach) certification": [
+      94,
+      0.003443
+     ],
+     "carried-retreat certification": [
+      809,
+      0.006267
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000816
+     ],
+     "nested: IK steps": [
+      19764,
+      0.142018
+     ],
+     "nested: swept-volume queries": [
+      92,
+      0.002164
+     ],
+     "nested: configuration safety": [
+      19033,
+      0.031895
+     ],
+     "nested: closure/contact safety": [
+      2723,
+      0.016444
+     ]
+    },
+    "dJ": -0.23015113045299995,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.0018350379999999972,
+    "dRetreatClear": 0.033702681999999984,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   }
+  },
+  "fullArgminAtEpoch": {
+   "source": 0,
+   "hyp": 3,
+   "lead": 2.35,
+   "eventTime": 11.374,
+   "cand": "axisP_side_337deg",
+   "route": "direct",
+   "J": 0.621368332865,
+   "motionJ": 0.59373675599,
+   "Tpres": 1.825,
+   "Texec": 7.20770833333,
+   "reachClear": 0.079430577,
+   "retreatClear": 0.21038931,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.191930999999999,
+   "wall": 0.167931,
+   "units": 22359,
+   "eventIdx": 80
+  },
+  "earliestTauAtEpoch": {
+   "source": 0,
+   "hyp": 3,
+   "lead": 2.35,
+   "eventTime": 11.374,
+   "cand": "axisP_side_337deg",
+   "route": "direct",
+   "J": 0.621368332865,
+   "motionJ": 0.59373675599,
+   "Tpres": 1.825,
+   "Texec": 7.20770833333,
+   "reachClear": 0.079430577,
+   "retreatClear": 0.21038931,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.191930999999999,
+   "wall": 0.167931,
+   "units": 22359,
+   "eventIdx": 80
+  },
+  "anytime": {
+   "firstIncumbentWall": 0.167931,
+   "firstIncumbentT": 9.191930999999999,
+   "firstIncumbentMinusRest": -4.355069,
+   "firstIncumbentUnits": 22359,
+   "changes": 11,
+   "losses": 0,
+   "trajectory": [
+    {
+     "t": 9.191930999999999,
+     "wall": 0.167931,
+     "units": 22359,
+     "eventIdx": 80,
+     "incumbent": {
+      "lead": 2.35,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.621368332865,
+      "reachClear": 0.079430577,
+      "retreatClear": 0.21038931
+     }
+    },
+    {
+     "t": 9.500952999999999,
+     "wall": 0.47695300000000007,
+     "units": 48779,
+     "eventIdx": 174,
+     "incumbent": {
+      "lead": 3.25,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.643721078988,
+      "reachClear": 0.08076408,
+      "retreatClear": 0.217038054
+     }
+    },
+    {
+     "t": 9.867882,
+     "wall": 0.843882,
+     "units": 69990,
+     "eventIdx": 268,
+     "incumbent": {
+      "lead": 3.25,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.662534954691,
+      "reachClear": 0.079694274,
+      "retreatClear": 0.216860893
+     }
+    },
+    {
+     "t": 10.25418,
+     "wall": 1.23018,
+     "units": 91900,
+     "eventIdx": 369,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.676718395057,
+      "reachClear": 0.080860743,
+      "retreatClear": 0.219234669
+     }
+    },
+    {
+     "t": 10.30036,
+     "wall": 1.27636,
+     "units": 94243,
+     "eventIdx": 378,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.690100285805,
+      "reachClear": 0.080083187,
+      "retreatClear": 0.21910632
+     }
+    },
+    {
+     "t": 10.636600999999999,
+     "wall": 1.612601,
+     "units": 115414,
+     "eventIdx": 460,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.714606611527,
+      "reachClear": 0.080937003,
+      "retreatClear": 0.220977328
+     }
+    },
+    {
+     "t": 10.748453999999999,
+     "wall": 1.7244540000000002,
+     "units": 121139,
+     "eventIdx": 480,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.722273153846,
+      "reachClear": 0.080250687,
+      "retreatClear": 0.220901969
+     }
+    },
+    {
+     "t": 11.044884,
+     "wall": 2.020884,
+     "units": 139551,
+     "eventIdx": 560,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.74963886921,
+      "reachClear": 0.081011778,
+      "retreatClear": 0.222213524
+     }
+    },
+    {
+     "t": 11.186463999999999,
+     "wall": 2.162464,
+     "units": 146818,
+     "eventIdx": 585,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.753868726202,
+      "reachClear": 0.080443101,
+      "retreatClear": 0.221417502
+     }
+    },
+    {
+     "t": 11.424665,
+     "wall": 2.400665,
+     "units": 162919,
+     "eventIdx": 653,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.782429345511,
+      "reachClear": 0.081095874,
+      "retreatClear": 0.209431301
+     }
+    },
+    {
+     "t": 11.670008999999999,
+     "wall": 2.646009,
+     "units": 179132,
+     "eventIdx": 727,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.7859191567,
+      "reachClear": 0.080815649,
+      "retreatClear": 0.20918245
+     }
+    }
+   ],
+   "atFractionOfFullWall": {
+    "0.1": {
+     "lead": 2.35,
+     "g": "axisP_side_337deg",
+     "r": "direct",
+     "J": 0.621368332865,
+     "dJ": -0.23015113045299995,
+     "reachClear": 0.079430577,
+     "retreatClear": 0.21038931
+    },
+    "0.25": {
+     "lead": 3.25,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_1of8",
+     "J": 0.643721078988,
+     "dJ": -0.20779838432999997,
+     "reachClear": 0.08076408,
+     "retreatClear": 0.217038054
+    },
+    "0.5": {
+     "lead": 4.15,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_1of8",
+     "J": 0.714606611527,
+     "dJ": -0.136912851791,
+     "reachClear": 0.080937003,
+     "retreatClear": 0.220977328
+    },
+    "0.75": {
+     "lead": 5.05,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_1of8",
+     "J": 0.782429345511,
+     "dJ": -0.06909011780700003,
+     "reachClear": 0.081095874,
+     "retreatClear": 0.209431301
+    },
+    "1.0": {
+     "lead": 5.95,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_1of8",
+     "J": 0.851519463318,
+     "dJ": 0.0,
+     "reachClear": 0.081265615,
+     "retreatClear": 0.176686628
+    }
+   }
+  },
+  "beforeFirstComplete": {
+   "staticScreensFailed": 79,
+   "wallStaticFailed": 0.160428,
+   "staticScreensPassed": 1,
+   "wallStaticPassed": 0.001816000000000012,
+   "routeRolloutsFailed": 0,
+   "wallRouteFailed": 0.0,
+   "wallSuccessfulRoute": 0.005686999999999998,
+   "hypothesesTouched": 3
+  },
+  "perCandidateWall": {
+   "static/rejected": {
+    "n": 413,
+    "median": 0.0014359999999999928,
+    "total": 0.8392890000000015
+   },
+   "static/feasible": {
+    "n": 35,
+    "median": 0.001816000000000012,
+    "total": 0.06466899999999834
+   },
+   "route/feasible": {
+    "n": 227,
+    "median": 0.006201000000000123,
+    "total": 1.4412640000000005
+   },
+   "route/rejected": {
+    "n": 249,
+    "median": 0.004148999999999958,
+    "total": 0.9607059999999997
+   }
+  },
+  "exactTimingPrune": {
+   "prunedGraspTau": 7,
+   "savedWall": 0.48446999999999996,
+   "savedUnits": 15238,
+   "originalFullWall": 3.791406
+  },
+  "fullArgminAtEpochUnpruned": {
+   "source": 0,
+   "hyp": 3,
+   "lead": 2.35,
+   "eventTime": 11.374,
+   "cand": "axisP_side_337deg",
+   "route": "direct",
+   "J": 0.621368332865,
+   "motionJ": 0.59373675599,
+   "Tpres": 1.825,
+   "Texec": 7.20770833333,
+   "reachClear": 0.079430577,
+   "retreatClear": 0.21038931,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.191930999999999,
+   "wall": 0.167931,
+   "units": 22359,
+   "eventIdx": 80
+  }
+ },
+ {
+  "run": "char_a/near-ground [exact timing prune]",
+  "gen": "1",
+  "kind": "moving",
+  "outcome": "accepted",
+  "submit": 9.024,
+  "rest": 13.546999999999999,
+  "records": 80,
+  "fullWall": 1.7992290000000002,
+  "fullUnits": 171990,
+  "policies": {
+   "FULL_ARGMIN": {
+    "policy": "FULL_ARGMIN",
+    "available": true,
+    "decisionT": 10.823229,
+    "wallToPlan": 1.7981120000000004,
+    "unitsToPlan": 171989,
+    "tMinusRest": -2.7237709999999993,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 11.04229784321,
+    "lead": 5.05,
+    "tau": 14.074,
+    "g": "axisP_side_45deg",
+    "r": "ring80mm_1of8",
+    "J": 0.948698319891,
+    "reachClear": 0.053410563,
+    "retreatClear": 0.089727824,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 14,
+    "graspScreens": 448,
+    "routeRollouts": 170,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 5.8142915285719354e-06,
+    "fractionWallAvoided": 0.000620821474086819,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      14,
+      0.00048
+     ],
+     "grasp/static reach screening": [
+      84783,
+      0.526351
+     ],
+     "insertion/closure certification": [
+      77104,
+      0.492695
+     ],
+     "route (transit reach) certification": [
+      62800,
+      1.834953
+     ],
+     "carried-retreat certification": [
+      17500,
+      0.13001
+     ],
+     "cost / terminal timing audit": [
+      256,
+      0.206306
+     ],
+     "nested: IK steps": [
+      226353,
+      1.449656
+     ],
+     "nested: swept-volume queries": [
+      61988,
+      1.205318
+     ],
+     "nested: configuration safety": [
+      271847,
+      0.381529
+     ],
+     "nested: closure/contact safety": [
+      45959,
+      0.241459
+     ]
+    },
+    "dJ": 0.0,
+    "sameTau": true,
+    "sameG": true,
+    "sameR": true,
+    "sameTuple": true,
+    "dReachClear": 0.0,
+    "dRetreatClear": 0.0,
+    "dJVsEpochFull": 0.19524385438699998,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.017234005000000004,
+    "dRetreatClearVsEpochFull": -0.015854763000000008
+   },
+   "FIRST_COMPLETE_FEASIBLE": {
+    "policy": "FIRST_COMPLETE_FEASIBLE",
+    "available": true,
+    "decisionT": 9.312038,
+    "wallToPlan": 0.28803800000000024,
+    "unitsToPlan": 44463,
+    "tMinusRest": -4.2349619999999994,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.774000000000001,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisP_side_45deg",
+    "r": "direct",
+    "J": 0.888487496309,
+    "reachClear": 0.044903055,
+    "retreatClear": 0.101518459,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 163,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7414791557648701,
+    "fractionWallAvoided": 0.8399103171413976,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000311
+     ],
+     "grasp/static reach screening": [
+      40197,
+      0.25084
+     ],
+     "insertion/closure certification": [
+      28303,
+      0.17572
+     ],
+     "route (transit reach) certification": [
+      36681,
+      1.068546
+     ],
+     "carried-retreat certification": [
+      9567,
+      0.070463
+     ],
+     "cost / terminal timing audit": [
+      177,
+      0.121258
+     ],
+     "nested: IK steps": [
+      103786,
+      0.661893
+     ],
+     "nested: swept-volume queries": [
+      36203,
+      0.705515
+     ],
+     "nested: configuration safety": [
+      131164,
+      0.181648
+     ],
+     "nested: closure/contact safety": [
+      28829,
+      0.149224
+     ]
+    },
+    "dJ": -0.06021082358199992,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.008507508000000004,
+    "dRetreatClear": 0.011790635000000008,
+    "dJVsEpochFull": 0.13503303080500006,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.025741513000000008,
+    "dRetreatClearVsEpochFull": -0.004064128
+   },
+   "FIRST_ADMISSIBLE_COMPLETE": {
+    "policy": "FIRST_ADMISSIBLE_COMPLETE",
+    "available": true,
+    "decisionT": 9.312038,
+    "wallToPlan": 0.28803800000000024,
+    "unitsToPlan": 44463,
+    "tMinusRest": -4.2349619999999994,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.774000000000001,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisP_side_45deg",
+    "r": "direct",
+    "J": 0.888487496309,
+    "reachClear": 0.044903055,
+    "retreatClear": 0.101518459,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 163,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7414791557648701,
+    "fractionWallAvoided": 0.8399103171413976,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000311
+     ],
+     "grasp/static reach screening": [
+      40197,
+      0.25084
+     ],
+     "insertion/closure certification": [
+      28303,
+      0.17572
+     ],
+     "route (transit reach) certification": [
+      36681,
+      1.068546
+     ],
+     "carried-retreat certification": [
+      9567,
+      0.070463
+     ],
+     "cost / terminal timing audit": [
+      177,
+      0.121258
+     ],
+     "nested: IK steps": [
+      103786,
+      0.661893
+     ],
+     "nested: swept-volume queries": [
+      36203,
+      0.705515
+     ],
+     "nested: configuration safety": [
+      131164,
+      0.181648
+     ],
+     "nested: closure/contact safety": [
+      28829,
+      0.149224
+     ]
+    },
+    "dJ": -0.06021082358199992,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.008507508000000004,
+    "dRetreatClear": 0.011790635000000008,
+    "dJVsEpochFull": 0.13503303080500006,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.025741513000000008,
+    "dRetreatClearVsEpochFull": -0.004064128
+   },
+   "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR": {
+    "policy": "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR",
+    "available": true,
+    "decisionT": 9.463871,
+    "wallToPlan": 0.4398710000000001,
+    "unitsToPlan": 57443,
+    "tMinusRest": -4.083129,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.64263760903,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisP_side_45deg",
+    "r": "ring80mm_7of8",
+    "J": 0.79564758101,
+    "reachClear": 0.065032307,
+    "retreatClear": 0.101472152,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 192,
+    "routeRollouts": 17,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.6660096517239374,
+    "fractionWallAvoided": 0.7555225043615904,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000311
+     ],
+     "grasp/static reach screening": [
+      48170,
+      0.298562
+     ],
+     "insertion/closure certification": [
+      30298,
+      0.188894
+     ],
+     "route (transit reach) certification": [
+      39153,
+      1.145836
+     ],
+     "carried-retreat certification": [
+      10095,
+      0.07459
+     ],
+     "cost / terminal timing audit": [
+      189,
+      0.130241
+     ],
+     "nested: IK steps": [
+      115982,
+      0.738188
+     ],
+     "nested: swept-volume queries": [
+      38643,
+      0.756769
+     ],
+     "nested: configuration safety": [
+      145312,
+      0.201508
+     ],
+     "nested: closure/contact safety": [
+      30848,
+      0.160437
+     ]
+    },
+    "dJ": -0.15305073888099996,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": 0.011621743999999996,
+    "dRetreatClear": 0.011744327999999998,
+    "dJVsEpochFull": 0.04219311550600002,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.005612261000000007,
+    "dRetreatClearVsEpochFull": -0.0041104350000000095
+   },
+   "ANYTIME_INCUMBENT": {
+    "policy": "ANYTIME_INCUMBENT",
+    "available": true,
+    "decisionT": 9.312038,
+    "wallToPlan": 0.28803800000000024,
+    "unitsToPlan": 44463,
+    "tMinusRest": -4.2349619999999994,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.774000000000001,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisP_side_45deg",
+    "r": "direct",
+    "J": 0.888487496309,
+    "reachClear": 0.044903055,
+    "retreatClear": 0.101518459,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 163,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7414791557648701,
+    "fractionWallAvoided": 0.8399103171413976,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000311
+     ],
+     "grasp/static reach screening": [
+      40197,
+      0.25084
+     ],
+     "insertion/closure certification": [
+      28303,
+      0.17572
+     ],
+     "route (transit reach) certification": [
+      36681,
+      1.068546
+     ],
+     "carried-retreat certification": [
+      9567,
+      0.070463
+     ],
+     "cost / terminal timing audit": [
+      177,
+      0.121258
+     ],
+     "nested: IK steps": [
+      103786,
+      0.661893
+     ],
+     "nested: swept-volume queries": [
+      36203,
+      0.705515
+     ],
+     "nested: configuration safety": [
+      131164,
+      0.181648
+     ],
+     "nested: closure/contact safety": [
+      28829,
+      0.149224
+     ]
+    },
+    "dJ": -0.06021082358199992,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.008507508000000004,
+    "dRetreatClear": 0.011790635000000008,
+    "dJVsEpochFull": 0.13503303080500006,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.025741513000000008,
+    "dRetreatClearVsEpochFull": -0.004064128
+   }
+  },
+  "fullArgminAtEpoch": {
+   "source": 158,
+   "hyp": 5,
+   "lead": 3.25,
+   "eventTime": 12.274,
+   "cand": "axisP_side_45deg",
+   "route": "ring80mm_7of8",
+   "J": 0.753454465504,
+   "motionJ": 0.745845984477,
+   "Tpres": 3.10543884964,
+   "Texec": 8.27814718297,
+   "reachClear": 0.070644568,
+   "retreatClear": 0.105582587,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 10.517930999999999,
+   "wall": 1.493931,
+   "units": 99120,
+   "eventIdx": 343
+  },
+  "earliestTauAtEpoch": {
+   "source": 12,
+   "hyp": 6,
+   "lead": 3.7,
+   "eventTime": 12.724,
+   "cand": "axisP_side_45deg",
+   "route": "ring140mm_7of8",
+   "J": 0.793112799596,
+   "motionJ": 0.773455135369,
+   "Tpres": 3.32650435168,
+   "Texec": 8.51921268501,
+   "reachClear": 0.068287794,
+   "retreatClear": 0.101428444,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.413212999999999,
+   "wall": 0.38921300000000025,
+   "units": 49059,
+   "eventIdx": 179
+  },
+  "anytime": {
+   "firstIncumbentWall": 0.28803800000000024,
+   "firstIncumbentT": 9.312038,
+   "firstIncumbentMinusRest": -4.2349619999999994,
+   "firstIncumbentUnits": 44463,
+   "changes": 7,
+   "losses": 0,
+   "trajectory": [
+    {
+     "t": 9.312038,
+     "wall": 0.28803800000000024,
+     "units": 44463,
+     "eventIdx": 163,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisP_side_45deg",
+      "r": "direct",
+      "J": 0.888487496309,
+      "reachClear": 0.044903055,
+      "retreatClear": 0.101518459
+     }
+    },
+    {
+     "t": 9.318911,
+     "wall": 0.29491100000000015,
+     "units": 44797,
+     "eventIdx": 164,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisP_side_45deg",
+      "r": "ring80mm_0of8",
+      "J": 0.801209809865,
+      "reachClear": 0.070855645,
+      "retreatClear": 0.101436745
+     }
+    },
+    {
+     "t": 9.363508,
+     "wall": 0.33950800000000014,
+     "units": 46781,
+     "eventIdx": 171,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisP_side_45deg",
+      "r": "ring80mm_7of8",
+      "J": 0.79564758101,
+      "reachClear": 0.065032307,
+      "retreatClear": 0.101472152
+     }
+    },
+    {
+     "t": 9.64355,
+     "wall": 0.61955,
+     "units": 74003,
+     "eventIdx": 261,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_45deg",
+      "r": "ring80mm_0of8",
+      "J": 0.838541206476,
+      "reachClear": 0.06605411,
+      "retreatClear": 0.097185219
+     }
+    },
+    {
+     "t": 10.103945999999999,
+     "wall": 1.0799460000000003,
+     "units": 113174,
+     "eventIdx": 409,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisP_side_45deg",
+      "r": "ring140mm_0of8",
+      "J": 0.889649129605,
+      "reachClear": 0.065287398,
+      "retreatClear": 0.093071735
+     }
+    },
+    {
+     "t": 10.279506,
+     "wall": 1.2555060000000002,
+     "units": 127214,
+     "eventIdx": 460,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisP_side_45deg",
+      "r": "ring80mm_0of8",
+      "J": 0.896275004726,
+      "reachClear": 0.057366118,
+      "retreatClear": 0.092659557
+     }
+    },
+    {
+     "t": 10.575548999999999,
+     "wall": 1.5515490000000003,
+     "units": 155538,
+     "eventIdx": 564,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisP_side_45deg",
+      "r": "ring140mm_0of8",
+      "J": 0.933966590181,
+      "reachClear": 0.059329143,
+      "retreatClear": 0.089612193
+     }
+    }
+   ],
+   "atFractionOfFullWall": {
+    "0.1": null,
+    "0.25": {
+     "lead": 3.7,
+     "g": "axisP_side_45deg",
+     "r": "ring80mm_7of8",
+     "J": 0.79564758101,
+     "dJ": -0.15305073888099996,
+     "reachClear": 0.065032307,
+     "retreatClear": 0.101472152
+    },
+    "0.5": {
+     "lead": 4.15,
+     "g": "axisP_side_45deg",
+     "r": "ring80mm_0of8",
+     "J": 0.838541206476,
+     "dJ": -0.11015711341500001,
+     "reachClear": 0.06605411,
+     "retreatClear": 0.097185219
+    },
+    "0.75": {
+     "lead": 4.6,
+     "g": "axisP_side_45deg",
+     "r": "ring80mm_0of8",
+     "J": 0.896275004726,
+     "dJ": -0.052423315164999984,
+     "reachClear": 0.057366118,
+     "retreatClear": 0.092659557
+    },
+    "1.0": {
+     "lead": 5.05,
+     "g": "axisP_side_45deg",
+     "r": "ring80mm_1of8",
+     "J": 0.948698319891,
+     "dJ": 0.0,
+     "reachClear": 0.053410563,
+     "retreatClear": 0.089727824
+    }
+   }
+  },
+  "beforeFirstComplete": {
+   "staticScreensFailed": 148,
+   "wallStaticFailed": 0.2519870000000002,
+   "staticScreensPassed": 15,
+   "wallStaticPassed": 0.029487000000000065,
+   "routeRolloutsFailed": 0,
+   "wallRouteFailed": 0.0,
+   "wallSuccessfulRoute": 0.006564000000000014,
+   "hypothesesTouched": 6
+  },
+  "perCandidateWall": {
+   "static/rejected": {
+    "n": 424,
+    "median": 0.0005149999999999322,
+    "total": 0.792727
+   },
+   "static/feasible": {
+    "n": 24,
+    "median": 0.0019689999999999985,
+    "total": 0.0476939999999997
+   },
+   "route/feasible": {
+    "n": 80,
+    "median": 0.007023999999999919,
+    "total": 0.5885710000000008
+   },
+   "route/rejected": {
+    "n": 90,
+    "median": 0.004553999999999947,
+    "total": 0.3691199999999999
+   }
+  },
+  "exactTimingPrune": {
+   "prunedGraspTau": 14,
+   "savedWall": 1.4062119999999998,
+   "savedUnits": 70468,
+   "originalFullWall": 3.205441
+  },
+  "fullArgminAtEpochUnpruned": {
+   "source": 158,
+   "hyp": 5,
+   "lead": 3.25,
+   "eventTime": 12.274,
+   "cand": "axisP_side_45deg",
+   "route": "ring80mm_7of8",
+   "J": 0.753454465504,
+   "motionJ": 0.745845984477,
+   "Tpres": 3.10543884964,
+   "Texec": 8.27814718297,
+   "reachClear": 0.070644568,
+   "retreatClear": 0.105582587,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 10.517930999999999,
+   "wall": 1.493931,
+   "units": 99120,
+   "eventIdx": 343
+  }
+ },
+ {
+  "run": "char_b/diagonal [exact timing prune]",
+  "gen": "1",
+  "kind": "moving",
+  "outcome": "accepted",
+  "submit": 9.024,
+  "rest": 13.547003756058919,
+  "records": 267,
+  "fullWall": 2.881436,
+  "fullUnits": 222160,
+  "policies": {
+   "FULL_ARGMIN": {
+    "policy": "FULL_ARGMIN",
+    "available": true,
+    "decisionT": 11.905435999999998,
+    "wallToPlan": 2.879979,
+    "unitsToPlan": 222159,
+    "tMinusRest": -1.6415677560589206,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 12.17994615226,
+    "lead": 5.5,
+    "tau": 14.524,
+    "g": "axisP_side_337deg",
+    "r": "ring80mm_2of8",
+    "J": 0.774639182014,
+    "reachClear": 0.074236993,
+    "retreatClear": 0.223219739,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 14,
+    "graspScreens": 448,
+    "routeRollouts": 408,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 4.501260352895997e-06,
+    "fractionWallAvoided": 0.0005056506547429507,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      14,
+      0.000431
+     ],
+     "grasp/static reach screening": [
+      89105,
+      0.55061
+     ],
+     "insertion/closure certification": [
+      56528,
+      0.349875
+     ],
+     "route (transit reach) certification": [
+      50614,
+      1.596859
+     ],
+     "carried-retreat certification": [
+      25631,
+      0.184389
+     ],
+     "cost / terminal timing audit": [
+      267,
+      0.185016
+     ],
+     "nested: IK steps": [
+      195256,
+      1.257064
+     ],
+     "nested: swept-volume queries": [
+      49798,
+      1.074843
+     ],
+     "nested: configuration safety": [
+      220512,
+      0.332559
+     ],
+     "nested: closure/contact safety": [
+      53070,
+      0.270181
+     ]
+    },
+    "dJ": 0.0,
+    "sameTau": true,
+    "sameG": true,
+    "sameR": true,
+    "sameTuple": true,
+    "dReachClear": 0.0,
+    "dRetreatClear": 0.0,
+    "dJVsEpochFull": 0.09265393050299997,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": 0.0018809949999999964,
+    "dRetreatClearVsEpochFull": 0.005440031000000012
+   },
+   "FIRST_COMPLETE_FEASIBLE": {
+    "policy": "FIRST_COMPLETE_FEASIBLE",
+    "available": true,
+    "decisionT": 9.408183999999999,
+    "wallToPlan": 0.384184,
+    "unitsToPlan": 59919,
+    "tMinusRest": -4.13881975605892,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 11.248999999999999,
+    "lead": 4.15,
+    "tau": 13.174,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.730966260042,
+    "reachClear": 0.069747321,
+    "retreatClear": 0.21714345,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 7,
+    "graspScreens": 208,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7302889809146561,
+    "fractionWallAvoided": 0.866669257967208,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      7,
+      8.3e-05
+     ],
+     "grasp/static reach screening": [
+      44564,
+      0.275898
+     ],
+     "insertion/closure certification": [
+      8847,
+      0.056218
+     ],
+     "route (transit reach) certification": [
+      99,
+      0.00332
+     ],
+     "carried-retreat certification": [
+      6401,
+      0.045674000000000006
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000774
+     ],
+     "nested: IK steps": [
+      53874,
+      0.336958
+     ],
+     "nested: swept-volume queries": [
+      97,
+      0.002175
+     ],
+     "nested: configuration safety": [
+      47527,
+      0.069361
+     ],
+     "nested: closure/contact safety": [
+      6206,
+      0.031851
+     ]
+    },
+    "dJ": -0.0436729219719999,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.004489672,
+    "dRetreatClear": -0.0060762890000000125,
+    "dJVsEpochFull": 0.04898100853100007,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.0026086770000000037,
+    "dRetreatClearVsEpochFull": -0.0006362580000000007
+   },
+   "FIRST_ADMISSIBLE_COMPLETE": {
+    "policy": "FIRST_ADMISSIBLE_COMPLETE",
+    "available": true,
+    "decisionT": 9.408183999999999,
+    "wallToPlan": 0.384184,
+    "unitsToPlan": 59919,
+    "tMinusRest": -4.13881975605892,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 11.248999999999999,
+    "lead": 4.15,
+    "tau": 13.174,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.730966260042,
+    "reachClear": 0.069747321,
+    "retreatClear": 0.21714345,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 7,
+    "graspScreens": 208,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7302889809146561,
+    "fractionWallAvoided": 0.866669257967208,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      7,
+      8.3e-05
+     ],
+     "grasp/static reach screening": [
+      44564,
+      0.275898
+     ],
+     "insertion/closure certification": [
+      8847,
+      0.056218
+     ],
+     "route (transit reach) certification": [
+      99,
+      0.00332
+     ],
+     "carried-retreat certification": [
+      6401,
+      0.045674000000000006
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000774
+     ],
+     "nested: IK steps": [
+      53874,
+      0.336958
+     ],
+     "nested: swept-volume queries": [
+      97,
+      0.002175
+     ],
+     "nested: configuration safety": [
+      47527,
+      0.069361
+     ],
+     "nested: closure/contact safety": [
+      6206,
+      0.031851
+     ]
+    },
+    "dJ": -0.0436729219719999,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.004489672,
+    "dRetreatClear": -0.0060762890000000125,
+    "dJVsEpochFull": 0.04898100853100007,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.0026086770000000037,
+    "dRetreatClearVsEpochFull": -0.0006362580000000007
+   },
+   "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR": {
+    "policy": "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR",
+    "available": true,
+    "decisionT": 9.519761999999998,
+    "wallToPlan": 0.495762,
+    "unitsToPlan": 67595,
+    "tMinusRest": -4.02724175605892,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 10.24618555459,
+    "lead": 4.15,
+    "tau": 13.174,
+    "g": "axisP_side_337deg",
+    "r": "ring140mm_2of8",
+    "J": 0.681985251511,
+    "reachClear": 0.072355998,
+    "retreatClear": 0.217779708,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 7,
+    "graspScreens": 224,
+    "routeRollouts": 17,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.6957373064458048,
+    "fractionWallAvoided": 0.8279462046007615,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      7,
+      8.3e-05
+     ],
+     "grasp/static reach screening": [
+      46577,
+      0.288628
+     ],
+     "insertion/closure certification": [
+      11239,
+      0.071275
+     ],
+     "route (transit reach) certification": [
+      2058,
+      0.06797
+     ],
+     "carried-retreat certification": [
+      7700,
+      0.055045000000000004
+     ],
+     "cost / terminal timing audit": [
+      14,
+      0.010121
+     ],
+     "nested: IK steps": [
+      60531,
+      0.381466
+     ],
+     "nested: swept-volume queries": [
+      2024,
+      0.046004
+     ],
+     "nested: configuration safety": [
+      54865,
+      0.081149
+     ],
+     "nested: closure/contact safety": [
+      8508,
+      0.043895
+     ]
+    },
+    "dJ": -0.09265393050299997,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.0018809949999999964,
+    "dRetreatClear": -0.005440031000000012,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   },
+   "ANYTIME_INCUMBENT": {
+    "policy": "ANYTIME_INCUMBENT",
+    "available": true,
+    "decisionT": 9.408183999999999,
+    "wallToPlan": 0.384184,
+    "unitsToPlan": 59919,
+    "tMinusRest": -4.13881975605892,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 11.248999999999999,
+    "lead": 4.15,
+    "tau": 13.174,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.730966260042,
+    "reachClear": 0.069747321,
+    "retreatClear": 0.21714345,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 7,
+    "graspScreens": 208,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7302889809146561,
+    "fractionWallAvoided": 0.866669257967208,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      7,
+      8.3e-05
+     ],
+     "grasp/static reach screening": [
+      44564,
+      0.275898
+     ],
+     "insertion/closure certification": [
+      8847,
+      0.056218
+     ],
+     "route (transit reach) certification": [
+      99,
+      0.00332
+     ],
+     "carried-retreat certification": [
+      6401,
+      0.045674000000000006
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000774
+     ],
+     "nested: IK steps": [
+      53874,
+      0.336958
+     ],
+     "nested: swept-volume queries": [
+      97,
+      0.002175
+     ],
+     "nested: configuration safety": [
+      47527,
+      0.069361
+     ],
+     "nested: closure/contact safety": [
+      6206,
+      0.031851
+     ]
+    },
+    "dJ": -0.0436729219719999,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.004489672,
+    "dRetreatClear": -0.0060762890000000125,
+    "dJVsEpochFull": 0.04898100853100007,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.0026086770000000037,
+    "dRetreatClearVsEpochFull": -0.0006362580000000007
+   }
+  },
+  "fullArgminAtEpoch": {
+   "source": 10,
+   "hyp": 7,
+   "lead": 4.15,
+   "eventTime": 13.174,
+   "cand": "axisP_side_337deg",
+   "route": "ring140mm_2of8",
+   "J": 0.681985251511,
+   "motionJ": 0.617659700831,
+   "Tpres": 2.92781444541,
+   "Texec": 8.13052277874,
+   "reachClear": 0.072355998,
+   "retreatClear": 0.217779708,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.47393,
+   "wall": 0.44993,
+   "units": 63088,
+   "eventIdx": 219
+  },
+  "earliestTauAtEpoch": {
+   "source": 10,
+   "hyp": 7,
+   "lead": 4.15,
+   "eventTime": 13.174,
+   "cand": "axisP_side_337deg",
+   "route": "ring140mm_2of8",
+   "J": 0.681985251511,
+   "motionJ": 0.617659700831,
+   "Tpres": 2.92781444541,
+   "Texec": 8.13052277874,
+   "reachClear": 0.072355998,
+   "retreatClear": 0.217779708,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.47393,
+   "wall": 0.44993,
+   "units": 63088,
+   "eventIdx": 219
+  },
+  "anytime": {
+   "firstIncumbentWall": 0.384184,
+   "firstIncumbentT": 9.408183999999999,
+   "firstIncumbentMinusRest": -4.13881975605892,
+   "firstIncumbentUnits": 59919,
+   "changes": 9,
+   "losses": 0,
+   "trajectory": [
+    {
+     "t": 9.408183999999999,
+     "wall": 0.384184,
+     "units": 59919,
+     "eventIdx": 208,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.730966260042,
+      "reachClear": 0.069747321,
+      "retreatClear": 0.21714345
+     }
+    },
+    {
+     "t": 9.419659999999999,
+     "wall": 0.39566,
+     "units": 60511,
+     "eventIdx": 210,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.706900401291,
+      "reachClear": 0.068850454,
+      "retreatClear": 0.217311266
+     }
+    },
+    {
+     "t": 9.426041,
+     "wall": 0.402041,
+     "units": 60807,
+     "eventIdx": 211,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_2of8",
+      "J": 0.69137289818,
+      "reachClear": 0.074485211,
+      "retreatClear": 0.217465078
+     }
+    },
+    {
+     "t": 9.47393,
+     "wall": 0.44993,
+     "units": 63088,
+     "eventIdx": 219,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "ring140mm_2of8",
+      "J": 0.681985251511,
+      "reachClear": 0.072355998,
+      "retreatClear": 0.217779708
+     }
+    },
+    {
+     "t": 10.200308999999999,
+     "wall": 1.176309,
+     "units": 117271,
+     "eventIdx": 417,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_2of8",
+      "J": 0.69137289818,
+      "reachClear": 0.074485211,
+      "retreatClear": 0.217465078
+     }
+    },
+    {
+     "t": 10.82969,
+     "wall": 1.80569,
+     "units": 157031,
+     "eventIdx": 588,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_2of8",
+      "J": 0.719500800064,
+      "reachClear": 0.074429756,
+      "retreatClear": 0.220143534
+     }
+    },
+    {
+     "t": 11.270636999999999,
+     "wall": 2.246637,
+     "units": 180318,
+     "eventIdx": 691,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_2of8",
+      "J": 0.747803779625,
+      "reachClear": 0.074375408,
+      "retreatClear": 0.221850844
+     }
+    },
+    {
+     "t": 11.739823999999999,
+     "wall": 2.715824,
+     "units": 208978,
+     "eventIdx": 804,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisP_side_315deg",
+      "r": "ring80mm_2of8",
+      "J": 0.770225375943,
+      "reachClear": 0.076942062,
+      "retreatClear": 0.211181
+     }
+    },
+    {
+     "t": 11.811506,
+     "wall": 2.787506,
+     "units": 214876,
+     "eventIdx": 828,
+     "incumbent": {
+      "lead": 5.5,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_2of8",
+      "J": 0.774639182014,
+      "reachClear": 0.074236993,
+      "retreatClear": 0.223219739
+     }
+    }
+   ],
+   "atFractionOfFullWall": {
+    "0.1": null,
+    "0.25": {
+     "lead": 4.15,
+     "g": "axisP_side_337deg",
+     "r": "ring140mm_2of8",
+     "J": 0.681985251511,
+     "dJ": -0.09265393050299997,
+     "reachClear": 0.072355998,
+     "retreatClear": 0.217779708
+    },
+    "0.5": {
+     "lead": 4.15,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_2of8",
+     "J": 0.69137289818,
+     "dJ": -0.08326628383399992,
+     "reachClear": 0.074485211,
+     "retreatClear": 0.217465078
+    },
+    "0.75": {
+     "lead": 4.6,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_2of8",
+     "J": 0.719500800064,
+     "dJ": -0.05513838194999998,
+     "reachClear": 0.074429756,
+     "retreatClear": 0.220143534
+    },
+    "1.0": {
+     "lead": 5.5,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_2of8",
+     "J": 0.774639182014,
+     "dJ": 0.0,
+     "reachClear": 0.074236993,
+     "retreatClear": 0.223219739
+    }
+   }
+  },
+  "beforeFirstComplete": {
+   "staticScreensFailed": 207,
+   "wallStaticFailed": 0.377213,
+   "staticScreensPassed": 1,
+   "wallStaticPassed": 0.0016579999999999928,
+   "routeRolloutsFailed": 0,
+   "wallRouteFailed": 0.0,
+   "wallSuccessfulRoute": 0.005313000000000012,
+   "hypothesesTouched": 7
+  },
+  "perCandidateWall": {
+   "static/rejected": {
+    "n": 424,
+    "median": 0.001303500000000013,
+    "total": 0.7433839999999992
+   },
+   "static/feasible": {
+    "n": 24,
+    "median": 0.0017395000000001715,
+    "total": 0.04195800000000033
+   },
+   "route/feasible": {
+    "n": 267,
+    "median": 0.005914000000000197,
+    "total": 1.5905180000000008
+   },
+   "route/rejected": {
+    "n": 141,
+    "median": 0.003414999999999946,
+    "total": 0.5041189999999998
+   }
+  },
+  "exactTimingPrune": {
+   "prunedGraspTau": 0,
+   "savedWall": 0.0,
+   "savedUnits": 0,
+   "originalFullWall": 2.881436
+  },
+  "fullArgminAtEpochUnpruned": {
+   "source": 10,
+   "hyp": 7,
+   "lead": 4.15,
+   "eventTime": 13.174,
+   "cand": "axisP_side_337deg",
+   "route": "ring140mm_2of8",
+   "J": 0.681985251511,
+   "motionJ": 0.617659700831,
+   "Tpres": 2.92781444541,
+   "Texec": 8.13052277874,
+   "reachClear": 0.072355998,
+   "retreatClear": 0.217779708,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.47393,
+   "wall": 0.44993,
+   "units": 63088,
+   "eventIdx": 219
+  }
+ },
+ {
+  "run": "char_b/lateral-low [exact timing prune]",
+  "gen": "1",
+  "kind": "moving",
+  "outcome": "accepted",
+  "submit": 9.024,
+  "rest": 13.546999999999999,
+  "records": 310,
+  "fullWall": 3.885852,
+  "fullUnits": 232028,
+  "policies": {
+   "FULL_ARGMIN": {
+    "policy": "FULL_ARGMIN",
+    "available": true,
+    "decisionT": 12.909851999999999,
+    "wallToPlan": 3.8836330000000006,
+    "unitsToPlan": 232028,
+    "tMinusRest": -0.6371479999999998,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 12.96048692723,
+    "lead": 6.85,
+    "tau": 15.874,
+    "g": "axisN_side_45deg",
+    "r": "ring80mm_6of8",
+    "J": 0.896050818407,
+    "reachClear": 0.063501752,
+    "retreatClear": 0.099628404,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 14,
+    "graspScreens": 448,
+    "routeRollouts": 612,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.0,
+    "fractionWallAvoided": 0.0005710459379305588,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      14,
+      0.0006
+     ],
+     "grasp/static reach screening": [
+      50616,
+      0.314826
+     ],
+     "insertion/closure certification": [
+      74623,
+      0.464309
+     ],
+     "route (transit reach) certification": [
+      111001,
+      3.294251
+     ],
+     "carried-retreat certification": [
+      26420,
+      0.193346
+     ],
+     "cost / terminal timing audit": [
+      382,
+      0.25999
+     ],
+     "nested: IK steps": [
+      227759,
+      1.465409
+     ],
+     "nested: swept-volume queries": [
+      109551,
+      2.178982
+     ],
+     "nested: configuration safety": [
+      312528,
+      0.444296
+     ],
+     "nested: closure/contact safety": [
+      73015,
+      0.377737
+     ]
+    },
+    "dJ": 0.0,
+    "sameTau": true,
+    "sameG": true,
+    "sameR": true,
+    "sameTuple": true,
+    "dReachClear": 0.0,
+    "dRetreatClear": 0.0,
+    "dJVsEpochFull": 0.21833098733699996,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": false,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.018085973000000005,
+    "dRetreatClearVsEpochFull": 0.022336387
+   },
+   "FIRST_COMPLETE_FEASIBLE": {
+    "policy": "FIRST_COMPLETE_FEASIBLE",
+    "available": true,
+    "decisionT": 9.238252999999998,
+    "wallToPlan": 0.21425300000000003,
+    "unitsToPlan": 28977,
+    "tMinusRest": -4.308747,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": false,
+    "reachStart": 9.283126012099999,
+    "lead": 3.25,
+    "tau": 12.274,
+    "g": "axisN_side_68deg",
+    "r": "ring80mm_5of8",
+    "J": 0.808567482623,
+    "reachClear": 0.047908407,
+    "retreatClear": 0.107730975,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 5,
+    "graspScreens": 148,
+    "routeRollouts": 7,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.8751142103539228,
+    "fractionWallAvoided": 0.9448633144031219,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      5,
+      0.000168
+     ],
+     "grasp/static reach screening": [
+      20375,
+      0.129292
+     ],
+     "insertion/closure certification": [
+      13711,
+      0.0867
+     ],
+     "route (transit reach) certification": [
+      15408,
+      0.448353
+     ],
+     "carried-retreat certification": [
+      3509,
+      0.026255
+     ],
+     "cost / terminal timing audit": [
+      56,
+      0.037619
+     ],
+     "nested: IK steps": [
+      45945,
+      0.293956
+     ],
+     "nested: swept-volume queries": [
+      15192,
+      0.29565
+     ],
+     "nested: configuration safety": [
+      57851,
+      0.081387
+     ],
+     "nested: closure/contact safety": [
+      12631,
+      0.065815
+     ]
+    },
+    "dJ": -0.08748333578399992,
+    "sameTau": false,
+    "sameG": false,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.015593344999999995,
+    "dRetreatClear": 0.008102571000000003,
+    "dJVsEpochFull": 0.13084765155300004,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": false,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.033679318,
+    "dRetreatClearVsEpochFull": 0.030438958000000002
+   },
+   "FIRST_ADMISSIBLE_COMPLETE": {
+    "policy": "FIRST_ADMISSIBLE_COMPLETE",
+    "available": true,
+    "decisionT": 9.356407999999998,
+    "wallToPlan": 0.33240800000000004,
+    "unitsToPlan": 39472,
+    "tMinusRest": -4.1905920000000005,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 10.00550014407,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisN_side_45deg",
+    "r": "ring80mm_1of8",
+    "J": 0.974122233808,
+    "reachClear": 0.077780958,
+    "retreatClear": 0.105309909,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 179,
+    "routeRollouts": 20,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.8298826003758167,
+    "fractionWallAvoided": 0.9144568552790997,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000184
+     ],
+     "grasp/static reach screening": [
+      25428,
+      0.159746
+     ],
+     "insertion/closure certification": [
+      16068,
+      0.101572
+     ],
+     "route (transit reach) certification": [
+      17454,
+      0.508196
+     ],
+     "carried-retreat certification": [
+      4541,
+      0.033947
+     ],
+     "cost / terminal timing audit": [
+      62,
+      0.042359
+     ],
+     "nested: IK steps": [
+      55093,
+      0.351311
+     ],
+     "nested: swept-volume queries": [
+      17213,
+      0.334838
+     ],
+     "nested: configuration safety": [
+      68011,
+      0.095818
+     ],
+     "nested: closure/contact safety": [
+      14666,
+      0.076418
+     ]
+    },
+    "dJ": 0.07807141540100004,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": 0.014279206000000003,
+    "dRetreatClear": 0.0056815049999999895,
+    "dJVsEpochFull": 0.296402402738,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": false,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.0038067670000000026,
+    "dRetreatClearVsEpochFull": 0.02801789199999999
+   },
+   "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR": {
+    "policy": "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR",
+    "available": true,
+    "decisionT": 9.651990999999999,
+    "wallToPlan": 0.627991,
+    "unitsToPlan": 56378,
+    "tMinusRest": -3.895009,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 10.599,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisN_side_337deg",
+    "r": "direct",
+    "J": 0.67771983107,
+    "reachClear": 0.081587725,
+    "retreatClear": 0.077292017,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 192,
+    "routeRollouts": 68,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.757020704397745,
+    "fractionWallAvoided": 0.8383903967521151,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000184
+     ],
+     "grasp/static reach screening": [
+      28101,
+      0.17608
+     ],
+     "insertion/closure certification": [
+      20997,
+      0.132562
+     ],
+     "route (transit reach) certification": [
+      24403,
+      0.71473
+     ],
+     "carried-retreat certification": [
+      6862,
+      0.051107
+     ],
+     "cost / terminal timing audit": [
+      96,
+      0.066116
+     ],
+     "nested: IK steps": [
+      70087,
+      0.449704
+     ],
+     "nested: swept-volume queries": [
+      24067,
+      0.470806
+     ],
+     "nested: configuration safety": [
+      87673,
+      0.123588
+     ],
+     "nested: closure/contact safety": [
+      19945,
+      0.104322
+     ]
+    },
+    "dJ": -0.21833098733699996,
+    "sameTau": false,
+    "sameG": false,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": 0.018085973000000005,
+    "dRetreatClear": -0.022336387,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   },
+   "ANYTIME_INCUMBENT": {
+    "policy": "ANYTIME_INCUMBENT",
+    "available": true,
+    "decisionT": 9.356407999999998,
+    "wallToPlan": 0.33240800000000004,
+    "unitsToPlan": 39472,
+    "tMinusRest": -4.1905920000000005,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 10.00550014407,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisN_side_45deg",
+    "r": "ring80mm_1of8",
+    "J": 0.974122233808,
+    "reachClear": 0.077780958,
+    "retreatClear": 0.105309909,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 179,
+    "routeRollouts": 20,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.8298826003758167,
+    "fractionWallAvoided": 0.9144568552790997,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000184
+     ],
+     "grasp/static reach screening": [
+      25428,
+      0.159746
+     ],
+     "insertion/closure certification": [
+      16068,
+      0.101572
+     ],
+     "route (transit reach) certification": [
+      17454,
+      0.508196
+     ],
+     "carried-retreat certification": [
+      4541,
+      0.033947
+     ],
+     "cost / terminal timing audit": [
+      62,
+      0.042359
+     ],
+     "nested: IK steps": [
+      55093,
+      0.351311
+     ],
+     "nested: swept-volume queries": [
+      17213,
+      0.334838
+     ],
+     "nested: configuration safety": [
+      68011,
+      0.095818
+     ],
+     "nested: closure/contact safety": [
+      14666,
+      0.076418
+     ]
+    },
+    "dJ": 0.07807141540100004,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": 0.014279206000000003,
+    "dRetreatClear": 0.0056815049999999895,
+    "dJVsEpochFull": 0.296402402738,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": false,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.0038067670000000026,
+    "dRetreatClearVsEpochFull": 0.02801789199999999
+   }
+  },
+  "fullArgminAtEpoch": {
+   "source": 79,
+   "hyp": 6,
+   "lead": 3.7,
+   "eventTime": 12.724,
+   "cand": "axisN_side_337deg",
+   "route": "direct",
+   "J": 0.67771983107,
+   "motionJ": 0.594825100445,
+   "Tpres": 2.125,
+   "Texec": 7.30270833333,
+   "reachClear": 0.081587725,
+   "retreatClear": 0.077292017,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 10.080708999999999,
+   "wall": 1.056709,
+   "units": 75594,
+   "eventIdx": 345
+  },
+  "earliestTauAtEpoch": {
+   "source": 0,
+   "hyp": 5,
+   "lead": 3.25,
+   "eventTime": 12.274,
+   "cand": "axisN_side_68deg",
+   "route": "ring80mm_5of8",
+   "J": 0.808567482623,
+   "motionJ": 0.794929272483,
+   "Tpres": 2.9908739879,
+   "Texec": 8.21358232124,
+   "reachClear": 0.047908407,
+   "retreatClear": 0.107730975,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.238252999999998,
+   "wall": 0.21425300000000003,
+   "units": 28977,
+   "eventIdx": 154
+  },
+  "anytime": {
+   "firstIncumbentWall": 0.33240800000000004,
+   "firstIncumbentT": 9.356407999999998,
+   "firstIncumbentMinusRest": -4.1905920000000005,
+   "firstIncumbentUnits": 39472,
+   "changes": 15,
+   "losses": 0,
+   "trajectory": [
+    {
+     "t": 9.356407999999998,
+     "wall": 0.33240800000000004,
+     "units": 39472,
+     "eventIdx": 198,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_1of8",
+      "J": 0.974122233808,
+      "reachClear": 0.077780958,
+      "retreatClear": 0.105309909
+     }
+    },
+    {
+     "t": 9.362058999999999,
+     "wall": 0.338059,
+     "units": 39785,
+     "eventIdx": 199,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_2of8",
+      "J": 0.893990124998,
+      "reachClear": 0.07976314,
+      "retreatClear": 0.105397893
+     }
+    },
+    {
+     "t": 9.371571999999999,
+     "wall": 0.347572,
+     "units": 40228,
+     "eventIdx": 201,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_4of8",
+      "J": 0.752310364201,
+      "reachClear": 0.071224809,
+      "retreatClear": 0.105420381
+     }
+    },
+    {
+     "t": 9.377561,
+     "wall": 0.353561,
+     "units": 40541,
+     "eventIdx": 202,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_5of8",
+      "J": 0.737777652147,
+      "reachClear": 0.070942467,
+      "retreatClear": 0.105396867
+     }
+    },
+    {
+     "t": 9.428263999999999,
+     "wall": 0.40426399999999996,
+     "units": 42966,
+     "eventIdx": 211,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_45deg",
+      "r": "ring140mm_6of8",
+      "J": 0.719130252351,
+      "reachClear": 0.080183963,
+      "retreatClear": 0.105365141
+     }
+    },
+    {
+     "t": 9.563075999999999,
+     "wall": 0.5390759999999999,
+     "units": 51507,
+     "eventIdx": 243,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisN_side_337deg",
+      "r": "direct",
+      "J": 0.67771983107,
+      "reachClear": 0.081587725,
+      "retreatClear": 0.077292017
+     }
+    },
+    {
+     "t": 10.552835,
+     "wall": 1.5288350000000002,
+     "units": 109469,
+     "eventIdx": 486,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisN_side_337deg",
+      "r": "direct",
+      "J": 0.69260073044,
+      "reachClear": 0.081581668,
+      "retreatClear": 0.081231952
+     }
+    },
+    {
+     "t": 10.952518999999999,
+     "wall": 1.9285189999999999,
+     "units": 132561,
+     "eventIdx": 584,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisN_side_337deg",
+      "r": "ring80mm_4of8",
+      "J": 0.719787174099,
+      "reachClear": 0.081347105,
+      "retreatClear": 0.086093343
+     }
+    },
+    {
+     "t": 11.099243999999999,
+     "wall": 2.0752439999999996,
+     "units": 138724,
+     "eventIdx": 613,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisN_side_337deg",
+      "r": "direct",
+      "J": 0.721678422651,
+      "reachClear": 0.081561861,
+      "retreatClear": 0.086120993
+     }
+    },
+    {
+     "t": 11.363565999999999,
+     "wall": 2.3395659999999996,
+     "units": 155726,
+     "eventIdx": 683,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisN_side_337deg",
+      "r": "ring80mm_4of8",
+      "J": 0.747676524773,
+      "reachClear": 0.081424436,
+      "retreatClear": 0.091656233
+     }
+    },
+    {
+     "t": 11.487461999999999,
+     "wall": 2.463462,
+     "units": 161162,
+     "eventIdx": 707,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisN_side_337deg",
+      "r": "direct",
+      "J": 0.751211884769,
+      "reachClear": 0.081478867,
+      "retreatClear": 0.091936556
+     }
+    },
+    {
+     "t": 11.765664,
+     "wall": 2.741664,
+     "units": 175869,
+     "eventIdx": 787,
+     "incumbent": {
+      "lead": 5.5,
+      "g": "axisN_side_337deg",
+      "r": "ring80mm_3of8",
+      "J": 0.777347681105,
+      "reachClear": 0.08102028,
+      "retreatClear": 0.091381593
+     }
+    },
+    {
+     "t": 11.807216,
+     "wall": 2.7832160000000004,
+     "units": 177770,
+     "eventIdx": 795,
+     "incumbent": {
+      "lead": 5.5,
+      "g": "axisN_side_337deg",
+      "r": "direct",
+      "J": 0.783093002073,
+      "reachClear": 0.081429373,
+      "retreatClear": 0.091660638
+     }
+    },
+    {
+     "t": 12.128592,
+     "wall": 3.1045920000000002,
+     "units": 192822,
+     "eventIdx": 876,
+     "incumbent": {
+      "lead": 6.4,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_6of8",
+      "J": 0.867886332777,
+      "reachClear": 0.066614968,
+      "retreatClear": 0.103170867
+     }
+    },
+    {
+     "t": 12.475662999999999,
+     "wall": 3.451663,
+     "units": 210041,
+     "eventIdx": 972,
+     "incumbent": {
+      "lead": 6.85,
+      "g": "axisN_side_45deg",
+      "r": "ring80mm_6of8",
+      "J": 0.896050818407,
+      "reachClear": 0.063501752,
+      "retreatClear": 0.099628404
+     }
+    }
+   ],
+   "atFractionOfFullWall": {
+    "0.1": {
+     "lead": 3.7,
+     "g": "axisN_side_45deg",
+     "r": "ring80mm_5of8",
+     "J": 0.737777652147,
+     "dJ": -0.15827316626,
+     "reachClear": 0.070942467,
+     "retreatClear": 0.105396867
+    },
+    "0.25": {
+     "lead": 3.7,
+     "g": "axisN_side_337deg",
+     "r": "direct",
+     "J": 0.67771983107,
+     "dJ": -0.21833098733699996,
+     "reachClear": 0.081587725,
+     "retreatClear": 0.077292017
+    },
+    "0.5": {
+     "lead": 4.6,
+     "g": "axisN_side_337deg",
+     "r": "ring80mm_4of8",
+     "J": 0.719787174099,
+     "dJ": -0.176263644308,
+     "reachClear": 0.081347105,
+     "retreatClear": 0.086093343
+    },
+    "0.75": {
+     "lead": 5.5,
+     "g": "axisN_side_337deg",
+     "r": "direct",
+     "J": 0.783093002073,
+     "dJ": -0.11295781633399993,
+     "reachClear": 0.081429373,
+     "retreatClear": 0.091660638
+    },
+    "1.0": {
+     "lead": 6.85,
+     "g": "axisN_side_45deg",
+     "r": "ring80mm_6of8",
+     "J": 0.896050818407,
+     "dJ": 0.0,
+     "reachClear": 0.063501752,
+     "retreatClear": 0.099628404
+    }
+   }
+  },
+  "beforeFirstComplete": {
+   "staticScreensFailed": 141,
+   "wallStaticFailed": 0.169365,
+   "staticScreensPassed": 7,
+   "wallStaticPassed": 0.012885000000000046,
+   "routeRolloutsFailed": 6,
+   "wallRouteFailed": 0.025621999999999923,
+   "wallSuccessfulRoute": 0.006381000000000081,
+   "hypothesesTouched": 5
+  },
+  "perCandidateWall": {
+   "static/rejected": {
+    "n": 405,
+    "median": 0.0004180000000006956,
+    "total": 0.4674549999999996
+   },
+   "static/feasible": {
+    "n": 43,
+    "median": 0.001818999999999793,
+    "total": 0.07861600000000081
+   },
+   "route/rejected": {
+    "n": 302,
+    "median": 0.004369999999999763,
+    "total": 1.314147999999998
+   },
+   "route/feasible": {
+    "n": 310,
+    "median": 0.006520500000000373,
+    "total": 2.023414000000002
+   }
+  },
+  "exactTimingPrune": {
+   "prunedGraspTau": 7,
+   "savedWall": 0.661605,
+   "savedUnits": 31028,
+   "originalFullWall": 4.547457
+  },
+  "fullArgminAtEpochUnpruned": {
+   "source": 79,
+   "hyp": 6,
+   "lead": 3.7,
+   "eventTime": 12.724,
+   "cand": "axisN_side_337deg",
+   "route": "direct",
+   "J": 0.67771983107,
+   "motionJ": 0.594825100445,
+   "Tpres": 2.125,
+   "Texec": 7.30270833333,
+   "reachClear": 0.081587725,
+   "retreatClear": 0.077292017,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 10.080708999999999,
+   "wall": 1.056709,
+   "units": 75594,
+   "eventIdx": 345
+  }
+ },
+ {
+  "run": "char_b/longitudinal [exact timing prune]",
+  "gen": "1",
+  "kind": "moving",
+  "outcome": "accepted",
+  "submit": 9.024,
+  "rest": 13.546999999999999,
+  "records": 227,
+  "fullWall": 3.2655529999999997,
+  "fullUnits": 242819,
+  "policies": {
+   "FULL_ARGMIN": {
+    "policy": "FULL_ARGMIN",
+    "available": true,
+    "decisionT": 12.289552999999998,
+    "wallToPlan": 3.2647799999999996,
+    "unitsToPlan": 242818,
+    "tMinusRest": -1.2574470000000009,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 12.43058006859,
+    "lead": 5.95,
+    "tau": 14.974,
+    "g": "axisP_side_337deg",
+    "r": "ring80mm_1of8",
+    "J": 0.851519463318,
+    "reachClear": 0.081265615,
+    "retreatClear": 0.176686628,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 14,
+    "graspScreens": 448,
+    "routeRollouts": 493,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 4.118293873256462e-06,
+    "fractionWallAvoided": 0.00023671335299113583,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      14,
+      0.000441
+     ],
+     "grasp/static reach screening": [
+      99852,
+      0.61898
+     ],
+     "insertion/closure certification": [
+      60867,
+      0.381427
+     ],
+     "route (transit reach) certification": [
+      74270,
+      2.3397300000000003
+     ],
+     "carried-retreat certification": [
+      20907,
+      0.15171
+     ],
+     "cost / terminal timing audit": [
+      232,
+      0.157264
+     ],
+     "nested: IK steps": [
+      230244,
+      1.462226
+     ],
+     "nested: swept-volume queries": [
+      73110,
+      1.592391
+     ],
+     "nested: configuration safety": [
+      283492,
+      0.410233
+     ],
+     "nested: closure/contact safety": [
+      48311,
+      0.248295
+     ]
+    },
+    "dJ": 0.0,
+    "sameTau": true,
+    "sameG": true,
+    "sameR": true,
+    "sameTuple": true,
+    "dReachClear": 0.0,
+    "dRetreatClear": 0.0,
+    "dJVsEpochFull": 0.23015113045299995,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": 0.0018350379999999972,
+    "dRetreatClearVsEpochFull": -0.033702681999999984
+   },
+   "FIRST_COMPLETE_FEASIBLE": {
+    "policy": "FIRST_COMPLETE_FEASIBLE",
+    "available": true,
+    "decisionT": 9.175146,
+    "wallToPlan": 0.151146,
+    "unitsToPlan": 22359,
+    "tMinusRest": -4.371853999999999,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.549000000000001,
+    "lead": 2.35,
+    "tau": 11.374,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.621368332865,
+    "reachClear": 0.079430577,
+    "retreatClear": 0.21038931,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 3,
+    "graspScreens": 80,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.9079190672888036,
+    "fractionWallAvoided": 0.9537150369324889,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      3,
+      7.6e-05
+     ],
+     "grasp/static reach screening": [
+      17601,
+      0.1143
+     ],
+     "insertion/closure certification": [
+      3851,
+      0.026115
+     ],
+     "route (transit reach) certification": [
+      94,
+      0.0030369999999999998
+     ],
+     "carried-retreat certification": [
+      809,
+      0.005845
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000864
+     ],
+     "nested: IK steps": [
+      19764,
+      0.12773
+     ],
+     "nested: swept-volume queries": [
+      92,
+      0.001969
+     ],
+     "nested: configuration safety": [
+      19033,
+      0.028889
+     ],
+     "nested: closure/contact safety": [
+      2723,
+      0.014944
+     ]
+    },
+    "dJ": -0.23015113045299995,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.0018350379999999972,
+    "dRetreatClear": 0.033702681999999984,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   },
+   "FIRST_ADMISSIBLE_COMPLETE": {
+    "policy": "FIRST_ADMISSIBLE_COMPLETE",
+    "available": true,
+    "decisionT": 9.175146,
+    "wallToPlan": 0.151146,
+    "unitsToPlan": 22359,
+    "tMinusRest": -4.371853999999999,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.549000000000001,
+    "lead": 2.35,
+    "tau": 11.374,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.621368332865,
+    "reachClear": 0.079430577,
+    "retreatClear": 0.21038931,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 3,
+    "graspScreens": 80,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.9079190672888036,
+    "fractionWallAvoided": 0.9537150369324889,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      3,
+      7.6e-05
+     ],
+     "grasp/static reach screening": [
+      17601,
+      0.1143
+     ],
+     "insertion/closure certification": [
+      3851,
+      0.026115
+     ],
+     "route (transit reach) certification": [
+      94,
+      0.0030369999999999998
+     ],
+     "carried-retreat certification": [
+      809,
+      0.005845
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000864
+     ],
+     "nested: IK steps": [
+      19764,
+      0.12773
+     ],
+     "nested: swept-volume queries": [
+      92,
+      0.001969
+     ],
+     "nested: configuration safety": [
+      19033,
+      0.028889
+     ],
+     "nested: closure/contact safety": [
+      2723,
+      0.014944
+     ]
+    },
+    "dJ": -0.23015113045299995,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.0018350379999999972,
+    "dRetreatClear": 0.033702681999999984,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   },
+   "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR": {
+    "policy": "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR",
+    "available": true,
+    "decisionT": 9.304848,
+    "wallToPlan": 0.28084800000000004,
+    "unitsToPlan": 31809,
+    "tMinusRest": -4.242151999999999,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.549000000000001,
+    "lead": 2.35,
+    "tau": 11.374,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.621368332865,
+    "reachClear": 0.079430577,
+    "retreatClear": 0.21038931,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 3,
+    "graspScreens": 96,
+    "routeRollouts": 17,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.8690011901869293,
+    "fractionWallAvoided": 0.9139968023792601,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      3,
+      7.6e-05
+     ],
+     "grasp/static reach screening": [
+      20664,
+      0.133517
+     ],
+     "insertion/closure certification": [
+      6672,
+      0.043949
+     ],
+     "route (transit reach) certification": [
+      4631,
+      0.14119
+     ],
+     "carried-retreat certification": [
+      2455,
+      0.017859
+     ],
+     "cost / terminal timing audit": [
+      18,
+      0.012584
+     ],
+     "nested: IK steps": [
+      30636,
+      0.198563
+     ],
+     "nested: swept-volume queries": [
+      4564,
+      0.094302
+     ],
+     "nested: configuration safety": [
+      32805,
+      0.048541
+     ],
+     "nested: closure/contact safety": [
+      5567,
+      0.029855
+     ]
+    },
+    "dJ": -0.23015113045299995,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.0018350379999999972,
+    "dRetreatClear": 0.033702681999999984,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   },
+   "ANYTIME_INCUMBENT": {
+    "policy": "ANYTIME_INCUMBENT",
+    "available": true,
+    "decisionT": 9.175146,
+    "wallToPlan": 0.151146,
+    "unitsToPlan": 22359,
+    "tMinusRest": -4.371853999999999,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.549000000000001,
+    "lead": 2.35,
+    "tau": 11.374,
+    "g": "axisP_side_337deg",
+    "r": "direct",
+    "J": 0.621368332865,
+    "reachClear": 0.079430577,
+    "retreatClear": 0.21038931,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 3,
+    "graspScreens": 80,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.9079190672888036,
+    "fractionWallAvoided": 0.9537150369324889,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      3,
+      7.6e-05
+     ],
+     "grasp/static reach screening": [
+      17601,
+      0.1143
+     ],
+     "insertion/closure certification": [
+      3851,
+      0.026115
+     ],
+     "route (transit reach) certification": [
+      94,
+      0.0030369999999999998
+     ],
+     "carried-retreat certification": [
+      809,
+      0.005845
+     ],
+     "cost / terminal timing audit": [
+      1,
+      0.000864
+     ],
+     "nested: IK steps": [
+      19764,
+      0.12773
+     ],
+     "nested: swept-volume queries": [
+      92,
+      0.001969
+     ],
+     "nested: configuration safety": [
+      19033,
+      0.028889
+     ],
+     "nested: closure/contact safety": [
+      2723,
+      0.014944
+     ]
+    },
+    "dJ": -0.23015113045299995,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.0018350379999999972,
+    "dRetreatClear": 0.033702681999999984,
+    "dJVsEpochFull": 0.0,
+    "sameTauVsEpochFull": true,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": true,
+    "dReachClearVsEpochFull": 0.0,
+    "dRetreatClearVsEpochFull": 0.0
+   }
+  },
+  "fullArgminAtEpoch": {
+   "source": 0,
+   "hyp": 3,
+   "lead": 2.35,
+   "eventTime": 11.374,
+   "cand": "axisP_side_337deg",
+   "route": "direct",
+   "J": 0.621368332865,
+   "motionJ": 0.59373675599,
+   "Tpres": 1.825,
+   "Texec": 7.20770833333,
+   "reachClear": 0.079430577,
+   "retreatClear": 0.21038931,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.175146,
+   "wall": 0.151146,
+   "units": 22359,
+   "eventIdx": 80
+  },
+  "earliestTauAtEpoch": {
+   "source": 0,
+   "hyp": 3,
+   "lead": 2.35,
+   "eventTime": 11.374,
+   "cand": "axisP_side_337deg",
+   "route": "direct",
+   "J": 0.621368332865,
+   "motionJ": 0.59373675599,
+   "Tpres": 1.825,
+   "Texec": 7.20770833333,
+   "reachClear": 0.079430577,
+   "retreatClear": 0.21038931,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.175146,
+   "wall": 0.151146,
+   "units": 22359,
+   "eventIdx": 80
+  },
+  "anytime": {
+   "firstIncumbentWall": 0.151146,
+   "firstIncumbentT": 9.175146,
+   "firstIncumbentMinusRest": -4.371853999999999,
+   "firstIncumbentUnits": 22359,
+   "changes": 11,
+   "losses": 0,
+   "trajectory": [
+    {
+     "t": 9.175146,
+     "wall": 0.151146,
+     "units": 22359,
+     "eventIdx": 80,
+     "incumbent": {
+      "lead": 2.35,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.621368332865,
+      "reachClear": 0.079430577,
+      "retreatClear": 0.21038931
+     }
+    },
+    {
+     "t": 9.586996,
+     "wall": 0.562996,
+     "units": 55952,
+     "eventIdx": 215,
+     "incumbent": {
+      "lead": 3.25,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.643721078988,
+      "reachClear": 0.08076408,
+      "retreatClear": 0.217038054
+     }
+    },
+    {
+     "t": 9.867628999999999,
+     "wall": 0.843629,
+     "units": 71913,
+     "eventIdx": 274,
+     "incumbent": {
+      "lead": 3.25,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.662534954691,
+      "reachClear": 0.079694274,
+      "retreatClear": 0.216860893
+     }
+    },
+    {
+     "t": 10.25362,
+     "wall": 1.22962,
+     "units": 94243,
+     "eventIdx": 378,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.676718395057,
+      "reachClear": 0.080860743,
+      "retreatClear": 0.219234669
+     }
+    },
+    {
+     "t": 10.29877,
+     "wall": 1.27477,
+     "units": 96627,
+     "eventIdx": 386,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.690100285805,
+      "reachClear": 0.080083187,
+      "retreatClear": 0.21910632
+     }
+    },
+    {
+     "t": 10.627453999999998,
+     "wall": 1.603454,
+     "units": 117570,
+     "eventIdx": 467,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.714606611527,
+      "reachClear": 0.080937003,
+      "retreatClear": 0.220977328
+     }
+    },
+    {
+     "t": 10.746215999999999,
+     "wall": 1.722216,
+     "units": 123569,
+     "eventIdx": 488,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.722273153846,
+      "reachClear": 0.080250687,
+      "retreatClear": 0.220901969
+     }
+    },
+    {
+     "t": 11.028205999999999,
+     "wall": 2.004206,
+     "units": 141721,
+     "eventIdx": 567,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.74963886921,
+      "reachClear": 0.081011778,
+      "retreatClear": 0.222213524
+     }
+    },
+    {
+     "t": 11.354958,
+     "wall": 2.330958,
+     "units": 162081,
+     "eventIdx": 661,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.753868726202,
+      "reachClear": 0.080443101,
+      "retreatClear": 0.221417502
+     }
+    },
+    {
+     "t": 11.429046,
+     "wall": 2.4050459999999996,
+     "units": 166113,
+     "eventIdx": 674,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisP_side_337deg",
+      "r": "ring80mm_1of8",
+      "J": 0.782429345511,
+      "reachClear": 0.081095874,
+      "retreatClear": 0.209431301
+     }
+    },
+    {
+     "t": 11.632456999999999,
+     "wall": 2.6084569999999996,
+     "units": 181046,
+     "eventIdx": 744,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisP_side_337deg",
+      "r": "direct",
+      "J": 0.7859191567,
+      "reachClear": 0.080815649,
+      "retreatClear": 0.20918245
+     }
+    }
+   ],
+   "atFractionOfFullWall": {
+    "0.1": {
+     "lead": 2.35,
+     "g": "axisP_side_337deg",
+     "r": "direct",
+     "J": 0.621368332865,
+     "dJ": -0.23015113045299995,
+     "reachClear": 0.079430577,
+     "retreatClear": 0.21038931
+    },
+    "0.25": {
+     "lead": 3.25,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_1of8",
+     "J": 0.643721078988,
+     "dJ": -0.20779838432999997,
+     "reachClear": 0.08076408,
+     "retreatClear": 0.217038054
+    },
+    "0.5": {
+     "lead": 4.15,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_1of8",
+     "J": 0.714606611527,
+     "dJ": -0.136912851791,
+     "reachClear": 0.080937003,
+     "retreatClear": 0.220977328
+    },
+    "0.75": {
+     "lead": 5.05,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_1of8",
+     "J": 0.782429345511,
+     "dJ": -0.06909011780700003,
+     "reachClear": 0.081095874,
+     "retreatClear": 0.209431301
+    },
+    "1.0": {
+     "lead": 5.95,
+     "g": "axisP_side_337deg",
+     "r": "ring80mm_1of8",
+     "J": 0.851519463318,
+     "dJ": 0.0,
+     "reachClear": 0.081265615,
+     "retreatClear": 0.176686628
+    }
+   }
+  },
+  "beforeFirstComplete": {
+   "staticScreensFailed": 79,
+   "wallStaticFailed": 0.144249,
+   "staticScreensPassed": 1,
+   "wallStaticPassed": 0.001708000000000015,
+   "routeRolloutsFailed": 0,
+   "wallRouteFailed": 0.0,
+   "wallSuccessfulRoute": 0.005188999999999999,
+   "hypothesesTouched": 3
+  },
+  "perCandidateWall": {
+   "static/rejected": {
+    "n": 413,
+    "median": 0.001374999999999904,
+    "total": 0.8142169999999999
+   },
+   "static/feasible": {
+    "n": 35,
+    "median": 0.001758999999999844,
+    "total": 0.06270599999999979
+   },
+   "route/feasible": {
+    "n": 227,
+    "median": 0.006049999999999667,
+    "total": 1.4046460000000005
+   },
+   "route/rejected": {
+    "n": 266,
+    "median": 0.003818000000000099,
+    "total": 0.9832109999999995
+   }
+  },
+  "exactTimingPrune": {
+   "prunedGraspTau": 6,
+   "savedWall": 0.3993990000000003,
+   "savedUnits": 13324,
+   "originalFullWall": 3.664952
+  },
+  "fullArgminAtEpochUnpruned": {
+   "source": 0,
+   "hyp": 3,
+   "lead": 2.35,
+   "eventTime": 11.374,
+   "cand": "axisP_side_337deg",
+   "route": "direct",
+   "J": 0.621368332865,
+   "motionJ": 0.59373675599,
+   "Tpres": 1.825,
+   "Texec": 7.20770833333,
+   "reachClear": 0.079430577,
+   "retreatClear": 0.21038931,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.175146,
+   "wall": 0.151146,
+   "units": 22359,
+   "eventIdx": 80
+  }
+ },
+ {
+  "run": "char_b/near-ground [exact timing prune]",
+  "gen": "1",
+  "kind": "moving",
+  "outcome": "accepted",
+  "submit": 9.024,
+  "rest": 13.546999999999999,
+  "records": 80,
+  "fullWall": 1.7913400000000002,
+  "fullUnits": 171990,
+  "policies": {
+   "FULL_ARGMIN": {
+    "policy": "FULL_ARGMIN",
+    "available": true,
+    "decisionT": 10.815339999999999,
+    "wallToPlan": 1.7901580000000001,
+    "unitsToPlan": 171989,
+    "tMinusRest": -2.7316599999999998,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 11.04229784321,
+    "lead": 5.05,
+    "tau": 14.074,
+    "g": "axisP_side_45deg",
+    "r": "ring80mm_1of8",
+    "J": 0.948698319891,
+    "reachClear": 0.053410563,
+    "retreatClear": 0.089727824,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 14,
+    "graspScreens": 448,
+    "routeRollouts": 170,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 5.8142915285719354e-06,
+    "fractionWallAvoided": 0.0006598412361695782,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      14,
+      0.000478
+     ],
+     "grasp/static reach screening": [
+      84783,
+      0.530207
+     ],
+     "insertion/closure certification": [
+      77104,
+      0.492047
+     ],
+     "route (transit reach) certification": [
+      62800,
+      1.84195
+     ],
+     "carried-retreat certification": [
+      17500,
+      0.130569
+     ],
+     "cost / terminal timing audit": [
+      256,
+      0.205921
+     ],
+     "nested: IK steps": [
+      226353,
+      1.459886
+     ],
+     "nested: swept-volume queries": [
+      61988,
+      1.199138
+     ],
+     "nested: configuration safety": [
+      271847,
+      0.386018
+     ],
+     "nested: closure/contact safety": [
+      45959,
+      0.241388
+     ]
+    },
+    "dJ": 0.0,
+    "sameTau": true,
+    "sameG": true,
+    "sameR": true,
+    "sameTuple": true,
+    "dReachClear": 0.0,
+    "dRetreatClear": 0.0,
+    "dJVsEpochFull": 0.19524385438699998,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.017234005000000004,
+    "dRetreatClearVsEpochFull": -0.015854763000000008
+   },
+   "FIRST_COMPLETE_FEASIBLE": {
+    "policy": "FIRST_COMPLETE_FEASIBLE",
+    "available": true,
+    "decisionT": 9.316538999999999,
+    "wallToPlan": 0.2925390000000003,
+    "unitsToPlan": 44463,
+    "tMinusRest": -4.230461,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.774000000000001,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisP_side_45deg",
+    "r": "direct",
+    "J": 0.888487496309,
+    "reachClear": 0.044903055,
+    "retreatClear": 0.101518459,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 163,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7414791557648701,
+    "fractionWallAvoided": 0.8366926434959303,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000328
+     ],
+     "grasp/static reach screening": [
+      40197,
+      0.255031
+     ],
+     "insertion/closure certification": [
+      28303,
+      0.179358
+     ],
+     "route (transit reach) certification": [
+      36681,
+      1.078687
+     ],
+     "carried-retreat certification": [
+      9567,
+      0.072462
+     ],
+     "cost / terminal timing audit": [
+      177,
+      0.123802
+     ],
+     "nested: IK steps": [
+      103786,
+      0.681847
+     ],
+     "nested: swept-volume queries": [
+      36203,
+      0.697012
+     ],
+     "nested: configuration safety": [
+      131164,
+      0.186015
+     ],
+     "nested: closure/contact safety": [
+      28829,
+      0.150864
+     ]
+    },
+    "dJ": -0.06021082358199992,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.008507508000000004,
+    "dRetreatClear": 0.011790635000000008,
+    "dJVsEpochFull": 0.13503303080500006,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.025741513000000008,
+    "dRetreatClearVsEpochFull": -0.004064128
+   },
+   "FIRST_ADMISSIBLE_COMPLETE": {
+    "policy": "FIRST_ADMISSIBLE_COMPLETE",
+    "available": true,
+    "decisionT": 9.316538999999999,
+    "wallToPlan": 0.2925390000000003,
+    "unitsToPlan": 44463,
+    "tMinusRest": -4.230461,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.774000000000001,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisP_side_45deg",
+    "r": "direct",
+    "J": 0.888487496309,
+    "reachClear": 0.044903055,
+    "retreatClear": 0.101518459,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 163,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7414791557648701,
+    "fractionWallAvoided": 0.8366926434959303,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000328
+     ],
+     "grasp/static reach screening": [
+      40197,
+      0.255031
+     ],
+     "insertion/closure certification": [
+      28303,
+      0.179358
+     ],
+     "route (transit reach) certification": [
+      36681,
+      1.078687
+     ],
+     "carried-retreat certification": [
+      9567,
+      0.072462
+     ],
+     "cost / terminal timing audit": [
+      177,
+      0.123802
+     ],
+     "nested: IK steps": [
+      103786,
+      0.681847
+     ],
+     "nested: swept-volume queries": [
+      36203,
+      0.697012
+     ],
+     "nested: configuration safety": [
+      131164,
+      0.186015
+     ],
+     "nested: closure/contact safety": [
+      28829,
+      0.150864
+     ]
+    },
+    "dJ": -0.06021082358199992,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.008507508000000004,
+    "dRetreatClear": 0.011790635000000008,
+    "dJVsEpochFull": 0.13503303080500006,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.025741513000000008,
+    "dRetreatClearVsEpochFull": -0.004064128
+   },
+   "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR": {
+    "policy": "EARLIEST_ADMISSIBLE_TAU_THEN_BEST_GR",
+    "available": true,
+    "decisionT": 9.468008999999999,
+    "wallToPlan": 0.4440090000000003,
+    "unitsToPlan": 57443,
+    "tMinusRest": -4.078991,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.64263760903,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisP_side_45deg",
+    "r": "ring80mm_7of8",
+    "J": 0.79564758101,
+    "reachClear": 0.065032307,
+    "retreatClear": 0.101472152,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 192,
+    "routeRollouts": 17,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.6660096517239374,
+    "fractionWallAvoided": 0.7521358312771443,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000328
+     ],
+     "grasp/static reach screening": [
+      48170,
+      0.304797
+     ],
+     "insertion/closure certification": [
+      30298,
+      0.192368
+     ],
+     "route (transit reach) certification": [
+      39153,
+      1.153865
+     ],
+     "carried-retreat certification": [
+      10095,
+      0.07649299999999999
+     ],
+     "cost / terminal timing audit": [
+      189,
+      0.132706
+     ],
+     "nested: IK steps": [
+      115982,
+      0.759434
+     ],
+     "nested: swept-volume queries": [
+      38643,
+      0.746895
+     ],
+     "nested: configuration safety": [
+      145312,
+      0.206165
+     ],
+     "nested: closure/contact safety": [
+      30848,
+      0.161981
+     ]
+    },
+    "dJ": -0.15305073888099996,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": 0.011621743999999996,
+    "dRetreatClear": 0.011744327999999998,
+    "dJVsEpochFull": 0.04219311550600002,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": true,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.005612261000000007,
+    "dRetreatClearVsEpochFull": -0.0041104350000000095
+   },
+   "ANYTIME_INCUMBENT": {
+    "policy": "ANYTIME_INCUMBENT",
+    "available": true,
+    "decisionT": 9.316538999999999,
+    "wallToPlan": 0.2925390000000003,
+    "unitsToPlan": 44463,
+    "tMinusRest": -4.230461,
+    "commitLeadOk": true,
+    "beforeReachStartDeadline": true,
+    "reachStart": 9.774000000000001,
+    "lead": 3.7,
+    "tau": 12.724,
+    "g": "axisP_side_45deg",
+    "r": "direct",
+    "J": 0.888487496309,
+    "reachClear": 0.044903055,
+    "retreatClear": 0.101518459,
+    "deepest": "CARRIED_RETREAT",
+    "hypothesesEvaluated": 6,
+    "graspScreens": 163,
+    "routeRollouts": 1,
+    "memoRecords": 0,
+    "fractionUnitsAvoided": 0.7414791557648701,
+    "fractionWallAvoided": 0.8366926434959303,
+    "breakdown": {
+     "temporal hypothesis setup": [
+      6,
+      0.000328
+     ],
+     "grasp/static reach screening": [
+      40197,
+      0.255031
+     ],
+     "insertion/closure certification": [
+      28303,
+      0.179358
+     ],
+     "route (transit reach) certification": [
+      36681,
+      1.078687
+     ],
+     "carried-retreat certification": [
+      9567,
+      0.072462
+     ],
+     "cost / terminal timing audit": [
+      177,
+      0.123802
+     ],
+     "nested: IK steps": [
+      103786,
+      0.681847
+     ],
+     "nested: swept-volume queries": [
+      36203,
+      0.697012
+     ],
+     "nested: configuration safety": [
+      131164,
+      0.186015
+     ],
+     "nested: closure/contact safety": [
+      28829,
+      0.150864
+     ]
+    },
+    "dJ": -0.06021082358199992,
+    "sameTau": false,
+    "sameG": true,
+    "sameR": false,
+    "sameTuple": false,
+    "dReachClear": -0.008507508000000004,
+    "dRetreatClear": 0.011790635000000008,
+    "dJVsEpochFull": 0.13503303080500006,
+    "sameTauVsEpochFull": false,
+    "sameGVsEpochFull": true,
+    "sameRVsEpochFull": false,
+    "sameTupleVsEpochFull": false,
+    "dReachClearVsEpochFull": -0.025741513000000008,
+    "dRetreatClearVsEpochFull": -0.004064128
+   }
+  },
+  "fullArgminAtEpoch": {
+   "source": 158,
+   "hyp": 5,
+   "lead": 3.25,
+   "eventTime": 12.274,
+   "cand": "axisP_side_45deg",
+   "route": "ring80mm_7of8",
+   "J": 0.753454465504,
+   "motionJ": 0.745845984477,
+   "Tpres": 3.10543884964,
+   "Texec": 8.27814718297,
+   "reachClear": 0.070644568,
+   "retreatClear": 0.105582587,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 10.544725,
+   "wall": 1.520725,
+   "units": 99120,
+   "eventIdx": 343
+  },
+  "earliestTauAtEpoch": {
+   "source": 12,
+   "hyp": 6,
+   "lead": 3.7,
+   "eventTime": 12.724,
+   "cand": "axisP_side_45deg",
+   "route": "ring140mm_7of8",
+   "J": 0.793112799596,
+   "motionJ": 0.773455135369,
+   "Tpres": 3.32650435168,
+   "Texec": 8.51921268501,
+   "reachClear": 0.068287794,
+   "retreatClear": 0.101428444,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 9.415232999999999,
+   "wall": 0.3912330000000004,
+   "units": 49059,
+   "eventIdx": 179
+  },
+  "anytime": {
+   "firstIncumbentWall": 0.2925390000000003,
+   "firstIncumbentT": 9.316538999999999,
+   "firstIncumbentMinusRest": -4.230461,
+   "firstIncumbentUnits": 44463,
+   "changes": 7,
+   "losses": 0,
+   "trajectory": [
+    {
+     "t": 9.316538999999999,
+     "wall": 0.2925390000000003,
+     "units": 44463,
+     "eventIdx": 163,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisP_side_45deg",
+      "r": "direct",
+      "J": 0.888487496309,
+      "reachClear": 0.044903055,
+      "retreatClear": 0.101518459
+     }
+    },
+    {
+     "t": 9.323197,
+     "wall": 0.2991970000000004,
+     "units": 44797,
+     "eventIdx": 164,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisP_side_45deg",
+      "r": "ring80mm_0of8",
+      "J": 0.801209809865,
+      "reachClear": 0.070855645,
+      "retreatClear": 0.101436745
+     }
+    },
+    {
+     "t": 9.366551999999999,
+     "wall": 0.3425520000000002,
+     "units": 46781,
+     "eventIdx": 171,
+     "incumbent": {
+      "lead": 3.7,
+      "g": "axisP_side_45deg",
+      "r": "ring80mm_7of8",
+      "J": 0.79564758101,
+      "reachClear": 0.065032307,
+      "retreatClear": 0.101472152
+     }
+    },
+    {
+     "t": 9.647737999999999,
+     "wall": 0.6237380000000001,
+     "units": 74003,
+     "eventIdx": 261,
+     "incumbent": {
+      "lead": 4.15,
+      "g": "axisP_side_45deg",
+      "r": "ring80mm_0of8",
+      "J": 0.838541206476,
+      "reachClear": 0.06605411,
+      "retreatClear": 0.097185219
+     }
+    },
+    {
+     "t": 10.088975999999999,
+     "wall": 1.0649760000000004,
+     "units": 113174,
+     "eventIdx": 409,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisP_side_45deg",
+      "r": "ring140mm_0of8",
+      "J": 0.889649129605,
+      "reachClear": 0.065287398,
+      "retreatClear": 0.093071735
+     }
+    },
+    {
+     "t": 10.297022,
+     "wall": 1.2730220000000003,
+     "units": 128943,
+     "eventIdx": 468,
+     "incumbent": {
+      "lead": 4.6,
+      "g": "axisP_side_45deg",
+      "r": "ring80mm_0of8",
+      "J": 0.896275004726,
+      "reachClear": 0.057366118,
+      "retreatClear": 0.092659557
+     }
+    },
+    {
+     "t": 10.568624999999999,
+     "wall": 1.5446250000000001,
+     "units": 155538,
+     "eventIdx": 564,
+     "incumbent": {
+      "lead": 5.05,
+      "g": "axisP_side_45deg",
+      "r": "ring140mm_0of8",
+      "J": 0.933966590181,
+      "reachClear": 0.059329143,
+      "retreatClear": 0.089612193
+     }
+    }
+   ],
+   "atFractionOfFullWall": {
+    "0.1": null,
+    "0.25": {
+     "lead": 3.7,
+     "g": "axisP_side_45deg",
+     "r": "ring80mm_7of8",
+     "J": 0.79564758101,
+     "dJ": -0.15305073888099996,
+     "reachClear": 0.065032307,
+     "retreatClear": 0.101472152
+    },
+    "0.5": {
+     "lead": 4.15,
+     "g": "axisP_side_45deg",
+     "r": "ring80mm_0of8",
+     "J": 0.838541206476,
+     "dJ": -0.11015711341500001,
+     "reachClear": 0.06605411,
+     "retreatClear": 0.097185219
+    },
+    "0.75": {
+     "lead": 4.6,
+     "g": "axisP_side_45deg",
+     "r": "ring80mm_0of8",
+     "J": 0.896275004726,
+     "dJ": -0.052423315164999984,
+     "reachClear": 0.057366118,
+     "retreatClear": 0.092659557
+    },
+    "1.0": {
+     "lead": 5.05,
+     "g": "axisP_side_45deg",
+     "r": "ring80mm_1of8",
+     "J": 0.948698319891,
+     "dJ": 0.0,
+     "reachClear": 0.053410563,
+     "retreatClear": 0.089727824
+    }
+   }
+  },
+  "beforeFirstComplete": {
+   "staticScreensFailed": 148,
+   "wallStaticFailed": 0.255985,
+   "staticScreensPassed": 15,
+   "wallStaticPassed": 0.030272000000000215,
+   "routeRolloutsFailed": 0,
+   "wallRouteFailed": 0.0,
+   "wallSuccessfulRoute": 0.006282000000000121,
+   "hypothesesTouched": 6
+  },
+  "perCandidateWall": {
+   "static/rejected": {
+    "n": 424,
+    "median": 0.0004985000000000128,
+    "total": 0.7933020000000005
+   },
+   "static/feasible": {
+    "n": 24,
+    "median": 0.0019809999999998995,
+    "total": 0.04804999999999962
+   },
+   "route/feasible": {
+    "n": 80,
+    "median": 0.007067999999999963,
+    "total": 0.5771139999999997
+   },
+   "route/rejected": {
+    "n": 90,
+    "median": 0.0044760000000001465,
+    "total": 0.37169200000000036
+   }
+  },
+  "exactTimingPrune": {
+   "prunedGraspTau": 14,
+   "savedWall": 1.4248069999999997,
+   "savedUnits": 70468,
+   "originalFullWall": 3.216147
+  },
+  "fullArgminAtEpochUnpruned": {
+   "source": 158,
+   "hyp": 5,
+   "lead": 3.25,
+   "eventTime": 12.274,
+   "cand": "axisP_side_45deg",
+   "route": "ring80mm_7of8",
+   "J": 0.753454465504,
+   "motionJ": 0.745845984477,
+   "Tpres": 3.10543884964,
+   "Texec": 8.27814718297,
+   "reachClear": 0.070644568,
+   "retreatClear": 0.105582587,
+   "costValid": true,
+   "deepest": "CARRIED_RETREAT",
+   "t": 10.544725,
+   "wall": 1.520725,
+   "units": 99120,
+   "eventIdx": 343
+  }
+ }
+]
