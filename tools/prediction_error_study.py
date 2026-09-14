@@ -509,7 +509,38 @@ def report(path):
             print(f"| {r['label']} | " + " | ".join(f"{b[k]*1000:.0f}" if k in b else "" for k in keys) + " |")
 
 
+def adoptions(logs):
+    """For every provisional adoption and every terminal commitment in V2 logs: the
+    horizon h = tau - t used by the decision and the realised prediction error
+    |p_O(tau) - predictedPresentation| against the scripted giver truth."""
+    rows = []
+    for path in logs:
+        lines = read(path)
+        script = next(kv(l) for l in lines if "[GiverTruthScript]" in l)
+        start = float(script["startTime"])
+        truth = GiverTruth(vec(script["p0"]), quat_to_mat(vec(script["q0"])), vec(script["v"]), vec(script["w"]),
+                           float(script["travelDistance"]), float(script["stopDuration"]))
+        done = any("[Completed] full plan-once" in l for l in lines)
+        for l in lines:
+            if "[V2ProvisionalAdopt]" not in l:
+                continue
+            d = kv(l)
+            t, tau = float(d["t"]), float(d["tau"])
+            pred = vec(d["predictedPresentation"])
+            p_tau, _ = truth.pose(tau - start)
+            moving = np.linalg.norm(truth.pose(t - start + 1e-3)[0] - truth.pose(t - start)[0]) / 1e-3 > REST_V
+            rows.append(dict(log="/".join(path.split("/")[-3:-1]), planId=int(d["planId"]), kind=d["kind"], t=t, tau=tau,
+                             horizon=tau - t, lead=float(d["eventLead"].rstrip("s")), objectMovingAtDecision=bool(moving),
+                             timeToGiverRest=start + truth.rest_time - t,
+                             realisedError=float(np.linalg.norm(p_tau - pred)), completed=done))
+    return rows
+
+
 def main(argv):
+    if len(argv) >= 3 and argv[1] == "adoptions":
+        for r in adoptions(argv[2:]):
+            print(json.dumps(r))
+        return 0
     if len(argv) >= 3 and argv[1] == "validate":
         rows = validate(argv[2:])
         for r in rows:

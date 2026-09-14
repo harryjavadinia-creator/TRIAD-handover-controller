@@ -794,6 +794,8 @@ void HandoverInterceptionController::runRecertifyActiveRolloutV2(ReceiverJobResu
   plannerContext_.routeStepTransitPostureSaved = false;
   plannerContext_.routeStepPhase = RouteStepPhase::Reach;
 
+  plannerContext_.routeStepReachPositionError = std::numeric_limits<double>::quiet_NaN();
+  plannerContext_.routeStepReachOrientationError = std::numeric_limits<double>::quiet_NaN();
   plannerContext_.parityTrace.clear();
   plannerContext_.parityTraceActive = v2ParityTrace_ && resumeIndex == 0;
   const RouteStepOutcome outcome = runRouteStepToCompletionV2();
@@ -810,10 +812,12 @@ void HandoverInterceptionController::runRecertifyActiveRolloutV2(ReceiverJobResu
                  routeDeepestStageV2(outcome == RouteStepOutcome::Feasible),
                  std::numeric_limits<double>::quiet_NaN(), plan.reachDuration, result.reason);
   mc_rtc::log::info(
-      "[V2CertificationDetail] type={} planId={} planningGeneration={} candidate={} route={} resumeIndex={}/{} success={} reason={} stageReached={}",
+      "[V2CertificationDetail] type={} planId={} planningGeneration={} candidate={} route={} resumeIndex={}/{} success={} reason={} stageReached={} reachEndPositionError={:.5f} reachEndOrientationError={:.5f} snapshotMouthDeviationFromPlanStart={:.5f}",
       receiverJobTypeNameV2(request.type), request.planId, request.planningGeneration, candidate.name, candidate.transitRouteName,
       resumeIndex, steps, result.success, result.reason,
-      outcome == RouteStepOutcome::Feasible ? "complete_through_carried_retreat" : "rejected");
+      outcome == RouteStepOutcome::Feasible ? "complete_through_carried_retreat" : "rejected",
+      plannerContext_.routeStepReachPositionError, plannerContext_.routeStepReachOrientationError,
+      (request.snapshotMouthPose.translation() - plan.mouthAtReachStart.translation()).norm());
 }
 
 void HandoverInterceptionController::runTerminalCertificationV2(ReceiverJobResultV2 & result)
