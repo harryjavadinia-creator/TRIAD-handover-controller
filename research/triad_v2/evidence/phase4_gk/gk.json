@@ -1,0 +1,1743 @@
+[
+ {
+  "log": "research/triad_v2/evidence/runs_ae1e824/logs/char_G/diagonal/diagonal.log.xz",
+  "moving": {
+   "epoch": 9.024,
+   "speed": 0.07999,
+   "reference": [
+    4.15,
+    "axisP_side_337deg",
+    "ring140mm_2of8",
+    0.681985252
+   ],
+   "referenceEarliest": 4.15,
+   "arcs": {
+    "staticArcs": [
+     2,
+     2,
+     3,
+     2,
+     5,
+     5,
+     6,
+     1,
+     9,
+     3,
+     11,
+     2,
+     3,
+     2,
+     10,
+     2,
+     6,
+     1,
+     10,
+     2,
+     9,
+     1
+    ],
+    "completeArcs": [
+     2,
+     1,
+     5,
+     5,
+     6,
+     1,
+     9,
+     2,
+     11,
+     2,
+     2,
+     10,
+     1,
+     6,
+     1,
+     10,
+     1,
+     9,
+     1
+    ]
+   },
+   "laws": {
+    "UNIFORM(4)": {
+     "staticScreens": 112,
+     "staticFraction": 0.0625,
+     "routeRollouts": 17,
+     "routeFraction": 0.010309278350515464,
+     "selected": [
+      5.95,
+      "axisP_side_0deg",
+      "ring80mm_3of8"
+     ],
+     "dJ": 0.165683876,
+     "earliestAdmissible": 5.95,
+     "dEarliest": 1.7999999999999998,
+     "clearance": [
+      0.07313,
+      0.21007
+     ]
+    },
+    "UNIFORM(8)": {
+     "staticScreens": 224,
+     "staticFraction": 0.125,
+     "routeRollouts": 238,
+     "routeFraction": 0.14432989690721648,
+     "selected": [
+      5.05,
+      "axisP_side_315deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.08343702999999991,
+     "earliestAdmissible": 4.6,
+     "dEarliest": 0.4499999999999993,
+     "clearance": [
+      0.07709,
+      0.21143
+     ]
+    },
+    "UNIFORM(16)": {
+     "staticScreens": 448,
+     "staticFraction": 0.25,
+     "routeRollouts": 408,
+     "routeFraction": 0.24742268041237114,
+     "selected": [
+      4.15,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 4.15,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07236,
+      0.21778
+     ]
+    },
+    "UNIFORM(32)": {
+     "staticScreens": 896,
+     "staticFraction": 0.5,
+     "routeRollouts": 782,
+     "routeFraction": 0.4742268041237113,
+     "selected": [
+      4.15,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 4.15,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07236,
+      0.21778
+     ]
+    },
+    "UNIFORM(64)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 1649,
+     "routeFraction": 1.0,
+     "selected": [
+      4.15,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 4.15,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07236,
+      0.21778
+     ]
+    },
+    "ADAPT(4)": {
+     "staticScreens": 133,
+     "staticFraction": 0.07421875,
+     "routeRollouts": 221,
+     "routeFraction": 0.13402061855670103,
+     "selected": [
+      5.95,
+      "axisP_side_332deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.118173313,
+     "earliestAdmissible": 5.95,
+     "dEarliest": 1.7999999999999998,
+     "clearance": [
+      0.07525,
+      0.22252
+     ]
+    },
+    "ADAPT(8)": {
+     "staticScreens": 336,
+     "staticFraction": 0.1875,
+     "routeRollouts": 1326,
+     "routeFraction": 0.8041237113402062,
+     "selected": [
+      4.6,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.022859111999999904,
+     "earliestAdmissible": 4.6,
+     "dEarliest": 0.4499999999999993,
+     "clearance": [
+      0.07426,
+      0.22042
+     ]
+    },
+    "ADAPT(16)": {
+     "staticScreens": 543,
+     "staticFraction": 0.30301339285714285,
+     "routeRollouts": 1428,
+     "routeFraction": 0.865979381443299,
+     "selected": [
+      4.15,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 4.15,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07236,
+      0.21778
+     ]
+    },
+    "ARCREP(1)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 374,
+     "routeFraction": 0.2268041237113402,
+     "selected": [
+      4.15,
+      "axisP_side_332deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.0015732169999999046,
+     "earliestAdmissible": 4.15,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07537,
+      0.215
+     ]
+    },
+    "ARCREP(3)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 901,
+     "routeFraction": 0.5463917525773195,
+     "selected": [
+      4.15,
+      "axisP_side_332deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.0015732169999999046,
+     "earliestAdmissible": 4.15,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07537,
+      0.215
+     ]
+    }
+   }
+  },
+  "rest": {
+   "epoch": 20.296,
+   "speed": 0.0,
+   "reference": [
+    1.8,
+    "axisP_side_343deg",
+    "ring80mm_1of8",
+    0.57871652875
+   ],
+   "referenceEarliest": 1.8,
+   "arcs": {
+    "staticArcs": [
+     4
+    ],
+    "completeArcs": [
+     4
+    ]
+   },
+   "laws": {
+    "UNIFORM(4)": {
+     "staticScreens": 8,
+     "staticFraction": 0.0625,
+     "routeRollouts": 0,
+     "routeFraction": 0.0,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "UNIFORM(8)": {
+     "staticScreens": 16,
+     "staticFraction": 0.125,
+     "routeRollouts": 0,
+     "routeFraction": 0.0,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "UNIFORM(16)": {
+     "staticScreens": 32,
+     "staticFraction": 0.25,
+     "routeRollouts": 17,
+     "routeFraction": 0.25,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "dJ": 0.002794358999999913,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08078,
+      0.21693
+     ]
+    },
+    "UNIFORM(32)": {
+     "staticScreens": 64,
+     "staticFraction": 0.5,
+     "routeRollouts": 34,
+     "routeFraction": 0.5,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "dJ": 0.002794358999999913,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08078,
+      0.21693
+     ]
+    },
+    "UNIFORM(64)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 68,
+     "routeFraction": 1.0,
+     "selected": [
+      1.8,
+      "axisP_side_343deg",
+      "ring80mm_1of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08095,
+      0.21945
+     ]
+    },
+    "ADAPT(4)": {
+     "staticScreens": 8,
+     "staticFraction": 0.0625,
+     "routeRollouts": 0,
+     "routeFraction": 0.0,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "ADAPT(8)": {
+     "staticScreens": 16,
+     "staticFraction": 0.125,
+     "routeRollouts": 0,
+     "routeFraction": 0.0,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "ADAPT(16)": {
+     "staticScreens": 37,
+     "staticFraction": 0.2890625,
+     "routeRollouts": 68,
+     "routeFraction": 1.0,
+     "selected": [
+      1.8,
+      "axisP_side_343deg",
+      "ring80mm_1of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08095,
+      0.21945
+     ]
+    },
+    "ARCREP(1)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 17,
+     "routeFraction": 0.25,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "dJ": 0.002794358999999913,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08078,
+      0.21693
+     ]
+    },
+    "ARCREP(3)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 51,
+     "routeFraction": 0.75,
+     "selected": [
+      1.8,
+      "axisP_side_343deg",
+      "ring80mm_1of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08095,
+      0.21945
+     ]
+    }
+   }
+  }
+ },
+ {
+  "log": "research/triad_v2/evidence/runs_ae1e824/logs/char_G/lateral-low/lateral-low.log.xz",
+  "moving": {
+   "epoch": 9.024,
+   "speed": 0.07999,
+   "reference": [
+    3.7,
+    "axisN_side_337deg",
+    "direct",
+    0.677719831
+   ],
+   "referenceEarliest": 2.35,
+   "arcs": {
+    "staticArcs": [
+     4,
+     3,
+     4,
+     3,
+     5,
+     2,
+     6,
+     2,
+     2,
+     6,
+     3,
+     1,
+     8,
+     4,
+     1,
+     8,
+     3,
+     9,
+     3,
+     10,
+     2,
+     13,
+     1,
+     15,
+     16,
+     6,
+     13,
+     1,
+     1,
+     7,
+     9
+    ],
+    "completeArcs": [
+     4,
+     3,
+     4,
+     3,
+     5,
+     2,
+     6,
+     2,
+     2,
+     6,
+     3,
+     1,
+     8,
+     4,
+     1,
+     8,
+     3,
+     9,
+     3,
+     10,
+     2,
+     13,
+     1,
+     15,
+     15,
+     6,
+     13,
+     1,
+     1,
+     7,
+     9
+    ]
+   },
+   "laws": {
+    "UNIFORM(4)": {
+     "staticScreens": 112,
+     "staticFraction": 0.0625,
+     "routeRollouts": 153,
+     "routeFraction": 0.05263157894736842,
+     "selected": [
+      5.05,
+      "axisN_side_90deg",
+      "ring140mm_7of8"
+     ],
+     "dJ": 0.19407015299999997,
+     "earliestAdmissible": 4.6,
+     "dEarliest": 2.2499999999999996,
+     "clearance": [
+      0.05921,
+      0.09293
+     ]
+    },
+    "UNIFORM(8)": {
+     "staticScreens": 224,
+     "staticFraction": 0.125,
+     "routeRollouts": 306,
+     "routeFraction": 0.10526315789473684,
+     "selected": [
+      3.7,
+      "axisN_side_45deg",
+      "ring140mm_6of8"
+     ],
+     "dJ": 0.04141042100000003,
+     "earliestAdmissible": 3.7,
+     "dEarliest": 1.35,
+     "clearance": [
+      0.08018,
+      0.10537
+     ]
+    },
+    "UNIFORM(16)": {
+     "staticScreens": 448,
+     "staticFraction": 0.25,
+     "routeRollouts": 731,
+     "routeFraction": 0.25146198830409355,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.8999999999999999,
+     "clearance": [
+      0.08159,
+      0.07729
+     ]
+    },
+    "UNIFORM(32)": {
+     "staticScreens": 896,
+     "staticFraction": 0.5,
+     "routeRollouts": 1496,
+     "routeFraction": 0.5146198830409356,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 2.35,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08159,
+      0.07729
+     ]
+    },
+    "UNIFORM(64)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 2907,
+     "routeFraction": 1.0,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 2.35,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08159,
+      0.07729
+     ]
+    },
+    "ADAPT(4)": {
+     "staticScreens": 248,
+     "staticFraction": 0.13839285714285715,
+     "routeRollouts": 1683,
+     "routeFraction": 0.5789473684210527,
+     "selected": [
+      4.6,
+      "axisN_side_45deg",
+      "ring80mm_6of8"
+     ],
+     "dJ": 0.084465224,
+     "earliestAdmissible": 4.6,
+     "dEarliest": 2.2499999999999996,
+     "clearance": [
+      0.07851,
+      0.10878
+     ]
+    },
+    "ADAPT(8)": {
+     "staticScreens": 363,
+     "staticFraction": 0.20256696428571427,
+     "routeRollouts": 1955,
+     "routeFraction": 0.672514619883041,
+     "selected": [
+      3.7,
+      "axisN_side_45deg",
+      "ring140mm_6of8"
+     ],
+     "dJ": 0.04141042100000003,
+     "earliestAdmissible": 3.7,
+     "dEarliest": 1.35,
+     "clearance": [
+      0.08018,
+      0.10537
+     ]
+    },
+    "ADAPT(16)": {
+     "staticScreens": 622,
+     "staticFraction": 0.3470982142857143,
+     "routeRollouts": 2720,
+     "routeFraction": 0.935672514619883,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 2.8,
+     "dEarliest": 0.44999999999999973,
+     "clearance": [
+      0.08159,
+      0.07729
+     ]
+    },
+    "ARCREP(1)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 527,
+     "routeFraction": 0.18128654970760233,
+     "selected": [
+      3.7,
+      "axisN_side_332deg",
+      "direct"
+     ],
+     "dJ": 0.023374601999999967,
+     "earliestAdmissible": 2.35,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.06981,
+      0.0704
+     ]
+    },
+    "ARCREP(3)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 1343,
+     "routeFraction": 0.4619883040935672,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 2.35,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08159,
+      0.07729
+     ]
+    }
+   }
+  },
+  "rest": {
+   "epoch": 28.081,
+   "speed": 0.0,
+   "reference": [
+    1.8,
+    "axisN_side_337deg",
+    "direct",
+    0.59125899575
+   ],
+   "referenceEarliest": 1.8,
+   "arcs": {
+    "staticArcs": [
+     1,
+     8,
+     3
+    ],
+    "completeArcs": [
+     1,
+     8,
+     3
+    ]
+   },
+   "laws": {
+    "UNIFORM(4)": {
+     "staticScreens": 8,
+     "staticFraction": 0.0625,
+     "routeRollouts": 0,
+     "routeFraction": 0.0,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "UNIFORM(8)": {
+     "staticScreens": 16,
+     "staticFraction": 0.125,
+     "routeRollouts": 17,
+     "routeFraction": 0.08333333333333333,
+     "selected": [
+      1.8,
+      "axisN_side_45deg",
+      "ring80mm_6of8"
+     ],
+     "dJ": 0.07840455800000001,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.0821,
+      0.10674
+     ]
+    },
+    "UNIFORM(16)": {
+     "staticScreens": 32,
+     "staticFraction": 0.25,
+     "routeRollouts": 68,
+     "routeFraction": 0.3333333333333333,
+     "selected": [
+      1.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08159,
+      0.08074
+     ]
+    },
+    "UNIFORM(32)": {
+     "staticScreens": 64,
+     "staticFraction": 0.5,
+     "routeRollouts": 119,
+     "routeFraction": 0.5833333333333334,
+     "selected": [
+      1.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08159,
+      0.08074
+     ]
+    },
+    "UNIFORM(64)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 204,
+     "routeFraction": 1.0,
+     "selected": [
+      1.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08159,
+      0.08074
+     ]
+    },
+    "ADAPT(4)": {
+     "staticScreens": 8,
+     "staticFraction": 0.0625,
+     "routeRollouts": 0,
+     "routeFraction": 0.0,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "ADAPT(8)": {
+     "staticScreens": 26,
+     "staticFraction": 0.203125,
+     "routeRollouts": 136,
+     "routeFraction": 0.6666666666666666,
+     "selected": [
+      1.8,
+      "axisN_side_45deg",
+      "ring80mm_6of8"
+     ],
+     "dJ": 0.07840455800000001,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.0821,
+      0.10674
+     ]
+    },
+    "ADAPT(16)": {
+     "staticScreens": 49,
+     "staticFraction": 0.3828125,
+     "routeRollouts": 204,
+     "routeFraction": 1.0,
+     "selected": [
+      1.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08159,
+      0.08074
+     ]
+    },
+    "ARCREP(1)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 51,
+     "routeFraction": 0.25,
+     "selected": [
+      1.8,
+      "axisN_side_332deg",
+      "direct"
+     ],
+     "dJ": 0.019736549999999964,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07673,
+      0.07359
+     ]
+    },
+    "ARCREP(3)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 119,
+     "routeFraction": 0.5833333333333334,
+     "selected": [
+      1.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08159,
+      0.08074
+     ]
+    }
+   }
+  }
+ },
+ {
+  "log": "research/triad_v2/evidence/runs_ae1e824/logs/char_G/longitudinal/longitudinal.log.xz",
+  "moving": {
+   "epoch": 9.024,
+   "speed": 0.07999,
+   "reference": [
+    3.25,
+    "axisP_side_343deg",
+    "ring140mm_1of8",
+    0.615856159
+   ],
+   "referenceEarliest": 2.35,
+   "arcs": {
+    "staticArcs": [
+     1,
+     3,
+     1,
+     6,
+     5,
+     8,
+     5,
+     6,
+     8,
+     8,
+     9,
+     8,
+     10,
+     2,
+     3,
+     9,
+     2,
+     2,
+     10,
+     8,
+     6,
+     8,
+     3,
+     7,
+     2,
+     4,
+     2,
+     1,
+     1,
+     4,
+     1
+    ],
+    "completeArcs": [
+     1,
+     3,
+     1,
+     3,
+     1,
+     5,
+     1,
+     2,
+     2,
+     5,
+     6,
+     1,
+     8,
+     9,
+     1,
+     10,
+     2,
+     3,
+     2,
+     2,
+     10,
+     6,
+     3,
+     1,
+     1,
+     3
+    ]
+   },
+   "laws": {
+    "UNIFORM(4)": {
+     "staticScreens": 112,
+     "staticFraction": 0.0625,
+     "routeRollouts": 170,
+     "routeFraction": 0.06535947712418301,
+     "selected": [
+      4.6,
+      "axisP_side_0deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.13066594099999995,
+     "earliestAdmissible": 4.6,
+     "dEarliest": 2.2499999999999996,
+     "clearance": [
+      0.08131,
+      0.12892
+     ]
+    },
+    "UNIFORM(8)": {
+     "staticScreens": 224,
+     "staticFraction": 0.125,
+     "routeRollouts": 289,
+     "routeFraction": 0.1111111111111111,
+     "selected": [
+      4.15,
+      "axisP_side_315deg",
+      "ring140mm_1of8"
+     ],
+     "dJ": 0.12375559199999997,
+     "earliestAdmissible": 3.7,
+     "dEarliest": 1.35,
+     "clearance": [
+      0.08012,
+      0.20998
+     ]
+    },
+    "UNIFORM(16)": {
+     "staticScreens": 448,
+     "staticFraction": 0.25,
+     "routeRollouts": 595,
+     "routeFraction": 0.22875816993464052,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.005512174000000036,
+     "earliestAdmissible": 2.35,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07943,
+      0.21039
+     ]
+    },
+    "UNIFORM(32)": {
+     "staticScreens": 896,
+     "staticFraction": 0.5,
+     "routeRollouts": 1343,
+     "routeFraction": 0.5163398692810458,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.005512174000000036,
+     "earliestAdmissible": 2.35,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07943,
+      0.21039
+     ]
+    },
+    "UNIFORM(64)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 2601,
+     "routeFraction": 1.0,
+     "selected": [
+      3.25,
+      "axisP_side_343deg",
+      "ring140mm_1of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 2.35,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08108,
+      0.21979
+     ]
+    },
+    "ADAPT(4)": {
+     "staticScreens": 230,
+     "staticFraction": 0.12834821428571427,
+     "routeRollouts": 1258,
+     "routeFraction": 0.48366013071895425,
+     "selected": [
+      4.6,
+      "axisP_side_332deg",
+      "ring140mm_1of8"
+     ],
+     "dJ": 0.114081922,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.8999999999999999,
+     "clearance": [
+      0.08091,
+      0.22009
+     ]
+    },
+    "ADAPT(8)": {
+     "staticScreens": 377,
+     "staticFraction": 0.21037946428571427,
+     "routeRollouts": 1972,
+     "routeFraction": 0.7581699346405228,
+     "selected": [
+      3.7,
+      "axisP_side_343deg",
+      "ring140mm_1of8"
+     ],
+     "dJ": 0.034485326999999955,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.8999999999999999,
+     "clearance": [
+      0.08102,
+      0.22173
+     ]
+    },
+    "ADAPT(16)": {
+     "staticScreens": 598,
+     "staticFraction": 0.33370535714285715,
+     "routeRollouts": 2346,
+     "routeFraction": 0.9019607843137255,
+     "selected": [
+      3.25,
+      "axisP_side_343deg",
+      "ring140mm_1of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 2.35,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08108,
+      0.21979
+     ]
+    },
+    "ARCREP(1)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 527,
+     "routeFraction": 0.20261437908496732,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.005512174000000036,
+     "earliestAdmissible": 2.35,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07943,
+      0.21039
+     ]
+    },
+    "ARCREP(3)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 1326,
+     "routeFraction": 0.5098039215686274,
+     "selected": [
+      3.25,
+      "axisP_side_343deg",
+      "ring140mm_1of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 2.35,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08108,
+      0.21979
+     ]
+    }
+   }
+  },
+  "rest": {
+   "epoch": 25.459,
+   "speed": 0.0,
+   "reference": [
+    1.8,
+    "axisP_side_343deg",
+    "direct",
+    0.6152641717499999
+   ],
+   "referenceEarliest": 1.8,
+   "arcs": {
+    "staticArcs": [
+     7,
+     8,
+     9
+    ],
+    "completeArcs": [
+     7,
+     8,
+     1
+    ]
+   },
+   "laws": {
+    "UNIFORM(4)": {
+     "staticScreens": 8,
+     "staticFraction": 0.0625,
+     "routeRollouts": 17,
+     "routeFraction": 0.041666666666666664,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "UNIFORM(8)": {
+     "staticScreens": 16,
+     "staticFraction": 0.125,
+     "routeRollouts": 51,
+     "routeFraction": 0.125,
+     "selected": [
+      1.8,
+      "axisP_side_315deg",
+      "direct"
+     ],
+     "dJ": 0.03226119100000002,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08038,
+      0.20946
+     ]
+    },
+    "UNIFORM(16)": {
+     "staticScreens": 32,
+     "staticFraction": 0.25,
+     "routeRollouts": 102,
+     "routeFraction": 0.25,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0004203940000000461,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08028,
+      0.22072
+     ]
+    },
+    "UNIFORM(32)": {
+     "staticScreens": 64,
+     "staticFraction": 0.5,
+     "routeRollouts": 204,
+     "routeFraction": 0.5,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0004203940000000461,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08028,
+      0.22072
+     ]
+    },
+    "UNIFORM(64)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 408,
+     "routeFraction": 1.0,
+     "selected": [
+      1.8,
+      "axisP_side_343deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08032,
+      0.22288
+     ]
+    },
+    "ADAPT(4)": {
+     "staticScreens": 20,
+     "staticFraction": 0.15625,
+     "routeRollouts": 153,
+     "routeFraction": 0.375,
+     "selected": [
+      1.8,
+      "axisN_side_242deg",
+      "ring140mm_6of8"
+     ],
+     "dJ": 0.5215890870000001,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.0319,
+      0.22395
+     ]
+    },
+    "ADAPT(8)": {
+     "staticScreens": 46,
+     "staticFraction": 0.359375,
+     "routeRollouts": 408,
+     "routeFraction": 1.0,
+     "selected": [
+      1.8,
+      "axisP_side_343deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08032,
+      0.22288
+     ]
+    },
+    "ADAPT(16)": {
+     "staticScreens": 56,
+     "staticFraction": 0.4375,
+     "routeRollouts": 408,
+     "routeFraction": 1.0,
+     "selected": [
+      1.8,
+      "axisP_side_343deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08032,
+      0.22288
+     ]
+    },
+    "ARCREP(1)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 51,
+     "routeFraction": 0.125,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0004203940000000461,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08028,
+      0.22072
+     ]
+    },
+    "ARCREP(3)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 153,
+     "routeFraction": 0.375,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0004203940000000461,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08028,
+      0.22072
+     ]
+    }
+   }
+  }
+ },
+ {
+  "log": "research/triad_v2/evidence/runs_ae1e824/logs/char_G/near-ground/near-ground.log.xz",
+  "moving": {
+   "epoch": 9.024,
+   "speed": 0.07999,
+   "reference": [
+    3.25,
+    "axisP_side_45deg",
+    "ring80mm_7of8",
+    0.753454466
+   ],
+   "referenceEarliest": 3.25,
+   "arcs": {
+    "staticArcs": [
+     5,
+     4,
+     6,
+     4,
+     6,
+     2,
+     6,
+     2,
+     6,
+     5,
+     5,
+     6,
+     5,
+     5,
+     5,
+     4,
+     2,
+     2,
+     2,
+     4,
+     1
+    ],
+    "completeArcs": [
+     5,
+     4,
+     6,
+     4,
+     6,
+     2,
+     5,
+     2,
+     5,
+     4,
+     4,
+     4,
+     3,
+     3,
+     2,
+     2,
+     3
+    ]
+   },
+   "laws": {
+    "UNIFORM(4)": {
+     "staticScreens": 112,
+     "staticFraction": 0.0625,
+     "routeRollouts": 0,
+     "routeFraction": 0.0,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "UNIFORM(8)": {
+     "staticScreens": 224,
+     "staticFraction": 0.125,
+     "routeRollouts": 204,
+     "routeFraction": 0.13793103448275862,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "ring80mm_7of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07064,
+      0.10558
+     ]
+    },
+    "UNIFORM(16)": {
+     "staticScreens": 448,
+     "staticFraction": 0.25,
+     "routeRollouts": 408,
+     "routeFraction": 0.27586206896551724,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "ring80mm_7of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07064,
+      0.10558
+     ]
+    },
+    "UNIFORM(32)": {
+     "staticScreens": 896,
+     "staticFraction": 0.5,
+     "routeRollouts": 731,
+     "routeFraction": 0.4942528735632184,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "ring80mm_7of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07064,
+      0.10558
+     ]
+    },
+    "UNIFORM(64)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 1479,
+     "routeFraction": 1.0,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "ring80mm_7of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07064,
+      0.10558
+     ]
+    },
+    "ADAPT(4)": {
+     "staticScreens": 112,
+     "staticFraction": 0.0625,
+     "routeRollouts": 0,
+     "routeFraction": 0.0,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "ADAPT(8)": {
+     "staticScreens": 319,
+     "staticFraction": 0.17801339285714285,
+     "routeRollouts": 1054,
+     "routeFraction": 0.7126436781609196,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "ring80mm_7of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07064,
+      0.10558
+     ]
+    },
+    "ADAPT(16)": {
+     "staticScreens": 551,
+     "staticFraction": 0.30747767857142855,
+     "routeRollouts": 1411,
+     "routeFraction": 0.9540229885057471,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "ring80mm_7of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.07064,
+      0.10558
+     ]
+    },
+    "ARCREP(1)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 357,
+     "routeFraction": 0.2413793103448276,
+     "selected": [
+      3.25,
+      "axisP_side_56deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.05232840400000005,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.06788,
+      0.09912
+     ]
+    },
+    "ARCREP(3)": {
+     "staticScreens": 1792,
+     "staticFraction": 1.0,
+     "routeRollouts": 952,
+     "routeFraction": 0.6436781609195402,
+     "selected": [
+      3.25,
+      "axisP_side_56deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.05232840400000005,
+     "earliestAdmissible": 3.25,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.06788,
+      0.09912
+     ]
+    }
+   }
+  },
+  "rest": {
+   "epoch": 21.453,
+   "speed": 0.0,
+   "reference": [
+    1.8,
+    "axisP_side_45deg",
+    "ring80mm_0of8",
+    0.7422364527499999
+   ],
+   "referenceEarliest": 1.8,
+   "arcs": {
+    "staticArcs": [
+     5
+    ],
+    "completeArcs": [
+     4
+    ]
+   },
+   "laws": {
+    "UNIFORM(4)": {
+     "staticScreens": 8,
+     "staticFraction": 0.0625,
+     "routeRollouts": 0,
+     "routeFraction": 0.0,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "UNIFORM(8)": {
+     "staticScreens": 16,
+     "staticFraction": 0.125,
+     "routeRollouts": 17,
+     "routeFraction": 0.2,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08262,
+      0.09766
+     ]
+    },
+    "UNIFORM(16)": {
+     "staticScreens": 32,
+     "staticFraction": 0.25,
+     "routeRollouts": 17,
+     "routeFraction": 0.2,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08262,
+      0.09766
+     ]
+    },
+    "UNIFORM(32)": {
+     "staticScreens": 64,
+     "staticFraction": 0.5,
+     "routeRollouts": 34,
+     "routeFraction": 0.4,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08262,
+      0.09766
+     ]
+    },
+    "UNIFORM(64)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 85,
+     "routeFraction": 1.0,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08262,
+      0.09766
+     ]
+    },
+    "ADAPT(4)": {
+     "staticScreens": 8,
+     "staticFraction": 0.0625,
+     "routeRollouts": 0,
+     "routeFraction": 0.0,
+     "selected": null,
+     "dJ": null,
+     "earliestAdmissible": null,
+     "dEarliest": null,
+     "clearance": null
+    },
+    "ADAPT(8)": {
+     "staticScreens": 23,
+     "staticFraction": 0.1796875,
+     "routeRollouts": 85,
+     "routeFraction": 1.0,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08262,
+      0.09766
+     ]
+    },
+    "ADAPT(16)": {
+     "staticScreens": 37,
+     "staticFraction": 0.2890625,
+     "routeRollouts": 85,
+     "routeFraction": 1.0,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.0,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08262,
+      0.09766
+     ]
+    },
+    "ARCREP(1)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 17,
+     "routeFraction": 0.2,
+     "selected": [
+      1.8,
+      "axisP_side_51deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.006991068000000045,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08276,
+      0.09492
+     ]
+    },
+    "ARCREP(3)": {
+     "staticScreens": 128,
+     "staticFraction": 1.0,
+     "routeRollouts": 51,
+     "routeFraction": 0.6,
+     "selected": [
+      1.8,
+      "axisP_side_51deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.006991068000000045,
+     "earliestAdmissible": 1.8,
+     "dEarliest": 0.0,
+     "clearance": [
+      0.08276,
+      0.09492
+     ]
+    }
+   }
+  }
+ }
+]
