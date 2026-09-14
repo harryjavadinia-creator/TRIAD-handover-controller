@@ -83,7 +83,7 @@ Characterization run a; run b and the in-situ runs give identical tuples.
 - **diagonal:** none → 0.682 → 0.691 → 0.720 → 0.775.
 - **near-ground:** none until 83% of the search, then 1.037.
 
-**More computation makes the executed decision worse in every moving scenario.** The objective favours early events and those expire while the search runs.
+**More computation makes the incumbent worse in 3 of 4 moving scenarios** (longitudinal, lateral-low, diagonal): the objective favours early events, and those expire while the search runs. In near-ground the incumbent improves from 1.255 (first appears at 83% of the search) to 1.037 at completion.
 
 ## D. Does exhaustive argmin behave like "earliest timing-admissible τ, then best (g, r)"?
 
