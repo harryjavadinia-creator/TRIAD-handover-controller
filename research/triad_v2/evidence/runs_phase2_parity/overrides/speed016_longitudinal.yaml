@@ -1,0 +1,8 @@
+# The run script appends this file after its scenario fragment; a second top-level
+# movingObject mapping replaces the scenario's, so every scenario key is restated.
+movingObject:
+  simulatedLinearVelocity: [-0.16, 0.0, 0.0]
+  giverTruthModel: independent_scripted
+configs:
+  HandoverInterceptionController_ReceiverV2:
+    parityTrace: true

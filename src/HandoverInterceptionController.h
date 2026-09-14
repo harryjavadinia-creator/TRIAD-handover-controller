@@ -2121,6 +2121,15 @@ private:
     Eigen::Vector3d p = Eigen::Vector3d::Zero();
     Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
     double clearance = std::numeric_limits<double>::quiet_NaN();
+    // reach phase only: timed interception reference, rate-limited reference
+    // and bounded command positions used by this step
+    Eigen::Vector3d reference = Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+    Eigen::Vector3d rateLimited = Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+    Eigen::Vector3d command = Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+    double clearanceScale = std::numeric_limits<double>::quiet_NaN();
+    double jointMarginRatio = std::numeric_limits<double>::quiet_NaN();
+    std::vector<double> jointQ;
+    std::vector<double> postureTarget;
   };
 
   struct ReceiverJobResultV2
@@ -2246,6 +2255,8 @@ private:
   std::uint64_t v2ParityReachTracePlanId_ = 0;
   std::uint64_t v2ParityReachTraceGeneration_ = 0;
   std::uint64_t v2ParityReachLoggedPlanId_ = 0;
+  std::vector<ParitySampleV2> v2ParityLastResumeTrace_;
+  std::uint64_t v2ParityLastResumeGeneration_ = 0;
   double v2ParityLastRuntimeLog_ = -1.0;
   bool parityRuntimeTraceActive_ = false;
   void logParityTraceV2(const char * tag, std::uint64_t planId,

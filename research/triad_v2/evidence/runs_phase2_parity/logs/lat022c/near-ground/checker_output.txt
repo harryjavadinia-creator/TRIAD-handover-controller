@@ -1,0 +1,17 @@
+PASS I1_architecture architecture=v2_receding giverTruthModel=independent_scripted valid=true
+PASS I2_giver_truth_independence replay: PASS near-ground.log: 1422 samples, max |dp|=2.049e-13 m, max |dq|=0.000e+00; truth recomputed from script only; commitTruthLines=1 planDrivenTruth=0
+PASS I3_exactly_one_commit v2Commits=1 v1CommitMarkers=0 secondCommitAttempts=0
+PASS I4_no_closure_authority_before_commit provisionalMotionSamples=171 closureAuthorizedSamples=0
+PASS I5_no_global_reselection_after_commit postCommitReselectionEvents=0
+PASS I6_stale_results_cannot_commit certificateGeneration=872 certificateStateGeneration=838 commitStateGeneration=839 staleRejections=0 staleGenerations=[] stateChangedAfterCertificate=False
+PASS I7_fsm_path states=['Initial', 'ObserveObject', 'ReceiverV2', 'MovePregrasp', 'CaptureTransfer', 'Retreat', 'Completed']
+PASS I8_capture_transfer_retreat capture=True transfer=True retreat=True completed=True ordered=True
+PASS I9_obsolete_generations_have_no_effect cancelRequests=3 cancelled=3 stale=0 leaked=[] badCancelLines=0 unresolvedCancelRequests=[]
+PASS I10_prediction_updates_cannot_adopt_stale_targets adoptions=2 certifiedAdoptions=0 adoptFreshnessLines=2 notFresh=0 uncertifiedCertifiedAdoptions=[] reselectedFailedRecords=[]
+PASS I11_exact_timing_prune_safe prunedGraspTau=0 premiseViolations=0 routesOfPruned=0 adoptionsFromPruned=0 inconsistentPruneLines=0
+OBSERVED D1_robot_moves_while_object_moves concurrentSamples=8 of 171 (50 ms sampling; object motion from giver truth)
+OBSERVED D2_generations_while_robot_moving jobs=872 whileRobotMoving=710 whileRobotAndObjectMoving=20
+OBSERVED D3_provisional_update_or_replacement adoptions=2 replacements=1 retains=833 retainsWithPredictionUpdate=61 replacementReasons=['recertification_infeasible/cost_invalid/timeout']
+NOT_OBSERVED D4_stale_results_rejected staleRejections=0
+METRICS {"completed": true, "commitTime": 17.56, "firstPlanningSubmitTime": 9.043, "planningGenerations": 872, "provisionalAdoptions": 2, "provisionalReplacements": 1, "retainsWithPredictionUpdate": 61, "staleRejections": 0, "cancelRequests": 3, "cancelled": 3, "certifiedAdoptions": 0, "timingPrunedGraspTau": 0, "cancelLatencies": [0.002, 0.001, 0.001], "minRuntimeClearance": 0.0791, "fullSearchLatencies": [2.695, 0.24], "commitObjectDrift": 0.0, "commitMouthDrift": 3.4e-05, "tauMinusCommit": -0.101}
+V2 run check: PASS (0 invariant failure(s))

@@ -1,0 +1,18 @@
+robots:
+  call_object:
+    init_pos:
+      translation: [0.25, 0.62, 0.15]
+object:
+  translation: [0.25, 0.62, 0.15]
+movingObject:
+  simulatedLinearVelocity: [0.0, -0.08, 0.0]
+  giverTruthModel: independent_scripted
+receiverArchitecture: v2_receding
+# The run script appends this file after its scenario fragment; a second top-level
+# movingObject mapping replaces the scenario's, so every scenario key is restated.
+movingObject:
+  simulatedLinearVelocity: [0.0, -0.16, 0.0]
+  giverTruthModel: independent_scripted
+configs:
+  HandoverInterceptionController_ReceiverV2:
+    parityTrace: true

@@ -153,6 +153,7 @@ def analyse(path):
                     return t
             return None
 
+        spatial = polyline_distance([r[4] for r in sel], pp) if sel else []
         prev_arr = arrival(pt, pp, pq)
         run_all = [r for r in runtime if r[3] == pid and r[0] >= rs - 1e-9 and (end is None or r[0] <= end + 1e-9)
                    and r[2] in ("PROVISIONAL_REACH", "TERMINAL_TRACK", "COMMITTED")]
@@ -164,6 +165,7 @@ def analyse(path):
             ended=how, executedFraction=(win_end - rs) / max(1e-9, so - rs), samples=len(sel),
             maxPathDev=max(dev_p) if dev_p else None, rmsPathDev=float(np.sqrt(np.mean(np.square(dev_p)))) if dev_p else None,
             maxOriDev=max(dev_q) if dev_q else None,
+            maxSpatialDev=max(spatial) if spatial else None,
             previewStandoffErr=float(np.linalg.norm(pp[-1] - target_p)), previewStandoffOri=qangle(pq[-1], target_q),
             runtimeStandoffErr=float(np.linalg.norm(at_so[0][4] - target_p)) if at_so and (end is None or end >= so) else None,
             runtimeStandoffOri=qangle(at_so[0][5], target_q) if at_so and (end is None or end >= so) else None,
@@ -210,16 +212,16 @@ def fmt(x, d=3, scale=1.0):
 def report(path):
     runs = json.load(open(path))
     print("### Reach: copied-state preview vs runtime (per executed plan)\n")
-    print("| run | plan | candidate / route | ended | executed fraction | max / RMS path dev (mm) | max ori dev (rad) | standoff err preview / runtime (mm) | arrival preview / runtime (s after reach start) | min clearance preview / runtime (mm) | max presentation update while executing (mm) |")
-    print("|---|---:|---|---|---:|---|---:|---|---|---|---:|")
+    print("| run | plan | candidate / route | ended | executed fraction | time-aligned max / RMS path dev (mm) | spatial max dev (mm) | max ori dev (rad) | standoff err preview / runtime (mm) | arrival preview / runtime (s after reach start) | min clearance preview / runtime (mm) | max presentation update while executing (mm) |")
+    print("|---|---:|---|---|---:|---|---:|---:|---|---|---|---:|")
     for r in runs:
         name = "/".join(r["log"].split("/")[-3:-1])
         for p in r["reach"]:
             if not p.get("available"):
-                print(f"| {name} | {p['planId']} | trace unavailable | | | | | | | | |")
+                print(f"| {name} | {p['planId']} | trace unavailable | | | | | | | | | |")
                 continue
             print(f"| {name} | {p['planId']} | {p['candidate']} / {p['route']} | {p['ended'][:60]} | {p['executedFraction']:.2f} | "
-                  f"{fmt(p['maxPathDev'],1,1000)} / {fmt(p['rmsPathDev'],1,1000)} | {fmt(p['maxOriDev'],3)} | "
+                  f"{fmt(p['maxPathDev'],1,1000)} / {fmt(p['rmsPathDev'],1,1000)} | {fmt(p.get('maxSpatialDev'),1,1000)} | {fmt(p['maxOriDev'],3)} | "
                   f"{fmt(p['previewStandoffErr'],1,1000)} / {fmt(p['runtimeStandoffErr'],1,1000)} | "
                   f"{fmt(p['previewArrival'],2)} / {fmt(p['runtimeArrival'],2)} | {fmt(p['previewMinClear'],1,1000)} / {fmt(p['runtimeMinClear'],1,1000)} | "
                   f"{fmt(p['maxPresentationUpdate'],1,1000)} |")

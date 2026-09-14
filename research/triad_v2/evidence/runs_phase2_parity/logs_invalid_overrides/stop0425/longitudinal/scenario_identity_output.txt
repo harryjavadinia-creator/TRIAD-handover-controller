@@ -1,0 +1,7 @@
+FAIL: velocity (-0.0566, 0.0, 0.0566) does not match scenario 'longitudinal' expected (-0.08, 0.0, 0.0)
+FAIL: expected a completed handover but [Completed] was not found
+observed_position=[0.92, 0.0, 0.55]
+observed_velocity=[-0.0566, 0.0, 0.0566]
+position_ok=True
+velocity_ok=False
+scenario_identity_result=FAIL

@@ -6727,6 +6727,18 @@ HandoverInterceptionController::stepPredictiveRouteCandidate(int workUnits)
           s.p = currentMouth.translation();
           s.q = Eigen::Quaterniond(worldRotation(currentMouth));
           s.clearance = std::min(currentReport.minClearance, sweptReport.minClearance);
+          s.reference = refNext.mouthPose.translation();
+          s.rateLimited = rateLimitedReference.translation();
+          s.command = nextCommand.translation();
+          s.clearanceScale = plannerContext_.routeStepClearanceScale;
+          s.jointMarginRatio = plannerContext_.routeStepReachResult.minimumJointMarginRatio;
+          for(const auto & kvq : armPostureFromMbc(plannerContext_.routeStepMbc))
+          {
+            if(!kvq.second.empty()) { s.jointQ.push_back(kvq.second[0]); }
+            const auto it = plannerContext_.routeStepCandidate.plannedStandoffArmPosture.find(kvq.first);
+            s.postureTarget.push_back(it != plannerContext_.routeStepCandidate.plannedStandoffArmPosture.end()
+                                      && !it->second.empty() ? it->second[0] : std::numeric_limits<double>::quiet_NaN());
+          }
           plannerContext_.parityTrace.push_back(s);
         }
 

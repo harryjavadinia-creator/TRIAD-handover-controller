@@ -797,9 +797,9 @@ void HandoverInterceptionController::runRecertifyActiveRolloutV2(ReceiverJobResu
   plannerContext_.routeStepReachPositionError = std::numeric_limits<double>::quiet_NaN();
   plannerContext_.routeStepReachOrientationError = std::numeric_limits<double>::quiet_NaN();
   plannerContext_.parityTrace.clear();
-  plannerContext_.parityTraceActive = v2ParityTrace_ && resumeIndex == 0;
+  plannerContext_.parityTraceActive = v2ParityTrace_;
   const RouteStepOutcome outcome = runRouteStepToCompletionV2();
-  result.parityFromReachStart = plannerContext_.parityTraceActive;
+  result.parityFromReachStart = v2ParityTrace_ && resumeIndex == 0;
   plannerContext_.parityTraceActive = false;
   result.parityTrace.swap(plannerContext_.parityTrace);
   result.candidate = plannerContext_.routeStepCandidate;
@@ -1015,6 +1015,20 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
 
   if(pending.type == ReceiverJobTypeV2::RecertifyActive)
   {
+    if(v2ParityTrace_ && !result.parityFromReachStart && !result.success)
+    {
+      // Logging only: the rejected resumed rollout next to the last accepted one.
+      mc_rtc::log::info("[V2ParityResumeFailure] planId={} failedGeneration={} lastAcceptedResumeGeneration={} failedSamples={} acceptedSamples={} reason={} t={:.6f}",
+                        pending.planId, pending.planningGeneration, v2ParityLastResumeGeneration_,
+                        result.parityTrace.size(), v2ParityLastResumeTrace_.size(), result.reason, now);
+      logParityTraceV2("V2ParityResumeRejected", pending.planId, result.parityTrace);
+      logParityTraceV2("V2ParityResumeAccepted", pending.planId, v2ParityLastResumeTrace_);
+    }
+    if(v2ParityTrace_ && !result.parityFromReachStart && result.success)
+    {
+      v2ParityLastResumeTrace_ = result.parityTrace;
+      v2ParityLastResumeGeneration_ = pending.planningGeneration;
+    }
     if(!result.success)
     {
       invalidateProvisionalPlanV2("recertification_infeasible/" + result.reason, now);
@@ -2154,9 +2168,21 @@ void HandoverInterceptionController::logParityTraceV2(
   {
     const auto & s = trace[i];
     mc_rtc::log::info(
-        "[{}] planId={} i={} phase={} t={:.6f} p=[{:.6f},{:.6f},{:.6f}] q=[{:.6f},{:.6f},{:.6f},{:.6f}] clear={:.5f}",
+        "[{}] planId={} i={} phase={} t={:.6f} p=[{:.6f},{:.6f},{:.6f}] q=[{:.6f},{:.6f},{:.6f},{:.6f}] clear={:.5f} ref=[{:.6f},{:.6f},{:.6f}] rate=[{:.6f},{:.6f},{:.6f}] cmd=[{:.6f},{:.6f},{:.6f}] scale={:.4f}",
         tag, planId, i, s.phase, s.t, s.p.x(), s.p.y(), s.p.z(), s.q.w(), s.q.x(), s.q.y(), s.q.z(),
-        s.clearance);
+        s.clearance, s.reference.x(), s.reference.y(), s.reference.z(), s.rateLimited.x(), s.rateLimited.y(),
+        s.rateLimited.z(), s.command.x(), s.command.y(), s.command.z(), s.clearanceScale);
+    if(!s.jointQ.empty())
+    {
+      std::string q, pt;
+      for(std::size_t k = 0; k < s.jointQ.size(); ++k)
+      {
+        q += (k ? "," : "") + std::to_string(s.jointQ[k]);
+        pt += (k ? "," : "") + std::to_string(k < s.postureTarget.size() ? s.postureTarget[k] : 0.0);
+      }
+      mc_rtc::log::info("[{}Joints] planId={} i={} jointMarginRatio={:.4f} q=[{}] postureTarget=[{}]", tag, planId, i,
+                        s.jointMarginRatio, q, pt);
+    }
   }
 }
 
@@ -2181,10 +2207,11 @@ void HandoverInterceptionController::logParityRuntimeV2()
   }
   clear = report.minClearance;
   mc_rtc::log::info(
-      "[V2ParityRuntime] t={:.6f} state={} v2phase={} planId={} mouth=[{:.6f},{:.6f},{:.6f}] mouthQ=[{:.6f},{:.6f},{:.6f},{:.6f}] object=[{:.6f},{:.6f},{:.6f}] objectQ=[{:.6f},{:.6f},{:.6f},{:.6f}] truth=[{:.6f},{:.6f},{:.6f}] closure={:.5f} attached={} clear={:.5f} clearSource={}",
+      "[V2ParityRuntime] t={:.6f} state={} v2phase={} planId={} mouth=[{:.6f},{:.6f},{:.6f}] mouthQ=[{:.6f},{:.6f},{:.6f},{:.6f}] object=[{:.6f},{:.6f},{:.6f}] objectQ=[{:.6f},{:.6f},{:.6f},{:.6f}] truth=[{:.6f},{:.6f},{:.6f}] closure={:.5f} attached={} clear={:.5f} clearSource={} v2ref=[{:.6f},{:.6f},{:.6f}] clearanceScale={:.4f}",
       controllerTime_, executor_.state(), receiverPhaseNameV2(v2Phase_), provisionalReceiverPlan_.planId,
       mouth.translation().x(), mouth.translation().y(), mouth.translation().z(), mq.w(), mq.x(), mq.y(), mq.z(),
       W_T_O_.translation().x(), W_T_O_.translation().y(), W_T_O_.translation().z(), oq.w(), oq.x(), oq.y(), oq.z(),
       W_T_O_truth_.translation().x(), W_T_O_truth_.translation().y(), W_T_O_truth_.translation().z(),
-      measuredGripperClosure(), objectAttached_, clear, clearSource);
+      measuredGripperClosure(), objectAttached_, clear, clearSource, v2ReferencePose_.translation().x(),
+      v2ReferencePose_.translation().y(), v2ReferencePose_.translation().z(), v2ClearanceScale_);
 }

@@ -277,7 +277,7 @@ Each row gives three things:
   - (A3) Execution-time feasibility must be checked, not assumed (Kim's failure breakdown is direct negative evidence).
   - (A4) The horizon choice trades prediction accuracy against time and reachability (Jia; Akinola's open problem).
 - **Paper-specific detail (do not import)**: Akinola's 2 s / 1 s / 0 s steps; Jia's 8 s predictable range and (2 s, 1 s); Islam's t_rc = 3.5 s; Kim's slice resolution; Menon's 2.0 s gripper time.
-- **TRIAD gap**: none of these generates a **finite set** of interception times as a law I_k → T_k whose bounds come from both robot capability and a *measured* prediction-validity envelope, and whose spacing comes from a physical pose-change criterion. TRIAD's current bank (CODE) is a fixed schedule from 1.8 to 8.0 s at 0.45 s steps (14 leads), regardless of state. Phase 2 must supply the prediction-error-vs-horizon envelope and the preview/runtime reach-duration error that A1 and A4 need.
+- **TRIAD gap**: none of these generates a **finite set** of interception times as a law I_k → T_k whose bounds come from both robot capability and a *measured* prediction-validity envelope, and whose spacing comes from a physical pose-change criterion. TRIAD's current bank (CODE) is a fixed schedule of 14 leads [1.80, 1.90, then 0.45 s steps 2.35–6.85, 8.00] s, regardless of state. Phase 2 must supply the prediction-error-vs-horizon envelope and the preview/runtime reach-duration error that A1 and A4 need.
 
 ### B. Future-state sampling and adaptive temporal resolution (→ Phase 3)
 
@@ -456,7 +456,7 @@ These have to be derived, validated or removed in Phases 3–9. Literature value
 
 | TRIAD quantity (CODE) | status after Phase 1 |
 |---|---|
-| lead bank 1.8–8.0 s, step 0.45 s (14 leads) | No support; principles A1–A4 and B define what must replace it. |
+| lead bank [1.80, 1.90, 2.35 … 6.85 step 0.45, 8.00] s (14 leads) | No support; principles A1–A4 and B define what must replace it. |
 | 16 grasp angles × 2 signs (32) | Symmetry doubling is principled (Yang flip); 16 has no support (C). |
 | 17 routes (direct + 8 directions × 80/140 mm) | Direct-first is principled (Yang); the alternative ring has no support (E). |
 | seven cost weights (8, 2, 2, 3, 1.6, 1.4, 1)/19, w_T = 0.4210526, T_ref = 8 | No support; literature weights are hand-tuned (H). |

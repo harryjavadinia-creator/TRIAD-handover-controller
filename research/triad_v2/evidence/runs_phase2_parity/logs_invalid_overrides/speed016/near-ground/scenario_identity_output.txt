@@ -1,0 +1,7 @@
+FAIL: velocity (-0.16, 0.0, 0.0) does not match scenario 'near-ground' expected (0.0, -0.08, 0.0)
+FAIL: expected a completed handover but [Completed] was not found
+observed_position=[0.25, 0.62, 0.15]
+observed_velocity=[-0.16, 0.0, 0.0]
+position_ok=True
+velocity_ok=False
+scenario_identity_result=FAIL

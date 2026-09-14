@@ -1,0 +1,18 @@
+robots:
+  call_object:
+    init_pos:
+      translation: [0.25, 0.62, 0.15]
+object:
+  translation: [0.25, 0.62, 0.15]
+movingObject:
+  simulatedLinearVelocity: [0.0, -0.08, 0.0]
+  giverTruthModel: independent_scripted
+receiverArchitecture: v2_receding
+movingObject:
+  perceptionLatency:
+    enabled: true
+    delay: 0.220
+    compensate: true
+configs:
+  HandoverInterceptionController_ReceiverV2:
+    parityTrace: true
