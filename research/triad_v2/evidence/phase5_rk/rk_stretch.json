@@ -1,0 +1,1011 @@
+[
+ {
+  "log": "research/triad_v2/evidence/runs_phase5_routes/logs/char_stretch/diagonal/diagonal.log",
+  "movingFailures": {
+   "directOutcomes": {
+    "success": 16,
+    "predictive_static/runtime_clearance_reserve": 2,
+    "predictive_static/reach_tracking": 6
+   },
+   "afterDirectFailure": {
+    "predictive_static/runtime_clearance_reserve": {
+     "x1.05:fail": 2,
+     "x1.10:fail": 2,
+     "x1.20:fail": 2,
+     "x1.35:fail": 2,
+     "x1.50:fail": 2,
+     "x1.70:fail": 2,
+     "ring80:fail": 16,
+     "ring140:fail": 15,
+     "ring140:ok": 1,
+     "anyRing=True,anyStretch=False": 1,
+     "anyRing=False,anyStretch=False": 1
+    },
+    "predictive_static/reach_tracking": {
+     "x1.05:ok": 4,
+     "x1.10:ok": 4,
+     "x1.20:ok": 4,
+     "x1.35:ok": 4,
+     "x1.50:ok": 3,
+     "x1.70:ok": 3,
+     "ring80:fail": 33,
+     "ring80:ok": 15,
+     "ring140:fail": 39,
+     "ring140:ok": 9,
+     "anyRing=True,anyStretch=True": 5,
+     "x1.05:fail": 2,
+     "x1.10:fail": 2,
+     "x1.20:fail": 2,
+     "x1.35:fail": 2,
+     "x1.50:fail": 3,
+     "x1.70:fail": 3,
+     "anyRing=False,anyStretch=False": 1
+    }
+   }
+  },
+  "restFailures": {
+   "directOutcomes": {
+    "success": 1
+   },
+   "afterDirectFailure": {}
+  },
+  "moving": {
+   "reference": [
+    4.15,
+    "axisP_side_337deg",
+    "ring140mm_2of8",
+    0.681985252
+   ],
+   "laws": {
+    "DIRECT_ONLY": {
+     "routeRollouts": 24,
+     "fraction": 0.043478260869565216,
+     "completePairs": 16,
+     "selected": [
+      4.15,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.04898100799999994,
+     "earliest": 4.15,
+     "clearance": [
+      0.06975,
+      0.21714
+     ]
+    },
+    "ALL": {
+     "routeRollouts": 552,
+     "fraction": 1.0,
+     "completePairs": 22,
+     "selected": [
+      4.15,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.0,
+     "earliest": 4.15,
+     "clearance": [
+      0.07236,
+      0.21778
+     ]
+    },
+    "DIRECT + stretch ladder (no rings)": {
+     "routeRollouts": 168,
+     "fraction": 0.30434782608695654,
+     "completePairs": 21,
+     "selected": [
+      4.15,
+      "axisP_side_337deg",
+      "directx150"
+     ],
+     "dJ": 0.006823795999999938,
+     "earliest": 4.15,
+     "clearance": [
+      0.06231,
+      0.21767
+     ]
+    },
+    "RINGS only (17, current)": {
+     "routeRollouts": 408,
+     "fraction": 0.7391304347826086,
+     "completePairs": 22,
+     "selected": [
+      4.15,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "dJ": 0.0,
+     "earliest": 4.15,
+     "clearance": [
+      0.07236,
+      0.21778
+     ]
+    },
+    "FAILURE-CONDITIONED: direct; reach_tracking -> stretch ladder (then rings); other -> rings": {
+     "routeRollouts": 85,
+     "fraction": 0.1539855072463768,
+     "completePairs": 22,
+     "selected": [
+      4.15,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.04898100799999994,
+     "earliest": 4.15,
+     "clearance": [
+      0.06975,
+      0.21714
+     ]
+    }
+   },
+   "referenceCompletePairs": 22
+  },
+  "rest": {
+   "reference": [
+    1.8,
+    "axisP_side_337deg",
+    "directx150",
+    0.56927115075
+   ],
+   "laws": {
+    "DIRECT_ONLY": {
+     "routeRollouts": 1,
+     "fraction": 0.043478260869565216,
+     "completePairs": 1,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.01830725199999994,
+     "earliest": 1.9749999999999996,
+     "clearance": [
+      0.08018,
+      0.21678
+     ]
+    },
+    "ALL": {
+     "routeRollouts": 23,
+     "fraction": 1.0,
+     "completePairs": 1,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "directx150"
+     ],
+     "dJ": 0.0,
+     "earliest": 2.9375000000000018,
+     "clearance": [
+      0.08137,
+      0.2173
+     ]
+    },
+    "DIRECT + stretch ladder (no rings)": {
+     "routeRollouts": 7,
+     "fraction": 0.30434782608695654,
+     "completePairs": 1,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "directx150"
+     ],
+     "dJ": 0.0,
+     "earliest": 2.9375000000000018,
+     "clearance": [
+      0.08137,
+      0.2173
+     ]
+    },
+    "RINGS only (17, current)": {
+     "routeRollouts": 17,
+     "fraction": 0.7391304347826086,
+     "completePairs": 1,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "dJ": 0.01223982400000001,
+     "earliest": 2.3814860000000007,
+     "clearance": [
+      0.08078,
+      0.21693
+     ]
+    },
+    "FAILURE-CONDITIONED: direct; reach_tracking -> stretch ladder (then rings); other -> rings": {
+     "routeRollouts": 1,
+     "fraction": 0.043478260869565216,
+     "completePairs": 1,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.01830725199999994,
+     "earliest": 1.9749999999999996,
+     "clearance": [
+      0.08018,
+      0.21678
+     ]
+    }
+   },
+   "referenceCompletePairs": 1
+  }
+ },
+ {
+  "log": "research/triad_v2/evidence/runs_phase5_routes/logs/char_stretch/lateral-low/lateral-low.log",
+  "movingFailures": {
+   "directOutcomes": {
+    "predictive_static/reach_tracking": 34,
+    "success": 8,
+    "predictive_static/robust_transit_clearance_reserve": 1
+   },
+   "afterDirectFailure": {
+    "predictive_static/reach_tracking": {
+     "x1.05:fail": 33,
+     "x1.10:ok": 23,
+     "x1.20:ok": 28,
+     "x1.35:ok": 26,
+     "x1.50:ok": 26,
+     "x1.70:ok": 25,
+     "ring80:fail": 183,
+     "ring140:fail": 116,
+     "ring140:ok": 156,
+     "anyRing=True,anyStretch=True": 28,
+     "ring80:ok": 89,
+     "x1.10:fail": 11,
+     "x1.35:fail": 8,
+     "x1.50:fail": 8,
+     "x1.70:fail": 9,
+     "x1.20:fail": 6,
+     "anyRing=True,anyStretch=False": 5,
+     "anyRing=False,anyStretch=False": 1,
+     "x1.05:ok": 1
+    },
+    "predictive_static/robust_transit_clearance_reserve": {
+     "x1.05:fail": 1,
+     "x1.10:fail": 1,
+     "x1.20:fail": 1,
+     "x1.35:fail": 1,
+     "x1.50:fail": 1,
+     "x1.70:fail": 1,
+     "ring80:fail": 8,
+     "ring140:fail": 7,
+     "ring140:ok": 1,
+     "anyRing=True,anyStretch=False": 1
+    }
+   }
+  },
+  "restFailures": {
+   "directOutcomes": {
+    "success": 2,
+    "predictive_static/reach_tracking": 2
+   },
+   "afterDirectFailure": {
+    "predictive_static/reach_tracking": {
+     "x1.05:fail": 2,
+     "x1.10:ok": 2,
+     "x1.20:ok": 2,
+     "x1.35:ok": 2,
+     "x1.50:ok": 2,
+     "x1.70:ok": 2,
+     "ring80:fail": 11,
+     "ring80:ok": 5,
+     "ring140:fail": 8,
+     "ring140:ok": 8,
+     "anyRing=True,anyStretch=True": 2
+    }
+   }
+  },
+  "moving": {
+   "reference": [
+    3.7,
+    "axisN_side_337deg",
+    "directx170",
+    0.629904897
+   ],
+   "laws": {
+    "DIRECT_ONLY": {
+     "routeRollouts": 43,
+     "fraction": 0.043478260869565216,
+     "completePairs": 8,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.04781493400000003,
+     "earliest": 3.7,
+     "clearance": [
+      0.08159,
+      0.07729
+     ]
+    },
+    "ALL": {
+     "routeRollouts": 989,
+     "fraction": 1.0,
+     "completePairs": 42,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "directx170"
+     ],
+     "dJ": 0.0,
+     "earliest": 3.25,
+     "clearance": [
+      0.08201,
+      0.07732
+     ]
+    },
+    "DIRECT + stretch ladder (no rings)": {
+     "routeRollouts": 301,
+     "fraction": 0.30434782608695654,
+     "completePairs": 36,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "directx170"
+     ],
+     "dJ": 0.0,
+     "earliest": 3.25,
+     "clearance": [
+      0.08201,
+      0.07732
+     ]
+    },
+    "RINGS only (17, current)": {
+     "routeRollouts": 731,
+     "fraction": 0.7391304347826086,
+     "completePairs": 42,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.04781493400000003,
+     "earliest": 3.25,
+     "clearance": [
+      0.08159,
+      0.07729
+     ]
+    },
+    "FAILURE-CONDITIONED: direct; reach_tracking -> stretch ladder (then rings); other -> rings": {
+     "routeRollouts": 251,
+     "fraction": 0.2537917087967644,
+     "completePairs": 42,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.04781493400000003,
+     "earliest": 3.25,
+     "clearance": [
+      0.08159,
+      0.07729
+     ]
+    }
+   },
+   "referenceCompletePairs": 42
+  },
+  "rest": {
+   "reference": [
+    1.8,
+    "axisN_side_337deg",
+    "direct",
+    0.59125897975
+   ],
+   "laws": {
+    "DIRECT_ONLY": {
+     "routeRollouts": 4,
+     "fraction": 0.043478260869565216,
+     "completePairs": 2,
+     "selected": [
+      1.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliest": 2.2250000000000014,
+     "clearance": [
+      0.08159,
+      0.08074
+     ]
+    },
+    "ALL": {
+     "routeRollouts": 92,
+     "fraction": 1.0,
+     "completePairs": 4,
+     "selected": [
+      1.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliest": 2.2250000000000014,
+     "clearance": [
+      0.08159,
+      0.08074
+     ]
+    },
+    "DIRECT + stretch ladder (no rings)": {
+     "routeRollouts": 28,
+     "fraction": 0.30434782608695654,
+     "completePairs": 4,
+     "selected": [
+      1.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliest": 2.2250000000000014,
+     "clearance": [
+      0.08159,
+      0.08074
+     ]
+    },
+    "RINGS only (17, current)": {
+     "routeRollouts": 68,
+     "fraction": 0.7391304347826086,
+     "completePairs": 4,
+     "selected": [
+      1.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliest": 2.2250000000000014,
+     "clearance": [
+      0.08159,
+      0.08074
+     ]
+    },
+    "FAILURE-CONDITIONED: direct; reach_tracking -> stretch ladder (then rings); other -> rings": {
+     "routeRollouts": 8,
+     "fraction": 0.08695652173913043,
+     "completePairs": 4,
+     "selected": [
+      1.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.0,
+     "earliest": 2.2250000000000014,
+     "clearance": [
+      0.08159,
+      0.08074
+     ]
+    }
+   },
+   "referenceCompletePairs": 4
+  }
+ },
+ {
+  "log": "research/triad_v2/evidence/runs_phase5_routes/logs/char_stretch/longitudinal/longitudinal.log",
+  "movingFailures": {
+   "directOutcomes": {
+    "success": 15,
+    "predictive_static/robust_transit_clearance_reserve": 6,
+    "predictive_static/reach_tracking": 10,
+    "predictive_static/runtime_clearance_reserve": 3,
+    "predictive_static/static_acquire": 1
+   },
+   "afterDirectFailure": {
+    "predictive_static/robust_transit_clearance_reserve": {
+     "x1.05:fail": 6,
+     "x1.10:fail": 6,
+     "x1.20:fail": 6,
+     "x1.35:fail": 6,
+     "x1.50:ok": 1,
+     "x1.70:ok": 1,
+     "ring80:fail": 48,
+     "ring140:fail": 46,
+     "ring140:ok": 2,
+     "anyRing=True,anyStretch=True": 1,
+     "x1.50:fail": 5,
+     "x1.70:fail": 5,
+     "anyRing=False,anyStretch=False": 5
+    },
+    "predictive_static/reach_tracking": {
+     "x1.05:fail": 10,
+     "x1.10:fail": 10,
+     "x1.20:fail": 10,
+     "x1.35:fail": 10,
+     "x1.50:fail": 10,
+     "x1.70:ok": 1,
+     "ring80:fail": 80,
+     "ring140:fail": 77,
+     "ring140:ok": 3,
+     "anyRing=True,anyStretch=True": 1,
+     "x1.70:fail": 9,
+     "anyRing=True,anyStretch=False": 1,
+     "anyRing=False,anyStretch=False": 8
+    },
+    "predictive_static/runtime_clearance_reserve": {
+     "x1.05:fail": 3,
+     "x1.10:fail": 3,
+     "x1.20:ok": 2,
+     "x1.35:ok": 2,
+     "x1.50:ok": 2,
+     "x1.70:ok": 2,
+     "ring80:ok": 7,
+     "ring80:fail": 17,
+     "ring140:fail": 16,
+     "ring140:ok": 8,
+     "anyRing=True,anyStretch=True": 2,
+     "x1.20:fail": 1,
+     "x1.35:fail": 1,
+     "x1.50:fail": 1,
+     "x1.70:fail": 1,
+     "anyRing=False,anyStretch=False": 1
+    },
+    "predictive_static/static_acquire": {
+     "x1.05:fail": 1,
+     "x1.10:fail": 1,
+     "x1.20:fail": 1,
+     "x1.35:fail": 1,
+     "x1.50:fail": 1,
+     "x1.70:fail": 1,
+     "ring80:fail": 8,
+     "ring140:fail": 8,
+     "anyRing=False,anyStretch=False": 1
+    }
+   }
+  },
+  "restFailures": {
+   "directOutcomes": {
+    "predictive_static/runtime_clearance_reserve": 1,
+    "success": 3,
+    "predictive_static/reach_tracking": 2
+   },
+   "afterDirectFailure": {
+    "predictive_static/runtime_clearance_reserve": {
+     "x1.05:fail": 1,
+     "x1.10:fail": 1,
+     "x1.20:ok": 1,
+     "x1.35:ok": 1,
+     "x1.50:ok": 1,
+     "x1.70:ok": 1,
+     "ring80:ok": 3,
+     "ring80:fail": 5,
+     "ring140:fail": 4,
+     "ring140:ok": 4,
+     "anyRing=True,anyStretch=True": 1
+    },
+    "predictive_static/reach_tracking": {
+     "x1.05:fail": 2,
+     "x1.10:fail": 2,
+     "x1.20:fail": 2,
+     "x1.35:fail": 2,
+     "x1.50:fail": 2,
+     "x1.70:fail": 2,
+     "ring80:fail": 16,
+     "ring140:fail": 16,
+     "anyRing=False,anyStretch=False": 2
+    }
+   }
+  },
+  "moving": {
+   "reference": [
+    2.35,
+    "axisP_side_337deg",
+    "directx120",
+    0.595511213
+   ],
+   "laws": {
+    "DIRECT_ONLY": {
+     "routeRollouts": 35,
+     "fraction": 0.043478260869565216,
+     "completePairs": 15,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.025857120000000067,
+     "earliest": 2.35,
+     "clearance": [
+      0.07943,
+      0.21039
+     ]
+    },
+    "ALL": {
+     "routeRollouts": 805,
+     "fraction": 1.0,
+     "completePairs": 20,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "directx120"
+     ],
+     "dJ": 0.0,
+     "earliest": 2.35,
+     "clearance": [
+      0.08077,
+      0.21056
+     ]
+    },
+    "DIRECT + stretch ladder (no rings)": {
+     "routeRollouts": 245,
+     "fraction": 0.30434782608695654,
+     "completePairs": 19,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "directx120"
+     ],
+     "dJ": 0.0,
+     "earliest": 2.35,
+     "clearance": [
+      0.08077,
+      0.21056
+     ]
+    },
+    "RINGS only (17, current)": {
+     "routeRollouts": 595,
+     "fraction": 0.7391304347826086,
+     "completePairs": 20,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.025857120000000067,
+     "earliest": 2.35,
+     "clearance": [
+      0.07943,
+      0.21039
+     ]
+    },
+    "FAILURE-CONDITIONED: direct; reach_tracking -> stretch ladder (then rings); other -> rings": {
+     "routeRollouts": 399,
+     "fraction": 0.4956521739130435,
+     "completePairs": 20,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.025857120000000067,
+     "earliest": 2.35,
+     "clearance": [
+      0.07943,
+      0.21039
+     ]
+    }
+   },
+   "referenceCompletePairs": 20
+  },
+  "rest": {
+   "reference": [
+    1.8,
+    "axisP_side_337deg",
+    "directx150",
+    0.60213592175
+   ],
+   "laws": {
+    "DIRECT_ONLY": {
+     "routeRollouts": 6,
+     "fraction": 0.043478260869565216,
+     "completePairs": 3,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.013548711999999963,
+     "earliest": 2.1500000000000004,
+     "clearance": [
+      0.08028,
+      0.22072
+     ]
+    },
+    "ALL": {
+     "routeRollouts": 138,
+     "fraction": 1.0,
+     "completePairs": 4,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "directx150"
+     ],
+     "dJ": 0.0,
+     "earliest": 3.200000000000001,
+     "clearance": [
+      0.08163,
+      0.22104
+     ]
+    },
+    "DIRECT + stretch ladder (no rings)": {
+     "routeRollouts": 42,
+     "fraction": 0.30434782608695654,
+     "completePairs": 4,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "directx150"
+     ],
+     "dJ": 0.0,
+     "earliest": 3.200000000000001,
+     "clearance": [
+      0.08163,
+      0.22104
+     ]
+    },
+    "RINGS only (17, current)": {
+     "routeRollouts": 102,
+     "fraction": 0.7391304347826086,
+     "completePairs": 4,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.013548711999999963,
+     "earliest": 2.1500000000000004,
+     "clearance": [
+      0.08028,
+      0.22072
+     ]
+    },
+    "FAILURE-CONDITIONED: direct; reach_tracking -> stretch ladder (then rings); other -> rings": {
+     "routeRollouts": 66,
+     "fraction": 0.4782608695652174,
+     "completePairs": 4,
+     "selected": [
+      1.8,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "dJ": 0.013548711999999963,
+     "earliest": 2.1500000000000004,
+     "clearance": [
+      0.08028,
+      0.22072
+     ]
+    }
+   },
+   "referenceCompletePairs": 4
+  }
+ },
+ {
+  "log": "research/triad_v2/evidence/runs_phase5_routes/logs/char_stretch/near-ground/near-ground.log",
+  "movingFailures": {
+   "directOutcomes": {
+    "success": 19,
+    "predictive_static/static_acquire": 1,
+    "predictive_static/robust_transit_clearance_reserve": 2,
+    "predictive_static/reach_tracking": 2
+   },
+   "afterDirectFailure": {
+    "predictive_static/static_acquire": {
+     "x1.05:ok": 1,
+     "x1.10:ok": 1,
+     "x1.20:ok": 1,
+     "x1.35:ok": 1,
+     "x1.50:ok": 1,
+     "x1.70:ok": 1,
+     "ring80:fail": 5,
+     "ring80:ok": 3,
+     "ring140:fail": 6,
+     "ring140:ok": 2,
+     "anyRing=True,anyStretch=True": 1
+    },
+    "predictive_static/robust_transit_clearance_reserve": {
+     "x1.05:fail": 2,
+     "x1.10:fail": 2,
+     "x1.20:fail": 2,
+     "x1.35:fail": 2,
+     "x1.50:fail": 2,
+     "x1.70:fail": 2,
+     "ring80:fail": 16,
+     "ring140:fail": 16,
+     "anyRing=False,anyStretch=False": 2
+    },
+    "predictive_static/reach_tracking": {
+     "x1.05:fail": 2,
+     "x1.10:fail": 2,
+     "x1.20:fail": 2,
+     "x1.35:fail": 1,
+     "x1.50:fail": 1,
+     "x1.70:fail": 1,
+     "ring80:fail": 16,
+     "ring140:fail": 16,
+     "anyRing=False,anyStretch=False": 1,
+     "x1.35:ok": 1,
+     "x1.50:ok": 1,
+     "x1.70:ok": 1,
+     "anyRing=False,anyStretch=True": 1
+    }
+   }
+  },
+  "restFailures": {
+   "directOutcomes": {
+    "success": 1
+   },
+   "afterDirectFailure": {}
+  },
+  "moving": {
+   "reference": [
+    3.25,
+    "axisP_side_45deg",
+    "ring80mm_7of8",
+    0.753454466
+   ],
+   "laws": {
+    "DIRECT_ONLY": {
+     "routeRollouts": 24,
+     "fraction": 0.043478260869565216,
+     "completePairs": 19,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "direct"
+     ],
+     "dJ": 0.06495530900000002,
+     "earliest": 3.25,
+     "clearance": [
+      0.05327,
+      0.10562
+     ]
+    },
+    "ALL": {
+     "routeRollouts": 552,
+     "fraction": 1.0,
+     "completePairs": 21,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "ring80mm_7of8"
+     ],
+     "dJ": 0.0,
+     "earliest": 3.25,
+     "clearance": [
+      0.07064,
+      0.10558
+     ]
+    },
+    "DIRECT + stretch ladder (no rings)": {
+     "routeRollouts": 168,
+     "fraction": 0.30434782608695654,
+     "completePairs": 21,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "directx105"
+     ],
+     "dJ": 0.05422545700000003,
+     "earliest": 3.25,
+     "clearance": [
+      0.05346,
+      0.1056
+     ]
+    },
+    "RINGS only (17, current)": {
+     "routeRollouts": 408,
+     "fraction": 0.7391304347826086,
+     "completePairs": 20,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "ring80mm_7of8"
+     ],
+     "dJ": 0.0,
+     "earliest": 3.25,
+     "clearance": [
+      0.07064,
+      0.10558
+     ]
+    },
+    "FAILURE-CONDITIONED: direct; reach_tracking -> stretch ladder (then rings); other -> rings": {
+     "routeRollouts": 98,
+     "fraction": 0.17753623188405798,
+     "completePairs": 21,
+     "selected": [
+      3.25,
+      "axisP_side_45deg",
+      "direct"
+     ],
+     "dJ": 0.06495530900000002,
+     "earliest": 3.25,
+     "clearance": [
+      0.05327,
+      0.10562
+     ]
+    }
+   },
+   "referenceCompletePairs": 21
+  },
+  "rest": {
+   "reference": [
+    1.8,
+    "axisP_side_45deg",
+    "ring80mm_0of8",
+    0.74223647975
+   ],
+   "laws": {
+    "DIRECT_ONLY": {
+     "routeRollouts": 1,
+     "fraction": 0.043478260869565216,
+     "completePairs": 1,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "direct"
+     ],
+     "dJ": 0.052832089000000027,
+     "earliest": 3.0000000000000018,
+     "clearance": [
+      0.05567,
+      0.09778
+     ]
+    },
+    "ALL": {
+     "routeRollouts": 23,
+     "fraction": 1.0,
+     "completePairs": 1,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.0,
+     "earliest": 3.132662999999999,
+     "clearance": [
+      0.08262,
+      0.09766
+     ]
+    },
+    "DIRECT + stretch ladder (no rings)": {
+     "routeRollouts": 7,
+     "fraction": 0.30434782608695654,
+     "completePairs": 1,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "direct"
+     ],
+     "dJ": 0.052832089000000027,
+     "earliest": 3.0000000000000018,
+     "clearance": [
+      0.05567,
+      0.09778
+     ]
+    },
+    "RINGS only (17, current)": {
+     "routeRollouts": 17,
+     "fraction": 0.7391304347826086,
+     "completePairs": 1,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "dJ": 0.0,
+     "earliest": 3.132662999999999,
+     "clearance": [
+      0.08262,
+      0.09766
+     ]
+    },
+    "FAILURE-CONDITIONED: direct; reach_tracking -> stretch ladder (then rings); other -> rings": {
+     "routeRollouts": 1,
+     "fraction": 0.043478260869565216,
+     "completePairs": 1,
+     "selected": [
+      1.8,
+      "axisP_side_45deg",
+      "direct"
+     ],
+     "dJ": 0.052832089000000027,
+     "earliest": 3.0000000000000018,
+     "clearance": [
+      0.05567,
+      0.09778
+     ]
+    }
+   },
+   "referenceCompletePairs": 1
+  }
+ }
+]

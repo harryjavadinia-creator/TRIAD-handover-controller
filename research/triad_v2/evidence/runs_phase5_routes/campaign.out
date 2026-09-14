@@ -1,0 +1,9 @@
+v1 longitudinal exit=0
+v1 near-ground exit=0
+v1 lateral-low exit=0
+v1 diagonal exit=0
+char_stretch longitudinal exit=1
+char_stretch near-ground exit=1
+char_stretch lateral-low exit=1
+char_stretch diagonal exit=1
+CAMPAIGN_DONE
