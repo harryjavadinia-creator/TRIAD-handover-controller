@@ -1768,8 +1768,40 @@ void HandoverInterceptionController::logCertStageV2(
         plannerContext_.certJobGeneration, finiteSearch_.evaluatedHypotheses, candidate.name,
         candidate.transitRouteName, candidate.predictedPresentationTime, staticReach);
   }
+  // A1 logging only: terminal timing audit outcome and cost-input finiteness of
+  // every retreat-certified route record, plus a PROXY objective computed on a
+  // copy with the certifier's own pre-audit execution-time estimate. Nothing
+  // below writes to the candidate, the plan set or any decision input.
+  std::string a1Fields =
+      " auditRan=- auditSuccess=- auditReason=- auditDuration=nan legacyExecutionDuration=nan costInputsFinite=- proxyGlobalJPreAuditTime=nan";
+  if(!isStatic && feasible)
+  {
+    const bool inputsFinite = std::isfinite(candidate.predictedEffort)
+        && std::isfinite(candidate.transitPathLength)
+        && std::isfinite(candidate.predictiveReachClearance)
+        && std::isfinite(candidate.predictiveRetreatClearance)
+        && std::isfinite(candidate.minimumJointMarginRatio)
+        && std::isfinite(candidate.minimumConditionIndex)
+        && std::isfinite(candidate.maximumJointVelocityUtilization)
+        && std::isfinite(candidate.terminalVelocityUtilization);
+    CaptureCandidate proxy = candidate;
+    proxy.terminalTimingAuditSuccess = true;
+    proxy.auditEstimatedTime = candidate.legacyEstimatedTime;
+    computeCompletePlanAuditCost(proxy);
+    const double proxyJ = proxy.completeCostAuditValid
+        ? call_handover::extendMotionCostToSearchEpoch(
+              proxy.completeCostAudit, plannerConfig_.decisionTimeWeight,
+              plannerConfig_.decisionTimeReference, lead, candidate.predictedPresentationTime)
+        : std::numeric_limits<double>::quiet_NaN();
+    std::string auditReason = candidate.terminalTimingAuditReason.empty() ? std::string("none") : candidate.terminalTimingAuditReason;
+    for(auto & ch : auditReason) { if(ch == ' ') { ch = '_'; } }
+    a1Fields = fmt::format(
+        " auditRan={} auditSuccess={} auditReason={} auditDuration={:.6f} legacyExecutionDuration={:.12g} costInputsFinite={} proxyGlobalJPreAuditTime={:.12g}",
+        candidate.terminalTimingAuditRan, candidate.terminalTimingAuditSuccess, auditReason,
+        candidate.terminalTimingAuditDuration, candidate.legacyEstimatedTime, inputsFinite, proxyJ);
+  }
   mc_rtc::log::info(
-      "[CertStage] job={} planningGeneration={} hypothesis={} lead={:.3f} eventTime={:.9f} path={} grasp={}/{} candidate={} route={} feasible={} deepest={} costValid={} staticReachTime={:.6f} routeReachDuration={:.6f} reachClear={:.9f} retreatClear={:.9f} reason={} jobWall={:.6f} workUnits={} motionJ={:.12g} globalJ={:.12g} presentationDuration={:.12g} executionDuration={:.12g} prof={}",
+      "[CertStage] job={} planningGeneration={} hypothesis={} lead={:.3f} eventTime={:.9f} path={} grasp={}/{} candidate={} route={} feasible={} deepest={} costValid={} staticReachTime={:.6f} routeReachDuration={:.6f} reachClear={:.9f} retreatClear={:.9f} reason={} jobWall={:.6f} workUnits={} motionJ={:.12g} globalJ={:.12g} presentationDuration={:.12g} executionDuration={:.12g} prof={}{}",
       plannerContext_.certJobType, plannerContext_.certJobGeneration,
       search ? finiteSearch_.evaluatedHypotheses : 0,
       search ? finiteSearch_.currentLead : std::numeric_limits<double>::quiet_NaN(),
@@ -1782,7 +1814,7 @@ void HandoverInterceptionController::logCertStageV2(
       isStatic ? plannerContext_.certStaticReachClearance : candidate.predictiveReachClearance,
       candidate.predictiveRetreatClearance, why.empty() ? std::string("none") : why,
       jobWall, workUnitsV2(), candidate.completeCostAudit, globalJ,
-      candidate.predictedPresentationTime, candidate.auditEstimatedTime, stageSnapshotV2());
+      candidate.predictedPresentationTime, candidate.auditEstimatedTime, stageSnapshotV2(), a1Fields);
 }
 
 void HandoverInterceptionController::logMemoRecordsV2(const std::vector<CaptureCandidate> & completePlans) const
