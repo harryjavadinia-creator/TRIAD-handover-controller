@@ -213,6 +213,14 @@ bool HandoverInterceptionController::beginReceiverV2(
     mc_rtc::log::info("[V2PredictionUpdateMode] fullSearchPredictionUpdate={}", mode);
   }
   v2Params_.characterizationRestDwell = readDouble(stateConfig, "characterizationRestDwell", v2Params_.characterizationRestDwell);
+  // Phase 2B preview/runtime parity traces (logging only, default off).
+  v2ParityTrace_ = readBool(stateConfig, "parityTrace", false);
+  parityRuntimeTraceActive_ = v2ParityTrace_;
+  v2ParityReachTrace_.clear();
+  v2ParityReachTracePlanId_ = 0;
+  v2ParityReachLoggedPlanId_ = 0;
+  v2ParityLastRuntimeLog_ = -1.0;
+  mc_rtc::log::info("[V2ParityTrace] enabled={} decisionEffect=none", v2ParityTrace_);
   v2CharacterizationStage_ = 0;
 
   v2Active_ = true;
@@ -786,7 +794,12 @@ void HandoverInterceptionController::runRecertifyActiveRolloutV2(ReceiverJobResu
   plannerContext_.routeStepTransitPostureSaved = false;
   plannerContext_.routeStepPhase = RouteStepPhase::Reach;
 
+  plannerContext_.parityTrace.clear();
+  plannerContext_.parityTraceActive = v2ParityTrace_ && resumeIndex == 0;
   const RouteStepOutcome outcome = runRouteStepToCompletionV2();
+  result.parityFromReachStart = plannerContext_.parityTraceActive;
+  plannerContext_.parityTraceActive = false;
+  result.parityTrace.swap(plannerContext_.parityTrace);
   result.candidate = plannerContext_.routeStepCandidate;
   result.success = outcome == RouteStepOutcome::Feasible
       && result.candidate.completeCostAuditValid;
@@ -868,7 +881,11 @@ void HandoverInterceptionController::runTerminalCertificationV2(ReceiverJobResul
   plannerContext_.routeStepSegmentIteration = 0;
   plannerContext_.routeStepPhase = RouteStepPhase::Approach;
 
+  plannerContext_.parityTrace.clear();
+  plannerContext_.parityTraceActive = v2ParityTrace_;
   const RouteStepOutcome outcome = runRouteStepToCompletionV2();
+  plannerContext_.parityTraceActive = false;
+  result.parityTrace.swap(plannerContext_.parityTrace);
   result.candidate = plannerContext_.routeStepCandidate;
   result.success = outcome == RouteStepOutcome::Feasible
       && result.candidate.completeCostAuditValid;
@@ -1016,6 +1033,12 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
     provisionalReceiverPlan_.candidate.transitRouteName = route;
     ++provisionalReceiverPlan_.certifications;
     ++v2Counters_.retained;
+    if(v2ParityTrace_ && result.parityFromReachStart && now < provisionalReceiverPlan_.plan.reachStartTime)
+    {
+      v2ParityReachTrace_ = result.parityTrace;
+      v2ParityReachTracePlanId_ = provisionalReceiverPlan_.planId;
+      v2ParityReachTraceGeneration_ = pending.planningGeneration;
+    }
     if(drift > 0.0 || rotationDrift > 0.0) { ++v2Counters_.updated; }
     ++v2StateGeneration_;
     mc_rtc::log::success(
@@ -1276,6 +1299,22 @@ bool HandoverInterceptionController::executeProvisionalReachV2(double now)
     return true;
   }
 
+  if(v2ParityTrace_ && v2ParityReachLoggedPlanId_ != active.planId)
+  {
+    v2ParityReachLoggedPlanId_ = active.planId;
+    const bool available = v2ParityReachTracePlanId_ == active.planId && !v2ParityReachTrace_.empty();
+    const Eigen::Vector3d sp = compose(plan.objectAtPresentation, plan.O_T_M_standoff).translation();
+    const Eigen::Quaterniond sq(worldRotation(compose(plan.objectAtPresentation, plan.O_T_M_standoff)));
+    mc_rtc::log::info(
+        "[V2ParityReachStart] planId={} available={} traceGeneration={} samples={} reachStart={:.6f} standoffTime={:.6f} reachDuration={:.6f} candidate={} route={} standoff=[{:.6f},{:.6f},{:.6f}] standoffQ=[{:.6f},{:.6f},{:.6f},{:.6f}] predictedReachClear={:.5f} predictedRetreatClear={:.5f} predictedMinClear={:.5f} t={:.6f}",
+        active.planId, available, v2ParityReachTraceGeneration_, available ? v2ParityReachTrace_.size() : 0,
+        plan.reachStartTime, plan.standoffTime, plan.reachDuration, active.candidate.name,
+        active.candidate.transitRouteName, sp.x(), sp.y(), sp.z(), sq.w(), sq.x(), sq.y(), sq.z(),
+        active.candidate.predictiveReachClearance, active.candidate.predictiveRetreatClearance,
+        active.candidate.minClearance, now);
+    if(available) { logParityTraceV2("V2ParityPreviewReach", active.planId, v2ParityReachTrace_); }
+  }
+
   const double referenceTime = std::min(now, plan.standoffTime);
   auto reference = interceptionReferenceAt(plan, referenceTime, controlDt_);
   if(now >= plan.standoffTime)
@@ -1524,6 +1563,23 @@ bool HandoverInterceptionController::commitProvisionalReceiverPlanV2(
     mc_rtc::log::error("[V2TerminalCommit] committed=false reason=terminal_anchor_lock_failed");
     v2Phase_ = ReceiverPhaseV2::Failed;
     return false;
+  }
+
+  if(v2ParityTrace_)
+  {
+    const double predictedRetreat = std::max(0.0, c.estimatedTime - c.predictedContactTime
+                                                  - timingBilateralDwell_ - timingConfirmationDwell_);
+    mc_rtc::log::info(
+        "[V2ParityCommitPreview] planId={} certificatePlanningGeneration={} predictedApproach={:.6f} auditRan={} auditSuccess={} auditDuration={:.6f} legacyApproach={:.6f} predictedAcquire={:.6f} predictedContact={:.6f} predictedRetreat={:.6f} bilateralDwell={:.6f} confirmationDwell={:.6f} estimated={:.6f} contactClosure={:.6f} reachClear={:.5f} retreatClear={:.5f} minClear={:.5f} capture=[{:.6f},{:.6f},{:.6f}] retreat=[{:.6f},{:.6f},{:.6f}] samples={} t={:.6f}",
+        active.planId, certificate.planningGeneration, c.predictedApproachTime, c.terminalTimingAuditRan,
+        c.terminalTimingAuditSuccess, c.terminalTimingAuditDuration, c.legacyPredictedApproachTime,
+        c.predictedAcquireTime, c.predictedContactTime, predictedRetreat, timingBilateralDwell_,
+        timingConfirmationDwell_, c.estimatedTime, c.contactClosure, c.predictiveReachClearance,
+        c.predictiveRetreatClearance, c.minClearance, c.W_T_M_pre.translation().x(),
+        c.W_T_M_pre.translation().y(), c.W_T_M_pre.translation().z(), c.W_T_M_retreat.translation().x(),
+        c.W_T_M_retreat.translation().y(), c.W_T_M_retreat.translation().z(),
+        certificate.parityTrace.size(), now);
+    logParityTraceV2("V2ParityPreviewTerminal", active.planId, certificate.parityTrace);
   }
 
   v2CommitLatched_ = true;
@@ -2081,4 +2137,50 @@ bool HandoverInterceptionController::exactTimingPruneRoutesV2(const CaptureCandi
       std::chrono::duration<double>(std::chrono::steady_clock::now() - plannerContext_.certJobStart).count(),
       workUnitsV2());
   return true;
+}
+
+// =============================================================================
+// Phase 2B preview/runtime parity instrumentation (logging only)
+// =============================================================================
+
+void HandoverInterceptionController::logParityTraceV2(
+    const char * tag, std::uint64_t planId, const std::vector<ParitySampleV2> & trace) const
+{
+  for(std::size_t i = 0; i < trace.size(); ++i)
+  {
+    const auto & s = trace[i];
+    mc_rtc::log::info(
+        "[{}] planId={} i={} phase={} t={:.6f} p=[{:.6f},{:.6f},{:.6f}] q=[{:.6f},{:.6f},{:.6f},{:.6f}] clear={:.5f}",
+        tag, planId, i, s.phase, s.t, s.p.x(), s.p.y(), s.p.z(), s.q.w(), s.q.x(), s.q.y(), s.q.z(),
+        s.clearance);
+  }
+}
+
+void HandoverInterceptionController::logParityRuntimeV2()
+{
+  if(v2ParityLastRuntimeLog_ >= 0.0 && controllerTime_ < v2ParityLastRuntimeLog_ + 0.01 - 1e-9) { return; }
+  v2ParityLastRuntimeLog_ = controllerTime_;
+  const sva::PTransformd mouth = actualMouthPose();
+  const Eigen::Quaterniond mq(worldRotation(mouth));
+  const Eigen::Quaterniond oq(worldRotation(W_T_O_));
+  HandoverSafetyReport report;
+  double clear = std::numeric_limits<double>::quiet_NaN();
+  const char * clearSource = "pose";
+  if(objectAttached_)
+  {
+    evaluateAttachedRetreatSafety(report);
+    clearSource = "attached_retreat";
+  }
+  else
+  {
+    evaluateCurrentPoseSafety(report, false);
+  }
+  clear = report.minClearance;
+  mc_rtc::log::info(
+      "[V2ParityRuntime] t={:.6f} state={} v2phase={} planId={} mouth=[{:.6f},{:.6f},{:.6f}] mouthQ=[{:.6f},{:.6f},{:.6f},{:.6f}] object=[{:.6f},{:.6f},{:.6f}] objectQ=[{:.6f},{:.6f},{:.6f},{:.6f}] truth=[{:.6f},{:.6f},{:.6f}] closure={:.5f} attached={} clear={:.5f} clearSource={}",
+      controllerTime_, executor_.state(), receiverPhaseNameV2(v2Phase_), provisionalReceiverPlan_.planId,
+      mouth.translation().x(), mouth.translation().y(), mouth.translation().z(), mq.w(), mq.x(), mq.y(), mq.z(),
+      W_T_O_.translation().x(), W_T_O_.translation().y(), W_T_O_.translation().z(), oq.w(), oq.x(), oq.y(), oq.z(),
+      W_T_O_truth_.translation().x(), W_T_O_truth_.translation().y(), W_T_O_truth_.translation().z(),
+      measuredGripperClosure(), objectAttached_, clear, clearSource);
 }

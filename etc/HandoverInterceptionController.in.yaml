@@ -643,6 +643,8 @@ configs:
     # the current controller time. Lossless by construction (ReceiverV2.cpp).
     fullSearchExactTimingPrune: false
     characterizationRestDwell: 1.0
+    # Phase 2B preview/runtime parity traces (logging only, default off).
+    parityTrace: false
 
 transitions:
 - [HandoverInterceptionController_Initial, OK, HandoverInterceptionController_ObserveObject, Auto]

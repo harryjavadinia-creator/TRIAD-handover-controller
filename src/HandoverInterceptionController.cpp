@@ -387,7 +387,9 @@ bool HandoverInterceptionController::run()
     }
   }
   updateForceTransferMeasurement();
-  return mc_control::fsm::Controller::run();
+  const bool ok = mc_control::fsm::Controller::run();
+  if(parityRuntimeTraceActive_) { logParityRuntimeV2(); }
+  return ok;
 }
 
 void HandoverInterceptionController::beginForceTransferBiasCalibration()
@@ -6716,6 +6718,17 @@ HandoverInterceptionController::stepPredictiveRouteCandidate(int workUnits)
                                + plannerContext_.routeStepReachResult.reason);
         }
         plannerContext_.routeStepCommandReference = nextCommand;
+        if(plannerContext_.parityTraceActive)
+        {
+          // Logging only: the pose and clearance this reach step started from.
+          ParitySampleV2 s;
+          s.phase = 0;
+          s.t = t;
+          s.p = currentMouth.translation();
+          s.q = Eigen::Quaterniond(worldRotation(currentMouth));
+          s.clearance = std::min(currentReport.minClearance, sweptReport.minClearance);
+          plannerContext_.parityTrace.push_back(s);
+        }
 
         if(!plannerContext_.routeStepTransitPostureSaved && refNext.phaseProgress >= 0.5)
         {
@@ -6753,6 +6766,16 @@ HandoverInterceptionController::stepPredictiveRouteCandidate(int workUnits)
           - reachedStandoff.translation()).norm();
       plannerContext_.routeStepReachOrientationError = orientationError(
           reachedStandoff, plannerContext_.routeStepCandidate.W_T_M_standoff);
+      if(plannerContext_.parityTraceActive)
+      {
+        ParitySampleV2 s;
+        s.phase = 0;
+        s.t = plannerContext_.routeStepPlan.standoffTime;
+        s.p = reachedStandoff.translation();
+        s.q = Eigen::Quaterniond(worldRotation(reachedStandoff));
+        s.clearance = plannerContext_.routeStepReachResult.minClearance;
+        plannerContext_.parityTrace.push_back(s);
+      }
       if(plannerContext_.routeStepReachPositionError > policy.positionTolerance
          || plannerContext_.routeStepReachOrientationError > policy.orientationTolerance)
       {
@@ -6791,6 +6814,11 @@ HandoverInterceptionController::stepPredictiveRouteCandidate(int workUnits)
           plannerContext_.routeStepSegmentIteration, plannerContext_.routeStepTerminalResult,
           Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), true, nullptr,
           true);
+      if(plannerContext_.parityTraceActive)
+      {
+        parityRecordPreviewV2(1, plannerContext_.routeStepTerminalResult.duration,
+                              plannerContext_.routeStepTerminalResult.minClearance);
+      }
       if(status == PreviewStepStatus::Running) { continue; }
       if(status == PreviewStepStatus::Failed)
       {
@@ -6896,6 +6924,11 @@ HandoverInterceptionController::stepPredictiveRouteCandidate(int workUnits)
       // One iteration of the previewClosureSweep() loop, same arguments.
       const PreviewStepStatus status = previewClosureStep(
           plannerContext_.routeStepMbc, plannerContext_.routeStepClosureIndex, plannerContext_.routeStepTerminalResult);
+      if(plannerContext_.parityTraceActive)
+      {
+        parityRecordPreviewV2(3, plannerContext_.routeStepTerminalResult.duration,
+                              plannerContext_.routeStepTerminalResult.minClearance);
+      }
       if(status == PreviewStepStatus::Running) { continue; }
       if(status == PreviewStepStatus::Failed)
       {
@@ -6940,6 +6973,11 @@ HandoverInterceptionController::stepPredictiveRouteCandidate(int workUnits)
           Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), true, nullptr,
           true);
       plannerContext_.planningM_T_O = oldPlanning;
+      if(plannerContext_.parityTraceActive)
+      {
+        parityRecordPreviewV2(4, plannerContext_.routeStepRetreatResult.duration,
+                              plannerContext_.routeStepRetreatResult.minClearance);
+      }
       if(status == PreviewStepStatus::Running) { continue; }
       if(status == PreviewStepStatus::Failed)
       {
@@ -6978,6 +7016,22 @@ HandoverInterceptionController::stepPredictiveRouteCandidate(int workUnits)
 
   routeStepRestorePlanningWorld();
   return RouteStepOutcome::Running;
+}
+
+void HandoverInterceptionController::parityRecordPreviewV2(int phase, double t, double clearance)
+{
+  // Phase 2B parity instrumentation: logging only, active only for the
+  // RECERTIFY_ACTIVE (from reach start) and TERMINAL_CERTIFY jobs of a run with
+  // ReceiverV2 parityTrace enabled. Never read by any decision.
+  sva::PTransformd mouth;
+  if(!previewMouthPose(plannerContext_.routeStepMbc, mouth)) { return; }
+  ParitySampleV2 s;
+  s.phase = phase;
+  s.t = t;
+  s.p = mouth.translation();
+  s.q = Eigen::Quaterniond(worldRotation(mouth));
+  s.clearance = clearance;
+  plannerContext_.parityTrace.push_back(s);
 }
 
 HandoverInterceptionController::RouteStepOutcome

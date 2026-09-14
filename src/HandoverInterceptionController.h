@@ -2110,8 +2110,23 @@ private:
     int routeWorkUnits = 128;
   };
 
+  // Phase 2B preview/runtime parity instrumentation (logging only). One sample
+  // of the copied-state rollout of a certification job: phase 0 reach, 1
+  // insertion, 3 closure, 4 carried retreat; t is plan time for the reach and
+  // cumulative preview duration of the phase result otherwise.
+  struct ParitySampleV2
+  {
+    int phase = 0;
+    double t = 0.0;
+    Eigen::Vector3d p = Eigen::Vector3d::Zero();
+    Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
+    double clearance = std::numeric_limits<double>::quiet_NaN();
+  };
+
   struct ReceiverJobResultV2
   {
+    std::vector<ParitySampleV2> parityTrace;
+    bool parityFromReachStart = false;
     ReceiverJobTypeV2 type = ReceiverJobTypeV2::None;
     std::uint64_t planningGeneration = 0;
     std::uint64_t stateGeneration = 0;
@@ -2225,6 +2240,18 @@ private:
   ReceiverJobResultV2 v2Result_;
   ReceiverJobResultV2 v2LatestTerminalCertificate_;
   bool v2LatestTerminalCertificateValid_ = false;
+  // Phase 2B parity instrumentation (never read by a decision).
+  bool v2ParityTrace_ = false;
+  std::vector<ParitySampleV2> v2ParityReachTrace_;
+  std::uint64_t v2ParityReachTracePlanId_ = 0;
+  std::uint64_t v2ParityReachTraceGeneration_ = 0;
+  std::uint64_t v2ParityReachLoggedPlanId_ = 0;
+  double v2ParityLastRuntimeLog_ = -1.0;
+  bool parityRuntimeTraceActive_ = false;
+  void logParityTraceV2(const char * tag, std::uint64_t planId,
+                        const std::vector<ParitySampleV2> & trace) const;
+  void logParityRuntimeV2();
+  void parityRecordPreviewV2(int phase, double t, double clearance);
   bool v2CommitLatched_ = false;
   int v2CommitCount_ = 0;
   bool v2ReselectionLocked_ = false;
@@ -2434,6 +2461,8 @@ private:
     long long certRouteRecords = 0;
     long long certMemoReuses = 0;
     long long certTimingPruned = 0;
+    bool parityTraceActive = false;
+    std::vector<ParitySampleV2> parityTrace;
     double certStaticReachClearance = std::numeric_limits<double>::quiet_NaN();
     double certRouteReachDuration = std::numeric_limits<double>::quiet_NaN();
     RouteStepPhase routeStepFailedPhase = RouteStepPhase::Idle;
