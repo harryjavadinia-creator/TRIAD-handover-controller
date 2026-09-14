@@ -1,0 +1,4 @@
+configs:
+  HandoverInterceptionController_ReceiverV2:
+    characterizeOnly: true
+    fullSearchExactTimingPrune: true
