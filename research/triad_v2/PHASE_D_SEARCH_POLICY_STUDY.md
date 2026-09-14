@@ -107,7 +107,7 @@ Characterization run a; run b and the in-situ runs give identical tuples.
 | lateral-low | 4.64 | 7% | 10% | **73%** | 4% | 6% | 0% | 448 / 731 |
 | diagonal | 2.82 | 19% | 12% | **56%** | 6% | 6% | 0% | 448 / 408 |
 
-Nested inside these phases: IK integration steps are about 40% and swept-volume clearance queries 35–48% of search time. Selection overhead is 0.012 ms median, 0.024 ms max, for 200–600 records.
+Nested inside these phases: IK integration steps are 32–45% and swept-volume clearance queries 37–48% of search time (measured on near-ground, lateral-low and diagonal). Selection overhead is 0.012 ms median, 0.024 ms max, for 200–600 records.
 
 **Per candidate [M].**
 - A static grasp screen costs 0.4–2.0 ms (median; rejected screens are the cheaper).
@@ -158,7 +158,7 @@ This is a certification-order change, so it is reported apart from the four requ
 - It removes 0 / 0.40–0.48 / 0.66 / 1.41–1.43 s of route certification (diagonal / longitudinal / lateral-low / near-ground).
 - **EARLIEST_TAU + prune** reaches an admissible plan in **0.28–0.63 s in all 4 scenarios**, 3.9–4.2 s before rest.
 - Tuple equals the zero-latency argmin in 3 of 4 scenarios. Near-ground selects τ = 3.7 s, ΔJ +0.042 vs the zero-latency argmin, clearance 0.065/0.101 m vs 0.071/0.106 m.
-- **FULL_ARGMIN + prune** still takes 1.8–4.0 s and, as executed, selects later events with ΔJ +0.20 to +0.25 vs zero latency.
+- **FULL_ARGMIN + prune** still takes 1.8–4.0 s and, as executed, selects later events with ΔJ +0.09 to +0.25 vs zero latency.
 - This estimate ignores scheduling and logging overhead. It is not a runtime measurement.
 
 ## Failures and counterexamples
