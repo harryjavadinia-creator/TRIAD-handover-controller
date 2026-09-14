@@ -96,7 +96,7 @@ Let c be the computation per certified lead. While the ladder walks up by Δτ p
 **Measured.** With the exact Track 1 prune, c at leads that may still be admissible is **0.18–0.59 s per lead** (modelled from the job profiles). That exceeds Δτ_phys = 0.19 s at 0.08 m/s.
 
 **OFFLINE consequences** (`TK_SUMMARY.md`):
-- Every no-stopping grid (Δτ = 0.05–0.20 s) and every unanchored ascending ladder at Δτ ≤ 0.10 s ends with **no admissible plan** in 3–4 of 4 scenarios.
+- Every no-stopping grid at Δτ = 0.05–0.20 s ends with **no admissible plan** in 4/4 scenarios. Unanchored ascending ladders (with prune) end with none in 4/4 at Δτ = 0.05 s and in 2/4 at 0.10 s.
 - The full 191-lead grid needs 44–78 s, or 7.9–8.4 s with the prune, and is never admissible at its decision time.
 - BANK14 (3.1–5.0 s) is admissible in 3/4 scenarios, at leads 5.5–8.0 s with ΔJ +0.10…+0.29.
 
