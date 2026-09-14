@@ -1,0 +1,4602 @@
+[
+ {
+  "log": "research/triad_v2/evidence/runs_ae1e824/logs/char_T/diagonal/diagonal.log.xz",
+  "moving": {
+   "epoch": 9.024,
+   "speed": 0.07999,
+   "unitCostStatic": 0.0018356696662303663,
+   "unitCostRoute": 0.0055416293449197865,
+   "leadsTotal": 191,
+   "referenceZeroLatency": {
+    "selected": [
+     3.9,
+     "axisP_side_337deg",
+     "ring80mm_2of8"
+    ],
+    "J": 0.675810338,
+    "tau": 12.924,
+    "dJ": null,
+    "dTau": null,
+    "reachClear": 0.0745,
+    "retreatClear": 0.21553
+   },
+   "earliestAdmissibleLead0": 3.9,
+   "deltaTauPhysical": 0.18752344043005373,
+   "deltaTauOnGrid": 0.15000000000000002,
+   "laws": {
+    "FULL": {
+     "leads": 191,
+     "cost": 44.380722999999996,
+     "selected": null
+    },
+    "BANK14": {
+     "leads": 14,
+     "cost": 3.0833647831984767,
+     "selected": [
+      5.5,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.774639182,
+     "tau": 14.524,
+     "dJ": 0.09882884400000003,
+     "dTau": 1.5999999999999996,
+     "reachClear": 0.07424,
+     "retreatClear": 0.22322
+    },
+    "GRID(0.05)": {
+     "leads": 169,
+     "cost": 43.088411554973824,
+     "selected": null
+    },
+    "GRID(0.10)": {
+     "leads": 85,
+     "cost": 21.573576492146596,
+     "selected": null
+    },
+    "GRID(0.15)": {
+     "leads": 57,
+     "cost": 14.370562238249644,
+     "selected": null
+    },
+    "GRID(0.20)": {
+     "leads": 43,
+     "cost": 10.91036665959662,
+     "selected": null
+    },
+    "GRID(0.45)": {
+     "leads": 19,
+     "cost": 4.6017720150226085,
+     "selected": [
+      7.0,
+      "axisP_side_315deg",
+      "direct"
+     ],
+     "J": 0.902588991,
+     "tau": 16.024,
+     "dJ": 0.226778653,
+     "dTau": 3.1000000000000014,
+     "reachClear": 0.0746,
+     "retreatClear": 0.21875
+    },
+    "FULL+prune": {
+     "leads": 143,
+     "routeRollouts": 0,
+     "cost": 8.400024392670144,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "BANK14+prune": {
+     "leads": 14,
+     "routeRollouts": 408,
+     "cost": 3.083364783198476,
+     "firstAdmissibleLead": 4.15,
+     "selected": [
+      5.5,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.774639182,
+     "tau": 14.524,
+     "dJ": 0.09882884400000003,
+     "dTau": 1.5999999999999996,
+     "reachClear": 0.07424,
+     "retreatClear": 0.22322
+    },
+    "ASC(dphys,W=0.0)": {
+     "leads": 17,
+     "cost": 1.375435093883865,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634
+    },
+    "ASC(0.45,W=0.0)": {
+     "leads": 7,
+     "cost": 0.6938131018265111,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.687342286,
+     "tau": 13.324,
+     "dJ": 0.011531948000000014,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.07428,
+     "retreatClear": 0.21876
+    },
+    "ASC(dphys,W=0.5)": {
+     "leads": 20,
+     "cost": 1.8342824784328897,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.3,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.703012395,
+     "tau": 13.324,
+     "dJ": 0.027202057,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.07453,
+     "retreatClear": 0.21843
+    },
+    "ASC(0.45,W=0.5)": {
+     "leads": 8,
+     "cost": 0.9409699288731556,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.687342286,
+     "tau": 13.324,
+     "dJ": 0.011531948000000014,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.07428,
+     "retreatClear": 0.21876
+    },
+    "ASC(dphys,W=1.0)": {
+     "leads": 23,
+     "cost": 2.575752959572823,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.75,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.763344406,
+     "tau": 13.774,
+     "dJ": 0.08753406799999996,
+     "dTau": 0.8499999999999996,
+     "reachClear": 0.07115,
+     "retreatClear": 0.22056
+    },
+    "ASC(0.45,W=1.0)": {
+     "leads": 9,
+     "cost": 1.2823344547834363,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.687342286,
+     "tau": 13.324,
+     "dJ": 0.011531948000000014,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.07428,
+     "retreatClear": 0.21876
+    },
+    "ASC(dphys,W=2.0)": {
+     "leads": 30,
+     "cost": 5.247927737535697,
+     "firstAdmissibleLead": 4.0,
+     "selected": null
+    },
+    "ASC(0.45,W=2.0)": {
+     "leads": 11,
+     "cost": 2.0592712054676343,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.75,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.728242538,
+     "tau": 13.774,
+     "dJ": 0.05243220000000004,
+     "dTau": 0.8499999999999996,
+     "reachClear": 0.07438,
+     "retreatClear": 0.22077
+    },
+    "ASC+prune(d=0.05,W=0.0)": {
+     "leads": 143,
+     "routeRollouts": 0,
+     "cost": 8.400024392670144,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=0.5)": {
+     "leads": 143,
+     "routeRollouts": 0,
+     "cost": 8.400024392670144,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=1.0)": {
+     "leads": 143,
+     "routeRollouts": 0,
+     "cost": 8.400024392670144,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=2.0)": {
+     "leads": 143,
+     "routeRollouts": 0,
+     "cost": 8.400024392670144,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=inf)": {
+     "leads": 143,
+     "routeRollouts": 0,
+     "cost": 8.400024392670144,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=0.0)": {
+     "leads": 24,
+     "routeRollouts": 17,
+     "cost": 1.5040020025285583,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553
+    },
+    "ASC+prune(d=0.10,W=0.5)": {
+     "leads": 29,
+     "routeRollouts": 102,
+     "cost": 2.2687476434435987,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      4.3,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.739929346,
+     "tau": 13.324,
+     "dJ": 0.06411900800000003,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.07007,
+     "retreatClear": 0.21813
+    },
+    "ASC+prune(d=0.10,W=1.0)": {
+     "leads": 34,
+     "routeRollouts": 170,
+     "cost": 2.9392855854950013,
+     "firstAdmissibleLead": 3.9,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=2.0)": {
+     "leads": 44,
+     "routeRollouts": 221,
+     "cost": 3.8093229752796254,
+     "firstAdmissibleLead": 3.9,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=inf)": {
+     "leads": 85,
+     "routeRollouts": 408,
+     "cost": 7.2540062648738575,
+     "firstAdmissibleLead": 3.9,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=0.0)": {
+     "leads": 17,
+     "routeRollouts": 17,
+     "cost": 1.092811997292956,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634
+    },
+    "ASC+prune(d=0.15,W=0.5)": {
+     "leads": 20,
+     "routeRollouts": 68,
+     "cost": 1.5516593818419806,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634
+    },
+    "ASC+prune(d=0.15,W=1.0)": {
+     "leads": 23,
+     "routeRollouts": 170,
+     "cost": 2.293129862981914,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.75,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.728242538,
+     "tau": 13.774,
+     "dJ": 0.05243220000000004,
+     "dTau": 0.8499999999999996,
+     "reachClear": 0.07438,
+     "retreatClear": 0.22077
+    },
+    "ASC+prune(d=0.15,W=2.0)": {
+     "leads": 30,
+     "routeRollouts": 374,
+     "cost": 3.8348122545811494,
+     "firstAdmissibleLead": 4.0,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=inf)": {
+     "leads": 57,
+     "routeRollouts": 680,
+     "cost": 7.116569425749633,
+     "firstAdmissibleLead": 4.0,
+     "selected": null
+    },
+    "ASC+prune(d=0.20,W=0.0)": {
+     "leads": 13,
+     "routeRollouts": 34,
+     "cost": 0.9520539788791051,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634
+    },
+    "ASC+prune(d=0.20,W=0.5)": {
+     "leads": 15,
+     "routeRollouts": 68,
+     "cost": 1.2579522352451216,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634
+    },
+    "ASC+prune(d=0.20,W=1.0)": {
+     "leads": 18,
+     "routeRollouts": 170,
+     "cost": 1.9994227163850555,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.4,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.708114332,
+     "tau": 13.424,
+     "dJ": 0.03230399399999995,
+     "dTau": 0.5,
+     "reachClear": 0.07447,
+     "retreatClear": 0.21906
+    },
+    "ASC+prune(d=0.20,W=2.0)": {
+     "leads": 23,
+     "routeRollouts": 459,
+     "cost": 3.8946607436637293,
+     "firstAdmissibleLead": 4.0,
+     "selected": null
+    },
+    "ASC+prune(d=0.20,W=inf)": {
+     "leads": 43,
+     "routeRollouts": 782,
+     "cost": 6.859435608460249,
+     "firstAdmissibleLead": 4.0,
+     "selected": null
+    },
+    "ASC+prune(d=0.45,W=0.0)": {
+     "leads": 7,
+     "routeRollouts": 17,
+     "cost": 0.5053977040992383,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.687342286,
+     "tau": 13.324,
+     "dJ": 0.011531948000000014,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.07428,
+     "retreatClear": 0.21876
+    },
+    "ASC+prune(d=0.45,W=0.5)": {
+     "leads": 8,
+     "routeRollouts": 51,
+     "cost": 0.7525545311458828,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.687342286,
+     "tau": 13.324,
+     "dJ": 0.011531948000000014,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.07428,
+     "retreatClear": 0.21876
+    },
+    "ASC+prune(d=0.45,W=1.0)": {
+     "leads": 9,
+     "routeRollouts": 102,
+     "cost": 1.0939190570561637,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.687342286,
+     "tau": 13.324,
+     "dJ": 0.011531948000000014,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.07428,
+     "retreatClear": 0.21876
+    },
+    "ASC+prune(d=0.45,W=2.0)": {
+     "leads": 11,
+     "routeRollouts": 221,
+     "cost": 1.8708558077403623,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.703012395,
+     "tau": 13.324,
+     "dJ": 0.027202057,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.07453,
+     "retreatClear": 0.21843
+    },
+    "ASC+prune(d=0.45,W=inf)": {
+     "leads": 19,
+     "routeRollouts": 595,
+     "cost": 4.4133566172953325,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      7.0,
+      "axisP_side_315deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.887837775,
+     "tau": 16.024,
+     "dJ": 0.21202743700000004,
+     "dTau": 3.1000000000000014,
+     "reachClear": 0.07651,
+     "retreatClear": 0.21901
+    },
+    "ANCHOR(A=0.5,d=0.15,W=0.0)": {
+     "leads": 13,
+     "routeRollouts": 51,
+     "cost": 1.1050031070621134,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.15,W=0.5)": {
+     "leads": 16,
+     "routeRollouts": 102,
+     "cost": 1.563850491611138,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.20,W=0.0)": {
+     "leads": 10,
+     "routeRollouts": 34,
+     "cost": 0.8345711202403616,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.20,W=0.5)": {
+     "leads": 12,
+     "routeRollouts": 68,
+     "cost": 1.1404693766063778,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.30,W=0.0)": {
+     "leads": 7,
+     "routeRollouts": 34,
+     "cost": 0.6583468322822464,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.30,W=0.5)": {
+     "leads": 8,
+     "routeRollouts": 51,
+     "cost": 0.8112959604652545,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.45,W=0.0)": {
+     "leads": 5,
+     "routeRollouts": 34,
+     "cost": 0.540863973643503,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.45,W=0.5)": {
+     "leads": 6,
+     "routeRollouts": 51,
+     "cost": 0.6938131018265111,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": false
+    },
+    "ANCHOR(A=1.0,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.2116905575023798,
+     "firstAdmissibleLead": 3.95,
+     "selected": [
+      3.95,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.679630296,
+     "tau": 12.974,
+     "dJ": 0.003819958000000012,
+     "dTau": 0.05000000000000071,
+     "reachClear": 0.07453,
+     "retreatClear": 0.21593,
+     "hlo": 2.925,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 68,
+     "cost": 0.6705379420514042,
+     "firstAdmissibleLead": 3.95,
+     "selected": [
+      3.95,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.679630296,
+     "tau": 12.974,
+     "dJ": 0.003819958000000012,
+     "dTau": 0.05000000000000071,
+     "reachClear": 0.07453,
+     "retreatClear": 0.21593,
+     "hlo": 2.925,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.2116905575023798,
+     "firstAdmissibleLead": 3.95,
+     "selected": [
+      3.95,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.679630296,
+     "tau": 12.974,
+     "dJ": 0.003819958000000012,
+     "dTau": 0.05000000000000071,
+     "reachClear": 0.07453,
+     "retreatClear": 0.21593,
+     "hlo": 2.925,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 51,
+     "cost": 0.5175888138683961,
+     "firstAdmissibleLead": 3.95,
+     "selected": [
+      3.95,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.679630296,
+     "tau": 12.974,
+     "dJ": 0.003819958000000012,
+     "dTau": 0.05000000000000071,
+     "reachClear": 0.07453,
+     "retreatClear": 0.21593,
+     "hlo": 2.925,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.2116905575023798,
+     "firstAdmissibleLead": 3.95,
+     "selected": [
+      3.95,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.679630296,
+     "tau": 12.974,
+     "dJ": 0.003819958000000012,
+     "dTau": 0.05000000000000071,
+     "reachClear": 0.07453,
+     "retreatClear": 0.21593,
+     "hlo": 2.925,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 34,
+     "cost": 0.3646396856853879,
+     "firstAdmissibleLead": 3.95,
+     "selected": [
+      3.95,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.679630296,
+     "tau": 12.974,
+     "dJ": 0.003819958000000012,
+     "dTau": 0.05000000000000071,
+     "reachClear": 0.07453,
+     "retreatClear": 0.21593,
+     "hlo": 2.925,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.2116905575023798,
+     "firstAdmissibleLead": 3.95,
+     "selected": [
+      3.95,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.679630296,
+     "tau": 12.974,
+     "dJ": 0.003819958000000012,
+     "dTau": 0.05000000000000071,
+     "reachClear": 0.07453,
+     "retreatClear": 0.21593,
+     "hlo": 2.925,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 34,
+     "cost": 0.3646396856853879,
+     "firstAdmissibleLead": 3.95,
+     "selected": [
+      3.95,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.679630296,
+     "tau": 12.974,
+     "dJ": 0.003819958000000012,
+     "dTau": 0.05000000000000071,
+     "reachClear": 0.07453,
+     "retreatClear": 0.21593,
+     "hlo": 2.925,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.15,W=0.0)": {
+     "leads": 7,
+     "routeRollouts": 34,
+     "cost": 0.6583468322822466,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.15,W=0.5)": {
+     "leads": 10,
+     "routeRollouts": 85,
+     "cost": 1.117194216831271,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.15,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.681985252,
+     "tau": 13.174,
+     "dJ": 0.006174914000000031,
+     "dTau": 0.25,
+     "reachClear": 0.07236,
+     "retreatClear": 0.21778,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.20,W=0.0)": {
+     "leads": 5,
+     "routeRollouts": 34,
+     "cost": 0.540863973643503,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.20,W=0.5)": {
+     "leads": 7,
+     "routeRollouts": 68,
+     "cost": 0.8467622300095192,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.30,W=0.0)": {
+     "leads": 4,
+     "routeRollouts": 17,
+     "cost": 0.387914845460495,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.30,W=0.5)": {
+     "leads": 5,
+     "routeRollouts": 34,
+     "cost": 0.5408639736435031,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.45,W=0.0)": {
+     "leads": 3,
+     "routeRollouts": 34,
+     "cost": 0.42338111500475956,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.45,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 51,
+     "cost": 0.5763302431877677,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.15,W=0.0)": {
+     "leads": 3,
+     "routeRollouts": 51,
+     "cost": 0.517588813868396,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.15,W=0.5)": {
+     "leads": 6,
+     "routeRollouts": 102,
+     "cost": 0.9764361984174202,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.20,W=0.0)": {
+     "leads": 3,
+     "routeRollouts": 34,
+     "cost": 0.42338111500475956,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.683562646,
+     "tau": 13.024,
+     "dJ": 0.007752308000000041,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07454,
+     "retreatClear": 0.21634,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.20,W=0.5)": {
+     "leads": 5,
+     "routeRollouts": 68,
+     "cost": 0.7292793713707758,
+     "firstAdmissibleLead": 4.0,
+     "selected": [
+      4.2,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.680110528,
+     "tau": 13.224,
+     "dJ": 0.004300190000000037,
+     "dTau": 0.3000000000000007,
+     "reachClear": 0.07423,
+     "retreatClear": 0.21812,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.30,W=0.0)": {
+     "leads": 2,
+     "routeRollouts": 34,
+     "cost": 0.3646396856853879,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.30,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 51,
+     "cost": 0.5175888138683961,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.675810338,
+     "tau": 12.924,
+     "dJ": 0.0,
+     "dTau": 0.0,
+     "reachClear": 0.0745,
+     "retreatClear": 0.21553,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.45,W=0.0)": {
+     "leads": 2,
+     "routeRollouts": 17,
+     "cost": 0.2704319868217515,
+     "firstAdmissibleLead": 4.05,
+     "selected": [
+      4.05,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.687437938,
+     "tau": 13.074,
+     "dJ": 0.01162759999999996,
+     "dTau": 0.15000000000000036,
+     "reachClear": 0.07456,
+     "retreatClear": 0.2167,
+     "hlo": 1.6,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.45,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 34,
+     "cost": 0.42338111500475956,
+     "firstAdmissibleLead": 4.05,
+     "selected": [
+      4.05,
+      "axisP_side_337deg",
+      "ring80mm_2of8"
+     ],
+     "J": 0.687437938,
+     "tau": 13.074,
+     "dJ": 0.01162759999999996,
+     "dTau": 0.15000000000000036,
+     "reachClear": 0.07456,
+     "retreatClear": 0.2167,
+     "hlo": 1.6,
+     "consistent": true
+    }
+   }
+  },
+  "rest": {
+   "epoch": 53.594,
+   "speed": 0.0,
+   "leadsTotal": 191,
+   "recordsPerLead": 17,
+   "recordsIdenticalAcrossLeads": true,
+   "fullZeroLatency": {
+    "selected": [
+     2.4,
+     "axisP_side_337deg",
+     "ring80mm_1of8"
+    ],
+    "J": 0.582485334,
+    "tau": 55.994,
+    "dJ": null,
+    "dTau": null,
+    "reachClear": 0.08078,
+    "retreatClear": 0.21693
+   },
+   "fullAtOwnLatency": {
+    "selected": [
+     2.6,
+     "axisP_side_337deg",
+     "ring80mm_1of8"
+    ],
+    "J": 0.593011649,
+    "tau": 56.194,
+    "dJ": 0.010526315000000008,
+    "dTau": 0.20000000000000284,
+    "reachClear": 0.08078,
+    "retreatClear": 0.21693
+   },
+   "bank14AtFullLatency": {
+    "selected": [
+     2.8,
+     "axisP_side_337deg",
+     "ring80mm_1of8"
+    ],
+    "J": 0.603537964,
+    "tau": 56.394,
+    "dJ": 0.021052630000000017,
+    "dTau": 0.3999999999999986,
+    "reachClear": 0.08078,
+    "retreatClear": 0.21693
+   },
+   "restLaw": {
+    "selected": [
+     2.5458430000000023,
+     "axisP_side_337deg",
+     "ring80mm_1of8"
+    ],
+    "J": 0.590161255522275,
+    "tau": 56.139843000000006,
+    "dJ": 0.007675921522275031,
+    "dTau": 0.14584300000000638,
+    "reachClear": 0.08078,
+    "retreatClear": 0.21693
+   },
+   "restLawCost": 0.164357,
+   "fullCost": 0.18627,
+   "monotoneInLeadViolations": 0
+  }
+ },
+ {
+  "log": "research/triad_v2/evidence/runs_ae1e824/logs/char_T/lateral-low/lateral-low.log.xz",
+  "moving": {
+   "epoch": 9.024,
+   "speed": 0.07999,
+   "unitCostStatic": 0.001272188645287958,
+   "unitCostRoute": 0.006067852682421942,
+   "leadsTotal": 191,
+   "referenceZeroLatency": {
+    "selected": [
+     3.45,
+     "axisN_side_337deg",
+     "direct"
+    ],
+    "J": 0.669654271,
+    "tau": 12.474,
+    "dJ": null,
+    "dTau": null,
+    "reachClear": 0.08035,
+    "retreatClear": 0.07541
+   },
+   "earliestAdmissibleLead0": 3.1,
+   "deltaTauPhysical": 0.18752344043005373,
+   "deltaTauOnGrid": 0.15000000000000002,
+   "laws": {
+    "FULL": {
+     "leads": 191,
+     "cost": 78.126301,
+     "selected": null
+    },
+    "BANK14": {
+     "leads": 14,
+     "cost": 5.0055408239394446,
+     "selected": [
+      8.0,
+      "axisN_side_23deg",
+      "ring80mm_6of8"
+     ],
+     "J": 0.932116758,
+     "tau": 17.024,
+     "dJ": 0.2624624870000001,
+     "dTau": 4.550000000000001,
+     "reachClear": 0.06897,
+     "retreatClear": 0.09921
+    },
+    "GRID(0.05)": {
+     "leads": 169,
+     "cost": 68.66894005881991,
+     "selected": null
+    },
+    "GRID(0.10)": {
+     "leads": 85,
+     "cost": 34.303248299933976,
+     "selected": null
+    },
+    "GRID(0.15)": {
+     "leads": 57,
+     "cost": 23.157478200442185,
+     "selected": null
+    },
+    "GRID(0.20)": {
+     "leads": 43,
+     "cost": 17.12040242049101,
+     "selected": null
+    },
+    "GRID(0.45)": {
+     "leads": 19,
+     "cost": 7.272160919208979,
+     "selected": [
+      9.7,
+      "axisN_side_23deg",
+      "direct"
+     ],
+     "J": 1.056366229,
+     "tau": 18.724,
+     "dJ": 0.386711958,
+     "dTau": 6.25,
+     "reachClear": 0.0544,
+     "retreatClear": 0.0918
+    },
+    "FULL+prune": {
+     "leads": 169,
+     "routeRollouts": 170,
+     "cost": 7.911531149729031,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "BANK14+prune": {
+     "leads": 14,
+     "routeRollouts": 612,
+     "cost": 4.283466354731231,
+     "firstAdmissibleLead": 3.7,
+     "selected": [
+      8.0,
+      "axisN_side_23deg",
+      "ring80mm_6of8"
+     ],
+     "J": 0.932116758,
+     "tau": 17.024,
+     "dJ": 0.2624624870000001,
+     "dTau": 4.550000000000001,
+     "reachClear": 0.06897,
+     "retreatClear": 0.09921
+    },
+    "ASC(dphys,W=0.0)": {
+     "leads": 57,
+     "cost": 23.15747820044218,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=0.0)": {
+     "leads": 6,
+     "cost": 1.069488184704672,
+     "firstAdmissibleLead": 3.85,
+     "selected": [
+      3.85,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.68145684,
+     "tau": 12.874,
+     "dJ": 0.011802568999999985,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.0816,
+     "retreatClear": 0.07852
+    },
+    "ASC(dphys,W=0.5)": {
+     "leads": 57,
+     "cost": 23.15747820044218,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=0.5)": {
+     "leads": 7,
+     "cost": 1.6259656993597518,
+     "firstAdmissibleLead": 3.85,
+     "selected": [
+      3.85,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.68145684,
+     "tau": 12.874,
+     "dJ": 0.011802568999999985,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.0816,
+     "retreatClear": 0.07852
+    },
+    "ASC(dphys,W=1.0)": {
+     "leads": 57,
+     "cost": 23.15747820044218,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=1.0)": {
+     "leads": 8,
+     "cost": 2.0792897184136585,
+     "firstAdmissibleLead": 3.85,
+     "selected": [
+      4.75,
+      "axisN_side_337deg",
+      "ring80mm_4of8"
+     ],
+     "J": 0.73020059,
+     "tau": 13.774,
+     "dJ": 0.06054631900000007,
+     "dTau": 1.299999999999999,
+     "reachClear": 0.08136,
+     "retreatClear": 0.08792
+    },
+    "ASC(dphys,W=2.0)": {
+     "leads": 57,
+     "cost": 23.15747820044218,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=2.0)": {
+     "leads": 10,
+     "cost": 2.985937756521472,
+     "firstAdmissibleLead": 3.85,
+     "selected": [
+      5.65,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.793306792,
+     "tau": 14.674,
+     "dJ": 0.12365252100000002,
+     "dTau": 2.1999999999999993,
+     "reachClear": 0.0814,
+     "retreatClear": 0.09163
+    },
+    "ASC+prune(d=0.05,W=0.0)": {
+     "leads": 169,
+     "routeRollouts": 170,
+     "cost": 7.911531149729031,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=0.5)": {
+     "leads": 169,
+     "routeRollouts": 170,
+     "cost": 7.911531149729031,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=1.0)": {
+     "leads": 169,
+     "routeRollouts": 170,
+     "cost": 7.911531149729031,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=2.0)": {
+     "leads": 169,
+     "routeRollouts": 170,
+     "cost": 7.911531149729031,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=inf)": {
+     "leads": 169,
+     "routeRollouts": 170,
+     "cost": 7.911531149729031,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=0.0)": {
+     "leads": 20,
+     "routeRollouts": 17,
+     "cost": 0.9173542285854666,
+     "firstAdmissibleLead": 3.5,
+     "selected": [
+      3.5,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.672435149,
+     "tau": 12.524,
+     "dJ": 0.002780878000000042,
+     "dTau": 0.049999999999998934,
+     "reachClear": 0.08085,
+     "retreatClear": 0.07577
+    },
+    "ASC+prune(d=0.10,W=0.5)": {
+     "leads": 25,
+     "routeRollouts": 119,
+     "cost": 1.7398253854385777,
+     "firstAdmissibleLead": 3.5,
+     "selected": [
+      4.0,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.685754758,
+     "tau": 13.024,
+     "dJ": 0.016100486999999997,
+     "dTau": 0.5499999999999989,
+     "reachClear": 0.08157,
+     "retreatClear": 0.07983
+    },
+    "ASC+prune(d=0.10,W=1.0)": {
+     "leads": 30,
+     "routeRollouts": 170,
+     "cost": 2.2528360554881695,
+     "firstAdmissibleLead": 3.5,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=2.0)": {
+     "leads": 40,
+     "routeRollouts": 255,
+     "cost": 3.1757038999861793,
+     "firstAdmissibleLead": 3.5,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=inf)": {
+     "leads": 85,
+     "routeRollouts": 748,
+     "cost": 7.999106921634874,
+     "firstAdmissibleLead": 3.5,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=0.0)": {
+     "leads": 14,
+     "routeRollouts": 51,
+     "cost": 0.8794009998925245,
+     "firstAdmissibleLead": 3.55,
+     "selected": [
+      3.55,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.673359065,
+     "tau": 12.574,
+     "dJ": 0.0037047940000000112,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.08139,
+     "retreatClear": 0.07614
+    },
+    "ASC+prune(d=0.15,W=0.5)": {
+     "leads": 17,
+     "routeRollouts": 153,
+     "cost": 1.6204520834472065,
+     "firstAdmissibleLead": 3.55,
+     "selected": [
+      3.85,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.68145684,
+     "tau": 12.874,
+     "dJ": 0.011802568999999985,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.0816,
+     "retreatClear": 0.07852
+    },
+    "ASC+prune(d=0.15,W=1.0)": {
+     "leads": 20,
+     "routeRollouts": 204,
+     "cost": 2.0520426801983693,
+     "firstAdmissibleLead": 3.55,
+     "selected": [
+      4.3,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.702963839,
+     "tau": 13.324,
+     "dJ": 0.03330956800000007,
+     "dTau": 0.8499999999999996,
+     "reachClear": 0.08155,
+     "retreatClear": 0.08273
+    },
+    "ASC+prune(d=0.15,W=2.0)": {
+     "leads": 27,
+     "routeRollouts": 323,
+     "cost": 3.059087405951081,
+     "firstAdmissibleLead": 3.55,
+     "selected": [
+      5.5,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.783093002,
+     "tau": 14.524,
+     "dJ": 0.11343873100000001,
+     "dTau": 2.049999999999999,
+     "reachClear": 0.08143,
+     "retreatClear": 0.09166
+    },
+    "ASC+prune(d=0.15,W=inf)": {
+     "leads": 57,
+     "routeRollouts": 901,
+     "cost": 7.787607355867417,
+     "firstAdmissibleLead": 3.55,
+     "selected": [
+      10.0,
+      "axisN_side_23deg",
+      "direct"
+     ],
+     "J": 1.063674169,
+     "tau": 19.024,
+     "dJ": 0.39401989800000004,
+     "dTau": 6.550000000000001,
+     "reachClear": 0.05608,
+     "retreatClear": 0.0917
+    },
+    "ASC+prune(d=0.20,W=0.0)": {
+     "leads": 11,
+     "routeRollouts": 68,
+     "cost": 0.8604243855460535,
+     "firstAdmissibleLead": 3.6,
+     "selected": [
+      3.6,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.67480085,
+     "tau": 12.624,
+     "dJ": 0.00514657900000004,
+     "dTau": 0.15000000000000036,
+     "reachClear": 0.0816,
+     "retreatClear": 0.07652
+    },
+    "ASC+prune(d=0.20,W=0.5)": {
+     "leads": 13,
+     "routeRollouts": 153,
+     "cost": 1.457611936850348,
+     "firstAdmissibleLead": 3.6,
+     "selected": [
+      3.8,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.680602784,
+     "tau": 12.824,
+     "dJ": 0.010948512999999993,
+     "dTau": 0.34999999999999964,
+     "reachClear": 0.08157,
+     "retreatClear": 0.0781
+    },
+    "ASC+prune(d=0.20,W=1.0)": {
+     "leads": 16,
+     "routeRollouts": 255,
+     "cost": 2.1986630204050295,
+     "firstAdmissibleLead": 3.6,
+     "selected": [
+      4.6,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.721678423,
+     "tau": 13.624,
+     "dJ": 0.05202415199999999,
+     "dTau": 1.1500000000000004,
+     "reachClear": 0.08156,
+     "retreatClear": 0.08612
+    },
+    "ASC+prune(d=0.20,W=2.0)": {
+     "leads": 21,
+     "routeRollouts": 374,
+     "cost": 3.124287672859312,
+     "firstAdmissibleLead": 3.6,
+     "selected": [
+      5.6,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.790454467,
+     "tau": 14.624,
+     "dJ": 0.12080019600000003,
+     "dTau": 2.1500000000000004,
+     "reachClear": 0.08139,
+     "retreatClear": 0.09164
+    },
+    "ASC+prune(d=0.20,W=inf)": {
+     "leads": 43,
+     "routeRollouts": 969,
+     "cost": 7.630280825183101,
+     "firstAdmissibleLead": 3.6,
+     "selected": [
+      9.8,
+      "axisN_side_23deg",
+      "direct"
+     ],
+     "J": 1.059672042,
+     "tau": 18.824,
+     "dJ": 0.3900177710000001,
+     "dTau": 6.350000000000001,
+     "reachClear": 0.05472,
+     "retreatClear": 0.09174
+    },
+    "ASC+prune(d=0.45,W=0.0)": {
+     "leads": 5,
+     "routeRollouts": 17,
+     "cost": 0.3067036788472463,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.4,
+      "axisN_side_68deg",
+      "ring80mm_5of8"
+     ],
+     "J": 0.824219105,
+     "tau": 12.424,
+     "dJ": 0.15456483399999998,
+     "dTau": -0.05000000000000071,
+     "reachClear": 0.04624,
+     "retreatClear": 0.10727
+    },
+    "ASC+prune(d=0.45,W=0.5)": {
+     "leads": 6,
+     "routeRollouts": 68,
+     "cost": 0.6568742022999801,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.85,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.68145684,
+     "tau": 12.874,
+     "dJ": 0.011802568999999985,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.0816,
+     "retreatClear": 0.07852
+    },
+    "ASC+prune(d=0.45,W=1.0)": {
+     "leads": 7,
+     "routeRollouts": 136,
+     "cost": 1.1101982213538868,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.85,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.68145684,
+     "tau": 12.874,
+     "dJ": 0.011802568999999985,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.0816,
+     "retreatClear": 0.07852
+    },
+    "ASC+prune(d=0.45,W=2.0)": {
+     "leads": 9,
+     "routeRollouts": 272,
+     "cost": 2.0168462594617003,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      4.3,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.702963839,
+     "tau": 13.324,
+     "dJ": 0.03330956800000007,
+     "dTau": 0.8499999999999996,
+     "reachClear": 0.08155,
+     "retreatClear": 0.08273
+    },
+    "ASC+prune(d=0.45,W=inf)": {
+     "leads": 19,
+     "routeRollouts": 935,
+     "cost": 6.446932954399598,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      9.25,
+      "axisN_side_23deg",
+      "ring80mm_6of8"
+     ],
+     "J": 0.98469402,
+     "tau": 18.274,
+     "dJ": 0.315039749,
+     "dTau": 5.800000000000001,
+     "reachClear": 0.06976,
+     "retreatClear": 0.0925
+    },
+    "ANCHOR(A=0.5,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.18457356889960233,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.4,
+      "axisN_side_68deg",
+      "ring80mm_5of8"
+     ],
+     "J": 0.824219105,
+     "tau": 12.424,
+     "dJ": 0.15456483399999998,
+     "dTau": -0.05000000000000071,
+     "reachClear": 0.04624,
+     "retreatClear": 0.10727,
+     "hlo": 2.9,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 153,
+     "cost": 1.1319316436566305,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.55,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.673359065,
+     "tau": 12.574,
+     "dJ": 0.0037047940000000112,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.08139,
+     "retreatClear": 0.07614,
+     "hlo": 2.9,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.18457356889960233,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.4,
+      "axisN_side_68deg",
+      "ring80mm_5of8"
+     ],
+     "J": 0.824219105,
+     "tau": 12.424,
+     "dJ": 0.15456483399999998,
+     "dTau": -0.05000000000000071,
+     "reachClear": 0.04624,
+     "retreatClear": 0.10727,
+     "hlo": 2.9,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 119,
+     "cost": 0.8849146158050699,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.6,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.67480085,
+     "tau": 12.624,
+     "dJ": 0.00514657900000004,
+     "dTau": 0.15000000000000036,
+     "reachClear": 0.0816,
+     "retreatClear": 0.07652,
+     "hlo": 2.9,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.18457356889960233,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.4,
+      "axisN_side_68deg",
+      "ring80mm_5of8"
+     ],
+     "J": 0.824219105,
+     "tau": 12.424,
+     "dJ": 0.15456483399999998,
+     "dTau": -0.05000000000000071,
+     "reachClear": 0.04624,
+     "retreatClear": 0.10727,
+     "hlo": 2.9,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 68,
+     "cost": 0.5347440923523361,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.7,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.677719831,
+     "tau": 12.724,
+     "dJ": 0.008065560000000027,
+     "dTau": 0.25,
+     "reachClear": 0.08159,
+     "retreatClear": 0.07729,
+     "hlo": 2.9,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.18457356889960233,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.4,
+      "axisN_side_68deg",
+      "ring80mm_5of8"
+     ],
+     "J": 0.824219105,
+     "tau": 12.424,
+     "dJ": 0.15456483399999998,
+     "dTau": -0.05000000000000071,
+     "reachClear": 0.04624,
+     "retreatClear": 0.10727,
+     "hlo": 2.9,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 68,
+     "cost": 0.5347440923523361,
+     "firstAdmissibleLead": 3.4,
+     "selected": [
+      3.85,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.68145684,
+     "tau": 12.874,
+     "dJ": 0.011802568999999985,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.0816,
+     "retreatClear": 0.07852,
+     "hlo": 2.9,
+     "consistent": false
+    },
+    "ANCHOR(A=1.0,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 51,
+     "cost": 0.3908805601019484,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.682870185,
+     "tau": 12.924,
+     "dJ": 0.013215913999999995,
+     "dTau": 0.4499999999999993,
+     "reachClear": 0.08159,
+     "retreatClear": 0.07895,
+     "hlo": 2.875,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 221,
+     "cost": 1.5445456260613226,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.682870185,
+     "tau": 12.924,
+     "dJ": 0.013215913999999995,
+     "dTau": 0.4499999999999993,
+     "reachClear": 0.08159,
+     "retreatClear": 0.07895,
+     "hlo": 2.875,
+     "consistent": false
+    },
+    "ANCHOR(A=1.0,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 51,
+     "cost": 0.3908805601019484,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.682870185,
+     "tau": 12.924,
+     "dJ": 0.013215913999999995,
+     "dTau": 0.4499999999999993,
+     "reachClear": 0.08159,
+     "retreatClear": 0.07895,
+     "hlo": 2.875,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 170,
+     "cost": 1.194375102608589,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.682870185,
+     "tau": 12.924,
+     "dJ": 0.013215913999999995,
+     "dTau": 0.4499999999999993,
+     "reachClear": 0.08159,
+     "retreatClear": 0.07895,
+     "hlo": 2.875,
+     "consistent": false
+    },
+    "ANCHOR(A=1.0,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 51,
+     "cost": 0.3908805601019484,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.682870185,
+     "tau": 12.924,
+     "dJ": 0.013215913999999995,
+     "dTau": 0.4499999999999993,
+     "reachClear": 0.08159,
+     "retreatClear": 0.07895,
+     "hlo": 2.875,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 102,
+     "cost": 0.7410510835546822,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.682870185,
+     "tau": 12.924,
+     "dJ": 0.013215913999999995,
+     "dTau": 0.4499999999999993,
+     "reachClear": 0.08159,
+     "retreatClear": 0.07895,
+     "hlo": 2.875,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 51,
+     "cost": 0.3908805601019484,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.682870185,
+     "tau": 12.924,
+     "dJ": 0.013215913999999995,
+     "dTau": 0.4499999999999993,
+     "reachClear": 0.08159,
+     "retreatClear": 0.07895,
+     "hlo": 2.875,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 119,
+     "cost": 0.8442045791558552,
+     "firstAdmissibleLead": 3.9,
+     "selected": [
+      3.9,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.682870185,
+     "tau": 12.924,
+     "dJ": 0.013215913999999995,
+     "dTau": 0.4499999999999993,
+     "reachClear": 0.08159,
+     "retreatClear": 0.07895,
+     "hlo": 2.875,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 85,
+     "cost": 0.5971875513042945,
+     "firstAdmissibleLead": 4.35,
+     "selected": [
+      4.35,
+      "axisN_side_337deg",
+      "ring80mm_4of8"
+     ],
+     "J": 0.705282893,
+     "tau": 13.374,
+     "dJ": 0.035628622000000054,
+     "dTau": 0.9000000000000004,
+     "reachClear": 0.0813,
+     "retreatClear": 0.08331,
+     "hlo": 2.8499999999999996,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 289,
+     "cost": 1.9571596084660146,
+     "firstAdmissibleLead": 4.35,
+     "selected": [
+      4.35,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.70539185,
+     "tau": 13.374,
+     "dJ": 0.035737579000000075,
+     "dTau": 0.9000000000000004,
+     "reachClear": 0.08158,
+     "retreatClear": 0.08325,
+     "hlo": 2.8499999999999996,
+     "consistent": false
+    },
+    "ANCHOR(A=1.5,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 85,
+     "cost": 0.5971875513042945,
+     "firstAdmissibleLead": 4.35,
+     "selected": [
+      4.35,
+      "axisN_side_337deg",
+      "ring80mm_4of8"
+     ],
+     "J": 0.705282893,
+     "tau": 13.374,
+     "dJ": 0.035628622000000054,
+     "dTau": 0.9000000000000004,
+     "reachClear": 0.0813,
+     "retreatClear": 0.08331,
+     "hlo": 2.8499999999999996,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 221,
+     "cost": 1.5038355894121078,
+     "firstAdmissibleLead": 4.35,
+     "selected": [
+      4.35,
+      "axisN_side_337deg",
+      "ring80mm_4of8"
+     ],
+     "J": 0.705282893,
+     "tau": 13.374,
+     "dJ": 0.035628622000000054,
+     "dTau": 0.9000000000000004,
+     "reachClear": 0.0813,
+     "retreatClear": 0.08331,
+     "hlo": 2.8499999999999996,
+     "consistent": false
+    },
+    "ANCHOR(A=1.5,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 85,
+     "cost": 0.5971875513042945,
+     "firstAdmissibleLead": 4.35,
+     "selected": [
+      4.35,
+      "axisN_side_337deg",
+      "ring80mm_4of8"
+     ],
+     "J": 0.705282893,
+     "tau": 13.374,
+     "dJ": 0.035628622000000054,
+     "dTau": 0.9000000000000004,
+     "reachClear": 0.0813,
+     "retreatClear": 0.08331,
+     "hlo": 2.8499999999999996,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 153,
+     "cost": 1.050511570358201,
+     "firstAdmissibleLead": 4.35,
+     "selected": [
+      4.35,
+      "axisN_side_337deg",
+      "ring80mm_4of8"
+     ],
+     "J": 0.705282893,
+     "tau": 13.374,
+     "dJ": 0.035628622000000054,
+     "dTau": 0.9000000000000004,
+     "reachClear": 0.0813,
+     "retreatClear": 0.08331,
+     "hlo": 2.8499999999999996,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 85,
+     "cost": 0.5971875513042945,
+     "firstAdmissibleLead": 4.35,
+     "selected": [
+      4.35,
+      "axisN_side_337deg",
+      "ring80mm_4of8"
+     ],
+     "J": 0.705282893,
+     "tau": 13.374,
+     "dJ": 0.035628622000000054,
+     "dTau": 0.9000000000000004,
+     "reachClear": 0.0813,
+     "retreatClear": 0.08331,
+     "hlo": 2.8499999999999996,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 153,
+     "cost": 1.050511570358201,
+     "firstAdmissibleLead": 4.35,
+     "selected": [
+      4.35,
+      "axisN_side_337deg",
+      "ring80mm_4of8"
+     ],
+     "J": 0.705282893,
+     "tau": 13.374,
+     "dJ": 0.035628622000000054,
+     "dTau": 0.9000000000000004,
+     "reachClear": 0.0813,
+     "retreatClear": 0.08331,
+     "hlo": 2.8499999999999996,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 68,
+     "cost": 0.4940340557031214,
+     "firstAdmissibleLead": 4.2,
+     "selected": [
+      4.2,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.696849578,
+     "tau": 13.224,
+     "dJ": 0.027195307000000057,
+     "dTau": 0.75,
+     "reachClear": 0.08157,
+     "retreatClear": 0.08172,
+     "hlo": 2.175,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 272,
+     "cost": 1.8540061128648417,
+     "firstAdmissibleLead": 4.2,
+     "selected": [
+      4.2,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.696849578,
+     "tau": 13.224,
+     "dJ": 0.027195307000000057,
+     "dTau": 0.75,
+     "reachClear": 0.08157,
+     "retreatClear": 0.08172,
+     "hlo": 2.175,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 68,
+     "cost": 0.4940340557031214,
+     "firstAdmissibleLead": 4.2,
+     "selected": [
+      4.2,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.696849578,
+     "tau": 13.224,
+     "dJ": 0.027195307000000057,
+     "dTau": 0.75,
+     "reachClear": 0.08157,
+     "retreatClear": 0.08172,
+     "hlo": 2.175,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 204,
+     "cost": 1.400682093810935,
+     "firstAdmissibleLead": 4.2,
+     "selected": [
+      4.2,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.696849578,
+     "tau": 13.224,
+     "dJ": 0.027195307000000057,
+     "dTau": 0.75,
+     "reachClear": 0.08157,
+     "retreatClear": 0.08172,
+     "hlo": 2.175,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 68,
+     "cost": 0.4940340557031214,
+     "firstAdmissibleLead": 4.2,
+     "selected": [
+      4.2,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.696849578,
+     "tau": 13.224,
+     "dJ": 0.027195307000000057,
+     "dTau": 0.75,
+     "reachClear": 0.08157,
+     "retreatClear": 0.08172,
+     "hlo": 2.175,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 136,
+     "cost": 0.9473580747570283,
+     "firstAdmissibleLead": 4.2,
+     "selected": [
+      4.2,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.696849578,
+     "tau": 13.224,
+     "dJ": 0.027195307000000057,
+     "dTau": 0.75,
+     "reachClear": 0.08157,
+     "retreatClear": 0.08172,
+     "hlo": 2.175,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 68,
+     "cost": 0.4940340557031214,
+     "firstAdmissibleLead": 4.2,
+     "selected": [
+      4.2,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.696849578,
+     "tau": 13.224,
+     "dJ": 0.027195307000000057,
+     "dTau": 0.75,
+     "reachClear": 0.08157,
+     "retreatClear": 0.08172,
+     "hlo": 2.175,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 136,
+     "cost": 0.9473580747570283,
+     "firstAdmissibleLead": 4.2,
+     "selected": [
+      4.2,
+      "axisN_side_337deg",
+      "direct"
+     ],
+     "J": 0.696849578,
+     "tau": 13.224,
+     "dJ": 0.027195307000000057,
+     "dTau": 0.75,
+     "reachClear": 0.08157,
+     "retreatClear": 0.08172,
+     "hlo": 2.175,
+     "consistent": true
+    }
+   }
+  },
+  "rest": {
+   "epoch": 87.462,
+   "speed": 0.0,
+   "leadsTotal": 191,
+   "recordsPerLead": 42,
+   "recordsIdenticalAcrossLeads": true,
+   "fullZeroLatency": {
+    "selected": [
+     2.25,
+     "axisN_side_337deg",
+     "direct"
+    ],
+    "J": 0.592574786,
+    "tau": 89.712,
+    "dJ": null,
+    "dTau": null,
+    "reachClear": 0.08159,
+    "retreatClear": 0.08074
+   },
+   "fullAtOwnLatency": {
+    "selected": [
+     2.8,
+     "axisN_side_337deg",
+     "direct"
+    ],
+    "J": 0.621522152,
+    "tau": 90.262,
+    "dJ": 0.02894736600000003,
+    "dTau": 0.5499999999999972,
+    "reachClear": 0.08159,
+    "retreatClear": 0.08074
+   },
+   "bank14AtFullLatency": {
+    "selected": [
+     2.8,
+     "axisN_side_337deg",
+     "direct"
+    ],
+    "J": 0.621522152,
+    "tau": 90.262,
+    "dJ": 0.02894736600000003,
+    "dTau": 0.5499999999999972,
+    "reachClear": 0.08159,
+    "retreatClear": 0.08074
+   },
+   "restLaw": {
+    "selected": [
+     2.726626999999999,
+     "axisN_side_337deg",
+     "direct"
+    ],
+    "J": 0.617660414822525,
+    "tau": 90.188627,
+    "dJ": 0.025085628822524964,
+    "dTau": 0.4766269999999935,
+    "reachClear": 0.08159,
+    "retreatClear": 0.08074
+   },
+   "restLawCost": 0.501627,
+   "fullCost": 0.558732,
+   "monotoneInLeadViolations": 0
+  }
+ },
+ {
+  "log": "research/triad_v2/evidence/runs_ae1e824/logs/char_T/longitudinal/longitudinal.log.xz",
+  "moving": {
+   "epoch": 9.024,
+   "speed": 0.07999,
+   "unitCostStatic": 0.002345480366492147,
+   "unitCostRoute": 0.0052318769593797405,
+   "leadsTotal": 191,
+   "referenceZeroLatency": {
+    "selected": [
+     2.85,
+     "axisP_side_337deg",
+     "ring80mm_1of8"
+    ],
+    "J": 0.611262508,
+    "tau": 11.874,
+    "dJ": null,
+    "dTau": null,
+    "reachClear": 0.08066,
+    "retreatClear": 0.21458
+   },
+   "earliestAdmissibleLead0": 2.1,
+   "deltaTauPhysical": 0.18752344043005373,
+   "deltaTauOnGrid": 0.15000000000000002,
+   "laws": {
+    "FULL": {
+     "leads": 191,
+     "cost": 45.376302,
+     "selected": null
+    },
+    "BANK14": {
+     "leads": 14,
+     "cost": 4.163741995019427,
+     "selected": null
+    },
+    "GRID(0.05)": {
+     "leads": 169,
+     "cost": 42.390955197347694,
+     "selected": null
+    },
+    "GRID(0.10)": {
+     "leads": 85,
+     "cost": 21.23300528453772,
+     "selected": null
+    },
+    "GRID(0.15)": {
+     "leads": 57,
+     "cost": 14.06176610252179,
+     "selected": null
+    },
+    "GRID(0.20)": {
+     "leads": 43,
+     "cost": 10.609559373978007,
+     "selected": null
+    },
+    "GRID(0.45)": {
+     "leads": 19,
+     "cost": 4.53901885365817,
+     "selected": null
+    },
+    "FULL+prune": {
+     "leads": 112,
+     "routeRollouts": 0,
+     "cost": 8.406201633507866,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "BANK14+prune": {
+     "leads": 14,
+     "routeRollouts": 493,
+     "cost": 3.630090545162692,
+     "firstAdmissibleLead": 2.35,
+     "selected": null
+    },
+    "ASC(dphys,W=0.0)": {
+     "leads": 57,
+     "cost": 14.06176610252178,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=0.0)": {
+     "leads": 4,
+     "cost": 0.478105303529906,
+     "firstAdmissibleLead": 2.95,
+     "selected": [
+      2.95,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "J": 0.617882684,
+     "tau": 11.974,
+     "dJ": 0.006620175999999978,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.0807,
+     "retreatClear": 0.21526
+    },
+    "ASC(dphys,W=0.5)": {
+     "leads": 57,
+     "cost": 14.06176610252178,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=0.5)": {
+     "leads": 5,
+     "cost": 0.8199864001860214,
+     "firstAdmissibleLead": 2.95,
+     "selected": [
+      2.95,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.642322424,
+     "tau": 11.974,
+     "dJ": 0.03105991599999991,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07977,
+     "retreatClear": 0.2151
+    },
+    "ASC(dphys,W=1.0)": {
+     "leads": 57,
+     "cost": 14.06176610252178,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=1.0)": {
+     "leads": 6,
+     "cost": 1.339751313461048,
+     "firstAdmissibleLead": 2.95,
+     "selected": [
+      3.4,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.672006176,
+     "tau": 12.424,
+     "dJ": 0.06074366799999997,
+     "dTau": 0.5499999999999989,
+     "reachClear": 0.07982,
+     "retreatClear": 0.21768
+    },
+    "ASC(dphys,W=2.0)": {
+     "leads": 57,
+     "cost": 14.06176610252178,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=2.0)": {
+     "leads": 8,
+     "cost": 2.5571649566300123,
+     "firstAdmissibleLead": 2.95,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=0.0)": {
+     "leads": 112,
+     "routeRollouts": 0,
+     "cost": 8.406201633507866,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=0.5)": {
+     "leads": 112,
+     "routeRollouts": 0,
+     "cost": 8.406201633507866,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=1.0)": {
+     "leads": 112,
+     "routeRollouts": 0,
+     "cost": 8.406201633507866,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=2.0)": {
+     "leads": 112,
+     "routeRollouts": 0,
+     "cost": 8.406201633507866,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=inf)": {
+     "leads": 112,
+     "routeRollouts": 0,
+     "cost": 8.406201633507866,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=0.0)": {
+     "leads": 85,
+     "routeRollouts": 51,
+     "cost": 6.646532321787017,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=0.5)": {
+     "leads": 85,
+     "routeRollouts": 51,
+     "cost": 6.646532321787017,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=1.0)": {
+     "leads": 85,
+     "routeRollouts": 51,
+     "cost": 6.646532321787017,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=2.0)": {
+     "leads": 85,
+     "routeRollouts": 51,
+     "cost": 6.646532321787017,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=inf)": {
+     "leads": 85,
+     "routeRollouts": 51,
+     "cost": 6.646532321787017,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=0.0)": {
+     "leads": 10,
+     "routeRollouts": 34,
+     "cost": 0.928437533896398,
+     "firstAdmissibleLead": 2.95,
+     "selected": [
+      2.95,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.642322424,
+     "tau": 11.974,
+     "dJ": 0.03105991599999991,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07977,
+     "retreatClear": 0.2151
+    },
+    "ASC+prune(d=0.15,W=0.5)": {
+     "leads": 13,
+     "routeRollouts": 85,
+     "cost": 1.420429374008011,
+     "firstAdmissibleLead": 2.95,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=1.0)": {
+     "leads": 16,
+     "routeRollouts": 119,
+     "cost": 1.8234793058101681,
+     "firstAdmissibleLead": 2.95,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=2.0)": {
+     "leads": 23,
+     "routeRollouts": 187,
+     "cost": 2.704634541142232,
+     "firstAdmissibleLead": 2.95,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=inf)": {
+     "leads": 57,
+     "routeRollouts": 323,
+     "cost": 5.968052446361337,
+     "firstAdmissibleLead": 2.95,
+     "selected": null
+    },
+    "ASC+prune(d=0.20,W=0.0)": {
+     "leads": 8,
+     "routeRollouts": 34,
+     "cost": 0.7783267904409007,
+     "firstAdmissibleLead": 3.0,
+     "selected": [
+      3.0,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.646044592,
+     "tau": 12.024,
+     "dJ": 0.034782083999999935,
+     "dTau": 0.14999999999999858,
+     "reachClear": 0.07971,
+     "retreatClear": 0.21541
+    },
+    "ASC+prune(d=0.20,W=0.5)": {
+     "leads": 10,
+     "routeRollouts": 68,
+     "cost": 1.1063213505153093,
+     "firstAdmissibleLead": 3.0,
+     "selected": [
+      3.2,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.658719229,
+     "tau": 12.224,
+     "dJ": 0.04745672099999998,
+     "dTau": 0.34999999999999964,
+     "reachClear": 0.07975,
+     "retreatClear": 0.21659
+    },
+    "ASC+prune(d=0.20,W=1.0)": {
+     "leads": 13,
+     "routeRollouts": 153,
+     "cost": 1.7761970072458333,
+     "firstAdmissibleLead": 3.0,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.711892181,
+     "tau": 13.024,
+     "dJ": 0.10062967299999992,
+     "dTau": 1.1499999999999986,
+     "reachClear": 0.08011,
+     "retreatClear": 0.22033
+    },
+    "ASC+prune(d=0.20,W=2.0)": {
+     "leads": 18,
+     "routeRollouts": 272,
+     "cost": 2.774067224050766,
+     "firstAdmissibleLead": 3.0,
+     "selected": null
+    },
+    "ASC+prune(d=0.20,W=inf)": {
+     "leads": 43,
+     "routeRollouts": 459,
+     "cost": 5.6288125086484975,
+     "firstAdmissibleLead": 3.0,
+     "selected": null
+    },
+    "ASC+prune(d=0.45,W=0.0)": {
+     "leads": 4,
+     "routeRollouts": 17,
+     "cost": 0.3891633952204504,
+     "firstAdmissibleLead": 2.95,
+     "selected": [
+      2.95,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "J": 0.617882684,
+     "tau": 11.974,
+     "dJ": 0.006620175999999978,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.0807,
+     "retreatClear": 0.21526
+    },
+    "ASC+prune(d=0.45,W=0.5)": {
+     "leads": 5,
+     "routeRollouts": 51,
+     "cost": 0.6421025835671103,
+     "firstAdmissibleLead": 2.95,
+     "selected": [
+      2.95,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.642322424,
+     "tau": 11.974,
+     "dJ": 0.03105991599999991,
+     "dTau": 0.09999999999999964,
+     "reachClear": 0.07977,
+     "retreatClear": 0.2151
+    },
+    "ASC+prune(d=0.45,W=1.0)": {
+     "leads": 6,
+     "routeRollouts": 136,
+     "cost": 1.161867496842137,
+     "firstAdmissibleLead": 2.95,
+     "selected": [
+      3.4,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.672006176,
+     "tau": 12.424,
+     "dJ": 0.06074366799999997,
+     "dTau": 0.5499999999999989,
+     "reachClear": 0.07982,
+     "retreatClear": 0.21768
+    },
+    "ASC+prune(d=0.45,W=2.0)": {
+     "leads": 8,
+     "routeRollouts": 340,
+     "cost": 2.3792811400111002,
+     "firstAdmissibleLead": 2.95,
+     "selected": [
+      4.75,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.76446572,
+     "tau": 13.774,
+     "dJ": 0.15320321199999998,
+     "dTau": 1.8999999999999986,
+     "reachClear": 0.08057,
+     "retreatClear": 0.22096
+    },
+    "ASC+prune(d=0.45,W=inf)": {
+     "leads": 19,
+     "routeRollouts": 527,
+     "cost": 4.183251220420347,
+     "firstAdmissibleLead": 2.95,
+     "selected": [
+      7.45,
+      "axisP_side_315deg",
+      "direct"
+     ],
+     "J": 0.977958254,
+     "tau": 16.474,
+     "dJ": 0.366695746,
+     "dTau": 4.6,
+     "reachClear": 0.08067,
+     "retreatClear": 0.1564
+    },
+    "ANCHOR(A=0.5,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239052651764953,
+     "firstAdmissibleLead": 2.35,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.621368333,
+     "tau": 11.374,
+     "dJ": 0.010105825000000013,
+     "dTau": -0.5,
+     "reachClear": 0.07943,
+     "retreatClear": 0.21039,
+     "hlo": 1.825,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 17,
+     "cost": 0.4642187669481991,
+     "firstAdmissibleLead": 2.35,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.621368333,
+     "tau": 11.374,
+     "dJ": 0.010105825000000013,
+     "dTau": -0.5,
+     "reachClear": 0.07943,
+     "retreatClear": 0.21039,
+     "hlo": 1.825,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239052651764953,
+     "firstAdmissibleLead": 2.35,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.621368333,
+     "tau": 11.374,
+     "dJ": 0.010105825000000013,
+     "dTau": -0.5,
+     "reachClear": 0.07943,
+     "retreatClear": 0.21039,
+     "hlo": 1.825,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 17,
+     "cost": 0.3891633952204504,
+     "firstAdmissibleLead": 2.35,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.621368333,
+     "tau": 11.374,
+     "dJ": 0.010105825000000013,
+     "dTau": -0.5,
+     "reachClear": 0.07943,
+     "retreatClear": 0.21039,
+     "hlo": 1.825,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239052651764953,
+     "firstAdmissibleLead": 2.35,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.621368333,
+     "tau": 11.374,
+     "dJ": 0.010105825000000013,
+     "dTau": -0.5,
+     "reachClear": 0.07943,
+     "retreatClear": 0.21039,
+     "hlo": 1.825,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 17,
+     "cost": 0.3141080234927017,
+     "firstAdmissibleLead": 2.35,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.621368333,
+     "tau": 11.374,
+     "dJ": 0.010105825000000013,
+     "dTau": -0.5,
+     "reachClear": 0.07943,
+     "retreatClear": 0.21039,
+     "hlo": 1.825,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239052651764953,
+     "firstAdmissibleLead": 2.35,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.621368333,
+     "tau": 11.374,
+     "dJ": 0.010105825000000013,
+     "dTau": -0.5,
+     "reachClear": 0.07943,
+     "retreatClear": 0.21039,
+     "hlo": 1.825,
+     "consistent": true
+    },
+    "ANCHOR(A=0.5,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 17,
+     "cost": 0.3141080234927017,
+     "firstAdmissibleLead": 2.35,
+     "selected": [
+      2.35,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.621368333,
+     "tau": 11.374,
+     "dJ": 0.010105825000000013,
+     "dTau": -0.5,
+     "reachClear": 0.07943,
+     "retreatClear": 0.21039,
+     "hlo": 1.825,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 85,
+     "cost": 0.5948202850027753,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_337deg",
+      "ring140mm_1of8"
+     ],
+     "J": 0.665998603,
+     "tau": 12.824,
+     "dJ": 0.054736094999999985,
+     "dTau": 0.9499999999999993,
+     "reachClear": 0.08095,
+     "retreatClear": 0.21985,
+     "hlo": 2.8,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 323,
+     "cost": 2.0651731165183995,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      4.25,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.72871479,
+     "tau": 13.274,
+     "dJ": 0.11745228199999991,
+     "dTau": 1.3999999999999986,
+     "reachClear": 0.08042,
+     "retreatClear": 0.22122,
+     "hlo": 2.8,
+     "consistent": false
+    },
+    "ANCHOR(A=1.0,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 85,
+     "cost": 0.5948202850027753,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_337deg",
+      "ring140mm_1of8"
+     ],
+     "J": 0.665998603,
+     "tau": 12.824,
+     "dJ": 0.054736094999999985,
+     "dTau": 0.9499999999999993,
+     "reachClear": 0.08095,
+     "retreatClear": 0.21985,
+     "hlo": 2.8,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 289,
+     "cost": 1.8122339281717397,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      4.0,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.711892181,
+     "tau": 13.024,
+     "dJ": 0.10062967299999992,
+     "dTau": 1.1499999999999986,
+     "reachClear": 0.08011,
+     "retreatClear": 0.22033,
+     "hlo": 2.8,
+     "consistent": false
+    },
+    "ANCHOR(A=1.0,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 85,
+     "cost": 0.5948202850027753,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_337deg",
+      "ring140mm_1of8"
+     ],
+     "J": 0.665998603,
+     "tau": 12.824,
+     "dJ": 0.054736094999999985,
+     "dTau": 0.9499999999999993,
+     "reachClear": 0.08095,
+     "retreatClear": 0.21985,
+     "hlo": 2.8,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 187,
+     "cost": 1.2035271065872575,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "J": 0.686756585,
+     "tau": 12.824,
+     "dJ": 0.07549407699999999,
+     "dTau": 0.9499999999999993,
+     "reachClear": 0.08088,
+     "retreatClear": 0.21967,
+     "hlo": 2.8,
+     "consistent": false
+    },
+    "ANCHOR(A=1.0,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 85,
+     "cost": 0.5948202850027753,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_337deg",
+      "ring140mm_1of8"
+     ],
+     "J": 0.665998603,
+     "tau": 12.824,
+     "dJ": 0.054736094999999985,
+     "dTau": 0.9499999999999993,
+     "reachClear": 0.08095,
+     "retreatClear": 0.21985,
+     "hlo": 2.8,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 187,
+     "cost": 1.2035271065872575,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "J": 0.686756585,
+     "tau": 12.824,
+     "dJ": 0.07549407699999999,
+     "dTau": 0.9499999999999993,
+     "reachClear": 0.08088,
+     "retreatClear": 0.21967,
+     "hlo": 2.8,
+     "consistent": false
+    },
+    "ANCHOR(A=1.5,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 51,
+     "cost": 0.4169364683838641,
+     "firstAdmissibleLead": 3.5,
+     "selected": [
+      3.5,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.642838152,
+     "tau": 12.524,
+     "dJ": 0.031575644000000014,
+     "dTau": 0.6499999999999986,
+     "reachClear": 0.08066,
+     "retreatClear": 0.21866,
+     "hlo": 2.0,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 238,
+     "cost": 1.6204635749711216,
+     "firstAdmissibleLead": 3.5,
+     "selected": [
+      3.65,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.68628062,
+     "tau": 12.674,
+     "dJ": 0.07501811199999997,
+     "dTau": 0.7999999999999989,
+     "reachClear": 0.08012,
+     "retreatClear": 0.21889,
+     "hlo": 2.0,
+     "consistent": false
+    },
+    "ANCHOR(A=1.5,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 51,
+     "cost": 0.4169364683838641,
+     "firstAdmissibleLead": 3.5,
+     "selected": [
+      3.5,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.642838152,
+     "tau": 12.524,
+     "dJ": 0.031575644000000014,
+     "dTau": 0.6499999999999986,
+     "reachClear": 0.08066,
+     "retreatClear": 0.21866,
+     "hlo": 2.0,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 221,
+     "cost": 1.4564662949339173,
+     "firstAdmissibleLead": 3.5,
+     "selected": [
+      3.5,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.677661157,
+     "tau": 12.524,
+     "dJ": 0.06639864899999992,
+     "dTau": 0.6499999999999986,
+     "reachClear": 0.07999,
+     "retreatClear": 0.21818,
+     "hlo": 2.0,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 51,
+     "cost": 0.4169364683838641,
+     "firstAdmissibleLead": 3.5,
+     "selected": [
+      3.5,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.642838152,
+     "tau": 12.524,
+     "dJ": 0.031575644000000014,
+     "dTau": 0.6499999999999986,
+     "reachClear": 0.08066,
+     "retreatClear": 0.21866,
+     "hlo": 2.0,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 136,
+     "cost": 0.9367013816588907,
+     "firstAdmissibleLead": 3.5,
+     "selected": [
+      3.5,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "J": 0.661635021,
+     "tau": 12.524,
+     "dJ": 0.05037251300000001,
+     "dTau": 0.6499999999999986,
+     "reachClear": 0.08083,
+     "retreatClear": 0.21831,
+     "hlo": 2.0,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 51,
+     "cost": 0.4169364683838641,
+     "firstAdmissibleLead": 3.5,
+     "selected": [
+      3.5,
+      "axisP_side_337deg",
+      "ring140mm_2of8"
+     ],
+     "J": 0.642838152,
+     "tau": 12.524,
+     "dJ": 0.031575644000000014,
+     "dTau": 0.6499999999999986,
+     "reachClear": 0.08066,
+     "retreatClear": 0.21866,
+     "hlo": 2.0,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 153,
+     "cost": 1.0256432899683463,
+     "firstAdmissibleLead": 3.5,
+     "selected": [
+      3.5,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "J": 0.661635021,
+     "tau": 12.524,
+     "dJ": 0.05037251300000001,
+     "dTau": 0.6499999999999986,
+     "reachClear": 0.08083,
+     "retreatClear": 0.21831,
+     "hlo": 2.0,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 102,
+     "cost": 0.6837621933122309,
+     "firstAdmissibleLead": 4.1,
+     "selected": [
+      4.1,
+      "axisP_side_337deg",
+      "ring140mm_1of8"
+     ],
+     "J": 0.688253543,
+     "tau": 13.124,
+     "dJ": 0.07699103499999993,
+     "dTau": 1.25,
+     "reachClear": 0.08101,
+     "retreatClear": 0.22098,
+     "hlo": 2.0749999999999997,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 374,
+     "cost": 2.331998841446766,
+     "firstAdmissibleLead": 4.1,
+     "selected": [
+      4.55,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.749771303,
+     "tau": 13.574,
+     "dJ": 0.1385087949999999,
+     "dTau": 1.6999999999999993,
+     "reachClear": 0.08047,
+     "retreatClear": 0.22203,
+     "hlo": 2.0749999999999997,
+     "consistent": false
+    },
+    "ANCHOR(A=2.0,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 102,
+     "cost": 0.6837621933122309,
+     "firstAdmissibleLead": 4.1,
+     "selected": [
+      4.1,
+      "axisP_side_337deg",
+      "ring140mm_1of8"
+     ],
+     "J": 0.688253543,
+     "tau": 13.124,
+     "dJ": 0.07699103499999993,
+     "dTau": 1.25,
+     "reachClear": 0.08101,
+     "retreatClear": 0.22098,
+     "hlo": 2.0749999999999997,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 306,
+     "cost": 1.9011758364811953,
+     "firstAdmissibleLead": 4.1,
+     "selected": [
+      4.1,
+      "axisP_side_337deg",
+      "direct"
+     ],
+     "J": 0.71835397,
+     "tau": 13.124,
+     "dJ": 0.10709146199999997,
+     "dTau": 1.25,
+     "reachClear": 0.08028,
+     "retreatClear": 0.22073,
+     "hlo": 2.0749999999999997,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 102,
+     "cost": 0.6837621933122309,
+     "firstAdmissibleLead": 4.1,
+     "selected": [
+      4.1,
+      "axisP_side_337deg",
+      "ring140mm_1of8"
+     ],
+     "J": 0.688253543,
+     "tau": 13.124,
+     "dJ": 0.07699103499999993,
+     "dTau": 1.25,
+     "reachClear": 0.08101,
+     "retreatClear": 0.22098,
+     "hlo": 2.0749999999999997,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 204,
+     "cost": 1.292469014896713,
+     "firstAdmissibleLead": 4.1,
+     "selected": [
+      4.1,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "J": 0.709581467,
+     "tau": 13.124,
+     "dJ": 0.09831895899999998,
+     "dTau": 1.25,
+     "reachClear": 0.08094,
+     "retreatClear": 0.22083,
+     "hlo": 2.0749999999999997,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 102,
+     "cost": 0.6837621933122309,
+     "firstAdmissibleLead": 4.1,
+     "selected": [
+      4.1,
+      "axisP_side_337deg",
+      "ring140mm_1of8"
+     ],
+     "J": 0.688253543,
+     "tau": 13.124,
+     "dJ": 0.07699103499999993,
+     "dTau": 1.25,
+     "reachClear": 0.08101,
+     "retreatClear": 0.22098,
+     "hlo": 2.0749999999999997,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 204,
+     "cost": 1.292469014896713,
+     "firstAdmissibleLead": 4.1,
+     "selected": [
+      4.1,
+      "axisP_side_337deg",
+      "ring80mm_1of8"
+     ],
+     "J": 0.709581467,
+     "tau": 13.124,
+     "dJ": 0.09831895899999998,
+     "dTau": 1.25,
+     "reachClear": 0.08094,
+     "retreatClear": 0.22083,
+     "hlo": 2.0749999999999997,
+     "consistent": true
+    }
+   }
+  },
+  "rest": {
+   "epoch": 54.575,
+   "speed": 0.0,
+   "leadsTotal": 191,
+   "recordsPerLead": 43,
+   "recordsIdenticalAcrossLeads": true,
+   "fullZeroLatency": {
+    "selected": [
+     2.15,
+     "axisP_side_337deg",
+     "direct"
+    ],
+    "J": 0.615684566,
+    "tau": 56.725,
+    "dJ": null,
+    "dTau": null,
+    "reachClear": 0.08028,
+    "retreatClear": 0.22072
+   },
+   "fullAtOwnLatency": {
+    "selected": [
+     2.85,
+     "axisP_side_337deg",
+     "direct"
+    ],
+    "J": 0.652526668,
+    "tau": 57.425,
+    "dJ": 0.03684210200000004,
+    "dTau": 0.6999999999999957,
+    "reachClear": 0.08028,
+    "retreatClear": 0.22072
+   },
+   "bank14AtFullLatency": {
+    "selected": [
+     3.25,
+     "axisP_side_337deg",
+     "ring80mm_1of8"
+    ],
+    "J": 0.664774834,
+    "tau": 57.825,
+    "dJ": 0.04909026800000005,
+    "dTau": 1.1000000000000014,
+    "reachClear": 0.08094,
+    "retreatClear": 0.22082
+   },
+   "restLaw": {
+    "selected": [
+     2.735462999999997,
+     "axisP_side_337deg",
+     "direct"
+    ],
+    "J": 0.6464984055442249,
+    "tau": 57.310463,
+    "dJ": 0.030813839544224897,
+    "dTau": 0.5854629999999972,
+    "reachClear": 0.08028,
+    "retreatClear": 0.22072
+   },
+   "restLawCost": 0.5854630000000001,
+   "fullCost": 0.662991,
+   "monotoneInLeadViolations": 0
+  }
+ },
+ {
+  "log": "research/triad_v2/evidence/runs_ae1e824/logs/char_T/near-ground/near-ground.log.xz",
+  "moving": {
+   "epoch": 9.024,
+   "speed": 0.07999,
+   "unitCostStatic": 0.0020448579842931936,
+   "unitCostRoute": 0.006372051809341623,
+   "leadsTotal": 191,
+   "referenceZeroLatency": {
+    "selected": [
+     3.2,
+     "axisP_side_45deg",
+     "ring80mm_7of8"
+    ],
+    "J": 0.749762364,
+    "tau": 12.224,
+    "dJ": null,
+    "dTau": null,
+    "reachClear": 0.0711,
+    "retreatClear": 0.10602
+   },
+   "earliestAdmissibleLead0": 2.9,
+   "deltaTauPhysical": 0.18752344043005373,
+   "deltaTauOnGrid": 0.15000000000000002,
+   "laws": {
+    "FULL": {
+     "leads": 191,
+     "cost": 52.47005300000001,
+     "selected": null
+    },
+    "BANK14": {
+     "leads": 14,
+     "cost": 3.5158935151747333,
+     "selected": [
+      8.0,
+      "axisP_side_247deg",
+      "ring140mm_5of8"
+     ],
+     "J": 1.036698021,
+     "tau": 17.024,
+     "dJ": 0.2869356570000001,
+     "dTau": 4.800000000000001,
+     "reachClear": 0.08232,
+     "retreatClear": 0.08828
+    },
+    "GRID(0.05)": {
+     "leads": 169,
+     "cost": 41.497883472282524,
+     "selected": null
+    },
+    "GRID(0.10)": {
+     "leads": 85,
+     "cost": 20.72749702351055,
+     "selected": null
+    },
+    "GRID(0.15)": {
+     "leads": 57,
+     "cost": 14.020684635437508,
+     "selected": null
+    },
+    "GRID(0.20)": {
+     "leads": 43,
+     "cost": 10.28814135874516,
+     "selected": null
+    },
+    "GRID(0.45)": {
+     "leads": 19,
+     "cost": 4.601344957973297,
+     "selected": [
+      9.25,
+      "axisP_side_270deg",
+      "ring140mm_5of8"
+     ],
+     "J": 1.108299414,
+     "tau": 18.274,
+     "dJ": 0.35853705,
+     "dTau": 6.050000000000001,
+     "reachClear": 0.08293,
+     "retreatClear": 0.09389
+    },
+    "FULL+prune": {
+     "leads": 129,
+     "routeRollouts": 0,
+     "cost": 8.441173759162297,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "BANK14+prune": {
+     "leads": 14,
+     "routeRollouts": 170,
+     "cost": 1.999345184551426,
+     "firstAdmissibleLead": 3.7,
+     "selected": [
+      8.0,
+      "axisP_side_247deg",
+      "ring140mm_5of8"
+     ],
+     "J": 1.036698021,
+     "tau": 17.024,
+     "dJ": 0.2869356570000001,
+     "dTau": 4.800000000000001,
+     "reachClear": 0.08232,
+     "retreatClear": 0.08828
+    },
+    "ASC(dphys,W=0.0)": {
+     "leads": 57,
+     "cost": 14.020684635437506,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=0.0)": {
+     "leads": 12,
+     "cost": 3.168372842662353,
+     "firstAdmissibleLead": 6.55,
+     "selected": [
+      6.55,
+      "axisP_side_68deg",
+      "ring80mm_2of8"
+     ],
+     "J": 1.155194499,
+     "tau": 15.574,
+     "dJ": 0.4054321350000001,
+     "dTau": 3.3499999999999996,
+     "reachClear": 0.03915,
+     "retreatClear": 0.04002
+    },
+    "ASC(dphys,W=0.5)": {
+     "leads": 57,
+     "cost": 14.020684635437506,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=0.5)": {
+     "leads": 13,
+     "cost": 3.2338082981597354,
+     "firstAdmissibleLead": 6.55,
+     "selected": [
+      6.55,
+      "axisP_side_68deg",
+      "ring80mm_2of8"
+     ],
+     "J": 1.155194499,
+     "tau": 15.574,
+     "dJ": 0.4054321350000001,
+     "dTau": 3.3499999999999996,
+     "reachClear": 0.03915,
+     "retreatClear": 0.04002
+    },
+    "ASC(dphys,W=1.0)": {
+     "leads": 57,
+     "cost": 14.020684635437506,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=1.0)": {
+     "leads": 14,
+     "cost": 3.407568634415925,
+     "firstAdmissibleLead": 6.55,
+     "selected": [
+      6.55,
+      "axisP_side_68deg",
+      "ring80mm_2of8"
+     ],
+     "J": 1.155194499,
+     "tau": 15.574,
+     "dJ": 0.4054321350000001,
+     "dTau": 3.3499999999999996,
+     "reachClear": 0.03915,
+     "retreatClear": 0.04002
+    },
+    "ASC(dphys,W=2.0)": {
+     "leads": 57,
+     "cost": 14.020684635437506,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC(0.45,W=2.0)": {
+     "leads": 16,
+     "cost": 3.863414187687112,
+     "firstAdmissibleLead": 6.55,
+     "selected": [
+      7.9,
+      "axisP_side_247deg",
+      "ring80mm_5of8"
+     ],
+     "J": 1.052071898,
+     "tau": 16.924,
+     "dJ": 0.30230953399999994,
+     "dTau": 4.699999999999999,
+     "reachClear": 0.08243,
+     "retreatClear": 0.08802
+    },
+    "ASC+prune(d=0.05,W=0.0)": {
+     "leads": 129,
+     "routeRollouts": 0,
+     "cost": 8.441173759162297,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=0.5)": {
+     "leads": 129,
+     "routeRollouts": 0,
+     "cost": 8.441173759162297,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=1.0)": {
+     "leads": 129,
+     "routeRollouts": 0,
+     "cost": 8.441173759162297,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=2.0)": {
+     "leads": 129,
+     "routeRollouts": 0,
+     "cost": 8.441173759162297,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.05,W=inf)": {
+     "leads": 129,
+     "routeRollouts": 0,
+     "cost": 8.441173759162297,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=0.0)": {
+     "leads": 85,
+     "routeRollouts": 204,
+     "cost": 6.861912286383176,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=0.5)": {
+     "leads": 85,
+     "routeRollouts": 204,
+     "cost": 6.861912286383176,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=1.0)": {
+     "leads": 85,
+     "routeRollouts": 204,
+     "cost": 6.861912286383176,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=2.0)": {
+     "leads": 85,
+     "routeRollouts": 204,
+     "cost": 6.861912286383176,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.10,W=inf)": {
+     "leads": 85,
+     "routeRollouts": 204,
+     "cost": 6.861912286383176,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=0.0)": {
+     "leads": 57,
+     "routeRollouts": 442,
+     "cost": 6.546267863079783,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=0.5)": {
+     "leads": 57,
+     "routeRollouts": 442,
+     "cost": 6.546267863079783,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=1.0)": {
+     "leads": 57,
+     "routeRollouts": 442,
+     "cost": 6.546267863079783,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=2.0)": {
+     "leads": 57,
+     "routeRollouts": 442,
+     "cost": 6.546267863079783,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.15,W=inf)": {
+     "leads": 57,
+     "routeRollouts": 442,
+     "cost": 6.546267863079783,
+     "firstAdmissibleLead": null,
+     "selected": null
+    },
+    "ASC+prune(d=0.20,W=0.0)": {
+     "leads": 15,
+     "routeRollouts": 68,
+     "cost": 1.4148313554959628,
+     "firstAdmissibleLead": 4.4,
+     "selected": [
+      4.4,
+      "axisP_side_45deg",
+      "direct"
+     ],
+     "J": 1.048181003,
+     "tau": 13.424,
+     "dJ": 0.2984186390000001,
+     "dTau": 1.1999999999999993,
+     "reachClear": 0.03162,
+     "retreatClear": 0.09501
+    },
+    "ASC+prune(d=0.20,W=0.5)": {
+     "leads": 17,
+     "routeRollouts": 102,
+     "cost": 1.7623520280083422,
+     "firstAdmissibleLead": 4.4,
+     "selected": [
+      4.8,
+      "axisP_side_45deg",
+      "direct"
+     ],
+     "J": 1.265945208,
+     "tau": 13.824,
+     "dJ": 0.516182844,
+     "dTau": 1.5999999999999996,
+     "reachClear": 0.02343,
+     "retreatClear": 0.09139
+    },
+    "ASC+prune(d=0.20,W=1.0)": {
+     "leads": 20,
+     "routeRollouts": 153,
+     "cost": 2.283633036776912,
+     "firstAdmissibleLead": 4.4,
+     "selected": null
+    },
+    "ASC+prune(d=0.20,W=2.0)": {
+     "leads": 25,
+     "routeRollouts": 255,
+     "cost": 3.2607595988166707,
+     "firstAdmissibleLead": 4.4,
+     "selected": [
+      6.4,
+      "axisP_side_68deg",
+      "ring80mm_2of8"
+     ],
+     "J": 1.102362558,
+     "tau": 15.424,
+     "dJ": 0.3526001940000001,
+     "dTau": 3.1999999999999993,
+     "reachClear": 0.04689,
+     "retreatClear": 0.04949
+    },
+    "ASC+prune(d=0.20,W=inf)": {
+     "leads": 43,
+     "routeRollouts": 544,
+     "cost": 6.2801207706692805,
+     "firstAdmissibleLead": 4.4,
+     "selected": null
+    },
+    "ASC+prune(d=0.45,W=0.0)": {
+     "leads": 6,
+     "routeRollouts": 51,
+     "cost": 0.7175873752607159,
+     "firstAdmissibleLead": 3.85,
+     "selected": [
+      3.85,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.81225989,
+     "tau": 12.874,
+     "dJ": 0.062497526000000025,
+     "dTau": 0.6500000000000004,
+     "reachClear": 0.06946,
+     "retreatClear": 0.10001
+    },
+    "ASC+prune(d=0.45,W=0.5)": {
+     "leads": 7,
+     "routeRollouts": 68,
+     "cost": 0.8913477115169057,
+     "firstAdmissibleLead": 3.85,
+     "selected": [
+      4.3,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.856443781,
+     "tau": 13.324,
+     "dJ": 0.106681417,
+     "dTau": 1.0999999999999996,
+     "reachClear": 0.06337,
+     "retreatClear": 0.09578
+    },
+    "ASC+prune(d=0.45,W=1.0)": {
+     "leads": 8,
+     "routeRollouts": 85,
+     "cost": 1.0651080477730954,
+     "firstAdmissibleLead": 3.85,
+     "selected": [
+      4.3,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.856443781,
+     "tau": 13.324,
+     "dJ": 0.106681417,
+     "dTau": 1.0999999999999996,
+     "reachClear": 0.06337,
+     "retreatClear": 0.09578
+    },
+    "ASC+prune(d=0.45,W=2.0)": {
+     "leads": 10,
+     "routeRollouts": 119,
+     "cost": 1.4126287202854748,
+     "firstAdmissibleLead": 3.85,
+     "selected": [
+      4.75,
+      "axisP_side_45deg",
+      "ring80mm_1of8"
+     ],
+     "J": 0.914252129,
+     "tau": 13.774,
+     "dJ": 0.164489765,
+     "dTau": 1.549999999999999,
+     "reachClear": 0.05728,
+     "retreatClear": 0.09154
+    },
+    "ASC+prune(d=0.45,W=inf)": {
+     "leads": 19,
+     "routeRollouts": 306,
+     "cost": 3.1931215081088,
+     "firstAdmissibleLead": 3.85,
+     "selected": [
+      7.9,
+      "axisP_side_247deg",
+      "ring140mm_5of8"
+     ],
+     "J": 1.028697927,
+     "tau": 16.924,
+     "dJ": 0.2789355630000001,
+     "dTau": 4.699999999999999,
+     "reachClear": 0.08011,
+     "retreatClear": 0.08801
+    },
+    "ANCHOR(A=0.5,d=0.15,W=0.0)": {
+     "leads": 45,
+     "routeRollouts": 544,
+     "cost": 6.476427137161425,
+     "firstAdmissibleLead": null,
+     "selected": null,
+     "hlo": 2.775,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.15,W=0.5)": {
+     "leads": 45,
+     "routeRollouts": 544,
+     "cost": 6.476427137161425,
+     "firstAdmissibleLead": null,
+     "selected": null,
+     "hlo": 2.775,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.20,W=0.0)": {
+     "leads": 5,
+     "routeRollouts": 119,
+     "cost": 1.1508868982959464,
+     "firstAdmissibleLead": 4.1,
+     "selected": [
+      4.1,
+      "axisP_side_45deg",
+      "direct"
+     ],
+     "J": 0.972383837,
+     "tau": 13.124,
+     "dJ": 0.22262147300000001,
+     "dTau": 0.9000000000000004,
+     "reachClear": 0.03674,
+     "retreatClear": 0.09777,
+     "hlo": 2.775,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.20,W=0.5)": {
+     "leads": 7,
+     "routeRollouts": 153,
+     "cost": 1.4984075708083258,
+     "firstAdmissibleLead": 4.1,
+     "selected": [
+      4.5,
+      "axisP_side_45deg",
+      "direct"
+     ],
+     "J": 1.086973534,
+     "tau": 13.524,
+     "dJ": 0.33721117,
+     "dTau": 1.299999999999999,
+     "reachClear": 0.02954,
+     "retreatClear": 0.09362,
+     "hlo": 2.775,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.30,W=0.0)": {
+     "leads": 2,
+     "routeRollouts": 51,
+     "cost": 0.5212810087685694,
+     "firstAdmissibleLead": 3.6,
+     "selected": [
+      3.6,
+      "axisP_side_45deg",
+      "direct"
+     ],
+     "J": 0.86959311,
+     "tau": 12.624,
+     "dJ": 0.11983074599999999,
+     "dTau": 0.40000000000000036,
+     "reachClear": 0.0468,
+     "retreatClear": 0.10245,
+     "hlo": 2.775,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.30,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 68,
+     "cost": 0.6950413450247592,
+     "firstAdmissibleLead": 3.6,
+     "selected": [
+      3.9,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.816046411,
+     "tau": 12.924,
+     "dJ": 0.06628404700000001,
+     "dTau": 0.6999999999999993,
+     "reachClear": 0.06898,
+     "retreatClear": 0.09954,
+     "hlo": 2.775,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.45,W=0.0)": {
+     "leads": 2,
+     "routeRollouts": 51,
+     "cost": 0.5212810087685694,
+     "firstAdmissibleLead": 3.75,
+     "selected": [
+      3.75,
+      "axisP_side_45deg",
+      "ring80mm_7of8"
+     ],
+     "J": 0.801187355,
+     "tau": 12.774,
+     "dJ": 0.051424991000000086,
+     "dTau": 0.5499999999999989,
+     "reachClear": 0.06417,
+     "retreatClear": 0.101,
+     "hlo": 2.775,
+     "consistent": false
+    },
+    "ANCHOR(A=0.5,d=0.45,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 68,
+     "cost": 0.6950413450247592,
+     "firstAdmissibleLead": 3.75,
+     "selected": [
+      4.2,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.844115136,
+     "tau": 13.224,
+     "dJ": 0.09435277200000003,
+     "dTau": 1.0,
+     "reachClear": 0.06511,
+     "retreatClear": 0.09672,
+     "hlo": 2.775,
+     "consistent": false
+    },
+    "ANCHOR(A=1.0,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_45deg",
+      "ring140mm_7of8"
+     ],
+     "J": 0.803100027,
+     "tau": 12.824,
+     "dJ": 0.05333766300000009,
+     "dTau": 0.5999999999999996,
+     "reachClear": 0.06707,
+     "retreatClear": 0.10049,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 68,
+     "cost": 0.7604768005221414,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.95,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.819979931,
+     "tau": 12.974,
+     "dJ": 0.07021756700000004,
+     "dTau": 0.75,
+     "reachClear": 0.06846,
+     "retreatClear": 0.09906,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_45deg",
+      "ring140mm_7of8"
+     ],
+     "J": 0.803100027,
+     "tau": 12.824,
+     "dJ": 0.05333766300000009,
+     "dTau": 0.5999999999999996,
+     "reachClear": 0.06707,
+     "retreatClear": 0.10049,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 51,
+     "cost": 0.5867164642659516,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_45deg",
+      "ring80mm_7of8"
+     ],
+     "J": 0.806970882,
+     "tau": 12.824,
+     "dJ": 0.05720851800000004,
+     "dTau": 0.5999999999999996,
+     "reachClear": 0.06327,
+     "retreatClear": 0.10053,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_45deg",
+      "ring140mm_7of8"
+     ],
+     "J": 0.803100027,
+     "tau": 12.824,
+     "dJ": 0.05333766300000009,
+     "dTau": 0.5999999999999996,
+     "reachClear": 0.06707,
+     "retreatClear": 0.10049,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 34,
+     "cost": 0.4129561280097618,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_45deg",
+      "ring140mm_7of8"
+     ],
+     "J": 0.803100027,
+     "tau": 12.824,
+     "dJ": 0.05333766300000009,
+     "dTau": 0.5999999999999996,
+     "reachClear": 0.06707,
+     "retreatClear": 0.10049,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_45deg",
+      "ring140mm_7of8"
+     ],
+     "J": 0.803100027,
+     "tau": 12.824,
+     "dJ": 0.05333766300000009,
+     "dTau": 0.5999999999999996,
+     "reachClear": 0.06707,
+     "retreatClear": 0.10049,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.0,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 34,
+     "cost": 0.4129561280097618,
+     "firstAdmissibleLead": 3.8,
+     "selected": [
+      3.8,
+      "axisP_side_45deg",
+      "ring140mm_7of8"
+     ],
+     "J": 0.803100027,
+     "tau": 12.824,
+     "dJ": 0.05333766300000009,
+     "dTau": 0.5999999999999996,
+     "reachClear": 0.06707,
+     "retreatClear": 0.10049,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.856443781,
+     "tau": 13.324,
+     "dJ": 0.106681417,
+     "dTau": 1.0999999999999996,
+     "reachClear": 0.06337,
+     "retreatClear": 0.09578,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 68,
+     "cost": 0.7604768005221414,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.856443781,
+     "tau": 13.324,
+     "dJ": 0.106681417,
+     "dTau": 1.0999999999999996,
+     "reachClear": 0.06337,
+     "retreatClear": 0.09578,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.856443781,
+     "tau": 13.324,
+     "dJ": 0.106681417,
+     "dTau": 1.0999999999999996,
+     "reachClear": 0.06337,
+     "retreatClear": 0.09578,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 51,
+     "cost": 0.5867164642659516,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.856443781,
+     "tau": 13.324,
+     "dJ": 0.106681417,
+     "dTau": 1.0999999999999996,
+     "reachClear": 0.06337,
+     "retreatClear": 0.09578,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.856443781,
+     "tau": 13.324,
+     "dJ": 0.106681417,
+     "dTau": 1.0999999999999996,
+     "reachClear": 0.06337,
+     "retreatClear": 0.09578,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 34,
+     "cost": 0.4129561280097618,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.856443781,
+     "tau": 13.324,
+     "dJ": 0.106681417,
+     "dTau": 1.0999999999999996,
+     "reachClear": 0.06337,
+     "retreatClear": 0.09578,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.856443781,
+     "tau": 13.324,
+     "dJ": 0.106681417,
+     "dTau": 1.0999999999999996,
+     "reachClear": 0.06337,
+     "retreatClear": 0.09578,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=1.5,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 34,
+     "cost": 0.4129561280097618,
+     "firstAdmissibleLead": 4.3,
+     "selected": [
+      4.3,
+      "axisP_side_45deg",
+      "ring80mm_0of8"
+     ],
+     "J": 0.856443781,
+     "tau": 13.324,
+     "dJ": 0.106681417,
+     "dTau": 1.0999999999999996,
+     "reachClear": 0.06337,
+     "retreatClear": 0.09578,
+     "hlo": 2.775,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.15,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 5.05,
+     "selected": [
+      5.05,
+      "axisP_side_45deg",
+      "ring140mm_0of8"
+     ],
+     "J": 0.93396659,
+     "tau": 14.074,
+     "dJ": 0.18420422600000008,
+     "dTau": 1.8499999999999996,
+     "reachClear": 0.05933,
+     "retreatClear": 0.08961,
+     "hlo": 3.025,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.15,W=0.5)": {
+     "leads": 4,
+     "routeRollouts": 68,
+     "cost": 0.7604768005221414,
+     "firstAdmissibleLead": 5.05,
+     "selected": [
+      5.05,
+      "axisP_side_45deg",
+      "ring140mm_0of8"
+     ],
+     "J": 0.93396659,
+     "tau": 14.074,
+     "dJ": 0.18420422600000008,
+     "dTau": 1.8499999999999996,
+     "reachClear": 0.05933,
+     "retreatClear": 0.08961,
+     "hlo": 3.025,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.20,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 5.05,
+     "selected": [
+      5.05,
+      "axisP_side_45deg",
+      "ring140mm_0of8"
+     ],
+     "J": 0.93396659,
+     "tau": 14.074,
+     "dJ": 0.18420422600000008,
+     "dTau": 1.8499999999999996,
+     "reachClear": 0.05933,
+     "retreatClear": 0.08961,
+     "hlo": 3.025,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.20,W=0.5)": {
+     "leads": 3,
+     "routeRollouts": 51,
+     "cost": 0.5867164642659516,
+     "firstAdmissibleLead": 5.05,
+     "selected": [
+      5.05,
+      "axisP_side_45deg",
+      "ring140mm_0of8"
+     ],
+     "J": 0.93396659,
+     "tau": 14.074,
+     "dJ": 0.18420422600000008,
+     "dTau": 1.8499999999999996,
+     "reachClear": 0.05933,
+     "retreatClear": 0.08961,
+     "hlo": 3.025,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.30,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 5.05,
+     "selected": [
+      5.05,
+      "axisP_side_45deg",
+      "ring140mm_0of8"
+     ],
+     "J": 0.93396659,
+     "tau": 14.074,
+     "dJ": 0.18420422600000008,
+     "dTau": 1.8499999999999996,
+     "reachClear": 0.05933,
+     "retreatClear": 0.08961,
+     "hlo": 3.025,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.30,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 34,
+     "cost": 0.4129561280097618,
+     "firstAdmissibleLead": 5.05,
+     "selected": [
+      5.05,
+      "axisP_side_45deg",
+      "ring140mm_0of8"
+     ],
+     "J": 0.93396659,
+     "tau": 14.074,
+     "dJ": 0.18420422600000008,
+     "dTau": 1.8499999999999996,
+     "reachClear": 0.05933,
+     "retreatClear": 0.08961,
+     "hlo": 3.025,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.45,W=0.0)": {
+     "leads": 1,
+     "routeRollouts": 17,
+     "cost": 0.239195791753572,
+     "firstAdmissibleLead": 5.05,
+     "selected": [
+      5.05,
+      "axisP_side_45deg",
+      "ring140mm_0of8"
+     ],
+     "J": 0.93396659,
+     "tau": 14.074,
+     "dJ": 0.18420422600000008,
+     "dTau": 1.8499999999999996,
+     "reachClear": 0.05933,
+     "retreatClear": 0.08961,
+     "hlo": 3.025,
+     "consistent": true
+    },
+    "ANCHOR(A=2.0,d=0.45,W=0.5)": {
+     "leads": 2,
+     "routeRollouts": 34,
+     "cost": 0.4129561280097618,
+     "firstAdmissibleLead": 5.05,
+     "selected": [
+      5.05,
+      "axisP_side_45deg",
+      "ring140mm_0of8"
+     ],
+     "J": 0.93396659,
+     "tau": 14.074,
+     "dJ": 0.18420422600000008,
+     "dTau": 1.8499999999999996,
+     "reachClear": 0.05933,
+     "retreatClear": 0.08961,
+     "hlo": 3.025,
+     "consistent": true
+    }
+   }
+  },
+  "rest": {
+   "epoch": 61.708,
+   "speed": 0.0,
+   "leadsTotal": 191,
+   "recordsPerLead": 13,
+   "recordsIdenticalAcrossLeads": true,
+   "fullZeroLatency": {
+    "selected": [
+     3.15,
+     "axisP_side_45deg",
+     "ring80mm_0of8"
+    ],
+    "J": 0.743148913,
+    "tau": 64.858,
+    "dJ": null,
+    "dTau": null,
+    "reachClear": 0.08262,
+    "retreatClear": 0.09766
+   },
+   "fullAtOwnLatency": {
+    "selected": [
+     3.35,
+     "axisP_side_45deg",
+     "ring80mm_0of8"
+    ],
+    "J": 0.753675228,
+    "tau": 65.058,
+    "dJ": 0.010526315000000008,
+    "dTau": 0.20000000000000284,
+    "reachClear": 0.08262,
+    "retreatClear": 0.09766
+   },
+   "bank14AtFullLatency": {
+    "selected": [
+     3.7,
+     "axisP_side_45deg",
+     "ring140mm_7of8"
+    ],
+    "J": 0.76167196,
+    "tau": 65.408,
+    "dJ": 0.01852304700000007,
+    "dTau": 0.5499999999999972,
+    "reachClear": 0.07904,
+    "retreatClear": 0.09768
+   },
+   "restLaw": {
+    "selected": [
+     3.3136119999999982,
+     "axisP_side_45deg",
+     "ring80mm_0of8"
+    ],
+    "J": 0.7517600836146748,
+    "tau": 65.02161199999999,
+    "dJ": 0.008611170614674868,
+    "dTau": 0.16361199999998632,
+    "reachClear": 0.08262,
+    "retreatClear": 0.09766
+   },
+   "restLawCost": 0.180949,
+   "fullCost": 0.197666,
+   "monotoneInLeadViolations": 0
+  }
+ }
+]
