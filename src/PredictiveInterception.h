@@ -176,6 +176,53 @@ inline RendezvousReferenceState rendezvousReference(double t, double t0, double 
 }
 
 // ---------------------------------------------------------------------------
+// Phase-specific authority demands (tool-body twist, world frame, [w; v])
+// ---------------------------------------------------------------------------
+
+/** TRIAD-lite (04e9efc) demand: follow the rigid object at the body origin and
+ * insert along -y_M at the insertion speed. */
+inline Eigen::Matrix<double, 6, 1> followInsertTwist(const Eigen::Vector3d & vO, const Eigen::Vector3d & wO,
+                                                     const Eigen::Vector3d & pBody, const Eigen::Vector3d & pObject,
+                                                     const Eigen::Vector3d & yM, double insertionSpeed)
+{
+  Eigen::Matrix<double, 6, 1> t;
+  t.head<3>() = wO;
+  t.tail<3>() = vO + wO.cross(pBody - pObject) - insertionSpeed * yM;
+  return t;
+}
+
+/** Acquisition-interface insertion (object at rest): MovePregrasp far-speed
+ * translation along -y_M. */
+inline Eigen::Matrix<double, 6, 1> insertionTwist(const Eigen::Vector3d & yM, double insertionSpeed)
+{
+  Eigen::Matrix<double, 6, 1> t = Eigen::Matrix<double, 6, 1>::Zero();
+  t.tail<3>() = -insertionSpeed * yM;
+  return t;
+}
+
+/** Synchronization at the rendezvous: rigid object twist at the body origin. */
+inline Eigen::Matrix<double, 6, 1> synchronizationTwist(const Eigen::Vector3d & vO, const Eigen::Vector3d & wO,
+                                                        const Eigen::Vector3d & pBody, const Eigen::Vector3d & pObject)
+{
+  Eigen::Matrix<double, 6, 1> t;
+  t.head<3>() = wO;
+  t.tail<3>() = vO + wO.cross(pBody - pObject);
+  return t;
+}
+
+/** Commanded tool-body twist of one reference step: the finite-difference
+ * twist between consecutive commanded body poses (what the tracking law sends
+ * with the pose target). */
+inline Eigen::Matrix<double, 6, 1> commandedStepTwist(const Eigen::Matrix3d & R0, const Eigen::Vector3d & p0,
+                                                      const Eigen::Matrix3d & R1, const Eigen::Vector3d & p1, double dt)
+{
+  Eigen::Matrix<double, 6, 1> t;
+  t.head<3>() = rotationLog(R1 * R0.transpose()) / dt;
+  t.tail<3>() = (p1 - p0) / dt;
+  return t;
+}
+
+// ---------------------------------------------------------------------------
 // Earliest-encounter selection (no weights)
 // ---------------------------------------------------------------------------
 

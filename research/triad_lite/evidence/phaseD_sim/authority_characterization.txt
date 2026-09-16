@@ -1,0 +1,33 @@
+== filter: runs=4 jobs=29 feasible encounters=102
+  kappa: median=1.091 p10=1.020 min=1.001; below kappaMin=0 (0.0%)
+  pathReserve: median=1.097 p10=1.022 min=1.001
+  syncReserve: median=7.882 p10=5.245 min=3.206
+  insertionReserve: median=1.575 p10=1.216 min=1.009
+  limiting phase: {'path': 96, 'insertion': 6}
+  path samples median=27; peak commanded body speed median=0.163 max=0.239 m/s
+  authority attempts rejected (filter)=60; grasps with F_C later than F_I=6; grasps in F_I without F_C encounter=50; jobs with F_I nonempty=28, F_C empty=2
+  H2: per-job Spearman(kappa, conditionIndex) over feasible grasps (jobs with >=3): n=19 median=-0.76 p10=-1.00 p90=0.80
+  selections over jobs with a feasible encounter (26): FULL!=B1 2, FULL!=B2 12
+  cost: rollout per (g,tau) median=5.8 ms p90=7.7; moving-job sweep median=519 ms p90=1206
+== log: runs=4 jobs=31 feasible encounters=149
+  kappa: median=1.051 p10=0.762 min=0.453; below kappaMin=52 (34.9%)
+  pathReserve: median=1.057 p10=0.762 min=0.453
+  syncReserve: median=8.000 p10=5.601 min=3.206
+  insertionReserve: median=1.647 p10=1.240 min=0.893
+  limiting phase: {'path': 137, 'insertion': 12}
+  path samples median=27; peak commanded body speed median=0.153 max=0.566 m/s
+  authority attempts rejected (filter)=0; grasps with F_C later than F_I=0; grasps in F_I without F_C encounter=0; jobs with F_I nonempty=30, F_C empty=0
+  H2: per-job Spearman(kappa, conditionIndex) over feasible grasps (jobs with >=3): n=23 median=-0.83 p10=-1.00 p90=0.79
+  selections over jobs with a feasible encounter (30): FULL!=B1 4, FULL!=B2 15
+  cost: rollout per (g,tau) median=6.0 ms p90=7.4; moving-job sweep median=511 ms p90=643
+== stride1: runs=4 jobs=27 feasible encounters=114
+  kappa: median=1.025 p10=0.792 min=0.346; below kappaMin=49 (43.0%)
+  pathReserve: median=1.034 p10=0.792 min=0.346
+  syncReserve: median=7.796 p10=5.527 min=3.206
+  insertionReserve: median=1.606 p10=1.142 min=0.893
+  limiting phase: {'path': 108, 'insertion': 6}
+  path samples median=134; peak commanded body speed median=0.160 max=0.578 m/s
+  authority attempts rejected (filter)=0; grasps with F_C later than F_I=0; grasps in F_I without F_C encounter=0; jobs with F_I nonempty=26, F_C empty=0
+  H2: per-job Spearman(kappa, conditionIndex) over feasible grasps (jobs with >=3): n=20 median=-0.85 p10=-1.00 p90=0.81
+  selections over jobs with a feasible encounter (26): FULL!=B1 4, FULL!=B2 10
+  cost: rollout per (g,tau) median=12.7 ms p90=15.8; moving-job sweep median=567 ms p90=1125

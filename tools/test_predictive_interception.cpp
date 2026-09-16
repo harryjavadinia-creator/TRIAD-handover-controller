@@ -249,6 +249,42 @@ void testSelectionAndHysteresis()
   d = updateGraspSelector(st, baseRecords(lost), selectEarliestInterception(lost, tol, InterceptionTieBreak::Clearance), 2.0, 0.3);
   CHECK(d.event == "switch_inadmissible" && d.selectedId == 6);
 }
+void testAuthorityDemands()
+{
+  // Same y -> identical authority (the solver is unchanged): at rest the
+  // TRIAD-lite follow_insert demand equals the Phase D insertion demand.
+  const Eigen::Vector3d yM = Eigen::Vector3d(0.2, -0.9, 0.3).normalized();
+  const Eigen::Vector3d pB(0.5, 0.1, 0.4);
+  const Eigen::Vector3d pO(0.6, 0.0, 0.3);
+  const auto legacy = followInsertTwist(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), pB, pO, yM, 0.38);
+  const auto phase = insertionTwist(yM, 0.38);
+  CHECK((legacy - phase).norm() < 1e-15);
+  Eigen::MatrixXd J(6, 7);
+  for(int r = 0; r < 6; ++r)
+  {
+    for(int c = 0; c < 7; ++c) { J(r, c) = std::sin(1.3 * r + 0.7 * c) + (r == c ? 1.0 : 0.0); }
+  }
+  JointVelocityBox box;
+  box.lower = Eigen::VectorXd::Constant(7, -0.8);
+  box.upper = Eigen::VectorXd::Constant(7, 0.8);
+  box.damper = std::vector<int>(7, 0);
+  box.consistent = true;
+  AuthorityDemand a{"legacy", legacy};
+  AuthorityDemand b{"phase", phase};
+  const auto ea = evaluateAuthorityDemand(J, box, a, 0.2, 1e-4, 8.0);
+  const auto eb = evaluateAuthorityDemand(J, box, b, 0.2, 1e-4, 8.0);
+  CHECK(ea.reserve == eb.reserve && ea.residual == eb.residual);
+  // moving object: the two demands differ exactly by the synchronization twist
+  const Eigen::Vector3d vO(0.05, 0.08, 0.0);
+  const Eigen::Vector3d wO(0.0, 0.0, 0.3);
+  CHECK((followInsertTwist(vO, wO, pB, pO, yM, 0.38) - (synchronizationTwist(vO, wO, pB, pO) + insertionTwist(yM, 0.38))).norm()
+        < 1e-15);
+  // commanded step twist of a known motion
+  const Eigen::Matrix3d R0 = Eigen::Matrix3d::Identity();
+  const Eigen::Matrix3d R1 = rotationExp(Eigen::Vector3d(0.0, 0.0, 0.02));
+  const auto tw = commandedStepTwist(R0, pB, R1, pB + Eigen::Vector3d(0.004, 0, 0), 0.02);
+  CHECK((tw.head<3>() - Eigen::Vector3d(0, 0, 1.0)).norm() < 1e-9 && (tw.tail<3>() - Eigen::Vector3d(0.2, 0, 0)).norm() < 1e-12);
+}
 } // namespace
 
 int main()
@@ -258,6 +294,7 @@ int main()
   testEarliestAndImpossibleInterception();
   testRendezvousReference();
   testSelectionAndHysteresis();
+  testAuthorityDemands();
   if(failures != 0)
   {
     std::fprintf(stderr, "%d check(s) failed\n", failures);

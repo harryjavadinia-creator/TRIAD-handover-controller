@@ -1,0 +1,21 @@
+robots:
+  call_object:
+    init_pos:
+      translation: [0.92, 0.00, 0.55]
+object:
+  translation: [0.92, 0.00, 0.55]
+movingObject:
+  simulatedLinearVelocity: [-0.08, 0.0, 0.0]
+  giverTruthModel: independent_scripted
+receiverArchitecture: v2_receding
+configs:
+  HandoverInterceptionController_ReceiverV2:
+    supervisorMode: control_aware
+    controlAware:
+      graspFamily: receiving
+      interception:
+        mode: characterize_hold
+        maximumExactEvaluations: 3000
+        maximumRollouts: 400
+        authorityFilter: false
+        authorityStride: 5

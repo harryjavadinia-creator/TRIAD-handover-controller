@@ -2436,6 +2436,8 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
       p.interceptionMaximumExactEvaluations = readInt(ic, "maximumExactEvaluations", p.interceptionMaximumExactEvaluations);
       p.interceptionMaximumRollouts = readInt(ic, "maximumRollouts", p.interceptionMaximumRollouts);
       p.interceptionLogAttempts = readBool(ic, "logAttempts", p.interceptionLogAttempts);
+      p.authorityStride = std::max(1, readInt(ic, "authorityStride", p.authorityStride));
+      p.authorityFilter = readBool(ic, "authorityFilter", p.authorityFilter);
     }
     p.selection.clearanceTieBand = readDouble(ca, "clearanceTieBand", p.selection.clearanceTieBand);
     p.selection.reserveTieBand = readDouble(ca, "reserveTieBand", p.selection.reserveTieBand);
@@ -2489,6 +2491,8 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
       p.interceptionEntryLead, p.interceptionEpsPosition, p.interceptionEpsRotation, p.interceptionTerminalLinearSpeed,
       p.interceptionTerminalAngularSpeed, p.interceptionTimingSkip, p.interceptionMaximumExactEvaluations,
       p.interceptionMaximumRollouts, p.interceptionLogAttempts);
+  mc_rtc::log::info("[TriadLiteConfig] interceptionAuthority=[demands:path_command+synchronization+insertion,stride:{},filter:{},kappaMin:{:.3f},insertionSpeed:{:.3f}]",
+                    p.authorityStride, p.authorityFilter, p.kappaMin, p.insertionSpeed);
   mc_rtc::log::success(
       "[TriadLiteConfig] supervisorMode=control_aware graspsPerSign={} clearanceFloor={:.4f} kappaMin={:.3f} kappaMaximum={:.3f} residualTolerance={:.2e} angularLength={:.3f} insertionSpeed={:.3f} disturbanceSpeed={:.3f} switchDwell={:.3f} requireObjectStopped={} admissionRequiresCurrentAuthority={} reselectWhileTracking={} trustIncumbentReevaluation={} tieBands=[clearance:{:.4f},reserve:{:.3f}] reserveSaturation={:.3f} qpLimits=[velocityPercent:{:.3f},inter:{:.3f},security:{:.3f},damperOffset:{:.3f}] authorityLevel=velocity accelerationBounds=module_default_infinite xi=damperOffset_lower_bound",
       p.graspsPerSign, p.clearanceFloor, p.kappaMin, p.kappaMaximum, p.residualTolerance,
@@ -2526,7 +2530,10 @@ std::vector<call_handover::AuthorityDemand> HandoverInterceptionController::cont
   d.twist.tail<3>() = follow;
   demands.push_back(d);
   d.label = "follow_insert";
-  d.twist.tail<3>() = follow + insert;
+  // Same expression as call_handover::followInsertTwist (unit-tested against
+  // the Phase D insertion demand at rest).
+  d.twist = call_handover::followInsertTwist(objectLinearVelocity, objectAngularVelocity, W_T_B_eval.translation(),
+                                             objectPosition, worldRotation(W_T_M_goal).col(1), v2CaParams_.insertionSpeed);
   demands.push_back(d);
   if(v2CaParams_.disturbanceSpeed > 0.0)
   {
@@ -2543,6 +2550,18 @@ std::vector<call_handover::AuthorityDemand> HandoverInterceptionController::cont
     }
   }
   return demands;
+}
+
+std::vector<call_handover::AuthorityDemand> HandoverInterceptionController::insertionDemandV2(
+    const sva::PTransformd & W_T_M_goal) const
+{
+  // MovePregrasp moves the mouth from the standoff (capture + d_s y_M) to the
+  // capture pose at most at farLinearSpeed; the tool body shares the mouth's
+  // translation velocity for a pure translation.
+  call_handover::AuthorityDemand d;
+  d.label = "insert";
+  d.twist = call_handover::insertionTwist(worldRotation(W_T_M_goal).col(1), v2CaParams_.insertionSpeed);
+  return {d};
 }
 
 std::vector<call_handover::AuthorityEvaluation> HandoverInterceptionController::controlAwareAuthorityAtPreviewV2(
@@ -2737,11 +2756,18 @@ void HandoverInterceptionController::evaluateControlAwareExactLayersV2(
   }
   bool securityS = false;
   bool securityC = false;
+  // Interception mode: insertion is the only demand at the standoff/capture
+  // configurations because acquisition starts with the object at rest (sec. 3.7,
+  // interface limitation); following and synchronization are evaluated on the
+  // rollout. Otherwise the TRIAD-lite follow(+insert) demands are unchanged.
+  const bool phaseDemands = v2CaParams_.interceptionMode != "disabled";
   eval.standoffAuthority = controlAwareAuthorityAtPreviewV2(
-      standoffMbc, controlAwareDemandsV2(objectLinearVelocity, objectAngularVelocity, objectPose.translation(), c.W_T_M_pre, W_T_B_s),
+      standoffMbc, phaseDemands ? insertionDemandV2(c.W_T_M_pre)
+                                : controlAwareDemandsV2(objectLinearVelocity, objectAngularVelocity, objectPose.translation(), c.W_T_M_pre, W_T_B_s),
       eval.standoffDamper, securityS);
   eval.captureAuthority = controlAwareAuthorityAtPreviewV2(
-      captureMbc, controlAwareDemandsV2(objectLinearVelocity, objectAngularVelocity, objectPose.translation(), c.W_T_M_pre, W_T_B_c),
+      captureMbc, phaseDemands ? insertionDemandV2(c.W_T_M_pre)
+                               : controlAwareDemandsV2(objectLinearVelocity, objectAngularVelocity, objectPose.translation(), c.W_T_M_pre, W_T_B_c),
       eval.captureDamper, securityC);
   double reserve = inf;
   double residual = 0.0;
@@ -3529,6 +3555,25 @@ void HandoverInterceptionController::rolloutInterceptionV2(
       return fail("preview_kinematics_unavailable");
     }
     worldPoseTwist(baseNow, baseNext, dt, ffLinear, ffAngular);
+    if(k % v2CaParams_.authorityStride == 0)
+    {
+      // Phase D demand: the tool-body twist this step commands (the same
+      // quantity commandMouthTargetWithWorldVelocity sends to the QP task),
+      // tested at the configuration that must realise it.
+      call_handover::AuthorityDemand d;
+      d.label = "path";
+      d.twist.head<3>() = ffAngular;
+      d.twist.tail<3>() = ffLinear;
+      std::vector<int> damper;
+      bool inside = false;
+      const auto e = controlAwareAuthorityAtPreviewV2(mbc, {d}, damper, inside);
+      out.insideSecurity = out.insideSecurity || inside;
+      if(!(e.front().reserve >= out.pathReserve)) { out.pathLimitingTime = t - tStart; }
+      out.pathReserve = std::isnan(out.pathReserve) ? e.front().reserve : std::min(out.pathReserve, e.front().reserve);
+      out.pathResidual = std::max(out.pathResidual, e.front().residual);
+      out.pathPeakLinearSpeed = std::max(out.pathPeakLinearSpeed, ffLinear.norm());
+      ++out.pathSamples;
+    }
     const PreviewStepStatus status = previewReachStep(mbc, nextCommand, false, false, iteration, reach, ffLinear, ffAngular,
                                                       false, postureTarget.empty() ? nullptr : &postureTarget, true);
     if(status == PreviewStepStatus::Failed)
@@ -3571,6 +3616,26 @@ void HandoverInterceptionController::rolloutInterceptionV2(
     out.conditionIndexAtRendezvous = eig.info() == Eigen::Success
         ? std::sqrt(std::max(0.0, eig.eigenvalues().minCoeff()) / std::max(1e-12, eig.eigenvalues().maxCoeff()))
         : 0.0;
+  }
+  {
+    // Synchronization demand at the rendezvous configuration: the rigid object
+    // twist at the tool-body origin (TerminalTrack / control-aware tracking
+    // feedforward), [w_O; v_O + w_O x (p_B - p_O)].
+    sva::PTransformd W_T_B;
+    if(previewBasePose(mbc, W_T_B))
+    {
+      const sva::PTransformd W_T_O_R = predictionPoseAtV2(prediction, tRendezvous);
+      call_handover::AuthorityDemand d;
+      d.label = "synchronize";
+      d.twist = call_handover::synchronizationTwist(prediction.linearVelocity, omega, W_T_B.translation(),
+                                                    W_T_O_R.translation());
+      std::vector<int> damper;
+      bool inside = false;
+      const auto e = controlAwareAuthorityAtPreviewV2(mbc, {d}, damper, inside);
+      out.insideSecurity = out.insideSecurity || inside;
+      out.syncReserve = e.front().reserve;
+      out.syncResidual = e.front().residual;
+    }
   }
   restore();
   if(!std::isfinite(out.minClearance) || out.minClearance < plannerConfig_.transitMinimumPredictedClearance)
@@ -3803,6 +3868,38 @@ void HandoverInterceptionController::solveInterceptionV2(
       pushNext(cur, cur.event + 1);
       continue;
     }
+    // Phase D: kappa(g, tau) = min over path, synchronization and insertion
+    // (insertion = eval.record.reserve under the phase demands).
+    double kappa = eval.record.reserve;
+    std::string limiting = "insertion";
+    if(rollout.pathSamples > 0 && rollout.pathReserve < kappa)
+    {
+      kappa = rollout.pathReserve;
+      limiting = "path";
+    }
+    if(std::isfinite(rollout.syncReserve) && rollout.syncReserve < kappa)
+    {
+      kappa = rollout.syncReserve;
+      limiting = "synchronization";
+    }
+    if(std::isnan(rollout.syncReserve) || rollout.insideSecurity)
+    {
+      kappa = 0.0;
+      limiting = rollout.insideSecurity ? "security_distance" : "synchronization_unavailable";
+    }
+    if(!std::isfinite(ic.tauStarInterception)) { ic.tauStarInterception = at.tau; }
+    if(v2CaParams_.authorityFilter && kappa < v2CaParams_.kappaMin)
+    {
+      ++ic.authorityRejectedEvents;
+      attempt(at, "authority", fmt::format("{}/kappa={:.3f}<kappaMin={:.3f}", limiting, kappa, v2CaParams_.kappaMin), sc,
+              required, exactWall + rolloutWall);
+      pushNext(cur, cur.event + 1);
+      continue;
+    }
+    ic.kappa = kappa;
+    ic.kappaLimitingPhase = limiting;
+    eval.record.reserve = kappa;
+    eval.record.authorityFeasible = kappa >= v2CaParams_.kappaMin;
     attempt(at, "feasible", "feasible", sc, required, exactWall + rolloutWall);
     ic.status = "feasible";
     ic.tauStar = at.tau;
@@ -3843,13 +3940,17 @@ void HandoverInterceptionController::logInterceptionResultV2(const PendingJobV2 
     const sva::PTransformd T_G = e.candidate.W_T_M_standoff;
     const Eigen::Quaterniond qG(worldRotation(T_G));
     mc_rtc::log::info(
-        "[TriadLiteInterception] planningGeneration={} graspId={} status={} tauStar={:.4f} tauSurrogate={:.4f} surrogateEvent={} attempts={} exact={} rollouts={} T_G_p={} T_G_q=[{:.6f},{:.6f},{:.6f},{:.6f}] robotFeasible={} clearance={:.5f} reserve={:.5f} residual={:.6f} rejectionLayer={} rolloutReason={} rolloutClearance={:.5f} finalPositionError={:.5f} finalOrientationError={:.5f} relativeLinearSpeed={:.5f} relativeAngularSpeed={:.5f} conditionIndex={:.5f} reachStandoffDuration={:.4f}",
+        "[TriadLiteInterception] planningGeneration={} graspId={} status={} tauStar={:.4f} tauSurrogate={:.4f} surrogateEvent={} attempts={} exact={} rollouts={} T_G_p={} T_G_q=[{:.6f},{:.6f},{:.6f},{:.6f}] robotFeasible={} clearance={:.5f} reserve={:.5f} residual={:.6f} rejectionLayer={} rolloutReason={} rolloutClearance={:.5f} finalPositionError={:.5f} finalOrientationError={:.5f} relativeLinearSpeed={:.5f} relativeAngularSpeed={:.5f} conditionIndex={:.5f} reachStandoffDuration={:.4f} kappa={:.4f} kappaLimiting={} pathReserve={:.4f} pathSamples={} pathLimitingTime={:.3f} pathPeakLinearSpeed={:.4f} syncReserve={:.4f} insertionReserve={:.4f} tauStarInterception={:.4f} authorityRejectedEvents={}",
         pending.planningGeneration, ic.graspId, ic.status, ic.tauStar, ic.tauSurrogate, ic.surrogateEvent, ic.attempts,
         ic.exactEvaluations, ic.rollouts, caVec3(T_G.translation()), qG.w(), qG.x(), qG.y(), qG.z(),
         e.record.robotFeasible, e.record.clearance, e.record.reserve, e.record.residual, e.record.rejectionLayer,
         ic.rollout.reason, ic.rollout.minClearance, ic.rollout.finalPositionError, ic.rollout.finalOrientationError,
         ic.rollout.finalRelativeLinearSpeed, ic.rollout.finalRelativeAngularSpeed, ic.rollout.conditionIndexAtRendezvous,
-        e.reachStandoffDuration);
+        e.reachStandoffDuration, ic.kappa, ic.kappaLimitingPhase, ic.rollout.pathReserve, ic.rollout.pathSamples,
+        ic.rollout.pathLimitingTime, ic.rollout.pathPeakLinearSpeed, ic.rollout.syncReserve,
+        std::min([&e]() { double r = std::numeric_limits<double>::infinity(); for(const auto & a : e.standoffAuthority) { r = std::min(r, a.reserve); } return r; }(),
+                 [&e]() { double r = std::numeric_limits<double>::infinity(); for(const auto & a : e.captureAuthority) { r = std::min(r, a.reserve); } return r; }()),
+        ic.tauStarInterception, ic.authorityRejectedEvents);
     call_handover::InterceptionRecord r;
     r.base = e.record;
     r.base.grasp.id = ic.graspId;

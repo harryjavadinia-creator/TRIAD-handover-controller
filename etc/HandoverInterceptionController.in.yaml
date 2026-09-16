@@ -700,6 +700,11 @@ configs:
         maximumExactEvaluations: 240 # numerical per-job budget (logged when binding)
         maximumRollouts: 24          # numerical per-job budget (logged when binding)
         logAttempts: true
+        # Phase D authority (sec. 3.7): demands are the commanded interception step
+        # twists (every authorityStride rollout steps), the object twist at the
+        # rendezvous, and MovePregrasp insertion at standoff/capture (object at rest).
+        authorityStride: 1           # numerical; stride 5 missed demand peaks (min kappa 0.45 vs 0.35), evidence/phaseD_sim
+        authorityFilter: false       # true = FULL: tau* is the earliest encounter in F_C
 
 transitions:
 - [HandoverInterceptionController_Initial, OK, HandoverInterceptionController_ObserveObject, Auto]

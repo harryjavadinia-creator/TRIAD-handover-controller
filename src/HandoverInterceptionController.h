@@ -2208,6 +2208,17 @@ private:
     double finalRelativeLinearSpeed = std::numeric_limits<double>::quiet_NaN();
     double finalRelativeAngularSpeed = std::numeric_limits<double>::quiet_NaN();
     double conditionIndexAtRendezvous = std::numeric_limits<double>::quiet_NaN();
+    // Phase D: authority of the commanded interception reference (tool-body
+    // twist of each commanded step, sampled every authorityStride steps) and of
+    // the synchronization twist at the rendezvous configuration.
+    double pathReserve = std::numeric_limits<double>::quiet_NaN();
+    double pathResidual = 0.0;
+    int pathSamples = 0;
+    double pathLimitingTime = std::numeric_limits<double>::quiet_NaN();
+    double pathPeakLinearSpeed = 0.0;
+    double syncReserve = std::numeric_limits<double>::quiet_NaN();
+    double syncResidual = 0.0;
+    bool insideSecurity = false;
     std::map<std::string, std::vector<double>> rendezvousArmPosture;
   };
 
@@ -2238,6 +2249,12 @@ private:
     ControlAwareCandidateEvalV2 eval;  ///< exact layers at tau*
     InterceptionRolloutV2 rollout;
     sva::PTransformd objectPoseAtRendezvous = sva::PTransformd::Identity();
+    /** Phase D: kappa(g, tau*) = min over interception-path, synchronization
+     * and insertion demands (authority never decides F_I; it filters F_C). */
+    double kappa = std::numeric_limits<double>::quiet_NaN();
+    std::string kappaLimitingPhase = "none";
+    int authorityRejectedEvents = 0;
+    double tauStarInterception = std::numeric_limits<double>::infinity();  ///< earliest tau in F_I
   };
 
   struct InterceptionJobStatsV2
@@ -2415,6 +2432,9 @@ private:
     int interceptionMaximumExactEvaluations = 240; ///< numerical budget per job
     int interceptionMaximumRollouts = 24;          ///< numerical budget per job
     bool interceptionLogAttempts = true;
+    // Phase D controller-authority demands (sec. 3.7).
+    int authorityStride = 1;                       ///< numerical: every commanded step (stride 5 missed peaks, Phase D)
+    bool authorityFilter = false;                  ///< F_C = {F_I : kappa >= kappaMin} (FULL variant)
   };
   bool v2ControlAware_ = false;
   ControlAwareParametersV2 v2CaParams_;
@@ -2451,6 +2471,9 @@ private:
                                      double tau) const;
   /** Phase C: timed rollout from the frozen state tracking the Hermite
    * rendezvous reference toward compose(T_O(t), O_T_M_standoff), ending at tRendezvous. */
+  /** Phase D insertion demand at the acquisition interface (object at rest):
+   * MovePregrasp far-speed insertion along -y_M of the grasp. */
+  std::vector<call_handover::AuthorityDemand> insertionDemandV2(const sva::PTransformd & W_T_M_goal) const;
   void rolloutInterceptionV2(const ObjectPredictionRecordV2 & prediction, double tStart, double tRendezvous,
                              const sva::PTransformd & O_T_M_standoff,
                              const std::map<std::string, std::vector<double>> & postureTarget,
