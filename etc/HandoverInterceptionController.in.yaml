@@ -645,6 +645,31 @@ configs:
     characterizationRestDwell: 1.0
     # Phase 2B preview/runtime parity traces (logging only, default off).
     parityTrace: false
+    # TRIAD-lite supervisor selection (research/triad_lite). bank_search
+    # (default) keeps TRIAD V2 unchanged. control_aware replaces the
+    # (tau, grasp, route) bank search with a layered receiving-grasp selector
+    # (geometry -> robot -> clearance floor -> directional QP velocity
+    # authority), tracks the selected object-relative standoff continuously and
+    # admits acquisition on a measured gate; the grasp is frozen at the single
+    # commit. Not validated for handover outcome.
+    supervisorMode: bank_search
+    controlAware:
+      graspsPerSign: 32              # phi resolution 11.25 deg (Phase 4: 32/sign validated)
+      clearanceFloor: 0.025          # m, Phase 6 derived floor (8 mm reserve + 17 mm parity)
+      kappaMin: 1.0                  # declared demand must be realizable
+      kappaMaximum: 8.0
+      residualTolerance: 1.0e-4      # m/s-equivalent weighted residual
+      angularCharacteristicLength: 0.20
+      insertionSpeed: -1.0           # <0: MovePregrasp farLinearSpeed
+      disturbanceSpeed: 0.0          # >0 adds +/-x,y,z disturbance demands
+      switchDwell: 0.30              # s, hysteresis before replacing a dominated grasp
+      requireObjectStopped: true     # downstream MovePregrasp freezes its goal at commit
+      admissionRequiresCurrentAuthority: true
+      reselectWhileTracking: true
+      trustIncumbentReevaluation: true   # false was tested and failed 3/4 sim runs on the runtime clearance reserve (research/triad_lite)
+      clearanceTieBand: 0.005
+      reserveTieBand: 0.10
+      reserveSaturation: 2.0
 
 transitions:
 - [HandoverInterceptionController_Initial, OK, HandoverInterceptionController_ObserveObject, Auto]

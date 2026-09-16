@@ -1,0 +1,9 @@
+bank longitudinal exit=1 completed=0
+lite longitudinal exit=1 completed=0
+bank near-ground exit=0 completed=1
+lite near-ground exit=0 completed=1
+bank lateral-low exit=1 completed=0
+lite lateral-low exit=0 completed=1
+bank diagonal exit=1 completed=0
+lite diagonal exit=1 completed=0
+CAMPAIGN_DONE

@@ -1,0 +1,5 @@
+lite longitudinal exit=1 completed=0
+lite near-ground exit=1 completed=0
+lite lateral-low exit=0 completed=1
+lite diagonal exit=1 completed=0
+CAMPAIGN_DONE

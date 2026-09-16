@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IndependentGiverModel.h"
+#include "ControlAwareGraspSupervisor.h"
 
 #include <mc_control/fsm/Controller.h>
 #include <mc_tasks/TransformTask.h>
@@ -2046,7 +2047,10 @@ private:
     FullSearch,
     RecertifyActive,
     TerminalCertify,
-    CertifySelected
+    CertifySelected,
+    // TRIAD-lite (supervisorMode: control_aware): evaluate the receiving grasp
+    // family from the frozen current state and the current object estimate.
+    ControlAwareSelect
   };
   static const char * receiverJobTypeNameV2(ReceiverJobTypeV2 type);
 
@@ -2057,7 +2061,10 @@ private:
     ProvisionalReach,
     TerminalTrack,
     Committed,
-    Failed
+    Failed,
+    // TRIAD-lite: continuously track the selected object-relative standoff;
+    // acquisition entry is a measured gate, not a searched event time.
+    ControlAwareTrack
   };
   static const char * receiverPhaseNameV2(ReceiverPhaseV2 phase);
 
@@ -2136,8 +2143,26 @@ private:
     std::vector<double> postureTarget;
   };
 
+  /** TRIAD-lite: layered evaluation of one receiving grasp (worker output). */
+  struct ControlAwareCandidateEvalV2
+  {
+    call_handover::GraspCandidateRecord record;
+    CaptureCandidate candidate;
+    sva::PTransformd objectPose = sva::PTransformd::Identity();
+    double reachStandoffDuration = 0.0;
+    double reachCaptureDuration = 0.0;
+    double closureDuration = 0.0;
+    double retreatDuration = 0.0;
+    std::vector<call_handover::AuthorityEvaluation> standoffAuthority;
+    std::vector<call_handover::AuthorityEvaluation> captureAuthority;
+    std::vector<int> standoffDamper;
+    std::vector<int> captureDamper;
+  };
+
   struct ReceiverJobResultV2
   {
+    std::vector<ControlAwareCandidateEvalV2> controlAwareCandidates;
+    double controlAwareFrameConsistency = std::numeric_limits<double>::quiet_NaN();
     std::vector<ParitySampleV2> parityTrace;
     bool parityFromReachStart = false;
     ReceiverJobTypeV2 type = ReceiverJobTypeV2::None;
@@ -2239,6 +2264,56 @@ private:
   void logJobProfileV2(const PendingJobV2 & pending, double now) const;
   void filterHypothesisFreshnessV2(const PendingJobV2 & pending, double now);
   double independentGiverSpeedForLogV2(double now) const;
+
+  // ---------------------- TRIAD-lite control-aware supervisor ---------------
+  // Feature-flagged by ReceiverV2 `supervisorMode: control_aware` (default
+  // `bank_search` keeps TRIAD V2 unchanged). See
+  // research/triad_lite/TRIAD_CONTROL_AWARE_IMPLEMENTATION.md.
+  struct ControlAwareParametersV2
+  {
+    int graspsPerSign = 32;
+    double clearanceFloor = 0.025;
+    double kappaMin = 1.0;
+    double kappaMaximum = 8.0;
+    double residualTolerance = 1.0e-4;
+    double angularCharacteristicLength = 0.20;
+    double insertionSpeed = 0.38;
+    double disturbanceSpeed = 0.0;
+    double switchDwell = 0.30;
+    bool requireObjectStopped = true;
+    bool admissionRequiresCurrentAuthority = true;
+    bool reselectWhileTracking = true;
+    bool trustIncumbentReevaluation = true;
+    call_handover::GraspSelectionTolerances selection;
+  };
+  bool v2ControlAware_ = false;
+  ControlAwareParametersV2 v2CaParams_;
+  call_handover::QpKinematicsLimits v2QpLimits_;
+  call_handover::GraspSelectorState v2CaSelector_;
+  std::unique_ptr<rbd::Jacobian> v2CaRuntimeJacobian_;
+  int v2CaSelectionsSubmitted_ = 0;
+  int v2CaSelectionsProcessed_ = 0;
+  int v2CaSwitches_ = 0;
+  int v2CaAborts_ = 0;
+  int v2CaAdmitsDeferred_ = 0;
+  bool loadControlAwareConfigV2(const mc_rtc::Configuration & stateConfig);
+  void runControlAwareSelectionV2(ReceiverJobResultV2 & result);
+  void handleControlAwareSelectionV2(const PendingJobV2 & pending, double now);
+  bool adoptControlAwareCandidateV2(const ControlAwareCandidateEvalV2 & eval, double now, const std::string & event);
+  /** 0 running, 1 committed, -1 failed. */
+  int stepControlAwareTrackV2(double now, bool workerIdle);
+  std::vector<call_handover::AuthorityDemand> controlAwareDemandsV2(
+      const Eigen::Vector3d & objectLinearVelocity, const Eigen::Vector3d & objectAngularVelocity,
+      const Eigen::Vector3d & objectPosition, const sva::PTransformd & W_T_M_goal,
+      const sva::PTransformd & W_T_B_eval) const;
+  /** Directional authority at a planner-model configuration (worker thread). */
+  std::vector<call_handover::AuthorityEvaluation> controlAwareAuthorityAtPreviewV2(
+      const rbd::MultiBodyConfig & mbc, const std::vector<call_handover::AuthorityDemand> & demands,
+      std::vector<int> & damper, bool & insideSecurity) const;
+  /** Directional authority at the live robot configuration (control thread). */
+  std::vector<call_handover::AuthorityEvaluation> controlAwareAuthorityAtRuntimeV2(
+      const std::vector<call_handover::AuthorityDemand> & demands, bool & insideSecurity);
+  static std::string classifyControlAwareRejectionV2(const std::string & reason);
 
   ReceiverV2Parameters v2Params_;
   bool v2Active_ = false;

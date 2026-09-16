@@ -66,6 +66,7 @@ const char * HandoverInterceptionController::receiverJobTypeNameV2(ReceiverJobTy
     case ReceiverJobTypeV2::RecertifyActive: return "RECERTIFY_ACTIVE";
     case ReceiverJobTypeV2::TerminalCertify: return "TERMINAL_CERTIFY";
     case ReceiverJobTypeV2::CertifySelected: return "CERTIFY_SELECTED";
+    case ReceiverJobTypeV2::ControlAwareSelect: return "CONTROL_AWARE_SELECT";
     default: return "NONE";
   }
 }
@@ -79,6 +80,7 @@ const char * HandoverInterceptionController::receiverPhaseNameV2(ReceiverPhaseV2
     case ReceiverPhaseV2::TerminalTrack: return "TERMINAL_TRACK";
     case ReceiverPhaseV2::Committed: return "COMMITTED";
     case ReceiverPhaseV2::Failed: return "FAILED";
+    case ReceiverPhaseV2::ControlAwareTrack: return "CONTROL_AWARE_TRACK";
     default: return "IDLE";
   }
 }
@@ -222,6 +224,10 @@ bool HandoverInterceptionController::beginReceiverV2(
   v2ParityLastRuntimeLog_ = -1.0;
   mc_rtc::log::info("[V2ParityTrace] enabled={} decisionEffect=none", v2ParityTrace_);
   v2CharacterizationStage_ = 0;
+  if(!loadControlAwareConfigV2(stateConfig))
+  {
+    return false;
+  }
 
   v2Active_ = true;
   v2EstimationActive_ = true;
@@ -271,6 +277,13 @@ bool HandoverInterceptionController::beginReceiverV2(
 void HandoverInterceptionController::endReceiverV2()
 {
   shutdownPlannerWorker();
+  if(v2ControlAware_)
+  {
+    mc_rtc::log::success(
+        "[TriadLiteSummary] selectionsSubmitted={} selectionsProcessed={} graspSwitches={} abortsToHold={} admitsDeferred={} frozen={} selectedGraspId={}",
+        v2CaSelectionsSubmitted_, v2CaSelectionsProcessed_, v2CaSwitches_, v2CaAborts_, v2CaAdmitsDeferred_,
+        v2CaSelector_.frozen, v2CaSelector_.incumbentId);
+  }
   v2Active_ = false;
   if(!v2CommitLatched_) { v2EstimationActive_ = false; }
   mc_rtc::log::success(
@@ -393,7 +406,11 @@ HandoverInterceptionController::stepReceiverV2()
       // must still occupy at adoption.
       const bool settled = v2MouthLinearSpeed_ <= v2Params_.settleLinearSpeedTolerance
           && v2MouthAngularSpeed_ <= v2Params_.settleAngularSpeedTolerance;
-      if(workerIdle && settled) { submitReceiverFullSearchV2(now); }
+      if(workerIdle && settled)
+      {
+        if(v2ControlAware_) { submitReceiverCertificationV2(ReceiverJobTypeV2::ControlAwareSelect, now); }
+        else { submitReceiverFullSearchV2(now); }
+      }
       break;
     }
     case ReceiverPhaseV2::ProvisionalReach:
@@ -469,6 +486,17 @@ HandoverInterceptionController::stepReceiverV2()
         // Keep the active plan certified while waiting for presentation.
         submitReceiverCertificationV2(ReceiverJobTypeV2::TerminalCertify, now);
       }
+      break;
+    }
+    case ReceiverPhaseV2::ControlAwareTrack:
+    {
+      const int status = stepControlAwareTrackV2(now, workerIdle);
+      if(status < 0)
+      {
+        v2Phase_ = ReceiverPhaseV2::Failed;
+        return ReceiverStepStatusV2::Failed;
+      }
+      if(status > 0) { return ReceiverStepStatusV2::Committed; }
       break;
     }
     default:
@@ -580,7 +608,11 @@ bool HandoverInterceptionController::submitReceiverCertificationV2(
     return false;
   }
   if(v2Pending_.active || plannerJobState() == PlannerJobState::Running) { return false; }
-  if(type != ReceiverJobTypeV2::CertifySelected && !provisionalReceiverPlan_.valid) { return false; }
+  if(type != ReceiverJobTypeV2::CertifySelected && type != ReceiverJobTypeV2::ControlAwareSelect
+     && !provisionalReceiverPlan_.valid)
+  {
+    return false;
+  }
   if(type == ReceiverJobTypeV2::CertifySelected && (candidate == nullptr || plan == nullptr)) { return false; }
   const ObjectPredictionRecordV2 prediction = currentObjectPredictionV2();
   if(!prediction.valid) { return false; }
@@ -645,6 +677,7 @@ bool HandoverInterceptionController::submitReceiverCertificationV2(
     v2Pending_.bankPoses.push_back(request.terminalObjectPose);
   }
   if(type == ReceiverJobTypeV2::CertifySelected) { ++v2SelectedCertifications_; }
+  else if(type == ReceiverJobTypeV2::ControlAwareSelect) { ++v2CaSelectionsSubmitted_; }
   else if(type == ReceiverJobTypeV2::RecertifyActive) { ++v2Counters_.recertifySubmitted; }
   else { ++v2Counters_.terminalSubmitted; }
   const bool robotMoving = v2MouthLinearSpeed_ > v2Params_.settleLinearSpeedTolerance;
@@ -694,6 +727,10 @@ void HandoverInterceptionController::runReceiverWorkerJobV2(std::uint64_t genera
     else if(request.type == ReceiverJobTypeV2::TerminalCertify)
     {
       runTerminalCertificationV2(result);
+    }
+    else if(request.type == ReceiverJobTypeV2::ControlAwareSelect)
+    {
+      runControlAwareSelectionV2(result);
     }
     else
     {
@@ -972,6 +1009,11 @@ void HandoverInterceptionController::processReceiverJobResultV2(double now)
   }
 
   logSnapshotAuditV2(pending, now, "accepted");
+  if(pending.type == ReceiverJobTypeV2::ControlAwareSelect)
+  {
+    handleControlAwareSelectionV2(pending, now);
+    return;
+  }
   if(pending.type == ReceiverJobTypeV2::FullSearch)
   {
     const auto & set = plannerResult();
@@ -1272,6 +1314,15 @@ void HandoverInterceptionController::invalidateProvisionalPlanV2(
   v2SearchBudgetStart_ = now;
   v2LatestTerminalCertificateValid_ = false;
   v2GateStableSince_ = -1.0;
+  if(v2ControlAware_ && !v2CaSelector_.frozen)
+  {
+    ++v2CaAborts_;
+    mc_rtc::log::warning(
+        "[TriadLiteEvent] type=abort_to_hold graspId={} reason={} t={:.6f}",
+        v2CaSelector_.incumbentId, reason, now);
+    v2CaSelector_.incumbentId = -1;
+    v2CaSelector_.challengerId = -1;
+  }
 }
 
 // =============================================================================
@@ -2214,4 +2265,793 @@ void HandoverInterceptionController::logParityRuntimeV2()
       W_T_O_truth_.translation().x(), W_T_O_truth_.translation().y(), W_T_O_truth_.translation().z(),
       measuredGripperClosure(), objectAttached_, clear, clearSource, v2ReferencePose_.translation().x(),
       v2ReferencePose_.translation().y(), v2ReferencePose_.translation().z(), v2ClearanceScale_);
+}
+
+// =============================================================================
+// TRIAD-lite: control-aware supervisory grasp selection
+// (ReceiverV2 supervisorMode: control_aware; default bank_search is unchanged)
+// =============================================================================
+//
+// Decision variable: a receiving grasp g = (sign, phi) about the handle axis.
+// Layers, evaluated from the frozen current robot state and the current object
+// estimate with the controller's own preview kinematics:
+//   geometry  - insertion corridor to the capture pose, bilateral pad contact
+//               without penetration, no interference with the modelled object;
+//   robot     - convergence, joint limits, ground clearance, carried retreat,
+//               and no limited joint inside the QP security distance;
+//   clearance - min(reach, carried-retreat) non-contact clearance >= floor;
+//   authority - directional realizability of the declared acquisition twist
+//               within the QP joint-velocity box (ControlAwareGraspSupervisor.h).
+// Selection is the transparent cascade in selectGraspLexicographic with
+// hysteresis. The event time is not searched: acquisition entry is the first
+// time the measured gate holds for the stable dwell together with a fresh
+// terminal certificate; the grasp is frozen at that single commit.
+
+namespace
+{
+std::string caVec3(const Eigen::Vector3d & v)
+{
+  return fmt::format("[{:.5f},{:.5f},{:.5f}]", v.x(), v.y(), v.z());
+}
+
+std::string caDamper(const std::vector<int> & d)
+{
+  std::string s;
+  for(std::size_t i = 0; i < d.size(); ++i) { s += (i ? "," : "") + std::to_string(d[i]); }
+  return "[" + s + "]";
+}
+
+std::string caAuthority(const std::vector<call_handover::AuthorityEvaluation> & evals)
+{
+  std::string s;
+  for(const auto & e : evals)
+  {
+    s += fmt::format("{}{}:res={:.6f}:kappa={:.4f}", s.empty() ? "" : ";", e.label, e.residual, e.reserve);
+  }
+  return "[" + s + "]";
+}
+} // namespace
+
+bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Configuration & stateConfig)
+{
+  const std::string mode = stateConfig.has("supervisorMode")
+      ? static_cast<std::string>(stateConfig("supervisorMode")) : std::string("bank_search");
+  if(mode != "bank_search" && mode != "control_aware")
+  {
+    mc_rtc::log::error("[TriadLiteConfig] supervisorMode must be bank_search or control_aware, got {}", mode);
+    return false;
+  }
+  v2ControlAware_ = mode == "control_aware";
+  v2CaSelector_ = call_handover::GraspSelectorState{};
+  v2CaSelectionsSubmitted_ = 0;
+  v2CaSelectionsProcessed_ = 0;
+  v2CaSwitches_ = 0;
+  v2CaAborts_ = 0;
+  v2CaAdmitsDeferred_ = 0;
+  if(!v2ControlAware_)
+  {
+    mc_rtc::log::info("[TriadLiteConfig] supervisorMode=bank_search controlAware=false");
+    return true;
+  }
+  if(v2Params_.characterizeOnly)
+  {
+    mc_rtc::log::error("[TriadLiteConfig] supervisorMode=control_aware is incompatible with characterizeOnly");
+    return false;
+  }
+
+  // The authority test must use exactly the bounds the QP was built with:
+  // the kinematics constraint entry of this controller configuration, with the
+  // mc_rtc loader default velocityPercent = 0.5 when the key is absent.
+  bool found = false;
+  if(config().has("constraints"))
+  {
+    const auto constraints = config()("constraints");
+    for(std::size_t i = 0; i < constraints.size(); ++i)
+    {
+      const auto c = constraints[i];
+      if(!c.has("type") || static_cast<std::string>(c("type")) != "kinematics") { continue; }
+      if(!c.has("damper"))
+      {
+        mc_rtc::log::error("[TriadLiteConfig] control_aware requires the kinematics constraint to declare its damper");
+        return false;
+      }
+      const std::vector<double> damper = c("damper");
+      if(damper.size() != 3)
+      {
+        mc_rtc::log::error("[TriadLiteConfig] kinematics damper must have 3 entries, got {}", damper.size());
+        return false;
+      }
+      v2QpLimits_.interPercent = damper[0];
+      v2QpLimits_.securityPercent = damper[1];
+      v2QpLimits_.damperOffset = damper[2];
+      v2QpLimits_.velocityPercent = c("velocityPercent", 0.5);
+      found = true;
+      break;
+    }
+  }
+  if(!found)
+  {
+    mc_rtc::log::error("[TriadLiteConfig] control_aware requires a kinematics constraint in the controller configuration");
+    return false;
+  }
+
+  ControlAwareParametersV2 p;
+  const auto configs = config()("configs");
+  if(configs.has("HandoverInterceptionController_MovePregrasp"))
+  {
+    p.insertionSpeed = readDouble(configs("HandoverInterceptionController_MovePregrasp"), "farLinearSpeed", p.insertionSpeed);
+  }
+  if(config().has("decisionCost"))
+  {
+    p.angularCharacteristicLength = readDouble(config()("decisionCost"), "characteristicLength", p.angularCharacteristicLength);
+  }
+  if(stateConfig.has("controlAware"))
+  {
+    const auto ca = stateConfig("controlAware");
+    p.graspsPerSign = std::max(4, readInt(ca, "graspsPerSign", p.graspsPerSign));
+    p.clearanceFloor = readDouble(ca, "clearanceFloor", p.clearanceFloor);
+    p.kappaMin = readDouble(ca, "kappaMin", p.kappaMin);
+    p.kappaMaximum = readDouble(ca, "kappaMaximum", p.kappaMaximum);
+    p.residualTolerance = readDouble(ca, "residualTolerance", p.residualTolerance);
+    p.angularCharacteristicLength = readDouble(ca, "angularCharacteristicLength", p.angularCharacteristicLength);
+    if(ca.has("insertionSpeed") && readDouble(ca, "insertionSpeed", -1.0) >= 0.0)
+    {
+      p.insertionSpeed = readDouble(ca, "insertionSpeed", p.insertionSpeed);
+    }
+    p.disturbanceSpeed = readDouble(ca, "disturbanceSpeed", p.disturbanceSpeed);
+    p.switchDwell = readDouble(ca, "switchDwell", p.switchDwell);
+    p.requireObjectStopped = readBool(ca, "requireObjectStopped", p.requireObjectStopped);
+    p.admissionRequiresCurrentAuthority = readBool(ca, "admissionRequiresCurrentAuthority", p.admissionRequiresCurrentAuthority);
+    p.reselectWhileTracking = readBool(ca, "reselectWhileTracking", p.reselectWhileTracking);
+    p.trustIncumbentReevaluation = readBool(ca, "trustIncumbentReevaluation", p.trustIncumbentReevaluation);
+    p.selection.clearanceTieBand = readDouble(ca, "clearanceTieBand", p.selection.clearanceTieBand);
+    p.selection.reserveTieBand = readDouble(ca, "reserveTieBand", p.selection.reserveTieBand);
+    p.selection.reserveSaturation = readDouble(ca, "reserveSaturation", p.selection.reserveSaturation);
+  }
+  if(!(p.kappaMin > 0.0 && p.kappaMaximum > p.kappaMin && p.residualTolerance > 0.0 && p.switchDwell >= 0.0
+       && p.angularCharacteristicLength > 0.0 && p.insertionSpeed >= 0.0 && p.disturbanceSpeed >= 0.0))
+  {
+    mc_rtc::log::error("[TriadLiteConfig] invalid controlAware parameters");
+    return false;
+  }
+  v2CaParams_ = p;
+  mc_rtc::log::success(
+      "[TriadLiteConfig] supervisorMode=control_aware graspsPerSign={} clearanceFloor={:.4f} kappaMin={:.3f} kappaMaximum={:.3f} residualTolerance={:.2e} angularLength={:.3f} insertionSpeed={:.3f} disturbanceSpeed={:.3f} switchDwell={:.3f} requireObjectStopped={} admissionRequiresCurrentAuthority={} reselectWhileTracking={} trustIncumbentReevaluation={} tieBands=[clearance:{:.4f},reserve:{:.3f}] reserveSaturation={:.3f} qpLimits=[velocityPercent:{:.3f},inter:{:.3f},security:{:.3f},damperOffset:{:.3f}] authorityLevel=velocity accelerationBounds=module_default_infinite xi=damperOffset_lower_bound",
+      p.graspsPerSign, p.clearanceFloor, p.kappaMin, p.kappaMaximum, p.residualTolerance,
+      p.angularCharacteristicLength, p.insertionSpeed, p.disturbanceSpeed, p.switchDwell,
+      p.requireObjectStopped, p.admissionRequiresCurrentAuthority, p.reselectWhileTracking, p.trustIncumbentReevaluation,
+      p.selection.clearanceTieBand, p.selection.reserveTieBand, p.selection.reserveSaturation,
+      v2QpLimits_.velocityPercent, v2QpLimits_.interPercent, v2QpLimits_.securityPercent, v2QpLimits_.damperOffset);
+  return true;
+}
+
+std::string HandoverInterceptionController::classifyControlAwareRejectionV2(const std::string & reason)
+{
+  auto has = [&reason](const char * s) { return reason.find(s) != std::string::npos; };
+  if(has("no_convergence") || has("kinematics_unavailable")) { return "ik"; }
+  if(has("joint_limit")) { return "joint_limits"; }
+  if(has("ground_plane")) { return "collision"; }
+  return "geometry";
+}
+
+std::vector<call_handover::AuthorityDemand> HandoverInterceptionController::controlAwareDemandsV2(
+    const Eigen::Vector3d & objectLinearVelocity, const Eigen::Vector3d & objectAngularVelocity,
+    const Eigen::Vector3d & objectPosition, const sva::PTransformd & W_T_M_goal,
+    const sva::PTransformd & W_T_B_eval) const
+{
+  // Tool-body (gen3_robotiq_85_base_link) twist, world frame, [angular; linear]:
+  // follow the rigid object motion at the body origin, and additionally insert
+  // along -y_M of the grasp at the acquisition insertion speed.
+  const Eigen::Vector3d follow = objectLinearVelocity
+      + objectAngularVelocity.cross(W_T_B_eval.translation() - objectPosition);
+  const Eigen::Vector3d insert = -v2CaParams_.insertionSpeed * worldRotation(W_T_M_goal).col(1);
+  std::vector<call_handover::AuthorityDemand> demands;
+  call_handover::AuthorityDemand d;
+  d.label = "follow";
+  d.twist.head<3>() = objectAngularVelocity;
+  d.twist.tail<3>() = follow;
+  demands.push_back(d);
+  d.label = "follow_insert";
+  d.twist.tail<3>() = follow + insert;
+  demands.push_back(d);
+  if(v2CaParams_.disturbanceSpeed > 0.0)
+  {
+    static const char * names[6] = {"dist+x", "dist-x", "dist+y", "dist-y", "dist+z", "dist-z"};
+    for(int i = 0; i < 6; ++i)
+    {
+      Eigen::Vector3d e = Eigen::Vector3d::Zero();
+      e[i / 2] = (i % 2 == 0 ? 1.0 : -1.0) * v2CaParams_.disturbanceSpeed;
+      call_handover::AuthorityDemand dd;
+      dd.label = std::string("follow_insert_") + names[i];
+      dd.twist.head<3>() = objectAngularVelocity;
+      dd.twist.tail<3>() = follow + insert + e;
+      demands.push_back(dd);
+    }
+  }
+  return demands;
+}
+
+std::vector<call_handover::AuthorityEvaluation> HandoverInterceptionController::controlAwareAuthorityAtPreviewV2(
+    const rbd::MultiBodyConfig & mbc, const std::vector<call_handover::AuthorityDemand> & demands,
+    std::vector<int> & damper, bool & insideSecurity) const
+{
+  const auto & mb = plannerModel();
+  if(!plannerContext_.previewKinematicCacheValid || !plannerContext_.previewToolJacobian)
+  {
+    refreshPreviewKinematicCache();
+  }
+  rbd::Jacobian & jac = *plannerContext_.previewToolJacobian;
+  const Eigen::MatrixXd Jc = jac.jacobian(mb, mbc);
+  Eigen::MatrixXd Jfull = Eigen::MatrixXd::Zero(6, mb.nrDof());
+  jac.fullJacobian(mb, Jc, Jfull);
+
+  std::vector<int> cols;
+  std::vector<double> q, qMin, qMax, vMin, vMax;
+  const auto & ql = plannerConfig_.jointPositionLower;
+  const auto & qu = plannerConfig_.jointPositionUpper;
+  for(int j = 0; j < mb.nrJoints(); ++j)
+  {
+    if(plannerContext_.previewGripperJoint[static_cast<std::size_t>(j)] != 0u) { continue; }
+    if(mb.joint(j).dof() != 1) { continue; }
+    const int d = mb.jointPosInDof(j);
+    cols.push_back(d);
+    q.push_back(mbc.q[static_cast<std::size_t>(j)][0]);
+    qMin.push_back(static_cast<std::size_t>(j) < ql.size() && !ql[static_cast<std::size_t>(j)].empty()
+                       ? ql[static_cast<std::size_t>(j)][0] : -std::numeric_limits<double>::infinity());
+    qMax.push_back(static_cast<std::size_t>(j) < qu.size() && !qu[static_cast<std::size_t>(j)].empty()
+                       ? qu[static_cast<std::size_t>(j)][0] : std::numeric_limits<double>::infinity());
+    vMin.push_back(plannerContext_.previewJointVelocityLower[d]);
+    vMax.push_back(plannerContext_.previewJointVelocityUpper[d]);
+  }
+  const Eigen::Index n = static_cast<Eigen::Index>(cols.size());
+  Eigen::MatrixXd J(6, n);
+  for(Eigen::Index c = 0; c < n; ++c) { J.col(c) = Jfull.col(cols[static_cast<std::size_t>(c)]); }
+  const auto toVec = [](const std::vector<double> & v)
+  { return Eigen::Map<const Eigen::VectorXd>(v.data(), static_cast<Eigen::Index>(v.size())).eval(); };
+  const auto box = call_handover::qpJointVelocityBox(toVec(q), toVec(qMin), toVec(qMax), toVec(vMin), toVec(vMax), v2QpLimits_);
+  damper = box.damper;
+  insideSecurity = box.insideSecurity;
+  std::vector<call_handover::AuthorityEvaluation> out;
+  for(const auto & d : demands)
+  {
+    out.push_back(call_handover::evaluateAuthorityDemand(J, box, d, v2CaParams_.angularCharacteristicLength,
+                                                         v2CaParams_.residualTolerance, v2CaParams_.kappaMaximum));
+  }
+  return out;
+}
+
+std::vector<call_handover::AuthorityEvaluation> HandoverInterceptionController::controlAwareAuthorityAtRuntimeV2(
+    const std::vector<call_handover::AuthorityDemand> & demands, bool & insideSecurity)
+{
+  const auto & mb = robot().mb();
+  const auto & mbc = robot().mbc();
+  if(!v2CaRuntimeJacobian_) { v2CaRuntimeJacobian_ = std::make_unique<rbd::Jacobian>(mb, toolFrame_); }
+  const Eigen::MatrixXd Jc = v2CaRuntimeJacobian_->jacobian(mb, mbc);
+  Eigen::MatrixXd Jfull = Eigen::MatrixXd::Zero(6, mb.nrDof());
+  v2CaRuntimeJacobian_->fullJacobian(mb, Jc, Jfull);
+  std::vector<int> cols;
+  std::vector<double> q, qMin, qMax, vMin, vMax;
+  for(int j = 0; j < mb.nrJoints(); ++j)
+  {
+    if(mb.joint(j).dof() != 1) { continue; }
+    if(mb.joint(j).name().rfind("gen3_robotiq_85_", 0) == 0) { continue; }
+    const std::size_t sj = static_cast<std::size_t>(j);
+    cols.push_back(mb.jointPosInDof(j));
+    q.push_back(mbc.q[sj][0]);
+    qMin.push_back(robot().ql()[sj].empty() ? -std::numeric_limits<double>::infinity() : robot().ql()[sj][0]);
+    qMax.push_back(robot().qu()[sj].empty() ? std::numeric_limits<double>::infinity() : robot().qu()[sj][0]);
+    vMin.push_back(robot().vl()[sj].empty() ? -std::numeric_limits<double>::infinity() : robot().vl()[sj][0]);
+    vMax.push_back(robot().vu()[sj].empty() ? std::numeric_limits<double>::infinity() : robot().vu()[sj][0]);
+  }
+  const Eigen::Index n = static_cast<Eigen::Index>(cols.size());
+  Eigen::MatrixXd J(6, n);
+  for(Eigen::Index c = 0; c < n; ++c) { J.col(c) = Jfull.col(cols[static_cast<std::size_t>(c)]); }
+  const auto toVec = [](const std::vector<double> & v)
+  { return Eigen::Map<const Eigen::VectorXd>(v.data(), static_cast<Eigen::Index>(v.size())).eval(); };
+  const auto box = call_handover::qpJointVelocityBox(toVec(q), toVec(qMin), toVec(qMax), toVec(vMin), toVec(vMax), v2QpLimits_);
+  insideSecurity = box.insideSecurity;
+  // Gate use: realizability of kappaMin * demand (one bounded least squares per
+  // demand, no bisection) keeps the control-thread cost bounded.
+  std::vector<call_handover::AuthorityEvaluation> out;
+  Eigen::Matrix<double, 6, 1> w;
+  const double L = v2CaParams_.angularCharacteristicLength;
+  w << L, L, L, 1.0, 1.0, 1.0;
+  const Eigen::MatrixXd A = w.asDiagonal() * J;
+  for(const auto & d : demands)
+  {
+    call_handover::AuthorityEvaluation e;
+    e.label = d.label;
+    if(box.consistent)
+    {
+      const Eigen::VectorXd y = w.asDiagonal() * (v2CaParams_.kappaMin * d.twist);
+      e.residual = call_handover::boxConstrainedLeastSquares(A, y, box.lower, box.upper).residual;
+      e.realizable = e.residual <= v2CaParams_.residualTolerance;
+      e.reserve = e.realizable ? v2CaParams_.kappaMin : 0.0;
+    }
+    out.push_back(e);
+  }
+  return out;
+}
+
+void HandoverInterceptionController::runControlAwareSelectionV2(ReceiverJobResultV2 & result)
+{
+  const ReceiverJobRequestV2 & request = v2Request_;
+  const sva::PTransformd objectPose = request.terminalObjectPose;
+  result.objectPose = objectPose;
+  plannerContext_.W_T_O = objectPose;
+  plannerContext_.W_T_H = compose(objectPose, O_T_H_);
+  plannerContext_.planningM_T_O = sva::PTransformd::Identity();
+  plannerContext_.plannerWorldActive = true;
+  plannerContext_.planningStartMouthPose = request.snapshotMouthPose;
+  plannerContext_.planningStartMouthPoseValid = true;
+
+  const Eigen::Vector3d pH = plannerContext_.W_T_H.translation();
+  const Eigen::Vector3d zH = plannerHandleAxis();
+  // Same robot-relative outward reference as the V2 static screen.
+  Eigen::Vector3d outward = request.snapshotMouthPose.translation() - pH;
+  outward -= zH * zH.dot(outward);
+  if(outward.norm() < 1e-6) { outward = plannerConfig_.worldUp - zH * zH.dot(plannerConfig_.worldUp); }
+  if(outward.norm() < 1e-6) { outward = Eigen::Vector3d::UnitY() - zH * zH.y(); }
+  if(outward.norm() < 1e-6) { outward = Eigen::Vector3d::UnitX() - zH * zH.x(); }
+
+  const auto family = call_handover::generateGraspFamily(v2CaParams_.graspsPerSign);
+  const Eigen::Vector3d vObj = request.prediction.linearVelocity;
+  const Eigen::Vector3d wObj = request.prediction.angularVelocity;
+  const double inf = std::numeric_limits<double>::infinity();
+  result.controlAwareCandidates.reserve(family.size());
+
+  for(const auto & g : family)
+  {
+    if(plannerCancel_.load(std::memory_order_relaxed))
+    {
+      result.success = false;
+      result.reason = "v2/cancelled";
+      return;
+    }
+    ControlAwareCandidateEvalV2 eval;
+    eval.objectPose = objectPose;
+    eval.record.grasp = g;
+    CaptureCandidate c = buildCandidate(g.phi, static_cast<double>(g.sign), request.snapshotMouthPose, outward);
+    eval.record.name = c.name;
+    if(std::isnan(result.controlAwareFrameConsistency))
+    {
+      // Guard against divergence between the pure grasp-frame definition and
+      // the controller's buildCandidate (single geometric source in use).
+      result.controlAwareFrameConsistency =
+          (call_handover::graspFrameRotation(zH, outward, g) - worldRotation(c.W_T_M_pre)).norm();
+    }
+    c.rotation = orientationError(request.snapshotMouthPose, c.W_T_M_standoff);
+    c.transitPathLength = (c.W_T_M_standoff.translation() - request.snapshotMouthPose.translation()).norm();
+    eval.record.reachDistance = c.transitPathLength + v2CaParams_.angularCharacteristicLength * c.rotation;
+    auto reject = [&eval, &c, &result](const std::string & layer, const std::string & why)
+    {
+      eval.record.rejectionLayer = layer;
+      eval.record.rejectionReason = why;
+      eval.candidate = c;
+      result.controlAwareCandidates.push_back(eval);
+    };
+
+    rbd::MultiBodyConfig mbc = planningSnapshot_.frozenRobotState;
+    for(auto & a : mbc.alpha) { std::fill(a.begin(), a.end(), 0.0); }
+    for(auto & aD : mbc.alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
+    setPreviewGripperClosure(mbc, 0.0);
+
+    PreviewResult reach;
+    reach.minClearance = inf;
+    if(!previewReachSegment(mbc, c.W_T_M_standoff, false, false, reach, true))
+    {
+      reject(classifyControlAwareRejectionV2(reach.reason), "standoff/" + reach.reason);
+      continue;
+    }
+    eval.reachStandoffDuration = reach.duration;
+    const rbd::MultiBodyConfig standoffMbc = mbc;
+    c.plannedStandoffArmPosture = armPostureFromMbc(mbc);
+    c.plannedTransitArmPosture = c.plannedStandoffArmPosture;
+
+    PreviewResult capture;
+    capture.minClearance = inf;
+    if(!previewReachSegment(mbc, c.W_T_M_pre, true, false, capture, true))
+    {
+      reject(classifyControlAwareRejectionV2(capture.reason), "capture/" + capture.reason);
+      continue;
+    }
+    eval.reachCaptureDuration = capture.duration;
+    const rbd::MultiBodyConfig captureMbc = mbc;
+
+    PreviewResult closure;
+    closure.minClearance = inf;
+    if(!previewClosureSweep(mbc, closure))
+    {
+      reject(classifyControlAwareRejectionV2(closure.reason), "closure/" + closure.reason);
+      continue;
+    }
+    eval.closureDuration = closure.duration;
+    c.contactClosure = closure.contactClosure;
+    c.plannedArmPosture = armPostureFromMbc(mbc);
+
+    sva::PTransformd captureMouth;
+    if(!previewMouthPose(mbc, captureMouth))
+    {
+      reject("ik", "retreat/preview_kinematics_unavailable");
+      continue;
+    }
+    plannerContext_.planningM_T_O = relativePose(captureMouth, plannerContext_.W_T_O);
+    PreviewResult retreat;
+    retreat.minClearance = inf;
+    const bool retreatOk = previewReachSegment(mbc, c.W_T_M_retreat, false, true, retreat, true);
+    plannerContext_.planningM_T_O = sva::PTransformd::Identity();
+    if(!retreatOk)
+    {
+      reject(classifyControlAwareRejectionV2(retreat.reason), "retreat/" + retreat.reason);
+      continue;
+    }
+    eval.retreatDuration = retreat.duration;
+    c.plannedRetreatArmPosture = armPostureFromMbc(mbc);
+    eval.record.geometryFeasible = true;
+
+    // Authority at the standoff (start of insertion) and capture (end of
+    // insertion) configurations; the security-distance screen comes from the
+    // same box construction.
+    sva::PTransformd W_T_B_s;
+    sva::PTransformd W_T_B_c;
+    if(!previewBasePose(standoffMbc, W_T_B_s) || !previewBasePose(captureMbc, W_T_B_c))
+    {
+      reject("ik", "authority/preview_kinematics_unavailable");
+      continue;
+    }
+    bool securityS = false;
+    bool securityC = false;
+    eval.standoffAuthority = controlAwareAuthorityAtPreviewV2(
+        standoffMbc, controlAwareDemandsV2(vObj, wObj, objectPose.translation(), c.W_T_M_pre, W_T_B_s),
+        eval.standoffDamper, securityS);
+    eval.captureAuthority = controlAwareAuthorityAtPreviewV2(
+        captureMbc, controlAwareDemandsV2(vObj, wObj, objectPose.translation(), c.W_T_M_pre, W_T_B_c),
+        eval.captureDamper, securityC);
+    double reserve = inf;
+    double residual = 0.0;
+    for(const auto * evals : {&eval.standoffAuthority, &eval.captureAuthority})
+    {
+      for(const auto & e : *evals)
+      {
+        reserve = std::min(reserve, e.reserve);
+        residual = std::max(residual, e.residual);
+      }
+    }
+    eval.record.reserve = std::isfinite(reserve) ? reserve : 0.0;
+    eval.record.residual = residual;
+
+    // Complete-action fields consumed by adoption, TERMINAL_CERTIFY and commit.
+    c.previewFeasible = true;
+    c.failureReason = "feasible_control_aware";
+    c.predictiveReachClearance = reach.minClearance;
+    c.predictiveRetreatClearance = retreat.minClearance;
+    c.minClearance = std::min(reach.minClearance, std::min(capture.minClearance, retreat.minClearance));
+    c.predictedEffort = reach.effort + capture.effort + retreat.effort;
+    c.predictedReachTime = plannerConfig_.timingArmScale * eval.reachStandoffDuration;
+    c.predictedPresentationTime = c.predictedReachTime;
+    c.predictedApproachTime = plannerConfig_.timingTerminalCaptureDwell
+        + plannerConfig_.timingArmScale * eval.reachCaptureDuration;
+    c.predictedAcquireTime = plannerConfig_.timingPriorityBlend + plannerConfig_.timingCaptureLock
+        + c.contactClosure / std::max(1e-6, plannerConfig_.timingEffectiveGripperRate);
+    c.predictedContactTime = c.predictedPresentationTime + c.predictedApproachTime + c.predictedAcquireTime;
+    c.estimatedTime = c.predictedContactTime + plannerConfig_.timingBilateralDwell
+        + plannerConfig_.timingConfirmationDwell + plannerConfig_.timingArmScale * eval.retreatDuration;
+
+    if(securityS || securityC)
+    {
+      reject("security_distance", securityS ? "standoff_configuration" : "capture_configuration");
+      continue;
+    }
+    eval.record.robotFeasible = true;
+    eval.record.clearance = std::min(reach.minClearance, retreat.minClearance);
+    eval.record.clearanceFeasible = eval.record.clearance >= v2CaParams_.clearanceFloor;
+    if(!eval.record.clearanceFeasible)
+    {
+      reject("clearance_floor", fmt::format("clearance={:.4f}<floor={:.4f}", eval.record.clearance, v2CaParams_.clearanceFloor));
+      continue;
+    }
+    eval.record.authorityFeasible = eval.record.reserve >= v2CaParams_.kappaMin;
+    if(!eval.record.authorityFeasible)
+    {
+      reject("authority", fmt::format("kappa={:.4f}<kappaMin={:.3f}", eval.record.reserve, v2CaParams_.kappaMin));
+      continue;
+    }
+    eval.record.admissible = true;
+    eval.record.rejectionLayer = "none";
+    eval.record.rejectionReason = "admissible";
+    eval.candidate = c;
+    result.controlAwareCandidates.push_back(eval);
+  }
+  result.success = true;
+  result.reason = "evaluated";
+}
+
+void HandoverInterceptionController::handleControlAwareSelectionV2(const PendingJobV2 & pending, double now)
+{
+  const ReceiverJobResultV2 result = v2Result_;
+  ++v2CaSelectionsProcessed_;
+  if(plannerJobState() == PlannerJobState::Failed || !result.success)
+  {
+    mc_rtc::log::warning("[TriadLiteSelection] planningGeneration={} success=false reason={} t={:.6f}",
+                         pending.planningGeneration, result.reason, now);
+    return;
+  }
+  std::vector<call_handover::GraspCandidateRecord> records;
+  records.reserve(result.controlAwareCandidates.size());
+  std::map<std::string, int> layers;
+  for(const auto & e : result.controlAwareCandidates)
+  {
+    records.push_back(e.record);
+    ++layers[e.record.rejectionLayer];
+    const sva::PTransformd O_T_G = relativePose(e.objectPose, e.candidate.W_T_M_pre);
+    const Eigen::Quaterniond qG(worldRotation(O_T_G));
+    mc_rtc::log::info(
+        "[TriadLiteCandidate] planningGeneration={} id={} name={} sign={:+d} phiDeg={:.3f} O_T_G_p={} O_T_G_q=[{:.6f},{:.6f},{:.6f},{:.6f}] geometryFeasible={} robotFeasible={} clearance={:.5f} clearanceFeasible={} reserve={:.5f} residual={:.6f} authorityFeasible={} admissible={} rejectionLayer={} rejectionReason={} reachDistance={:.5f} standoffAuthority={} captureAuthority={} standoffDamper={} captureDamper={}",
+        pending.planningGeneration, e.record.grasp.id, e.record.name, e.record.grasp.sign,
+        e.record.grasp.phi * 180.0 / M_PI, caVec3(O_T_G.translation()), qG.w(), qG.x(), qG.y(), qG.z(),
+        e.record.geometryFeasible, e.record.robotFeasible, e.record.clearance, e.record.clearanceFeasible,
+        e.record.reserve, e.record.residual, e.record.authorityFeasible, e.record.admissible,
+        e.record.rejectionLayer, e.record.rejectionReason, e.record.reachDistance,
+        caAuthority(e.standoffAuthority), caAuthority(e.captureAuthority), caDamper(e.standoffDamper),
+        caDamper(e.captureDamper));
+  }
+  const auto outcome = call_handover::selectGraspLexicographic(records, v2CaParams_.selection);
+  const int previousId = v2CaSelector_.incumbentId;
+  // trustIncumbentReevaluation (default true): a re-evaluation of the executing
+  // incumbent from the moving arm state may remove it. Distrusting it was tested
+  // in simulation and failed 3/4 runs on the runtime clearance reserve
+  // (research/triad_lite/TRIAD_CONTROL_AWARE_IMPLEMENTATION.md).
+  const bool trustIncumbent = v2Phase_ != ReceiverPhaseV2::ControlAwareTrack || v2CaParams_.trustIncumbentReevaluation;
+  const auto decision = call_handover::updateGraspSelector(v2CaSelector_, records, outcome, now, v2CaParams_.switchDwell,
+                                                           trustIncumbent);
+  std::string layerSummary;
+  for(const auto & kv : layers) { layerSummary += fmt::format("{}{}:{}", layerSummary.empty() ? "" : ",", kv.first, kv.second); }
+  mc_rtc::log::success(
+      "[TriadLiteSelection] planningGeneration={} evaluated={} layers=[{}] bestId={} bestClearance={:.5f} bestReserve={:.5f} decision={} selectedId={} previousId={} phase={} frameConsistency={:.3e} selectionRule=admissible>clearance>reserve>reach t={:.6f}",
+      pending.planningGeneration, records.size(), layerSummary,
+      outcome.bestIndex >= 0 ? records[static_cast<std::size_t>(outcome.bestIndex)].grasp.id : -1,
+      outcome.bestClearance, outcome.bestReserve, decision.event, decision.selectedId, previousId,
+      receiverPhaseNameV2(v2Phase_), result.controlAwareFrameConsistency, now);
+
+  if(decision.event == "abort_to_hold")
+  {
+    if(provisionalReceiverPlan_.valid)
+    {
+      // invalidateProvisionalPlanV2 logs the abort and holds the current pose.
+      v2CaSelector_.incumbentId = previousId;
+      invalidateProvisionalPlanV2("control_aware/no_admissible_grasp", now);
+    }
+    return;
+  }
+  if(!decision.changed || decision.selectedId < 0) { return; }
+  for(const auto & e : result.controlAwareCandidates)
+  {
+    if(e.record.grasp.id != decision.selectedId) { continue; }
+    const std::string event = decision.event == "initial" ? "initial_select" : "grasp_switch/" + decision.event;
+    if(!adoptControlAwareCandidateV2(e, now, event))
+    {
+      v2CaSelector_.incumbentId = previousId;
+    }
+    return;
+  }
+}
+
+bool HandoverInterceptionController::adoptControlAwareCandidateV2(const ControlAwareCandidateEvalV2 & eval,
+                                                                  double now, const std::string & event)
+{
+  const CaptureCandidate & c = eval.candidate;
+  const ObjectPredictionRecordV2 prediction = currentObjectPredictionV2();
+  InterceptionPlan plan = makeInterceptionPlan(
+      c, eval.objectPose, now, timingArmScale_ * eval.reachStandoffDuration,
+      timingTerminalCaptureDwell_ + timingArmScale_ * eval.reachCaptureDuration,
+      timingPriorityBlend_ + timingCaptureLock_ + c.contactClosure / std::max(1e-6, timingEffectiveGripperRate_),
+      timingArmScale_ * eval.retreatDuration);
+  // Not an event hypothesis: presented "now" at the evaluated object pose, no
+  // modelled stop; the tracking law follows the live estimate.
+  plan.conditionalPresentationV2 = true;
+  plan.decelerationDuration = 0.0;
+  plan.decelerationStartTime = plan.presentationTime;
+  plan.objectLinearVelocity = prediction.linearVelocity;
+  plan.objectAngularVelocity = prediction.angularVelocity;
+  plan.mouthAtReachStart = actualMouthPose();
+  std::string why;
+  if(!validateInterceptionPlan(plan, &why, false))
+  {
+    mc_rtc::log::error("[TriadLiteEvent] type=adoption_refused graspId={} reason=invalid_plan/{} t={:.6f}",
+                       eval.record.grasp.id, why, now);
+    return false;
+  }
+  const bool replacement = provisionalReceiverPlan_.valid;
+  const std::uint64_t previousPlanId = provisionalReceiverPlan_.planId;
+  ProvisionalReceiverPlanV2 next;
+  next.valid = true;
+  next.planId = ++v2PlanIdCounter_;
+  next.sourcePlanningGeneration = plannerResultGeneration();
+  next.adoptedStateGeneration = ++v2StateGeneration_;
+  next.candidate = c;
+  next.plan = plan;
+  next.adoptedTime = now;
+  next.certifications = 1;
+  next.holdPosture = currentArmPosture();
+  provisionalReceiverPlan_ = next;
+  ++v2Counters_.adoptions;
+  if(replacement)
+  {
+    ++v2Counters_.replacements;
+    ++v2CaSwitches_;
+  }
+  v2Phase_ = ReceiverPhaseV2::ControlAwareTrack;
+  v2PhaseEntryTime_ = now;
+  v2ReferencePose_ = actualMouthPose();
+  v2ClearanceScale_ = 1.0;
+  v2LatestTerminalCertificateValid_ = false;
+  v2GateStableSince_ = -1.0;
+  const sva::PTransformd O_T_G = relativePose(eval.objectPose, c.W_T_M_pre);
+  mc_rtc::log::success(
+      "[TriadLiteEvent] type={} planId={} previousPlanId={} graspId={} name={} sign={:+d} phiDeg={:.3f} O_T_G_p={} clearance={:.5f} reserve={:.5f} residual={:.6f} stateGeneration={} t={:.6f}",
+      event, next.planId, previousPlanId, eval.record.grasp.id, eval.record.name, eval.record.grasp.sign,
+      eval.record.grasp.phi * 180.0 / M_PI, caVec3(O_T_G.translation()), eval.record.clearance, eval.record.reserve,
+      eval.record.residual, v2StateGeneration_, now);
+  return true;
+}
+
+int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool workerIdle)
+{
+  const auto & policy = predictiveReachPolicy_;
+  const auto & active = provisionalReceiverPlan_;
+  activateToolTask();
+  setToolTaskGains(policy.taskStiffness, policy.taskWeight);
+  setGripperJointPriority(false);
+  commandGripper(0.0);
+  if(!active.candidate.plannedStandoffArmPosture.empty())
+  {
+    commandArmPosture(active.candidate.plannedStandoffArmPosture);
+  }
+
+  const sva::PTransformd current = actualMouthPose();
+  HandoverSafetyReport currentReport;
+  if(!evaluateCurrentPoseSafety(currentReport, false))
+  {
+    commandMouthTarget(current);
+    mc_rtc::log::error("[V2Failure] reason=control_aware_track_unsafe clear={:.4f} limiting={}/{} planId={}",
+                       currentReport.minClearance, currentReport.sample, currentReport.obstacle, active.planId);
+    return -1;
+  }
+  v2Counters_.minimumRuntimeClearance = std::min(v2Counters_.minimumRuntimeClearance, currentReport.minClearance);
+  if(currentReport.minClearance < policy.minimumRuntimeClearance)
+  {
+    commandMouthTarget(current);
+    mc_rtc::log::error("[V2Failure] reason=control_aware_track_clearance_reserve clear={:.4f} minimum={:.4f} planId={}",
+                       currentReport.minClearance, policy.minimumRuntimeClearance, active.planId);
+    return -1;
+  }
+
+  // Tracking law: rate-limited reference toward the object-relative standoff
+  // at the LIVE object estimate, same clearance governor, speed and lead limits
+  // as the V2 provisional reach, then the geometric safety filter.
+  const sva::PTransformd target = compose(W_T_O_, active.plan.O_T_M_standoff);
+  double rawClearanceScale = 1.0;
+  if(currentReport.minClearance < policy.clearanceSlowdownStart)
+  {
+    const double denominator = std::max(1e-6, policy.clearanceSlowdownStart - policy.clearanceHardMargin);
+    const double u = std::min(1.0, std::max(0.0, (currentReport.minClearance - policy.clearanceHardMargin) / denominator));
+    rawClearanceScale = policy.minimumVelocityScale + (1.0 - policy.minimumVelocityScale) * u * u * (3.0 - 2.0 * u);
+  }
+  const double scaleRate = rawClearanceScale < v2ClearanceScale_ ? policy.clearanceScaleDropRate : policy.clearanceScaleRiseRate;
+  const double maximumScaleChange = scaleRate * controlDt_;
+  v2ClearanceScale_ += std::max(-maximumScaleChange, std::min(maximumScaleChange, rawClearanceScale - v2ClearanceScale_));
+  v2ClearanceScale_ = std::min(1.0, std::max(policy.minimumVelocityScale, v2ClearanceScale_));
+  const double linearSpeedLimit = policy.nearLinearSpeed + v2ClearanceScale_ * (policy.farLinearSpeed - policy.nearLinearSpeed);
+  const double angularSpeedLimit = policy.nearAngularSpeed + v2ClearanceScale_ * (policy.farAngularSpeed - policy.nearAngularSpeed);
+  const double linearLeadLimit = policy.nearLinearTrackingLead
+      + v2ClearanceScale_ * (policy.maxLinearTrackingLead - policy.nearLinearTrackingLead);
+  const double angularLeadLimit = policy.nearAngularTrackingLead
+      + v2ClearanceScale_ * (policy.maxAngularTrackingLead - policy.nearAngularTrackingLead);
+  const sva::PTransformd rateLimited = advancePoseReference(v2ReferencePose_, target, linearSpeedLimit, angularSpeedLimit);
+  const sva::PTransformd next = boundedPoseStep(current, rateLimited, linearLeadLimit, angularLeadLimit);
+  sva::PTransformd safe;
+  HandoverSafetyReport report;
+  if(!filterSafeMouthCommand(current, next, safe, report, false))
+  {
+    commandMouthTarget(current);
+    mc_rtc::log::error("[V2Failure] reason=control_aware_track_safety_filter clear={:.4f} limiting={}/{} planId={}",
+                       report.minClearance, report.sample, report.obstacle, active.planId);
+    return -1;
+  }
+  const sva::PTransformd previousCommand = v2ReferencePose_;
+  v2ReferencePose_ = safe;
+  Eigen::Vector3d v = Eigen::Vector3d::Zero();
+  Eigen::Vector3d w = Eigen::Vector3d::Zero();
+  worldPoseTwist(previousCommand, v2ReferencePose_, controlDt_, v, w);
+  if(v.norm() > linearSpeedLimit && v.norm() > 1e-12) { v *= linearSpeedLimit / v.norm(); }
+  if(w.norm() > angularSpeedLimit && w.norm() > 1e-12) { w *= angularSpeedLimit / w.norm(); }
+  commandMouthTargetWithWorldVelocity(v2ReferencePose_, v, w);
+
+  // Measured acquisition-entry gate (tau is this event, not a searched lead).
+  const ObjectPredictionRecordV2 prediction = currentObjectPredictionV2();
+  const bool objectQuasiStatic = objectLinearVelocityEstimate_.norm() <= presentationMaximumLinearSpeed_
+      && objectAngularVelocityEstimate_.norm() <= presentationMaximumAngularSpeed_;
+  if(!objectQuasiStatic) { v2ObjectQuasiStaticSince_ = -1.0; }
+  else if(v2ObjectQuasiStaticSince_ < 0.0) { v2ObjectQuasiStaticSince_ = now; }
+  const double dist = (target.translation() - current.translation()).norm();
+  const double angle = orientationError(current, target);
+  const bool gripperOpen = measuredGripperClosure() <= v2Params_.terminalMaximumOpenClosure;
+  const bool fresh = objectPerceptionMeasurementValid_ && objectMotionEstimateValid_
+      && objectPerceptionMeasurementAge_ <= perceptionLatencyBufferDuration_;
+  const bool geometricGate = dist <= v2Params_.terminalPositionTolerance
+      && angle <= v2Params_.terminalOrientationTolerance && gripperOpen && fresh && report.safe
+      && (!v2CaParams_.requireObjectStopped || objectQuasiStatic);
+  bool authorityGate = !v2CaParams_.admissionRequiresCurrentAuthority;
+  double gateResidual = std::numeric_limits<double>::quiet_NaN();
+  if(geometricGate && v2CaParams_.admissionRequiresCurrentAuthority)
+  {
+    bool insideSecurity = false;
+    const sva::PTransformd captureNow = compose(W_T_O_, active.plan.O_T_M_capture);
+    const auto evals = controlAwareAuthorityAtRuntimeV2(
+        controlAwareDemandsV2(prediction.linearVelocity, prediction.angularVelocity, W_T_O_.translation(), captureNow,
+                              actualBasePose()),
+        insideSecurity);
+    authorityGate = !insideSecurity;
+    gateResidual = 0.0;
+    for(const auto & e : evals)
+    {
+      authorityGate = authorityGate && e.realizable;
+      gateResidual = std::max(gateResidual, e.residual);
+    }
+  }
+  const bool gate = geometricGate && authorityGate;
+  if(gate)
+  {
+    if(v2GateStableSince_ < 0.0) { v2GateStableSince_ = now; }
+  }
+  else
+  {
+    v2GateStableSince_ = -1.0;
+  }
+  const bool gateStable = gate && now - v2GateStableSince_ + 1e-12 >= v2Params_.terminalStableDwell;
+  if(v2LastMotionLogTime_ < 0.0 || now >= v2LastMotionLogTime_ + 0.05 - 1e-9)
+  {
+    mc_rtc::log::info(
+        "[TriadLiteTrack] planId={} graspId={} dist={:.5f} angle={:.5f} objectQuasiStatic={} gripperOpen={} fresh={} safe={} geometricGate={} authorityGate={} gateResidual={:.6f} gateStable={} clearanceScale={:.3f} t={:.6f}",
+        active.planId, v2CaSelector_.incumbentId, dist, angle, objectQuasiStatic, gripperOpen, fresh, report.safe,
+        geometricGate, authorityGate, gateResidual, gateStable, v2ClearanceScale_, now);
+  }
+
+  const auto & cert = v2LatestTerminalCertificate_;
+  const bool certificateUsable = v2LatestTerminalCertificateValid_ && gateStable
+      && cert.stateGeneration == v2StateGeneration_ && cert.planId == active.planId
+      && cert.snapshotTime >= v2GateStableSince_ - 1e-12;
+  if(certificateUsable)
+  {
+    mc_rtc::log::success(
+        "[TriadLiteEvent] type=acquisition_admit planId={} graspId={} dist={:.5f} angle={:.5f} gateResidual={:.6f} certificateGeneration={} t={:.6f}",
+        active.planId, v2CaSelector_.incumbentId, dist, angle, gateResidual, cert.planningGeneration, now);
+    if(commitProvisionalReceiverPlanV2(cert, now))
+    {
+      v2CaSelector_.frozen = true;
+      mc_rtc::log::success("[TriadLiteEvent] type=grasp_freeze planId={} graspId={} executionAuthority=MovePregrasp t={:.6f}",
+                           active.planId, v2CaSelector_.incumbentId, now);
+      return 1;
+    }
+    if(v2Phase_ == ReceiverPhaseV2::Failed) { return -1; }
+    ++v2CaAdmitsDeferred_;
+    mc_rtc::log::warning("[TriadLiteEvent] type=admit_deferred planId={} graspId={} reason=commit_current_state_check t={:.6f}",
+                         active.planId, v2CaSelector_.incumbentId, now);
+    v2LatestTerminalCertificateValid_ = false;
+  }
+
+  if(v2ObjectQuasiStaticSince_ >= 0.0 && now - v2ObjectQuasiStaticSince_ > presentationAcquisitionWindow_)
+  {
+    mc_rtc::log::error(
+        "[V2Failure] reason=control_aware_no_admission_within_presentation_window window={:.3f}s quasiStaticSince={:.6f} planId={}",
+        presentationAcquisitionWindow_, v2ObjectQuasiStaticSince_, active.planId);
+    return -1;
+  }
+
+  if(workerIdle)
+  {
+    if(gate) { submitReceiverCertificationV2(ReceiverJobTypeV2::TerminalCertify, now); }
+    else if(v2CaParams_.reselectWhileTracking) { submitReceiverCertificationV2(ReceiverJobTypeV2::ControlAwareSelect, now); }
+  }
+  return 0;
 }
