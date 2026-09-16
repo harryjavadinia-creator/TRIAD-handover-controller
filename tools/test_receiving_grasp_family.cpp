@@ -177,6 +177,12 @@ void testShortlist()
   CHECK(std::find(all.begin(), all.end(), 4) == all.end());
   const auto fill = reachabilityShortlist(c, 5, 0.02, 0.2);
   CHECK(fill.size() == 5u && fill[4] == 1);  // diversity first, then fill by score (5 then 1)
+  // interception order: earlier surrogate event before better score
+  auto moving = c;
+  moving[0].eventIndex = 3;
+  moving[3].eventIndex = 1;
+  const auto m3 = reachabilityShortlist(moving, 3, 0.02, 0.2);
+  CHECK(m3.size() == 3u && m3[0] == 1 && m3[1] == 2 && m3[2] == 5);
 }
 } // namespace
 

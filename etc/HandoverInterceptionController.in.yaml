@@ -687,6 +687,19 @@ configs:
         pruneTolerance: 0.02         # m; deepest surrogate false negative 12.9 mm (research/triad_lite)
         thetaBinWidthDeg: 13.6       # numerical; 2 x the 6.8 deg resolution floor
         characterizeAll: false       # evaluate every mechanical hypothesis exactly (characterization only)
+      # Phase C predictive interception solver (TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md sec. 3).
+      # characterize: solve and log the earliest encounter per grasp; execution unchanged.
+      # Interface values (entry lead, eps_p/eps_R, terminal relative speeds) are read
+      # from the states that own them and are not repeated here.
+      interception:
+        mode: disabled               # disabled | characterize | characterize_hold (no adoption); requires graspFamily: receiving
+        horizon: 8.0                 # s, numerical (old maximumPresentationLead); capped by the rollout length
+        minimumStep: 0.02            # s, numerical floor on eps_p/|v_G| spacing
+        computationLatency: 0.80     # s, L_calc: p90 wall of moving-object selection jobs (evidence/phaseC_sim); 10% exceed it
+        timingSkip: true             # straight-line motion-time model skip; false for exact-scan characterization
+        maximumExactEvaluations: 240 # numerical per-job budget (logged when binding)
+        maximumRollouts: 24          # numerical per-job budget (logged when binding)
+        logAttempts: true
 
 transitions:
 - [HandoverInterceptionController_Initial, OK, HandoverInterceptionController_ObserveObject, Auto]

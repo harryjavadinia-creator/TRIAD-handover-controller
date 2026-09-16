@@ -1,0 +1,109 @@
+== hold_skip/diagonal: jobs=65
+  frontEndMs: median=0.4 p90=0.8 max=1.3
+  exactMs: median=54.0 p90=371.5 max=632.0
+  rolloutMs: median=3.5 p90=20.8 max=118.0
+  sweepMs: median=57.5 p90=393.4 max=653.2
+  exactEvaluations median=40 max=436; rollouts median=1 max=28; budgetExhausted=0
+  moving-prediction jobs=8 jobs with >=1 feasible encounter=65 (moving 8)
+  layers (median per job): G0=530  Gmech=530  GR=530  GK=40  exactFeasibleSomeTau=1  F_I (feasible)=1  dominated=4
+  attempt stages: exact:geometry/closure=3196, exact:geometry/capture=628, exact:collision/standoff=324, dominated:rest_travel_time_after_best=228, timing:travel_time_exceeds_arrival_time=116, feasible:feasible=104, exact:clearance_floor/clearance<floor=59, exact:ik/standoff=48, rollout:terminal_relative_motion=46, exact:ik/retreat=43, exact:collision/retreat=9
+  exact evaluations until first feasible encounter: median=13 p90=223 max=388
+  tie-break selections over feasible jobs: {'B1!=FULL': 3, 'B1!=B2': 6, 'B1==FULL': 62, 'B1==B2': 59}
+  feasible terminal relative speed median=0.0046 max=0.0350 m/s
+  timing-skip check: skipped-event timing outcomes observed=0 passed-timing-inside-skip=0
+== hold_skip/lateral-low: jobs=57
+  frontEndMs: median=0.4 p90=1.0 max=1.7
+  exactMs: median=57.3 p90=382.1 max=525.8
+  rolloutMs: median=18.7 p90=54.3 max=72.6
+  sweepMs: median=76.0 p90=442.4 max=596.6
+  exactEvaluations median=40 max=378; rollouts median=5 max=18; budgetExhausted=0
+  moving-prediction jobs=9 jobs with >=1 feasible encounter=57 (moving 9)
+  layers (median per job): G0=530  Gmech=420  GR=420  GK=40  exactFeasibleSomeTau=5  F_I (feasible)=5  dominated=4
+  attempt stages: exact:geometry/closure=2968, exact:collision/standoff=683, exact:geometry/capture=414, feasible:feasible=286, dominated:rest_travel_time_after_best=192, timing:travel_time_exceeds_arrival_time=140, exact:clearance_floor/clearance<floor=130, rollout:terminal_relative_motion=64, rollout:rendezvous_tracking=4, exact:geometry/standoff=4, exact:ik/retreat=3
+  exact evaluations until first feasible encounter: median=9 p90=290 max=308
+  tie-break selections over feasible jobs: {'B1==FULL': 54, 'B1==B2': 52, 'B1!=B2': 5, 'B1!=FULL': 3}
+  feasible terminal relative speed median=0.0015 max=0.0270 m/s
+  timing-skip check: skipped-event timing outcomes observed=0 passed-timing-inside-skip=0
+== hold_skip/longitudinal: jobs=58
+  frontEndMs: median=0.5 p90=0.8 max=1.4
+  exactMs: median=54.4 p90=408.9 max=566.0
+  rolloutMs: median=18.0 p90=22.2 max=77.4
+  sweepMs: median=72.7 p90=437.2 max=599.0
+  exactEvaluations median=40.0 max=353; rollouts median=5.0 max=19; budgetExhausted=0
+  moving-prediction jobs=9 jobs with >=1 feasible encounter=58 (moving 9)
+  layers (median per job): G0=530.0  Gmech=530.0  GR=530.0  GK=40.0  exactFeasibleSomeTau=5.0  F_I (feasible)=3.0  dominated=5.0
+  attempt stages: exact:geometry/closure=2526, exact:geometry/capture=1000, dominated:rest_travel_time_after_best=245, timing:travel_time_exceeds_arrival_time=195, feasible:feasible=180, exact:collision/standoff=151, rollout:runtime_clearance_reserve=103, exact:ik/capture=58, rollout:terminal_relative_motion=37, exact:ik/standoff=29, exact:ik/retreat=10, exact:geometry/standoff=4
+  exact evaluations until first feasible encounter: median=9.0 p90=238 max=296
+  tie-break selections over feasible jobs: {'B1!=FULL': 2, 'B1!=B2': 7, 'B1==FULL': 56, 'B1==B2': 51}
+  feasible terminal relative speed median=0.0072 max=0.0336 m/s
+  timing-skip check: skipped-event timing outcomes observed=0 passed-timing-inside-skip=0
+== hold_skip/near-ground: jobs=27
+  frontEndMs: median=0.5 p90=1.1 max=1.7
+  exactMs: median=150.1 p90=568.8 max=1051.8
+  rolloutMs: median=4.5 p90=18.3 max=22.9
+  sweepMs: median=154.2 p90=592.2 max=1061.7
+  exactEvaluations median=40 max=429; rollouts median=1 max=5; budgetExhausted=0
+  moving-prediction jobs=7 jobs with >=1 feasible encounter=26 (moving 6)
+  layers (median per job): G0=530  Gmech=420  GR=420  GK=40  exactFeasibleSomeTau=1  F_I (feasible)=1  dominated=0
+  attempt stages: exact:geometry/closure=863, exact:geometry/capture=804, exact:ik/standoff=723, exact:collision/standoff=580, exact:ik/retreat=185, exact:ik/capture=89, exact:geometry/standoff=64, timing:travel_time_exceeds_arrival_time=50, feasible:feasible=31, rollout:robust_transit_clearance_reserve=6, exact:clearance_floor/clearance<floor=3, rollout:terminal_relative_motion=1
+  exact evaluations until first feasible encounter: median=24.0 p90=294 max=362
+  tie-break selections over feasible jobs: {'B1==FULL': 26, 'B1==B2': 26}
+  feasible terminal relative speed median=0.0052 max=0.0399 m/s
+  timing-skip check: skipped-event timing outcomes observed=0 passed-timing-inside-skip=0
+== hold_noskip/diagonal: jobs=58
+  frontEndMs: median=0.5 p90=0.9 max=1.4
+  exactMs: median=59.5 p90=477.2 max=720.9
+  rolloutMs: median=3.9 p90=19.9 max=126.9
+  sweepMs: median=63.4 p90=493.4 max=765.3
+  exactEvaluations median=40.0 max=436; rollouts median=1.0 max=30; budgetExhausted=0
+  moving-prediction jobs=7 jobs with >=1 feasible encounter=58 (moving 7)
+  layers (median per job): G0=530.0  Gmech=530.0  GR=530.0  GK=40.0  exactFeasibleSomeTau=1.0  F_I (feasible)=1.0  dominated=4.0
+  attempt stages: exact:geometry/closure=2915, exact:geometry/capture=563, timing:travel_time_exceeds_arrival_time=304, exact:collision/standoff=298, dominated:rest_travel_time_after_best=204, feasible:feasible=80, exact:clearance_floor/clearance<floor=51, rollout:terminal_relative_motion=42, exact:ik/retreat=31, exact:ik/standoff=29, exact:collision/retreat=8
+  exact evaluations until first feasible encounter: median=13.0 p90=264 max=388
+  tie-break selections over feasible jobs: {'B1!=FULL': 3, 'B1!=B2': 5, 'B1==FULL': 55, 'B1==B2': 53}
+  feasible terminal relative speed median=0.0046 max=0.0389 m/s
+  timing-skip check: skipped-event timing outcomes observed=568 passed-timing-inside-skip=0
+== hold_noskip/lateral-low: jobs=51
+  frontEndMs: median=0.5 p90=1.1 max=1.7
+  exactMs: median=64.5 p90=431.6 max=585.3
+  rolloutMs: median=21.1 p90=35.1 max=93.0
+  sweepMs: median=85.5 p90=486.2 max=678.8
+  exactEvaluations median=40 max=434; rollouts median=5 max=21; budgetExhausted=0
+  moving-prediction jobs=9 jobs with >=1 feasible encounter=51 (moving 9)
+  layers (median per job): G0=530  Gmech=420  GR=420  GK=40  exactFeasibleSomeTau=5  F_I (feasible)=5  dominated=4
+  attempt stages: exact:geometry/closure=2561, exact:collision/standoff=667, timing:travel_time_exceeds_arrival_time=401, exact:geometry/capture=352, feasible:feasible=259, dominated:rest_travel_time_after_best=168, exact:clearance_floor/clearance<floor=102, rollout:terminal_relative_motion=50, exact:geometry/standoff=5, rollout:rendezvous_tracking=4
+  exact evaluations until first feasible encounter: median=9 p90=253 max=377
+  tie-break selections over feasible jobs: {'B1==FULL': 49, 'B1==B2': 48, 'B1!=B2': 3, 'B1!=FULL': 2}
+  feasible terminal relative speed median=0.0015 max=0.0271 m/s
+  timing-skip check: skipped-event timing outcomes observed=856 passed-timing-inside-skip=0
+== hold_noskip/longitudinal: jobs=52
+  frontEndMs: median=0.5 p90=0.8 max=1.5
+  exactMs: median=57.9 p90=449.3 max=868.8
+  rolloutMs: median=19.4 p90=21.4 max=81.2
+  sweepMs: median=77.5 p90=464.0 max=895.7
+  exactEvaluations median=40.0 max=436; rollouts median=5.0 max=19; budgetExhausted=0
+  moving-prediction jobs=7 jobs with >=1 feasible encounter=52 (moving 7)
+  layers (median per job): G0=530.0  Gmech=530.0  GR=530.0  GK=40.0  exactFeasibleSomeTau=5.0  F_I (feasible)=3.0  dominated=5.0
+  attempt stages: exact:geometry/closure=2207, exact:geometry/capture=767, timing:travel_time_exceeds_arrival_time=497, dominated:rest_travel_time_after_best=225, feasible:feasible=163, exact:collision/standoff=135, rollout:runtime_clearance_reserve=90, exact:ik/capture=37, rollout:terminal_relative_motion=25, exact:ik/standoff=17, exact:ik/retreat=9, exact:clearance_floor/clearance<floor=3
+  exact evaluations until first feasible encounter: median=9.0 p90=263 max=375
+  tie-break selections over feasible jobs: {'B1!=FULL': 3, 'B1!=B2': 5, 'B1==FULL': 49, 'B1==B2': 47}
+  feasible terminal relative speed median=0.0072 max=0.0336 m/s
+  timing-skip check: skipped-event timing outcomes observed=977 passed-timing-inside-skip=0
+== hold_noskip/near-ground: jobs=18
+  frontEndMs: median=0.5 p90=1.6 max=1.7
+  exactMs: median=154.8 p90=1213.4 max=3563.9
+  rolloutMs: median=4.6 p90=21.7 max=29.4
+  sweepMs: median=159.3 p90=1224.3 max=3574.3
+  exactEvaluations median=40.0 max=1360; rollouts median=1.0 max=6; budgetExhausted=0
+  moving-prediction jobs=5 jobs with >=1 feasible encounter=17 (moving 4)
+  layers (median per job): G0=530.0  Gmech=420.0  GR=420.0  GK=40.0  exactFeasibleSomeTau=1.0  F_I (feasible)=1.0  dominated=0.0
+  attempt stages: exact:ik/standoff=965, exact:geometry/capture=744, exact:geometry/closure=736, exact:collision/standoff=512, exact:ik/capture=192, timing:travel_time_exceeds_arrival_time=124, exact:ik/retreat=116, exact:geometry/standoff=45, feasible:feasible=22, rollout:terminal_relative_motion=6, rollout:robust_transit_clearance_reserve=3
+  exact evaluations until first feasible encounter: median=24 p90=332 max=332
+  tie-break selections over feasible jobs: {'B1==FULL': 16, 'B1==B2': 17, 'B1!=FULL': 1}
+  feasible terminal relative speed median=0.0052 max=0.0398 m/s
+  timing-skip check: skipped-event timing outcomes observed=189 passed-timing-inside-skip=0
+== timing skip vs exact scan (distributional; different simulations)
+  diagonal: moving tauBest median skip=2.532 noskip=2.362; exact median skip=40 noskip=40.0; sweepMs median skip=58 noskip=63
+  lateral-low: moving tauBest median skip=2.925 noskip=2.925; exact median skip=40 noskip=40; sweepMs median skip=76 noskip=86
+  longitudinal: moving tauBest median skip=2.925 noskip=2.550; exact median skip=40.0 noskip=40.0; sweepMs median skip=73 noskip=78
+  near-ground: moving tauBest median skip=3.300 noskip=3.300; exact median skip=40 noskip=40.0; sweepMs median skip=154 noskip=159

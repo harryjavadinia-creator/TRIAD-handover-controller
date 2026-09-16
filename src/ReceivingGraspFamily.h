@@ -235,9 +235,14 @@ struct FunnelCandidate
   int axialIndex = 0;
   double theta = 0.0;
   double score = -std::numeric_limits<double>::infinity(); ///< reachability SDF (m)
+  /** Index of the first interception event at which the surrogate admits the
+   * grasp (a lower bound on its earliest encounter). 0 for an object at rest,
+   * which reduces the order to the score order. */
+  int eventIndex = 0;
 };
 
-/** Candidates with score >= -pruneTolerance, best score first (ties by id).
+/** Candidates with score >= -pruneTolerance, earliest surrogate event first,
+ * then best score (ties by id).
  * Diversity pass: at most one per (sign, axial index, theta bin of width
  * thetaBinWidth); then fill remaining slots by score. K <= 0 keeps all. */
 inline std::vector<int> reachabilityShortlist(std::vector<FunnelCandidate> candidates, int K, double pruneTolerance,
@@ -247,7 +252,10 @@ inline std::vector<int> reachabilityShortlist(std::vector<FunnelCandidate> candi
                                   [&](const FunnelCandidate & c) { return !(c.score >= -pruneTolerance); }),
                    candidates.end());
   std::stable_sort(candidates.begin(), candidates.end(), [](const FunnelCandidate & a, const FunnelCandidate & b)
-                   { return a.score > b.score || (a.score == b.score && a.id < b.id); });
+                   {
+                     if(a.eventIndex != b.eventIndex) { return a.eventIndex < b.eventIndex; }
+                     return a.score > b.score || (a.score == b.score && a.id < b.id);
+                   });
   std::vector<int> out;
   const std::size_t limit = K <= 0 ? candidates.size() : std::min(candidates.size(), static_cast<std::size_t>(K));
   std::set<std::tuple<int, int, int>> used;

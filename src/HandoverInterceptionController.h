@@ -3,6 +3,7 @@
 #include "IndependentGiverModel.h"
 #include "ControlAwareGraspSupervisor.h"
 #include "ReceivingGraspFamily.h"
+#include "PredictiveInterception.h"
 
 #include <mc_control/fsm/Controller.h>
 #include <mc_tasks/TransformTask.h>
@@ -2169,6 +2170,8 @@ private:
   /** One grasp hypothesis before exact evaluation (worker thread). */
   struct ControlAwareHypothesisV2
   {
+    int surrogateEvent = 0;  ///< Phase C: first event with surrogate reachability (0 at rest)
+    double tauSurrogate = 0.0;
     call_handover::GraspParameters grasp;
     CaptureCandidate candidate;
     std::string family = "legacy_ring";
@@ -2192,10 +2195,78 @@ private:
     double exactWall = 0.0;
   };
 
+  /** Phase C: timed rollout of the velocity-matched rendezvous reference. */
+  struct InterceptionRolloutV2
+  {
+    bool feasible = false;
+    std::string reason = "not_run";
+    int steps = 0;
+    double duration = 0.0;
+    double minClearance = std::numeric_limits<double>::infinity();
+    double finalPositionError = std::numeric_limits<double>::quiet_NaN();
+    double finalOrientationError = std::numeric_limits<double>::quiet_NaN();
+    double finalRelativeLinearSpeed = std::numeric_limits<double>::quiet_NaN();
+    double finalRelativeAngularSpeed = std::numeric_limits<double>::quiet_NaN();
+    double conditionIndexAtRendezvous = std::numeric_limits<double>::quiet_NaN();
+    std::map<std::string, std::vector<double>> rendezvousArmPosture;
+  };
+
+  /** Phase C: one (g, tau) attempt of the ascending event sweep (log record). */
+  struct InterceptionAttemptV2
+  {
+    int graspId = -1;
+    double tau = 0.0;
+    std::string stage;   ///< pursuit | surrogate | mechanical | exact | timing | budget | rollout | feasible
+    std::string reason;
+    double surrogate = std::numeric_limits<double>::quiet_NaN();
+    double requiredTime = std::numeric_limits<double>::quiet_NaN();
+    double wall = 0.0;
+  };
+
+  /** Phase C: earliest feasible encounter of one grasp. */
+  struct InterceptionCandidateV2
+  {
+    int hypothesisIndex = -1;
+    int graspId = -1;
+    std::string status = "not_evaluated";  ///< feasible | infeasible_within_horizon | dominated | budget
+    double tauStar = std::numeric_limits<double>::infinity();
+    double tauSurrogate = std::numeric_limits<double>::infinity();  ///< surrogate lower bound on tau*
+    int surrogateEvent = -1;
+    int attempts = 0;
+    int exactEvaluations = 0;
+    int rollouts = 0;
+    ControlAwareCandidateEvalV2 eval;  ///< exact layers at tau*
+    InterceptionRolloutV2 rollout;
+    sva::PTransformd objectPoseAtRendezvous = sva::PTransformd::Identity();
+  };
+
+  struct InterceptionJobStatsV2
+  {
+    bool active = false;
+    double step = std::numeric_limits<double>::quiet_NaN();
+    double tieBand = 0.0;
+    double horizon = 0.0;
+    double anchor = 0.0;
+    double pointSpeed = 0.0;
+    int events = 0;
+    int exactEvaluations = 0;
+    int rollouts = 0;
+    bool budgetExhausted = false;
+    double tauBest = std::numeric_limits<double>::infinity();
+    double sweepWall = 0.0;
+    double rolloutWall = 0.0;
+    double exactWall = 0.0;
+    double frontEndWall = 0.0;
+    ControlAwareFunnelStatsV2 funnel;
+  };
+
   struct ReceiverJobResultV2
   {
     std::vector<ControlAwareCandidateEvalV2> controlAwareCandidates;
     ControlAwareFunnelStatsV2 controlAwareFunnel;
+    std::vector<InterceptionCandidateV2> interceptionCandidates;
+    std::vector<InterceptionAttemptV2> interceptionAttempts;
+    InterceptionJobStatsV2 interception;
     double controlAwareFrameConsistency = std::numeric_limits<double>::quiet_NaN();
     std::vector<ParitySampleV2> parityTrace;
     bool parityFromReachStart = false;
@@ -2330,6 +2401,20 @@ private:
     double funnelPruneTolerance = 0.02;
     double funnelThetaBinWidth = 0.2374;
     bool funnelCharacterizeAll = false;
+    // Phase C predictive interception solver (TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md sec. 3).
+    std::string interceptionMode = "disabled";     ///< disabled | characterize | characterize_hold (no adoption)
+    double interceptionHorizon = 8.0;              ///< numerical (s)
+    double interceptionMinimumStep = 0.02;         ///< numerical floor on the event spacing (s)
+    double interceptionComputationLatency = 0.80;  ///< L_calc (s): p90 moving-job wall, Phase C characterization
+    double interceptionEntryLead = 0.05;           ///< L_entry = ReceiverV2 minimumReachEntryLead
+    double interceptionEpsPosition = 0.015;        ///< predictiveReachPolicy.maximumObjectTranslationDeviation
+    double interceptionEpsRotation = 0.12;         ///< predictiveReachPolicy.maximumObjectRotationDeviation
+    double interceptionTerminalLinearSpeed = 0.04;   ///< MovePregrasp terminalLinearSpeedTolerance
+    double interceptionTerminalAngularSpeed = 0.08;  ///< MovePregrasp terminalAngularSpeedTolerance
+    bool interceptionTimingSkip = true;            ///< model-based skip of timing-infeasible events
+    int interceptionMaximumExactEvaluations = 240; ///< numerical budget per job
+    int interceptionMaximumRollouts = 24;          ///< numerical budget per job
+    bool interceptionLogAttempts = true;
   };
   bool v2ControlAware_ = false;
   ControlAwareParametersV2 v2CaParams_;
@@ -2345,8 +2430,34 @@ private:
   void runControlAwareSelectionV2(ReceiverJobResultV2 & result);
   std::vector<ControlAwareHypothesisV2> controlAwareHypothesesV2(
       const ReceiverJobRequestV2 & request, const sva::PTransformd & objectPose, const Eigen::Vector3d & handleAxis,
-      const Eigen::Vector3d & outward, ControlAwareFunnelStatsV2 & stats) const;
+      const Eigen::Vector3d & outward, ControlAwareFunnelStatsV2 & stats,
+      const std::vector<std::pair<double, sva::PTransformd>> * events = nullptr) const;
   void handleControlAwareSelectionV2(const PendingJobV2 & pending, double now);
+  /** Exact controller layers (standoff, corridor capture, closure, carried
+   * retreat, security distance, clearance floor, authority) for one grasp at
+   * one object pose. Shared by the at-rest selection and the interception sweep. */
+  void evaluateControlAwareExactLayersV2(ControlAwareCandidateEvalV2 & eval, CaptureCandidate c,
+                                         const sva::PTransformd & objectPose,
+                                         const sva::PTransformd & startMouthPose,
+                                         const Eigen::Vector3d & objectLinearVelocity,
+                                         const Eigen::Vector3d & objectAngularVelocity);
+  /** Phase C: earliest feasible encounter per shortlisted grasp (worker thread). */
+  void solveInterceptionV2(ReceiverJobResultV2 & result, const std::vector<ControlAwareHypothesisV2> & hypotheses,
+                           const std::vector<std::pair<double, sva::PTransformd>> & events,
+                           const sva::PTransformd & snapshotObjectPose);
+  /** Pursuit necessary condition: the rate-limited reference cannot cover the
+   * pose change to W_T_M within (tau - L_calc). */
+  bool interceptionPursuitPossibleV2(const sva::PTransformd & startMouth, const sva::PTransformd & W_T_M,
+                                     double tau) const;
+  /** Phase C: timed rollout from the frozen state tracking the Hermite
+   * rendezvous reference toward compose(T_O(t), O_T_M_standoff), ending at tRendezvous. */
+  void rolloutInterceptionV2(const ObjectPredictionRecordV2 & prediction, double tStart, double tRendezvous,
+                             const sva::PTransformd & O_T_M_standoff,
+                             const std::map<std::string, std::vector<double>> & postureTarget,
+                             InterceptionRolloutV2 & out);
+  sva::PTransformd controlAwareGraspPoseAtV2(const ObjectPredictionRecordV2 & prediction, double absoluteTime,
+                                            const sva::PTransformd & O_T_M) const;
+  void logInterceptionResultV2(const PendingJobV2 & pending, const ReceiverJobResultV2 & result, double now) const;
   bool adoptControlAwareCandidateV2(const ControlAwareCandidateEvalV2 & eval, double now, const std::string & event);
   /** 0 running, 1 committed, -1 failed. */
   int stepControlAwareTrackV2(double now, bool workerIdle);

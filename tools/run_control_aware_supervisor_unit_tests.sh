@@ -22,3 +22,11 @@ eigen_include="${EIGEN3_INCLUDE_DIR:-/usr/include/eigen3}"
   -o "${build_dir}/test_receiving_grasp_family"
 
 "${build_dir}/test_receiving_grasp_family"
+
+"${CXX:-c++}" \
+  -std=c++14 -Wall -Wextra -Werror -pedantic -O1 \
+  -I"${eigen_include}" \
+  "${script_dir}/test_predictive_interception.cpp" \
+  -o "${build_dir}/test_predictive_interception"
+
+"${build_dir}/test_predictive_interception"
