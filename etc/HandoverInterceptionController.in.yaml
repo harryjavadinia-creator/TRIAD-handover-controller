@@ -654,6 +654,13 @@ configs:
     # commit. Not validated for handover outcome.
     supervisorMode: bank_search
     controlAware:
+      # Execution variant (Phase E; all share perception, grasp family, funnel and the low-level law):
+      #   reactive              B0: 04e9efc tracker of the currently selected grasp (default)
+      #   predictive            B1: earliest feasible encounter, clearance tie-break, authority logged
+      #   predictive_capability B2: B1 with the condition-index tie-break
+      #   full                  FULL: B1 restricted to F_C (kappa >= kappaMin), reserve tie-break
+      # Predictive variants require graspFamily: receiving and interception.mode: disabled.
+      variant: reactive
       graspsPerSign: 32              # phi resolution 11.25 deg (Phase 4: 32/sign validated)
       clearanceFloor: 0.025          # m, Phase 6 derived floor (8 mm reserve + 17 mm parity)
       kappaMin: 1.0                  # declared demand must be realizable
@@ -697,8 +704,8 @@ configs:
         minimumStep: 0.02            # s, numerical floor on eps_p/|v_G| spacing
         computationLatency: 0.80     # s, L_calc: p90 wall of moving-object selection jobs (evidence/phaseC_sim); 10% exceed it
         timingSkip: true             # straight-line motion-time model skip; false for exact-scan characterization
-        maximumExactEvaluations: 240 # numerical per-job budget (logged when binding)
-        maximumRollouts: 24          # numerical per-job budget (logged when binding)
+        maximumExactEvaluations: 450 # numerical: covers all observed first-feasible counts but one (1078, near-ground) in phaseC/D_sim
+        maximumRollouts: 40          # numerical: >= max 35 rollouts per job observed (phaseC_sim, phaseD_sim)
         logAttempts: true
         # Phase D authority (sec. 3.7): demands are the commanded interception step
         # twists (every authorityStride rollout steps), the object twist at the

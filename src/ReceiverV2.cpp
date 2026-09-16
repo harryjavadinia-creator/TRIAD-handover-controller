@@ -648,6 +648,19 @@ bool HandoverInterceptionController::submitReceiverCertificationV2(
   }
   request.terminalObjectPose = predictionPoseAtV2(prediction, now);
   request.routeWorkUnits = v2Params_.routeWorkUnitsPerCycle;
+  if(type == ReceiverJobTypeV2::ControlAwareSelect && v2ControlAware_)
+  {
+    request.incumbentGraspId = v2CaSelector_.incumbentId;
+    if(predictiveVariantV2() && v2Icpt_.valid && provisionalReceiverPlan_.valid)
+    {
+      // Hujic planning-time shift: the patch starts where the executed
+      // reference is predicted to be when the result can be adopted.
+      const auto ref = interceptionExecutionReferenceV2(now + v2CaParams_.interceptionComputationLatency, prediction);
+      request.interceptionStartValid = true;
+      request.interceptionStartPose = fromWorldPose(ref.rotation, ref.position);
+      request.interceptionStartLinearVelocity = ref.linearVelocity;
+    }
+  }
 
   const std::uint64_t generation =
       plannerRequestGeneration_.fetch_add(1, std::memory_order_acq_rel) + 1;
@@ -1316,6 +1329,7 @@ void HandoverInterceptionController::invalidateProvisionalPlanV2(
   v2SearchBudgetStart_ = now;
   v2LatestTerminalCertificateValid_ = false;
   v2GateStableSince_ = -1.0;
+  v2Icpt_.valid = false;
   if(v2ControlAware_ && !v2CaSelector_.frozen)
   {
     ++v2CaAborts_;
@@ -2467,6 +2481,30 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
     mc_rtc::log::error("[TriadLiteConfig] interception requires graspFamily=receiving and positive horizon/step/budgets");
     return false;
   }
+  if(stateConfig.has("controlAware") && stateConfig("controlAware").has("variant"))
+  {
+    p.variant = static_cast<std::string>(stateConfig("controlAware")("variant"));
+  }
+  if(p.variant != "reactive" && p.variant != "predictive" && p.variant != "predictive_capability" && p.variant != "full")
+  {
+    mc_rtc::log::error("[TriadLiteConfig] variant must be reactive, predictive, predictive_capability or full, got {}", p.variant);
+    return false;
+  }
+  if(p.variant != "reactive")
+  {
+    if(p.graspFamily != "receiving" || p.interceptionMode != "disabled")
+    {
+      mc_rtc::log::error("[TriadLiteConfig] variant={} requires graspFamily=receiving and interception.mode=disabled", p.variant);
+      return false;
+    }
+    // Identical perception, grasp family, funnel, interception solver and
+    // low-level law; the variants differ only in F_C and the tie-break.
+    p.interceptionMode = "execute";
+    p.authorityFilter = p.variant == "full";
+    p.tieBreak = p.variant == "full" ? call_handover::InterceptionTieBreak::AuthorityReserve
+        : (p.variant == "predictive_capability" ? call_handover::InterceptionTieBreak::Capability
+                                                : call_handover::InterceptionTieBreak::Clearance);
+  }
   if(p.graspFamily != "legacy_ring" && p.graspFamily != "receiving")
   {
     mc_rtc::log::error("[TriadLiteConfig] graspFamily must be legacy_ring or receiving, got {}", p.graspFamily);
@@ -2491,6 +2529,10 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
       p.interceptionEntryLead, p.interceptionEpsPosition, p.interceptionEpsRotation, p.interceptionTerminalLinearSpeed,
       p.interceptionTerminalAngularSpeed, p.interceptionTimingSkip, p.interceptionMaximumExactEvaluations,
       p.interceptionMaximumRollouts, p.interceptionLogAttempts);
+  v2Icpt_ = InterceptionExecutionV2{};
+  v2IcptRetained_ = v2IcptPatched_ = v2IcptLatencyRefused_ = 0;
+  mc_rtc::log::info("[TriadLiteConfig] variant={} interceptionExecution={} requireObjectStoppedAtAcquisition={}", p.variant,
+                    p.interceptionMode == "execute", p.requireObjectStopped);
   mc_rtc::log::info("[TriadLiteConfig] interceptionAuthority=[demands:path_command+synchronization+insertion,stride:{},filter:{},kappaMin:{:.3f},insertionSpeed:{:.3f}]",
                     p.authorityStride, p.authorityFilter, p.kappaMin, p.insertionSpeed);
   mc_rtc::log::success(
@@ -2858,7 +2900,8 @@ void HandoverInterceptionController::runControlAwareSelectionV2(ReceiverJobResul
 
   for(const auto & hyp : hypotheses)
   {
-    if(!hyp.evaluate) { continue; }
+    // Predictive variants use only the interception solver below.
+    if(!hyp.evaluate || v2CaParams_.interceptionMode == "execute") { continue; }
     if(plannerCancel_.load(std::memory_order_relaxed))
     {
       result.success = false;
@@ -3045,7 +3088,13 @@ HandoverInterceptionController::controlAwareHypothesesV2(const ReceiverJobReques
         groundAtSomeEvent = true;
         // At rest (single event) the encounter time is free (rest collapse), so
         // the pursuit bound does not constrain the pose; timing decides tau.
-        if(events->size() > 1 && !interceptionPursuitPossibleV2(request.snapshotMouthPose, W_T_S, ev.first)) { continue; }
+        if(events->size() > 1
+           && !interceptionPursuitPossibleV2(request.interceptionStartValid ? request.interceptionStartPose
+                                                                            : request.snapshotMouthPose,
+                                             W_T_S, ev.first))
+        {
+          continue;
+        }
         const double sc = std::min(score(W_T_S), score(W_T_C));
         h.reachabilityScore = std::max(h.reachabilityScore, sc);
         if(sc >= -v2CaParams_.funnelPruneTolerance)
@@ -3086,6 +3135,20 @@ HandoverInterceptionController::controlAwareHypothesesV2(const ReceiverJobReques
     out[static_cast<std::size_t>(idx)].evaluate = true;
   }
   stats.shortlisted = static_cast<int>(selected.size());
+  if(events != nullptr && request.incumbentGraspId >= 0)
+  {
+    // Receding update: the incumbent is always re-solved (hysteresis needs its
+    // current encounter), even when the funnel would not shortlist it.
+    for(auto & h : out)
+    {
+      if(h.grasp.id == request.incumbentGraspId && h.mechanicalPassed && h.surrogateEvent >= 0 && !h.evaluate)
+      {
+        h.evaluate = true;
+        h.shortlisted = true;
+        ++stats.shortlisted;
+      }
+    }
+  }
   if(v2CaParams_.funnelCharacterizeAll)
   {
     // Characterization: evaluate every mechanically valid hypothesis exactly;
@@ -3136,6 +3199,11 @@ void HandoverInterceptionController::handleControlAwareSelectionV2(const Pending
     // Solver characterization from the held arm: nothing is adopted, so every
     // job starts from rest (the rollout start state is exact) and jobs continue
     // through the whole giver motion until the presentation window expires.
+    return;
+  }
+  if(predictiveVariantV2())
+  {
+    handlePredictiveSelectionV2(pending, result, now);
     return;
   }
   const auto outcome = call_handover::selectGraspLexicographic(records, v2CaParams_.selection);
@@ -3223,10 +3291,17 @@ bool HandoverInterceptionController::adoptControlAwareCandidateV2(const ControlA
     ++v2Counters_.replacements;
     ++v2CaSwitches_;
   }
+  const bool continuousReference = predictiveVariantV2() && replacement && v2Phase_ == ReceiverPhaseV2::ControlAwareTrack;
   v2Phase_ = ReceiverPhaseV2::ControlAwareTrack;
   v2PhaseEntryTime_ = now;
-  v2ReferencePose_ = actualMouthPose();
-  v2ClearanceScale_ = 1.0;
+  if(!continuousReference)
+  {
+    // A replanned interception patch starts from the executed reference state
+    // (position and velocity continuity); every other adoption resets it.
+    v2ReferencePose_ = actualMouthPose();
+    v2ClearanceScale_ = 1.0;
+    v2CaCommandLinearVelocity_.setZero();
+  }
   v2LatestTerminalCertificateValid_ = false;
   v2GateStableSince_ = -1.0;
   const sva::PTransformd O_T_G = relativePose(eval.objectPose, c.W_T_M_pre);
@@ -3290,7 +3365,26 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
       + v2ClearanceScale_ * (policy.maxLinearTrackingLead - policy.nearLinearTrackingLead);
   const double angularLeadLimit = policy.nearAngularTrackingLead
       + v2ClearanceScale_ * (policy.maxAngularTrackingLead - policy.nearAngularTrackingLead);
-  const sva::PTransformd rateLimited = advancePoseReference(v2ReferencePose_, target, linearSpeedLimit, angularSpeedLimit);
+  // Predictive variants: until the rendezvous the reference goal is the
+  // velocity-matched Hermite patch toward the predicted grasp (same law as the
+  // certifying rollout); afterwards local synchronization is the object-relative
+  // tracking below (target at the live estimate).
+  sva::PTransformd referenceGoal = target;
+  const bool intercepting = predictiveVariantV2() && v2Icpt_.valid && now < v2Icpt_.tRendezvous;
+  if(intercepting)
+  {
+    const auto ref = interceptionExecutionReferenceV2(now + controlDt_, currentObjectPredictionV2());
+    referenceGoal = fromWorldPose(ref.rotation, ref.position);
+  }
+  else if(predictiveVariantV2() && v2Icpt_.valid && !v2Icpt_.synchronizationLogged)
+  {
+    v2Icpt_.synchronizationLogged = true;
+    mc_rtc::log::success(
+        "[TriadLiteEvent] type=local_synchronization planId={} graspId={} tRendezvous={:.6f} distToStandoff={:.5f} angle={:.5f} t={:.6f}",
+        active.planId, v2Icpt_.graspId, v2Icpt_.tRendezvous, (target.translation() - current.translation()).norm(),
+        orientationError(current, target), now);
+  }
+  const sva::PTransformd rateLimited = advancePoseReference(v2ReferencePose_, referenceGoal, linearSpeedLimit, angularSpeedLimit);
   const sva::PTransformd next = boundedPoseStep(current, rateLimited, linearLeadLimit, angularLeadLimit);
   sva::PTransformd safe;
   HandoverSafetyReport report;
@@ -3309,6 +3403,19 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
   if(v.norm() > linearSpeedLimit && v.norm() > 1e-12) { v *= linearSpeedLimit / v.norm(); }
   if(w.norm() > angularSpeedLimit && w.norm() > 1e-12) { w *= angularSpeedLimit / w.norm(); }
   commandMouthTargetWithWorldVelocity(v2ReferencePose_, v, w);
+  v2CaCommandLinearVelocity_ = v;
+  if(predictiveVariantV2() && (v2IcptLastLog_ < 0.0 || now >= v2IcptLastLog_ + 0.05 - 1e-9))
+  {
+    v2IcptLastLog_ = now;
+    const sva::PTransformd W_T_B_cmd = basePoseFromMouthPose(v2ReferencePose_);
+    const Eigen::Vector3d vBody = v + w.cross(W_T_B_cmd.translation() - v2ReferencePose_.translation());
+    mc_rtc::log::info(
+        "[TriadLiteInterceptTrack] planId={} graspId={} phase={} timeToRendezvous={:.4f} referenceToGoal={:.5f} commandToMeasured={:.5f} bodyLinearSpeed={:.5f} bodyAngularSpeed={:.5f} clearance={:.5f} t={:.6f}",
+        active.planId, v2Icpt_.graspId, intercepting ? "intercept" : "synchronize", v2Icpt_.tRendezvous - now,
+        (referenceGoal.translation() - v2ReferencePose_.translation()).norm(),
+        (v2ReferencePose_.translation() - current.translation()).norm(), vBody.norm(), w.norm(),
+        currentReport.minClearance, now);
+  }
 
   // Measured acquisition-entry gate (tau is this event, not a searched lead).
   const ObjectPredictionRecordV2 prediction = currentObjectPredictionV2();
@@ -3394,7 +3501,28 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
   if(workerIdle)
   {
     if(gate) { submitReceiverCertificationV2(ReceiverJobTypeV2::TerminalCertify, now); }
-    else if(v2CaParams_.reselectWhileTracking) { submitReceiverCertificationV2(ReceiverJobTypeV2::ControlAwareSelect, now); }
+    else if(v2CaParams_.reselectWhileTracking)
+    {
+      // Predictive variants: a re-solve returns tau >= L_calc + L_entry, so once
+      // now + L_calc + L_entry >= tRendezvous no result can patch the approach
+      // before the rendezvous; the plan is completed by local synchronization
+      // and the terminal certificate (Hujic: fine motion after rendezvous).
+      const bool noUsefulReplan = predictiveVariantV2() && v2Icpt_.valid
+          && now + v2CaParams_.interceptionComputationLatency + v2CaParams_.interceptionEntryLead >= v2Icpt_.tRendezvous;
+      if(noUsefulReplan)
+      {
+        if(!v2IcptReplanClosed_)
+        {
+          v2IcptReplanClosed_ = true;
+          mc_rtc::log::info("[TriadLiteEvent] type=replanning_closed graspId={} tRendezvous={:.6f} t={:.6f}",
+                            v2Icpt_.graspId, v2Icpt_.tRendezvous, now);
+        }
+      }
+      else
+      {
+        submitReceiverCertificationV2(ReceiverJobTypeV2::ControlAwareSelect, now);
+      }
+    }
   }
   return 0;
 }
@@ -3427,7 +3555,7 @@ bool HandoverInterceptionController::interceptionPursuitPossibleV2(const sva::PT
 void HandoverInterceptionController::rolloutInterceptionV2(
     const ObjectPredictionRecordV2 & prediction, double tStart, double tRendezvous,
     const sva::PTransformd & O_T_M_standoff, const std::map<std::string, std::vector<double>> & postureTarget,
-    InterceptionRolloutV2 & out)
+    InterceptionRolloutV2 & out, const sva::PTransformd * startReference, const Eigen::Vector3d & startLinearVelocity)
 {
   const PredictiveReachPolicy & policy = plannerConfig_.predictiveReachPolicy;
   const double dt = plannerConfig_.previewDt;
@@ -3476,9 +3604,13 @@ void HandoverInterceptionController::rolloutInterceptionV2(
   Eigen::Vector3d pG0, vG0;
   Eigen::Matrix3d RG0;
   graspState(tStart, pG0, vG0, RG0);
-  const Eigen::Vector3d p0 = startMouth.translation();
-  const Eigen::Matrix3d R0 = worldRotation(startMouth);
-  const Eigen::Vector3d v0 = Eigen::Vector3d::Zero();
+  // Patch start: the executed reference state at tStart when replanning while
+  // moving (the arm configuration is still the snapshot: approximation), else
+  // the frozen mouth at rest.
+  const sva::PTransformd referenceStart = startReference != nullptr ? *startReference : startMouth;
+  const Eigen::Vector3d p0 = referenceStart.translation();
+  const Eigen::Matrix3d R0 = worldRotation(referenceStart);
+  const Eigen::Vector3d v0 = startReference != nullptr ? startLinearVelocity : Eigen::Vector3d::Zero();
   auto referenceAt = [&](double t)
   {
     Eigen::Vector3d pG, vG;
@@ -3493,7 +3625,7 @@ void HandoverInterceptionController::rolloutInterceptionV2(
   PreviewResult reach;
   reach.minClearance = std::numeric_limits<double>::infinity();
   int iteration = 0;
-  sva::PTransformd commandReference = startMouth;
+  sva::PTransformd commandReference = referenceStart;
   double clearanceScale = 1.0;
   const int steps = std::max(1, static_cast<int>(std::ceil(duration / dt)));
   sva::PTransformd previousMouth = startMouth;
@@ -3744,8 +3876,17 @@ void HandoverInterceptionController::solveInterceptionV2(
   while(!queue.empty())
   {
     const Cursor cur = queue.top();
-    if(cur.tau > st.tauBest + st.tieBand + 1e-9) { break; }
     queue.pop();
+    if(cur.tau > st.tauBest + st.tieBand + 1e-9 && cur.id != request.incumbentGraspId)
+    {
+      auto & dominated = result.interceptionCandidates[static_cast<std::size_t>(candidateOf[static_cast<std::size_t>(cur.hyp)])];
+      if(dominated.status != "feasible")
+      {
+        dominated.status = "dominated";
+        dominated.tauSurrogate = cur.tau;
+      }
+      continue;
+    }
     if(plannerCancel_.load(std::memory_order_relaxed))
     {
       result.success = false;
@@ -3770,7 +3911,9 @@ void HandoverInterceptionController::solveInterceptionV2(
       pushNext(cur, cur.event + 1);
       continue;
     }
-    if(std::isfinite(st.step) && !interceptionPursuitPossibleV2(request.snapshotMouthPose, c.W_T_M_standoff, cur.tau))
+    if(std::isfinite(st.step)
+       && !interceptionPursuitPossibleV2(request.interceptionStartValid ? request.interceptionStartPose : request.snapshotMouthPose,
+                                         c.W_T_M_standoff, cur.tau))
     {
       attempt(cur, "pursuit", "pose_change_exceeds_rate_bound", std::numeric_limits<double>::quiet_NaN(),
               std::numeric_limits<double>::quiet_NaN(), 0.0);
@@ -3824,7 +3967,7 @@ void HandoverInterceptionController::solveInterceptionV2(
       // Object at rest: the meeting pose does not depend on tau, so the
       // earliest encounter of this grasp is its travel time (rest collapse).
       at.tau = required;
-      if(at.tau > st.tauBest + st.tieBand + 1e-9)
+      if(at.tau > st.tauBest + st.tieBand + 1e-9 && cur.id != request.incumbentGraspId)
       {
         attempt(at, "dominated", "rest_travel_time_after_best", sc, required, exactWall);
         ic.status = "dominated";
@@ -3854,7 +3997,9 @@ void HandoverInterceptionController::solveInterceptionV2(
     const auto rolloutStart = std::chrono::steady_clock::now();
     InterceptionRolloutV2 rollout;
     rolloutInterceptionV2(prediction, request.snapshotTime + Lcalc, request.snapshotTime + at.tau,
-                          relativePose(W_T_O_tau, c.W_T_M_standoff), eval.candidate.plannedStandoffArmPosture, rollout);
+                          relativePose(W_T_O_tau, c.W_T_M_standoff), eval.candidate.plannedStandoffArmPosture, rollout,
+                          request.interceptionStartValid ? &request.interceptionStartPose : nullptr,
+                          request.interceptionStartLinearVelocity);
     const double rolloutWall = std::chrono::duration<double>(std::chrono::steady_clock::now() - rolloutStart).count();
     st.rolloutWall += rolloutWall;
     ++st.rollouts;
@@ -3980,4 +4125,186 @@ void HandoverInterceptionController::logInterceptionResultV2(const PendingJobV2 
   mc_rtc::log::info("[TriadLiteInterceptionFunnel] planningGeneration={} G0={} Gmech={} GR={} GK={} t={:.6f}",
                     pending.planningGeneration, st.funnel.generated, st.funnel.mechanical, st.funnel.reachable,
                     st.funnel.shortlisted, now);
+}
+
+// =============================================================================
+// TRIAD-lite Phase E: receding predictive interception execution (control thread)
+// predict -> intercept -> move concurrently -> update -> correct
+// =============================================================================
+
+call_handover::RendezvousReferenceState HandoverInterceptionController::interceptionExecutionReferenceV2(
+    double t, const ObjectPredictionRecordV2 & prediction) const
+{
+  const sva::PTransformd W_T_O = predictionPoseAtV2(prediction, t);
+  const sva::PTransformd G = compose(W_T_O, v2Icpt_.O_T_M_standoff);
+  const Eigen::Vector3d pG = G.translation();
+  const Eigen::Vector3d vG = prediction.linearVelocity + prediction.angularVelocity.cross(pG - W_T_O.translation());
+  return call_handover::rendezvousReference(t, v2Icpt_.t0, v2Icpt_.tRendezvous - v2Icpt_.t0, v2Icpt_.p0, v2Icpt_.v0,
+                                            v2Icpt_.R0, v2Icpt_.pG0, v2Icpt_.vG0, v2Icpt_.RG0, pG, vG,
+                                            worldRotation(G), prediction.angularVelocity);
+}
+
+void HandoverInterceptionController::setInterceptionExecutionV2(const InterceptionCandidateV2 & candidate,
+                                                                double tRendezvous, double now)
+{
+  const ObjectPredictionRecordV2 prediction = currentObjectPredictionV2();
+  InterceptionExecutionV2 x;
+  x.valid = true;
+  x.graspId = candidate.graspId;
+  x.O_T_M_standoff = relativePose(candidate.objectPoseAtRendezvous, candidate.eval.candidate.W_T_M_standoff);
+  x.meetingPose = candidate.eval.candidate.W_T_M_standoff;
+  v2IcptReplanClosed_ = false;
+  x.t0 = now;
+  x.tRendezvous = std::max(tRendezvous, now + 2.0 * controlDt_);
+  // Patch continuity: start at the executed reference pose and velocity.
+  x.p0 = v2ReferencePose_.translation();
+  x.R0 = worldRotation(v2ReferencePose_);
+  x.v0 = v2CaCommandLinearVelocity_;
+  const sva::PTransformd W_T_O = predictionPoseAtV2(prediction, now);
+  const sva::PTransformd G = compose(W_T_O, x.O_T_M_standoff);
+  x.pG0 = G.translation();
+  x.RG0 = worldRotation(G);
+  x.vG0 = prediction.linearVelocity + prediction.angularVelocity.cross(x.pG0 - W_T_O.translation());
+  v2Icpt_ = x;
+}
+
+void HandoverInterceptionController::handlePredictiveSelectionV2(const PendingJobV2 & pending,
+                                                                 const ReceiverJobResultV2 & result, double now)
+{
+  const auto & st = result.interception;
+  // The rollout assumed adoption no later than snapshot + L_calc. A later
+  // result violates its start-state assumption and is not used at all.
+  const double latency = now - pending.submitTime;
+  if(latency > v2CaParams_.interceptionComputationLatency + 1e-9)
+  {
+    ++v2IcptLatencyRefused_;
+    mc_rtc::log::warning(
+        "[TriadLiteEvent] type=result_refused reason=latency_bound planningGeneration={} latency={:.4f} L_calc={:.4f} incumbentId={} t={:.6f}",
+        pending.planningGeneration, latency, v2CaParams_.interceptionComputationLatency, v2CaSelector_.incumbentId, now);
+    return;
+  }
+  if(st.budgetExhausted)
+  {
+    // A budget-limited sweep proves nothing about grasps it did not finish:
+    // if it found no encounter, or could not resolve the incumbent, the result
+    // is inconclusive and the executing plan continues unchanged.
+    bool anyFeasible = false;
+    bool incumbentUnresolved = false;
+    for(const auto & ic : result.interceptionCandidates)
+    {
+      anyFeasible = anyFeasible || ic.status == "feasible";
+      if(ic.graspId == v2CaSelector_.incumbentId && ic.status == "budget") { incumbentUnresolved = true; }
+    }
+    if(!anyFeasible || incumbentUnresolved)
+    {
+      ++v2IcptInconclusive_;
+      mc_rtc::log::warning(
+          "[TriadLiteEvent] type=result_inconclusive reason=budget planningGeneration={} anyFeasible={} incumbentUnresolved={} incumbentId={} t={:.6f}",
+          pending.planningGeneration, anyFeasible, incumbentUnresolved, v2CaSelector_.incumbentId, now);
+      return;
+    }
+  }
+  std::vector<call_handover::InterceptionRecord> records;
+  std::vector<call_handover::GraspCandidateRecord> bases;
+  for(const auto & ic : result.interceptionCandidates)
+  {
+    call_handover::InterceptionRecord r;
+    r.base = ic.eval.record;
+    r.base.grasp.id = ic.graspId;
+    r.base.admissible = ic.status == "feasible";
+    r.base.reserve = std::isfinite(ic.kappa) ? ic.kappa : 0.0;
+    r.tau = ic.tauStar;
+    r.capability = ic.rollout.conditionIndexAtRendezvous;
+    records.push_back(r);
+    bases.push_back(r.base);
+  }
+  call_handover::InterceptionSelectionTolerances tol;
+  tol.tauTieBand = st.tieBand;
+  tol.clearanceTieBand = v2CaParams_.selection.clearanceTieBand;
+  tol.reserveTieBand = v2CaParams_.selection.reserveTieBand;
+  tol.reserveSaturation = v2CaParams_.selection.reserveSaturation;
+  const auto outcome = call_handover::selectEarliestInterception(records, tol, v2CaParams_.tieBreak);
+  const int previousId = v2CaSelector_.incumbentId;
+  const bool trustIncumbent = v2Phase_ != ReceiverPhaseV2::ControlAwareTrack || v2CaParams_.trustIncumbentReevaluation;
+  const auto decision = call_handover::updateGraspSelector(v2CaSelector_, bases, outcome, now, v2CaParams_.switchDwell,
+                                                           trustIncumbent);
+  const InterceptionCandidateV2 * chosen = nullptr;
+  for(const auto & ic : result.interceptionCandidates)
+  {
+    if(ic.graspId == decision.selectedId && ic.status == "feasible") { chosen = &ic; }
+  }
+  double incumbentTau = std::numeric_limits<double>::infinity();
+  for(const auto & ic : result.interceptionCandidates)
+  {
+    if(ic.graspId == previousId) { incumbentTau = ic.tauStar; }
+  }
+  mc_rtc::log::success(
+      "[TriadLiteSelection] planningGeneration={} variant={} evaluated={} feasible={} bestId={} bestTau={:.4f} incumbentTau={:.4f} decision={} selectedId={} previousId={} phase={} latency={:.4f} selectionRule=earliest_tau>{} t={:.6f}",
+      pending.planningGeneration, v2CaParams_.variant, records.size(),
+      std::count_if(records.begin(), records.end(), [](const call_handover::InterceptionRecord & r) { return r.base.admissible; }),
+      outcome.bestIndex >= 0 ? records[static_cast<std::size_t>(outcome.bestIndex)].base.grasp.id : -1,
+      outcome.bestIndex >= 0 ? records[static_cast<std::size_t>(outcome.bestIndex)].tau : std::numeric_limits<double>::infinity(),
+      incumbentTau, decision.event, decision.selectedId, previousId, receiverPhaseNameV2(v2Phase_), latency,
+      v2CaParams_.tieBreak == call_handover::InterceptionTieBreak::AuthorityReserve ? "reserve>clearance"
+          : (v2CaParams_.tieBreak == call_handover::InterceptionTieBreak::Capability ? "capability>clearance" : "clearance"),
+      now);
+
+  if(decision.event == "abort_to_hold")
+  {
+    if(provisionalReceiverPlan_.valid)
+    {
+      v2CaSelector_.incumbentId = previousId;
+      invalidateProvisionalPlanV2("predictive_interception/no_feasible_encounter", now);
+    }
+    return;
+  }
+  if(chosen == nullptr) { return; }
+  const double tRendezvous = pending.submitTime + chosen->tauStar;
+  if(!decision.changed)
+  {
+    if(!provisionalReceiverPlan_.valid) { return; }
+    if(v2Icpt_.valid && v2Icpt_.graspId == chosen->graspId)
+    {
+      // Aimed-state check (Audit sec. 3.6.1, Hujic replanning): keep the
+      // executing plan while the newest prediction places the grasp at the
+      // PLANNED rendezvous time within eps of the planned meeting pose and the
+      // grasp is still interceptable. Re-deriving tau every job would restart
+      // the approach and let the rendezvous recede.
+      const sva::PTransformd aimed =
+          compose(predictionPoseAtV2(currentObjectPredictionV2(), v2Icpt_.tRendezvous), v2Icpt_.O_T_M_standoff);
+      const double dp = (aimed.translation() - v2Icpt_.meetingPose.translation()).norm();
+      const double dr = orientationError(aimed, v2Icpt_.meetingPose);
+      if(now >= v2Icpt_.tRendezvous || (dp <= v2CaParams_.interceptionEpsPosition && dr <= v2CaParams_.interceptionEpsRotation))
+      {
+        ++v2IcptRetained_;
+        mc_rtc::log::info(
+            "[TriadLiteEvent] type=plan_retained graspId={} aimedError={:.5f} aimedAngle={:.5f} tRendezvous={:.6f} newTauStar={:.4f} synchronizing={} t={:.6f}",
+            chosen->graspId, dp, dr, v2Icpt_.tRendezvous, chosen->tauStar, now >= v2Icpt_.tRendezvous, now);
+        return;
+      }
+      setInterceptionExecutionV2(*chosen, tRendezvous, now);
+      ++v2IcptPatched_;
+      mc_rtc::log::success(
+          "[TriadLiteEvent] type=plan_patched graspId={} reason=aimed_state_moved aimedError={:.5f} aimedAngle={:.5f} tauStar={:.4f} tRendezvous={:.6f} startSpeed={:.4f} t={:.6f}",
+          chosen->graspId, dp, dr, chosen->tauStar, v2Icpt_.tRendezvous, v2Icpt_.v0.norm(), now);
+      return;
+    }
+    setInterceptionExecutionV2(*chosen, tRendezvous, now);
+    ++v2IcptPatched_;
+    mc_rtc::log::success("[TriadLiteEvent] type=plan_patched graspId={} reason=no_execution_plan tauStar={:.4f} t={:.6f}",
+                         chosen->graspId, chosen->tauStar, now);
+    return;
+  }
+  const std::string event = decision.event == "initial" ? "initial_select" : "grasp_switch/" + decision.event;
+  if(!adoptControlAwareCandidateV2(chosen->eval, now, event))
+  {
+    v2CaSelector_.incumbentId = previousId;
+    return;
+  }
+  setInterceptionExecutionV2(*chosen, tRendezvous, now);
+  mc_rtc::log::success(
+      "[TriadLiteEvent] type=interception_plan graspId={} tauStar={:.4f} tRendezvous={:.6f} kappa={:.4f} kappaLimiting={} clearance={:.5f} conditionIndex={:.5f} meeting={} startSpeed={:.4f} t={:.6f}",
+      chosen->graspId, chosen->tauStar, v2Icpt_.tRendezvous, chosen->kappa, chosen->kappaLimitingPhase,
+      chosen->eval.record.clearance, chosen->rollout.conditionIndexAtRendezvous, caVec3(v2Icpt_.meetingPose.translation()),
+      v2Icpt_.v0.norm(), now);
 }

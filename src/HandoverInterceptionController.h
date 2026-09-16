@@ -2118,6 +2118,12 @@ private:
     InterceptionPlan plan;
     sva::PTransformd snapshotMouthPose = sva::PTransformd::Identity();
     sva::PTransformd terminalObjectPose = sva::PTransformd::Identity();
+    // Phase E receding interception: incumbent grasp (always resolved) and the
+    // executed reference state predicted at snapshotTime + L_calc (patch start).
+    int incumbentGraspId = -1;
+    bool interceptionStartValid = false;
+    sva::PTransformd interceptionStartPose = sva::PTransformd::Identity();
+    Eigen::Vector3d interceptionStartLinearVelocity = Eigen::Vector3d::Zero();
     // Work units per cancellation check in the worker rollout. The rollout is
     // invariant to this suspension granularity (see stepPredictiveRouteCandidate).
     int routeWorkUnits = 128;
@@ -2429,12 +2435,16 @@ private:
     double interceptionTerminalLinearSpeed = 0.04;   ///< MovePregrasp terminalLinearSpeedTolerance
     double interceptionTerminalAngularSpeed = 0.08;  ///< MovePregrasp terminalAngularSpeedTolerance
     bool interceptionTimingSkip = true;            ///< model-based skip of timing-infeasible events
-    int interceptionMaximumExactEvaluations = 240; ///< numerical budget per job
-    int interceptionMaximumRollouts = 24;          ///< numerical budget per job
+    int interceptionMaximumExactEvaluations = 450; ///< numerical: covers all but one (near-ground, 1078) observed first-feasible counts (Phase C/D)
+    int interceptionMaximumRollouts = 40;          ///< numerical: >= max 35 per job observed (Phase C/D)
     bool interceptionLogAttempts = true;
     // Phase D controller-authority demands (sec. 3.7).
     int authorityStride = 1;                       ///< numerical: every commanded step (stride 5 missed peaks, Phase D)
     bool authorityFilter = false;                  ///< F_C = {F_I : kappa >= kappaMin} (FULL variant)
+    // Phase E execution variant: reactive (B0, 04e9efc tracker) | predictive (B1)
+    // | predictive_capability (B2) | full (FULL = B1 + F_C + authority tie-break).
+    std::string variant = "reactive";
+    call_handover::InterceptionTieBreak tieBreak = call_handover::InterceptionTieBreak::Clearance;
   };
   bool v2ControlAware_ = false;
   ControlAwareParametersV2 v2CaParams_;
@@ -2477,10 +2487,41 @@ private:
   void rolloutInterceptionV2(const ObjectPredictionRecordV2 & prediction, double tStart, double tRendezvous,
                              const sva::PTransformd & O_T_M_standoff,
                              const std::map<std::string, std::vector<double>> & postureTarget,
-                             InterceptionRolloutV2 & out);
+                             InterceptionRolloutV2 & out, const sva::PTransformd * startReference = nullptr,
+                             const Eigen::Vector3d & startLinearVelocity = Eigen::Vector3d::Zero());
   sva::PTransformd controlAwareGraspPoseAtV2(const ObjectPredictionRecordV2 & prediction, double absoluteTime,
                                             const sva::PTransformd & O_T_M) const;
   void logInterceptionResultV2(const PendingJobV2 & pending, const ReceiverJobResultV2 & result, double now) const;
+  // Phase E: receding predictive interception execution (control thread).
+  struct InterceptionExecutionV2
+  {
+    bool valid = false;
+    int graspId = -1;
+    sva::PTransformd O_T_M_standoff = sva::PTransformd::Identity();
+    sva::PTransformd meetingPose = sva::PTransformd::Identity();
+    double t0 = 0.0;
+    double tRendezvous = 0.0;
+    Eigen::Vector3d p0 = Eigen::Vector3d::Zero();
+    Eigen::Vector3d v0 = Eigen::Vector3d::Zero();
+    Eigen::Matrix3d R0 = Eigen::Matrix3d::Identity();
+    Eigen::Vector3d pG0 = Eigen::Vector3d::Zero();
+    Eigen::Vector3d vG0 = Eigen::Vector3d::Zero();
+    Eigen::Matrix3d RG0 = Eigen::Matrix3d::Identity();
+    bool synchronizationLogged = false;
+  };
+  InterceptionExecutionV2 v2Icpt_;
+  Eigen::Vector3d v2CaCommandLinearVelocity_ = Eigen::Vector3d::Zero();
+  double v2IcptLastLog_ = -1.0;
+  int v2IcptRetained_ = 0;
+  int v2IcptPatched_ = 0;
+  int v2IcptLatencyRefused_ = 0;
+  bool v2IcptReplanClosed_ = false;
+  int v2IcptInconclusive_ = 0;
+  bool predictiveVariantV2() const { return v2ControlAware_ && v2CaParams_.variant != "reactive"; }
+  call_handover::RendezvousReferenceState interceptionExecutionReferenceV2(
+      double t, const ObjectPredictionRecordV2 & prediction) const;
+  void setInterceptionExecutionV2(const InterceptionCandidateV2 & candidate, double tRendezvous, double now);
+  void handlePredictiveSelectionV2(const PendingJobV2 & pending, const ReceiverJobResultV2 & result, double now);
   bool adoptControlAwareCandidateV2(const ControlAwareCandidateEvalV2 & eval, double now, const std::string & event);
   /** 0 running, 1 committed, -1 failed. */
   int stepControlAwareTrackV2(double now, bool workerIdle);
