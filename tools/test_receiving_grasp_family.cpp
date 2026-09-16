@@ -56,6 +56,43 @@ void testFrameAndContacts()
   }
 }
 
+void testPhysicalIdentity()
+{
+  HandleGeometry local;
+  local.center = Eigen::Vector3d(0.0, 0.0, -0.0869);
+  local.axis = -Eigen::Vector3d::UnitZ();
+  GripperInterface gi;
+  ReceivingGraspFamilySpec spec;
+  spec.axialSamples = 5;
+  spec.axialMax = 0.035;
+  const Eigen::Matrix3d R = Eigen::AngleAxisd(0.73, Eigen::Vector3d(1,2,3).normalized()).toRotationMatrix();
+  const Eigen::Vector3d t(0.4, -0.2, 0.5);
+  HandleGeometry world = local;
+  world.center = t + R * local.center;
+  world.axis = R * local.axis;
+  for(const auto & g : generateReceivingGraspFamily(spec))
+  {
+    const auto expected = objectFixedReceivingGraspPoses(local, gi, Eigen::Matrix3d::Identity(), Eigen::Vector3d::Zero(), g);
+    for(const Eigen::Vector3d & robot : {Eigen::Vector3d(1,0,0), Eigen::Vector3d(0,1,0), Eigen::Vector3d(-1,0,1)})
+    {
+      // Production helper has no robot-state input. Moving the robot cannot
+      // redefine the physical grasp; also test object rigid-motion equivariance.
+      (void)robot;
+      const auto actual = objectFixedReceivingGraspPoses(world, gi, R, t, g);
+      CHECK((R.transpose() * actual.rotation - expected.rotation).norm() < 1e-12);
+      CHECK((R.transpose() * (actual.capture - t) - expected.capture).norm() < 1e-12);
+      CHECK((R.transpose() * (actual.standoff - t) - expected.standoff).norm() < 1e-12);
+      CHECK((R.transpose() * (actual.retreat - t) - expected.retreat).norm() < 1e-12);
+    }
+    // Explicit negative regression: the frozen implementation reuses the same
+    // g.id with a robot-dependent basis. Its object-relative transform changes.
+    const auto oldA = receivingGraspPoses(local, gi, Eigen::Vector3d::UnitX(), g);
+    const auto oldB = receivingGraspPoses(local, gi, Eigen::Vector3d::UnitY(), g);
+    CHECK((oldA.rotation - oldB.rotation).norm() > 1.0);
+    CHECK((oldA.standoff - oldB.standoff).norm() > 0.1);
+  }
+}
+
 void testTaskConstraintReduction()
 {
   GripperInterface gi;
@@ -189,6 +226,7 @@ void testShortlist()
 int main()
 {
   testFrameAndContacts();
+  testPhysicalIdentity();
   testTaskConstraintReduction();
   testResolutionAndConvergenceHelper();
   testLegacyEquivalence();

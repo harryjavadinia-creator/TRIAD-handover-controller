@@ -158,6 +158,27 @@ inline ReceivingGraspPoses receivingGraspPoses(const HandleGeometry & handle, co
   return p;
 }
 
+/** Stable receiving geometry. The angular basis is constructed in OBJECT
+ * coordinates from projected object +X (fallback +Y), never from robot pose.
+ * With a fixed family specification, an ID denotes an immutable O_T_M.
+ * The world transform below is only placement of that same physical grasp. */
+inline ReceivingGraspPoses objectFixedReceivingGraspPoses(
+    const HandleGeometry & worldHandle, const GripperInterface & gripper,
+    const Eigen::Matrix3d & R_W_O, const Eigen::Vector3d & p_W_O, const ReceivingGrasp & g)
+{
+  HandleGeometry local = worldHandle;
+  local.center = R_W_O.transpose() * (worldHandle.center - p_W_O);
+  local.axis = R_W_O.transpose() * worldHandle.axis;
+  auto p = receivingGraspPoses(local, gripper, Eigen::Vector3d::UnitX(), g);
+  p.rotation = R_W_O * p.rotation;
+  p.capture = p_W_O + R_W_O * p.capture;
+  p.standoff = p_W_O + R_W_O * p.standoff;
+  p.retreat = p_W_O + R_W_O * p.retreat;
+  p.contactPlus = p_W_O + R_W_O * p.contactPlus;
+  p.contactMinus = p_W_O + R_W_O * p.contactMinus;
+  return p;
+}
+
 /** Legacy TRIAD (sigma, phi) ring angle equivalent to (sigma, theta):
  * sigma = +1: theta = phi - pi/2;  sigma = -1: theta = pi/2 - phi. */
 inline double legacyPhiFromTheta(int sign, double theta)

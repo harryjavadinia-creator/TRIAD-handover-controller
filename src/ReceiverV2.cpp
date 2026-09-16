@@ -3041,7 +3041,8 @@ HandoverInterceptionController::controlAwareHypothesesV2(const ReceiverJobReques
   for(const auto & rg : call_handover::generateReceivingGraspFamily(spec))
   {
     ++stats.generated;
-    const auto poses = call_handover::receivingGraspPoses(handle, gi, outward, rg);
+    const auto poses = call_handover::objectFixedReceivingGraspPoses(
+        handle, gi, worldRotation(objectPose), objectPose.translation(), rg);
     ControlAwareHypothesisV2 h;
     h.family = "receiving";
     h.grasp.id = rg.id;
