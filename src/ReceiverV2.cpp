@@ -3625,7 +3625,11 @@ void HandoverInterceptionController::rolloutInterceptionV2(
   PreviewResult reach;
   reach.minClearance = std::numeric_limits<double>::infinity();
   int iteration = 0;
-  sva::PTransformd commandReference = referenceStart;
+  // The command chain starts at the arm the rollout integrates (snapshot
+  // mouth). Starting it at the shifted reference state made the first
+  // commanded step jump between two instants (Phase F: 4.4-4.9 m/s spurious
+  // path-demand peaks on replans from a moving arm).
+  sva::PTransformd commandReference = startMouth;
   double clearanceScale = 1.0;
   const int steps = std::max(1, static_cast<int>(std::ceil(duration / dt)));
   sva::PTransformd previousMouth = startMouth;

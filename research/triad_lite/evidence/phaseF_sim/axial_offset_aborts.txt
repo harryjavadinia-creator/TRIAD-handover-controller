@@ -1,0 +1,6 @@
+# Phase F (post-fix) predictive variants pooled: adoptions and aborts by axial offset
+adoptions s!=0 264
+adoptions s=0 21
+aborts s!=0 predictive_interception 183
+aborts s!=0 terminal_certification_infeasible 29
+aborts s=0 predictive_interception 3

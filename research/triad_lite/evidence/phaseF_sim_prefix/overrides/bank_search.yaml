@@ -1,0 +1,3 @@
+configs:
+  HandoverInterceptionController_ReceiverV2:
+    supervisorMode: bank_search

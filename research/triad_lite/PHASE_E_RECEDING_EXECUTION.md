@@ -56,3 +56,9 @@ Both first grasps had |s| > 0. Whether the Phase B axial bound (35 mm) is consis
 - **Refused results.** 10 % of moving jobs exceed L_calc and are refused (latency is machine-dependent).
 - **Held-arm dead end.** After an abort mid-approach, the held pose can leave no certifiable grasp (pilot 2, all 40 shortlisted grasps fail closure / tube). This is the same failure mode as V2 Track 1.
 - **Acquisition and prediction.** Acquisition of a moving object is not implemented (interface limit). The prediction is constant twist.
+
+## 5. Addendum (Phase F)
+
+**Defect.** A rollout defect on replans from a moving arm was found by comparing executed and rollout demands: the command chain started at the shifted reference instead of the integrated arm. It produced spurious path-demand peaks of 4.4–4.9 m/s.
+
+**Fix and consequences.** The fix is in the Phase F commit. The Phase E pilots and the first Phase F campaign (`evidence/phaseF_sim_prefix`) predate it, and the fix changed the FULL vs B1 ordering (`TRIAD_PREDICTIVE_INTERCEPTION_FINAL_REPORT.md` §11).

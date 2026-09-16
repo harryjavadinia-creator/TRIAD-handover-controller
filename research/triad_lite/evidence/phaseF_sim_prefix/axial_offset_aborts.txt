@@ -1,0 +1,14 @@
+# Phase F predictive variants: adoptions and aborts by axial offset of the adopted grasp
+adoptions full s!=0 20
+adoptions full s=0 5
+adoptions predictive s!=0 31
+adoptions predictive s=0 9
+adoptions predictive_capability s!=0 32
+adoptions predictive_capability s=0 9
+aborts full s!=0 terminal_certification_infeasible 10
+aborts predictive s!=0 predictive_interception 2
+aborts predictive s!=0 terminal_certification_infeasible 9
+aborts predictive s=0 terminal_certification_infeasible 1
+aborts predictive_capability s!=0 predictive_interception 4
+aborts predictive_capability s!=0 terminal_certification_infeasible 9
+aborts predictive_capability s=0 predictive_interception 3
