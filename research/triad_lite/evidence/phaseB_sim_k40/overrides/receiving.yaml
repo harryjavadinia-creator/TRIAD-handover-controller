@@ -1,0 +1,5 @@
+configs:
+  HandoverInterceptionController_ReceiverV2:
+    supervisorMode: control_aware
+    controlAware:
+      graspFamily: receiving

@@ -14,3 +14,11 @@ eigen_include="${EIGEN3_INCLUDE_DIR:-/usr/include/eigen3}"
   -o "${build_dir}/test_control_aware_grasp_supervisor"
 
 "${build_dir}/test_control_aware_grasp_supervisor"
+
+"${CXX:-c++}" \
+  -std=c++14 -Wall -Wextra -Werror -pedantic -O1 \
+  -I"${eigen_include}" \
+  "${script_dir}/test_receiving_grasp_family.cpp" \
+  -o "${build_dir}/test_receiving_grasp_family"
+
+"${build_dir}/test_receiving_grasp_family"

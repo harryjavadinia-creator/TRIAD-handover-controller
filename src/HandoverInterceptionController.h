@@ -2,6 +2,7 @@
 
 #include "IndependentGiverModel.h"
 #include "ControlAwareGraspSupervisor.h"
+#include "ReceivingGraspFamily.h"
 
 #include <mc_control/fsm/Controller.h>
 #include <mc_tasks/TransformTask.h>
@@ -2157,11 +2158,44 @@ private:
     std::vector<call_handover::AuthorityEvaluation> captureAuthority;
     std::vector<int> standoffDamper;
     std::vector<int> captureDamper;
+    // Phase B front end (graspFamily: receiving); legacy_ring leaves these unset.
+    std::string family = "legacy_ring";
+    double theta = std::numeric_limits<double>::quiet_NaN();
+    double axialOffset = 0.0;
+    double reachabilityScore = std::numeric_limits<double>::quiet_NaN();
+    bool shortlisted = true;
+  };
+
+  /** One grasp hypothesis before exact evaluation (worker thread). */
+  struct ControlAwareHypothesisV2
+  {
+    call_handover::GraspParameters grasp;
+    CaptureCandidate candidate;
+    std::string family = "legacy_ring";
+    double theta = std::numeric_limits<double>::quiet_NaN();
+    double axialOffset = 0.0;
+    double reachabilityScore = std::numeric_limits<double>::quiet_NaN();
+    bool mechanicalPassed = true;
+    std::string mechanicalReason = "not_applicable";
+    bool shortlisted = true;
+    bool evaluate = true;
+  };
+
+  struct ControlAwareFunnelStatsV2
+  {
+    int generated = 0;
+    int mechanical = 0;
+    int reachable = 0;
+    int shortlisted = 0;
+    int evaluated = 0;
+    double frontEndWall = 0.0;
+    double exactWall = 0.0;
   };
 
   struct ReceiverJobResultV2
   {
     std::vector<ControlAwareCandidateEvalV2> controlAwareCandidates;
+    ControlAwareFunnelStatsV2 controlAwareFunnel;
     double controlAwareFrameConsistency = std::numeric_limits<double>::quiet_NaN();
     std::vector<ParitySampleV2> parityTrace;
     bool parityFromReachStart = false;
@@ -2285,6 +2319,17 @@ private:
     bool reselectWhileTracking = true;
     bool trustIncumbentReevaluation = true;
     call_handover::GraspSelectionTolerances selection;
+    // Phase B receiving-grasp front end (default legacy_ring = 04e9efc behaviour).
+    std::string graspFamily = "legacy_ring";
+    call_handover::ReceivingGraspFamilySpec receivingSpec;
+    double receivingAxialMax = -1.0;  ///< < 0: derived receivingAxialLimit
+    double fingerHalfWidth = 0.0125;
+    double axialMargin = 0.003;
+    bool funnelEnabled = true;
+    int funnelShortlistSize = 40;  ///< Phase B characterization (recall and best-clearance retention)
+    double funnelPruneTolerance = 0.02;
+    double funnelThetaBinWidth = 0.2374;
+    bool funnelCharacterizeAll = false;
   };
   bool v2ControlAware_ = false;
   ControlAwareParametersV2 v2CaParams_;
@@ -2298,6 +2343,9 @@ private:
   int v2CaAdmitsDeferred_ = 0;
   bool loadControlAwareConfigV2(const mc_rtc::Configuration & stateConfig);
   void runControlAwareSelectionV2(ReceiverJobResultV2 & result);
+  std::vector<ControlAwareHypothesisV2> controlAwareHypothesesV2(
+      const ReceiverJobRequestV2 & request, const sva::PTransformd & objectPose, const Eigen::Vector3d & handleAxis,
+      const Eigen::Vector3d & outward, ControlAwareFunnelStatsV2 & stats) const;
   void handleControlAwareSelectionV2(const PendingJobV2 & pending, double now);
   bool adoptControlAwareCandidateV2(const ControlAwareCandidateEvalV2 & eval, double now, const std::string & event);
   /** 0 running, 1 committed, -1 failed. */

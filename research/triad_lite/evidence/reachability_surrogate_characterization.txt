@@ -1,0 +1,6 @@
+reachable samples=400000 sdf min=-0.0129 p0.1=0.0095 median=0.1787
+  false negatives at prune threshold sdf < -0.000: 0.0010%
+  false negatives at prune threshold sdf < -0.005: 0.0003%
+  false negatives at prune threshold sdf < -0.010: 0.0003%
+  false negatives at prune threshold sdf < -0.020: 0.0000%
+far probe (|p - base| in [0.95,1.45] m around z=0.2): rejected at -0.01: 100.00%

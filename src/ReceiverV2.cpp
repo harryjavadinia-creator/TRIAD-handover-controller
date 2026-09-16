@@ -2404,9 +2404,33 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
     p.admissionRequiresCurrentAuthority = readBool(ca, "admissionRequiresCurrentAuthority", p.admissionRequiresCurrentAuthority);
     p.reselectWhileTracking = readBool(ca, "reselectWhileTracking", p.reselectWhileTracking);
     p.trustIncumbentReevaluation = readBool(ca, "trustIncumbentReevaluation", p.trustIncumbentReevaluation);
+    if(ca.has("graspFamily")) { p.graspFamily = static_cast<std::string>(ca("graspFamily")); }
+    if(ca.has("receivingFamily"))
+    {
+      const auto rf = ca("receivingFamily");
+      p.receivingSpec.thetaSamples = std::max(1, readInt(rf, "thetaSamples", p.receivingSpec.thetaSamples));
+      p.receivingSpec.axialSamples = std::max(1, readInt(rf, "axialSamples", p.receivingSpec.axialSamples));
+      p.receivingAxialMax = readDouble(rf, "axialMax", p.receivingAxialMax);
+      p.fingerHalfWidth = readDouble(rf, "fingerHalfWidth", p.fingerHalfWidth);
+      p.axialMargin = readDouble(rf, "axialMargin", p.axialMargin);
+    }
+    if(ca.has("reachabilityFunnel"))
+    {
+      const auto rf = ca("reachabilityFunnel");
+      p.funnelEnabled = readBool(rf, "enabled", p.funnelEnabled);
+      p.funnelShortlistSize = readInt(rf, "shortlistSize", p.funnelShortlistSize);
+      p.funnelPruneTolerance = readDouble(rf, "pruneTolerance", p.funnelPruneTolerance);
+      p.funnelThetaBinWidth = readDouble(rf, "thetaBinWidthDeg", p.funnelThetaBinWidth * 180.0 / M_PI) * M_PI / 180.0;
+      p.funnelCharacterizeAll = readBool(rf, "characterizeAll", p.funnelCharacterizeAll);
+    }
     p.selection.clearanceTieBand = readDouble(ca, "clearanceTieBand", p.selection.clearanceTieBand);
     p.selection.reserveTieBand = readDouble(ca, "reserveTieBand", p.selection.reserveTieBand);
     p.selection.reserveSaturation = readDouble(ca, "reserveSaturation", p.selection.reserveSaturation);
+  }
+  if(p.graspFamily != "legacy_ring" && p.graspFamily != "receiving")
+  {
+    mc_rtc::log::error("[TriadLiteConfig] graspFamily must be legacy_ring or receiving, got {}", p.graspFamily);
+    return false;
   }
   if(!(p.kappaMin > 0.0 && p.kappaMaximum > p.kappaMin && p.residualTolerance > 0.0 && p.switchDwell >= 0.0
        && p.angularCharacteristicLength > 0.0 && p.insertionSpeed >= 0.0 && p.disturbanceSpeed >= 0.0))
@@ -2415,6 +2439,12 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
     return false;
   }
   v2CaParams_ = p;
+  mc_rtc::log::info(
+      "[TriadLiteConfig] graspFamily={} thetaSamples={} axialSamples={} axialMax={:.4f} fingerHalfWidth={:.4f} axialMargin={:.4f} funnel=[enabled:{},K:{},pruneTolerance:{:.4f},thetaBinDeg:{:.3f},characterizeAll:{}] reachabilityMap=[urdfSha256:{},samples:{},step:{:.3f}]",
+      p.graspFamily, p.receivingSpec.thetaSamples, p.receivingSpec.axialSamples, p.receivingAxialMax, p.fingerHalfWidth,
+      p.axialMargin, p.funnelEnabled, p.funnelShortlistSize, p.funnelPruneTolerance, p.funnelThetaBinWidth * 180.0 / M_PI,
+      p.funnelCharacterizeAll, call_handover::gen3_wrist_reachability::kUrdfSha256,
+      call_handover::gen3_wrist_reachability::kSamples, call_handover::gen3_wrist_reachability::kStep);
   mc_rtc::log::success(
       "[TriadLiteConfig] supervisorMode=control_aware graspsPerSign={} clearanceFloor={:.4f} kappaMin={:.3f} kappaMaximum={:.3f} residualTolerance={:.2e} angularLength={:.3f} insertionSpeed={:.3f} disturbanceSpeed={:.3f} switchDwell={:.3f} requireObjectStopped={} admissionRequiresCurrentAuthority={} reselectWhileTracking={} trustIncumbentReevaluation={} tieBands=[clearance:{:.4f},reserve:{:.3f}] reserveSaturation={:.3f} qpLimits=[velocityPercent:{:.3f},inter:{:.3f},security:{:.3f},damperOffset:{:.3f}] authorityLevel=velocity accelerationBounds=module_default_infinite xi=damperOffset_lower_bound",
       p.graspsPerSign, p.clearanceFloor, p.kappaMin, p.kappaMaximum, p.residualTolerance,
@@ -2594,31 +2624,46 @@ void HandoverInterceptionController::runControlAwareSelectionV2(ReceiverJobResul
   if(outward.norm() < 1e-6) { outward = Eigen::Vector3d::UnitY() - zH * zH.y(); }
   if(outward.norm() < 1e-6) { outward = Eigen::Vector3d::UnitX() - zH * zH.x(); }
 
-  const auto family = call_handover::generateGraspFamily(v2CaParams_.graspsPerSign);
+  const auto frontEndStart = std::chrono::steady_clock::now();
+  const std::vector<ControlAwareHypothesisV2> hypotheses =
+      controlAwareHypothesesV2(request, objectPose, zH, outward, result.controlAwareFunnel);
+  result.controlAwareFunnel.frontEndWall =
+      std::chrono::duration<double>(std::chrono::steady_clock::now() - frontEndStart).count();
+  const auto exactStart = std::chrono::steady_clock::now();
   const Eigen::Vector3d vObj = request.prediction.linearVelocity;
   const Eigen::Vector3d wObj = request.prediction.angularVelocity;
   const double inf = std::numeric_limits<double>::infinity();
-  result.controlAwareCandidates.reserve(family.size());
+  result.controlAwareCandidates.reserve(hypotheses.size());
 
-  for(const auto & g : family)
+  for(const auto & hyp : hypotheses)
   {
+    if(!hyp.evaluate) { continue; }
     if(plannerCancel_.load(std::memory_order_relaxed))
     {
       result.success = false;
       result.reason = "v2/cancelled";
       return;
     }
+    ++result.controlAwareFunnel.evaluated;
+    const call_handover::GraspParameters & g = hyp.grasp;
     ControlAwareCandidateEvalV2 eval;
     eval.objectPose = objectPose;
     eval.record.grasp = g;
-    CaptureCandidate c = buildCandidate(g.phi, static_cast<double>(g.sign), request.snapshotMouthPose, outward);
+    eval.family = hyp.family;
+    eval.theta = hyp.theta;
+    eval.axialOffset = hyp.axialOffset;
+    eval.reachabilityScore = hyp.reachabilityScore;
+    eval.shortlisted = hyp.shortlisted;
+    CaptureCandidate c = hyp.candidate;
     eval.record.name = c.name;
-    if(std::isnan(result.controlAwareFrameConsistency))
+    if(std::isnan(result.controlAwareFrameConsistency) && std::abs(hyp.axialOffset) < 1e-12)
     {
-      // Guard against divergence between the pure grasp-frame definition and
-      // the controller's buildCandidate (single geometric source in use).
-      result.controlAwareFrameConsistency =
-          (call_handover::graspFrameRotation(zH, outward, g) - worldRotation(c.W_T_M_pre)).norm();
+      // Guard against divergence between the pure grasp-frame definitions and
+      // the controller's buildCandidate (single geometric source of V2).
+      const CaptureCandidate ref = buildCandidate(g.phi, static_cast<double>(g.sign), request.snapshotMouthPose, outward);
+      result.controlAwareFrameConsistency = (worldRotation(ref.W_T_M_pre) - worldRotation(c.W_T_M_pre)).norm()
+          + (ref.W_T_M_pre.translation() - c.W_T_M_pre.translation()).norm()
+          + (call_handover::graspFrameRotation(zH, outward, g) - worldRotation(c.W_T_M_pre)).norm();
     }
     c.rotation = orientationError(request.snapshotMouthPose, c.W_T_M_standoff);
     c.transitPathLength = (c.W_T_M_standoff.translation() - request.snapshotMouthPose.translation()).norm();
@@ -2762,8 +2807,120 @@ void HandoverInterceptionController::runControlAwareSelectionV2(ReceiverJobResul
     eval.candidate = c;
     result.controlAwareCandidates.push_back(eval);
   }
+  result.controlAwareFunnel.exactWall = std::chrono::duration<double>(std::chrono::steady_clock::now() - exactStart).count();
   result.success = true;
   result.reason = "evaluated";
+}
+
+std::vector<HandoverInterceptionController::ControlAwareHypothesisV2>
+HandoverInterceptionController::controlAwareHypothesesV2(const ReceiverJobRequestV2 & request,
+                                                        const sva::PTransformd & objectPose,
+                                                        const Eigen::Vector3d & handleAxis,
+                                                        const Eigen::Vector3d & outward,
+                                                        ControlAwareFunnelStatsV2 & stats) const
+{
+  std::vector<ControlAwareHypothesisV2> out;
+  if(v2CaParams_.graspFamily != "receiving")
+  {
+    for(const auto & g : call_handover::generateGraspFamily(v2CaParams_.graspsPerSign))
+    {
+      ControlAwareHypothesisV2 h;
+      h.grasp = g;
+      h.candidate = buildCandidate(g.phi, static_cast<double>(g.sign), request.snapshotMouthPose, outward);
+      out.push_back(h);
+    }
+    stats.generated = stats.mechanical = stats.reachable = stats.shortlisted = static_cast<int>(out.size());
+    return out;
+  }
+
+  // Mechanically derived receiving family (ReceivingGraspFamily.h).
+  call_handover::HandleGeometry handle;
+  handle.center = compose(objectPose, O_T_H_).translation();
+  handle.axis = handleAxis;
+  handle.radius = plannerConfig_.handleRadius;
+  handle.halfLength = plannerConfig_.handleHalfLength;
+  call_handover::GripperInterface gi;
+  gi.captureDepth = plannerConfig_.captureDepth;
+  gi.standoffDistance = plannerConfig_.candidateStandoffDistance;
+  gi.retreatDistance = plannerConfig_.candidateRetreatDistance;
+  gi.fingerHalfWidth = v2CaParams_.fingerHalfWidth;
+  gi.axialMargin = v2CaParams_.axialMargin;
+  gi.corridorAxialTolerance = plannerConfig_.corridorAxialTolerance;
+  const double axialLimit = call_handover::receivingAxialLimit(handle, gi);
+  call_handover::ReceivingGraspFamilySpec spec = v2CaParams_.receivingSpec;
+  spec.axialMax = v2CaParams_.receivingAxialMax < 0.0 ? axialLimit : std::min(v2CaParams_.receivingAxialMax, axialLimit);
+
+  // Robot base (root body) pose of the frozen state: the reachability map is
+  // expressed in the base frame.
+  const sva::PTransformd & W_T_root = planningSnapshot_.frozenRobotState.bodyPosW[0];
+  const Eigen::Matrix3d R_W_root = worldRotation(W_T_root);
+  const Eigen::Vector3d p_W_root = W_T_root.translation();
+  auto score = [&](const sva::PTransformd & W_T_M)
+  {
+    const sva::PTransformd W_T_B = basePoseFromMouthPoseWith(W_T_M, planningSnapshot_.mouthToBaseTransform);
+    const Eigen::Vector3d pw = call_handover::gen3WristPoint(worldRotation(W_T_B), W_T_B.translation());
+    return call_handover::gen3WristReachabilitySdf(R_W_root.transpose() * (pw - p_W_root));
+  };
+
+  std::vector<call_handover::FunnelCandidate> funnel;
+  for(const auto & rg : call_handover::generateReceivingGraspFamily(spec))
+  {
+    ++stats.generated;
+    const auto poses = call_handover::receivingGraspPoses(handle, gi, outward, rg);
+    ControlAwareHypothesisV2 h;
+    h.family = "receiving";
+    h.grasp.id = rg.id;
+    h.grasp.sign = rg.sign;
+    h.grasp.phi = call_handover::legacyPhiFromTheta(rg.sign, rg.theta);
+    h.theta = rg.theta;
+    h.axialOffset = rg.s;
+    CaptureCandidate & c = h.candidate;
+    c.W_T_M_pre = fromWorldPose(poses.rotation, poses.capture);
+    c.W_T_M_standoff = fromWorldPose(poses.rotation, poses.standoff);
+    c.W_T_M_transit = c.W_T_M_standoff;
+    c.W_T_M_retreat = fromWorldPose(poses.rotation, poses.retreat);
+    c.verticalComponent = clamp01V2(poses.rotation.col(1).dot(plannerConfig_.worldUp));
+    c.name = fmt::format("rg_{}_s{:+03d}_t{:03d}", rg.sign >= 0 ? "P" : "N",
+                         static_cast<int>(std::lround(rg.s * 1000.0)),
+                         static_cast<int>(std::lround(rg.theta * 180.0 / M_PI)));
+    const auto screen = call_handover::receivingMechanicalScreen(rg, poses, axialLimit, plannerConfig_.groundZ);
+    h.mechanicalPassed = screen.passed;
+    h.mechanicalReason = screen.reason;
+    h.evaluate = false;
+    h.shortlisted = false;
+    if(screen.passed)
+    {
+      ++stats.mechanical;
+      h.reachabilityScore = std::min(score(c.W_T_M_standoff), score(c.W_T_M_pre));
+      if(h.reachabilityScore >= -v2CaParams_.funnelPruneTolerance) { ++stats.reachable; }
+      call_handover::FunnelCandidate f;
+      f.index = static_cast<int>(out.size());
+      f.id = rg.id;
+      f.sign = rg.sign;
+      f.axialIndex = rg.axialIndex;
+      f.theta = rg.theta;
+      f.score = h.reachabilityScore;
+      funnel.push_back(f);
+    }
+    out.push_back(h);
+  }
+  const std::vector<int> selected = v2CaParams_.funnelEnabled
+      ? call_handover::reachabilityShortlist(funnel, v2CaParams_.funnelShortlistSize,
+                                             v2CaParams_.funnelPruneTolerance, v2CaParams_.funnelThetaBinWidth)
+      : call_handover::reachabilityShortlist(funnel, 0, std::numeric_limits<double>::infinity(), 0.0);
+  for(int idx : selected)
+  {
+    out[static_cast<std::size_t>(idx)].shortlisted = true;
+    out[static_cast<std::size_t>(idx)].evaluate = true;
+  }
+  stats.shortlisted = static_cast<int>(selected.size());
+  if(v2CaParams_.funnelCharacterizeAll)
+  {
+    // Characterization: evaluate every mechanically valid hypothesis exactly;
+    // only shortlisted records take part in selection.
+    for(auto & h : out) { h.evaluate = h.mechanicalPassed; }
+  }
+  return out;
 }
 
 void HandoverInterceptionController::handleControlAwareSelectionV2(const PendingJobV2 & pending, double now)
@@ -2781,13 +2938,14 @@ void HandoverInterceptionController::handleControlAwareSelectionV2(const Pending
   std::map<std::string, int> layers;
   for(const auto & e : result.controlAwareCandidates)
   {
-    records.push_back(e.record);
+    if(e.shortlisted) { records.push_back(e.record); }
     ++layers[e.record.rejectionLayer];
     const sva::PTransformd O_T_G = relativePose(e.objectPose, e.candidate.W_T_M_pre);
     const Eigen::Quaterniond qG(worldRotation(O_T_G));
     mc_rtc::log::info(
-        "[TriadLiteCandidate] planningGeneration={} id={} name={} sign={:+d} phiDeg={:.3f} O_T_G_p={} O_T_G_q=[{:.6f},{:.6f},{:.6f},{:.6f}] geometryFeasible={} robotFeasible={} clearance={:.5f} clearanceFeasible={} reserve={:.5f} residual={:.6f} authorityFeasible={} admissible={} rejectionLayer={} rejectionReason={} reachDistance={:.5f} standoffAuthority={} captureAuthority={} standoffDamper={} captureDamper={}",
-        pending.planningGeneration, e.record.grasp.id, e.record.name, e.record.grasp.sign,
+        "[TriadLiteCandidate] planningGeneration={} id={} name={} family={} thetaDeg={:.3f} s={:.4f} reachability={:.4f} shortlisted={} sign={:+d} phiDeg={:.3f} O_T_G_p={} O_T_G_q=[{:.6f},{:.6f},{:.6f},{:.6f}] geometryFeasible={} robotFeasible={} clearance={:.5f} clearanceFeasible={} reserve={:.5f} residual={:.6f} authorityFeasible={} admissible={} rejectionLayer={} rejectionReason={} reachDistance={:.5f} standoffAuthority={} captureAuthority={} standoffDamper={} captureDamper={}",
+        pending.planningGeneration, e.record.grasp.id, e.record.name, e.family, e.theta * 180.0 / M_PI, e.axialOffset,
+        e.reachabilityScore, e.shortlisted, e.record.grasp.sign,
         e.record.grasp.phi * 180.0 / M_PI, caVec3(O_T_G.translation()), qG.w(), qG.x(), qG.y(), qG.z(),
         e.record.geometryFeasible, e.record.robotFeasible, e.record.clearance, e.record.clearanceFeasible,
         e.record.reserve, e.record.residual, e.record.authorityFeasible, e.record.admissible,
@@ -2795,6 +2953,11 @@ void HandoverInterceptionController::handleControlAwareSelectionV2(const Pending
         caAuthority(e.standoffAuthority), caAuthority(e.captureAuthority), caDamper(e.standoffDamper),
         caDamper(e.captureDamper));
   }
+  const auto & fs = result.controlAwareFunnel;
+  mc_rtc::log::info(
+      "[TriadLiteFunnel] planningGeneration={} family={} G0={} Gmech={} GR={} GK={} evaluated={} frontEndMs={:.3f} exactMs={:.3f} characterizeAll={} t={:.6f}",
+      pending.planningGeneration, v2CaParams_.graspFamily, fs.generated, fs.mechanical, fs.reachable, fs.shortlisted,
+      fs.evaluated, 1e3 * fs.frontEndWall, 1e3 * fs.exactWall, v2CaParams_.funnelCharacterizeAll, now);
   const auto outcome = call_handover::selectGraspLexicographic(records, v2CaParams_.selection);
   const int previousId = v2CaSelector_.incumbentId;
   // trustIncumbentReevaluation (default true): a re-evaluation of the executing

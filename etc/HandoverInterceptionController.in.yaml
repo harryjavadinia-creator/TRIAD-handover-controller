@@ -670,6 +670,23 @@ configs:
       clearanceTieBand: 0.005
       reserveTieBand: 0.10
       reserveSaturation: 2.0
+      # Phase B receiving-grasp front end. legacy_ring (default) keeps the
+      # inherited (sigma, phi) ring; receiving uses the mechanically derived
+      # (sigma, theta, s) family with necessary-condition screens and the Gen3
+      # wrist-reachability funnel (research/triad_lite).
+      graspFamily: legacy_ring
+      receivingFamily:
+        thetaSamples: 53             # numerical; Phase 4 pose-change floor ceil(2pi/6.8deg)
+        axialSamples: 5              # numerical; ds <= eps_p = 15 mm over |s| <= 35 mm
+        axialMax: -1.0               # <0: derived min(L_H - w/2 - m, corridor axial tolerance); 0 = centred-grasp task
+        fingerHalfWidth: 0.0125      # m, Robotiq tip-body lattice (|y| 8 mm + 4.5 mm radius)
+        axialMargin: 0.003           # m, geometry safety margin
+      reachabilityFunnel:
+        enabled: true
+        shortlistSize: 40            # numerical K: smallest tested K with recall=1 and best-clearance grasp retained in all 32 characterized generations (per-scenario max 33); evidence/phaseB_sim/funnel_characterization.txt
+        pruneTolerance: 0.02         # m; deepest surrogate false negative 12.9 mm (research/triad_lite)
+        thetaBinWidthDeg: 13.6       # numerical; 2 x the 6.8 deg resolution floor
+        characterizeAll: false       # evaluate every mechanical hypothesis exactly (characterization only)
 
 transitions:
 - [HandoverInterceptionController_Initial, OK, HandoverInterceptionController_ObserveObject, Auto]
