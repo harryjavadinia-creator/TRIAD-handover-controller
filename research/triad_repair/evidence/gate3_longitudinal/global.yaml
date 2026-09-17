@@ -1,0 +1,14 @@
+ClearControllerModulePath: true
+ControllerModulePaths:
+- /home/harry/TRIAD_SCIENTIFIC_AUDIT/research/triad_repair/evidence/gate3_longitudinal/modules
+Enabled:
+- HandoverInterceptionController
+GUIServer:
+  Enable: false
+LogDirectory: /home/harry/TRIAD_SCIENTIFIC_AUDIT/research/triad_repair/evidence/gate3_longitudinal
+MainRobot:
+- env
+- /home/harry/mc_rtc_ws/Sandbox/kinova_gen3_2f85_mcdesc
+- gen3_2f85
+Plugins: []
+Timestep: 0.001

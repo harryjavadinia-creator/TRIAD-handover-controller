@@ -1,0 +1,40 @@
+[  3%] Building CXX object src/CMakeFiles/HandoverInterceptionController.dir/HandoverInterceptionController.cpp.o
+[  7%] Building CXX object src/CMakeFiles/HandoverInterceptionController.dir/ReceiverV2.cpp.o
+[ 11%] Linking CXX shared library libHandoverInterceptionController.so
+[ 11%] Built target HandoverInterceptionController
+[ 18%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_Initial.dir/HandoverInterceptionController_Initial.cpp.o
+[ 18%] Building CXX object src/CMakeFiles/HandoverInterceptionController_controller.dir/lib.cpp.o
+[ 22%] Linking CXX shared library HandoverInterceptionController_controller.so
+[ 22%] Built target HandoverInterceptionController_controller
+[ 25%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_ObserveObject.dir/HandoverInterceptionController_ObserveObject.cpp.o
+[ 29%] Linking CXX shared library HandoverInterceptionController_Initial.so
+[ 29%] Built target HandoverInterceptionController_Initial
+[ 33%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_SolveInterception.dir/HandoverInterceptionController_SolveInterception.cpp.o
+[ 37%] Linking CXX shared library HandoverInterceptionController_ObserveObject.so
+[ 37%] Built target HandoverInterceptionController_ObserveObject
+[ 40%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_ExecuteCommittedReach.dir/HandoverInterceptionController_ExecuteCommittedReach.cpp.o
+[ 44%] Linking CXX shared library HandoverInterceptionController_SolveInterception.so
+[ 44%] Built target HandoverInterceptionController_SolveInterception
+[ 48%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_PresentationHold.dir/HandoverInterceptionController_PresentationHold.cpp.o
+[ 51%] Linking CXX shared library HandoverInterceptionController_ExecuteCommittedReach.so
+[ 51%] Built target HandoverInterceptionController_ExecuteCommittedReach
+[ 55%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_MovePregrasp.dir/HandoverInterceptionController_MovePregrasp.cpp.o
+[ 59%] Linking CXX shared library HandoverInterceptionController_PresentationHold.so
+[ 59%] Built target HandoverInterceptionController_PresentationHold
+[ 62%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_CaptureTransfer.dir/HandoverInterceptionController_CaptureTransfer.cpp.o
+[ 66%] Linking CXX shared library HandoverInterceptionController_MovePregrasp.so
+[ 66%] Built target HandoverInterceptionController_MovePregrasp
+[ 70%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_Retreat.dir/HandoverInterceptionController_Retreat.cpp.o
+[ 74%] Linking CXX shared library HandoverInterceptionController_CaptureTransfer.so
+[ 74%] Built target HandoverInterceptionController_CaptureTransfer
+[ 77%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_Completed.dir/HandoverInterceptionController_Completed.cpp.o
+[ 81%] Linking CXX shared library HandoverInterceptionController_Retreat.so
+[ 81%] Built target HandoverInterceptionController_Retreat
+[ 85%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_Failure.dir/HandoverInterceptionController_Failure.cpp.o
+[ 88%] Linking CXX shared library HandoverInterceptionController_Completed.so
+[ 88%] Built target HandoverInterceptionController_Completed
+[ 92%] Building CXX object src/states/CMakeFiles/HandoverInterceptionController_ReceiverV2.dir/HandoverInterceptionController_ReceiverV2.cpp.o
+[ 96%] Linking CXX shared library HandoverInterceptionController_Failure.so
+[ 96%] Built target HandoverInterceptionController_Failure
+[100%] Linking CXX shared library HandoverInterceptionController_ReceiverV2.so
+[100%] Built target HandoverInterceptionController_ReceiverV2

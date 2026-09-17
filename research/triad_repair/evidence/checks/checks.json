@@ -1,0 +1,105 @@
+[
+  {
+    "command": [
+      "python3",
+      "-B",
+      "research/triad_repair/check_contracts.py"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS matched explicit pool, diagnostic authority, observed-motion feedforward\nPASS identity, immutable geometry, snapshot epoch, linked terminal state, no truth-stop reads in decision functions\nLIMIT: source wiring checks; not a physical execution certificate\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "tools/check_worker_snapshot_purity.py"
+    ],
+    "exit_code": 0,
+    "stdout": "worker snapshot purity: PASS (107 worker-reachable functions, 2 root(s), no unguarded live robot/estimator/world access)\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "tools/check_giver_truth_independence.py",
+      "--static"
+    ],
+    "exit_code": 0,
+    "stdout": "static: PASS updateSimulatedObjectMotion independent region has no receiver-plan dependency\nstatic: PASS IndependentGiverModel.h has no receiver-plan dependency\nstatic: PASS truth = independentGiverStateAt(script, elapsed)\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "research/triad_repair/check_run.py",
+      "research/triad_repair/evidence/capability_smoke/run.log",
+      "--mutations"
+    ],
+    "exit_code": 0,
+    "stdout": "{\n  \"passed\": true,\n  \"errors\": [],\n  \"commits\": 1,\n  \"completed\": true,\n  \"observed_physical_ids\": 0,\n  \"giver_replay\": \"replay: PASS run.log: 1156 samples, max |dp|=2.049e-13 m, max |dq|=0.000e+00; truth recomputed from script only\",\n  \"mutation_tests\": \"passed geometry, premature closure, V1 path, multiple commitments\"\n}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "research/triad_repair/check_run.py",
+      "research/triad_repair/evidence/gate3_longitudinal_retry/run.log",
+      "--mutations"
+    ],
+    "exit_code": 0,
+    "stdout": "{\n  \"passed\": true,\n  \"errors\": [],\n  \"commits\": 1,\n  \"completed\": true,\n  \"observed_physical_ids\": 0,\n  \"giver_replay\": \"replay: PASS run.log: 1121 samples, max |dp|=2.049e-13 m, max |dq|=0.000e+00; truth recomputed from script only\",\n  \"mutation_tests\": \"passed geometry, premature closure, V1 path, multiple commitments\"\n}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "research/triad_repair/check_run.py",
+      "research/triad_repair/evidence/gate4_paired_longitudinal/run.log",
+      "--mutations"
+    ],
+    "exit_code": 0,
+    "stdout": "{\n  \"passed\": true,\n  \"errors\": [],\n  \"commits\": 0,\n  \"completed\": false,\n  \"observed_physical_ids\": 104,\n  \"giver_replay\": \"replay: PASS run.log: 1388 samples, max |dp|=2.049e-13 m, max |dq|=0.000e+00; truth recomputed from script only\",\n  \"mutation_tests\": \"passed geometry, premature closure, V1 path, multiple commitments\"\n}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "research/triad_repair/check_run.py",
+      "research/triad_repair/evidence/matched_lookahead_smoke/run.log",
+      "--mutations"
+    ],
+    "exit_code": 0,
+    "stdout": "{\n  \"passed\": true,\n  \"errors\": [],\n  \"commits\": 0,\n  \"completed\": false,\n  \"observed_physical_ids\": 40,\n  \"giver_replay\": \"replay: PASS run.log: 2188 samples, max |dp|=2.049e-13 m, max |dq|=0.000e+00; truth recomputed from script only\",\n  \"mutation_tests\": \"passed geometry, premature closure, V1 path, multiple commitments\"\n}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "research/triad_repair/check_run.py",
+      "research/triad_repair/evidence/matched_predictive_smoke/run.log",
+      "--mutations"
+    ],
+    "exit_code": 0,
+    "stdout": "{\n  \"passed\": true,\n  \"errors\": [],\n  \"commits\": 1,\n  \"completed\": true,\n  \"observed_physical_ids\": 0,\n  \"giver_replay\": \"replay: PASS run.log: 1155 samples, max |dp|=2.049e-13 m, max |dq|=0.000e+00; truth recomputed from script only\",\n  \"mutation_tests\": \"passed geometry, premature closure, V1 path, multiple commitments\"\n}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "research/triad_repair/check_run.py",
+      "research/triad_repair/evidence/matched_reactive_smoke/run.log",
+      "--mutations"
+    ],
+    "exit_code": 0,
+    "stdout": "{\n  \"passed\": true,\n  \"errors\": [],\n  \"commits\": 0,\n  \"completed\": false,\n  \"observed_physical_ids\": 40,\n  \"giver_replay\": \"replay: PASS run.log: 2188 samples, max |dp|=2.049e-13 m, max |dq|=0.000e+00; truth recomputed from script only\",\n  \"mutation_tests\": \"passed geometry, premature closure, V1 path, multiple commitments\"\n}\n",
+    "stderr": ""
+  }
+]

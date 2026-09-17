@@ -1,0 +1,14 @@
+[
+  {
+    "name": "CALL_DUAL_ACTUAL-HandoverInterceptionController-2026-09-17-08-40-12.bin",
+    "bytes": 88464964,
+    "sha256": "e370bd6be75a618cd47810730238d468437c7a1e6676f156e19167e33a9c2f96",
+    "storage": "retained locally, not committed"
+  },
+  {
+    "name": "CALL_DUAL_ACTUAL-HandoverInterceptionController-latest.bin",
+    "bytes": 88464964,
+    "sha256": "e370bd6be75a618cd47810730238d468437c7a1e6676f156e19167e33a9c2f96",
+    "storage": "retained locally, not committed"
+  }
+]

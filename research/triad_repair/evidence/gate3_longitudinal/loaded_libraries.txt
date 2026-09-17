@@ -1,0 +1,10 @@
+744042400000-74404244e000 r--p 00000000 103:02 7480011                   /tmp/triad-scientific-repair-build/src/libHandoverInterceptionController.so
+74404244e000-7440425b3000 r-xp 0004e000 103:02 7480011                   /tmp/triad-scientific-repair-build/src/libHandoverInterceptionController.so
+7440425b3000-7440425fe000 r--p 001b3000 103:02 7480011                   /tmp/triad-scientific-repair-build/src/libHandoverInterceptionController.so
+7440425fe000-744042600000 r--p 001fe000 103:02 7480011                   /tmp/triad-scientific-repair-build/src/libHandoverInterceptionController.so
+744042600000-744042602000 rw-p 00200000 103:02 7480011                   /tmp/triad-scientific-repair-build/src/libHandoverInterceptionController.so
+744043e62000-744043e94000 r--p 00000000 103:02 7480081                   /tmp/triad-scientific-repair-build/src/HandoverInterceptionController_controller.so
+744043e94000-744043eba000 r-xp 00032000 103:02 7480081                   /tmp/triad-scientific-repair-build/src/HandoverInterceptionController_controller.so
+744043eba000-744043ec5000 r--p 00058000 103:02 7480081                   /tmp/triad-scientific-repair-build/src/HandoverInterceptionController_controller.so
+744043ec5000-744043ec7000 r--p 00062000 103:02 7480081                   /tmp/triad-scientific-repair-build/src/HandoverInterceptionController_controller.so
+744043ec7000-744043ec8000 rw-p 00064000 103:02 7480081                   /tmp/triad-scientific-repair-build/src/HandoverInterceptionController_controller.so

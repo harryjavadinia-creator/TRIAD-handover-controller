@@ -1,0 +1,77 @@
+{
+  "capability_smoke": {
+    "completed_event": true,
+    "commit_events": 1,
+    "paired_terminal_checks": 0,
+    "cancelled_terminal_checks": 0,
+    "pair_counts": {},
+    "capability_samples": 107,
+    "interpretation": "implementation diagnostic only; not independent outcome evidence",
+    "same_sample_minima": {
+      "kappa": 1.08259367,
+      "sigmaMin": 0.09766251,
+      "conditionIndex": 0.11721108,
+      "manipulability": 0.0005850039833,
+      "velocityWeightedSigma": 0.11482479
+    },
+    "kappa_below_one_samples": 0
+  },
+  "gate3_longitudinal": {
+    "completed_event": false,
+    "commit_events": 0,
+    "paired_terminal_checks": 0,
+    "cancelled_terminal_checks": 0,
+    "pair_counts": {},
+    "capability_samples": 0,
+    "interpretation": "implementation diagnostic only; not independent outcome evidence"
+  },
+  "gate3_longitudinal_retry": {
+    "completed_event": true,
+    "commit_events": 1,
+    "paired_terminal_checks": 0,
+    "cancelled_terminal_checks": 0,
+    "pair_counts": {},
+    "capability_samples": 0,
+    "interpretation": "implementation diagnostic only; not independent outcome evidence"
+  },
+  "gate4_paired_longitudinal": {
+    "completed_event": false,
+    "commit_events": 0,
+    "paired_terminal_checks": 158,
+    "cancelled_terminal_checks": 1,
+    "pair_counts": {
+      "true/true": 150,
+      "true/false": 5,
+      "false/false": 3
+    },
+    "capability_samples": 0,
+    "interpretation": "implementation diagnostic only; not independent outcome evidence"
+  },
+  "matched_lookahead_smoke": {
+    "completed_event": false,
+    "commit_events": 0,
+    "paired_terminal_checks": 0,
+    "cancelled_terminal_checks": 0,
+    "pair_counts": {},
+    "capability_samples": 0,
+    "interpretation": "implementation diagnostic only; not independent outcome evidence"
+  },
+  "matched_predictive_smoke": {
+    "completed_event": true,
+    "commit_events": 1,
+    "paired_terminal_checks": 0,
+    "cancelled_terminal_checks": 0,
+    "pair_counts": {},
+    "capability_samples": 0,
+    "interpretation": "implementation diagnostic only; not independent outcome evidence"
+  },
+  "matched_reactive_smoke": {
+    "completed_event": false,
+    "commit_events": 0,
+    "paired_terminal_checks": 0,
+    "cancelled_terminal_checks": 0,
+    "pair_counts": {},
+    "capability_samples": 0,
+    "interpretation": "implementation diagnostic only; not independent outcome evidence"
+  }
+}

@@ -1,0 +1,93 @@
+
+This GDB supports auto-downloading debuginfo from the following URLs:
+  <https://debuginfod.ubuntu.com>
+Enable debuginfod for this session? (y or [n]) [answered N; input not from terminal]
+Debuginfod has been disabled.
+To make this setting permanent, add 'set debuginfod enabled off' to .gdbinit.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7ffff4cce6c0 (LWP 829279)]
+[info] Loading default global configuration /usr/local/etc/mc_rtc.yaml
+[info] Loading additional global configuration /home/harry/.config/mc_rtc/mc_rtc.yaml
+[info] Loading additional global configuration research/triad_repair/evidence/gate3_longitudinal/global.yaml
+[warning] Aliases object/box was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/door was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/litter was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/nail was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/pole was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/seesaw was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/valve was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/valve_handle was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases env/beam was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/box was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/box_table was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/chair was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/corniche was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/crapahut was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/crapahut_bricks was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/door was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/drc_terrain was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/ground was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/litter was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/nail was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/platform was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/pole was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/seesaw was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/table was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/table_printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/valve was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/valve_handle was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[info] GlobalPluginPaths: /usr/local/lib/mc_plugins
+[info] GUI server disabled
+[info] Enabled plugins: ROS (autoload)
+[info] Loading additional plugin configuration: /usr/local/lib/mc_plugins/etc/ROS.yaml
+[New Thread 0x7fffefb846c0 (LWP 829280)]
+[New Thread 0x7fffef3836c0 (LWP 829281)]
+[info] Loading additional controller configuration: /home/harry/TRIAD_SCIENTIFIC_AUDIT/research/triad_repair/evidence/gate3_longitudinal/modules/etc/HandoverInterceptionController.yaml
+[info] Create controller HandoverInterceptionController
+[info] robot config module: [object, /home/harry/TRIAD_SCIENTIFIC_AUDIT/call_object_description, call_object]
+init_pos:
+  translation: [0.92, 0, 0.55]
+  rotation: [0.0, 1.5708, 0.0]
+[info] Robots loaded in controller:
+[info] - gen3_2f85
+[info] - call_object
+[info] MCController(base) ready
+[info] Looking for state files in /home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states/data
+[info] Added task FSM_posture_gen3_2f85
+[warning] [PlanSelectionConfiguration] mode=binding_cost costConfigurationValid=true tieTolerance=1.000e-09 allowPhysicalExecution=false weightSumBeforeNormalization=1.000000 eventTimePolicy=global_time_plan timeTerm=search_to_completion
+[info] [ReceiverArchitecture] architecture=v2_receding giverTruthModel=independent_scripted valid=true
+[info] [HandoverInterception] physical task frame B=gen3_robotiq_85_base_link object=call_object/call_object dt=0.001000
+[warning] [HandoverInterception] Cartesian task created but inactive. Initial uses joint posture and opens the gripper.
+[New Thread 0x7fffee3ff6c0 (LWP 829285)]
+[warning] [MCController::HandoverInterceptionController] No state observation pipeline configured: the state of the real robots will not be estimated
+[info] Will log controller outputs to /home/harry/TRIAD_SCIENTIFIC_AUDIT/research/triad_repair/evidence/gate3_longitudinal/CALL_DUAL_ACTUAL-HandoverInterceptionController-2026-09-17-08-18-01.bin
+[info] Updated latest log symlink: /home/harry/TRIAD_SCIENTIFIC_AUDIT/research/triad_repair/evidence/gate3_longitudinal/CALL_DUAL_ACTUAL-HandoverInterceptionController-latest.bin
+[info] Added task FSM_body6d_call_object_call_object
+[WARN] [1789625881.638596500] [rcl]: ROS_LOCALHOST_ONLY is deprecated but still honored if it is enabled. Use ROS_AUTOMATIC_DISCOVERY_RANGE and ROS_STATIC_PEERS instead.
+[WARN] [1789625881.638646382] [rcl]: 'localhost_only' is enabled, 'automatic_discovery_range' and 'static_peers' will be ignored.
+[New Thread 0x7fffecbff6c0 (LWP 829286)]
+[New Thread 0x7fffe7fff6c0 (LWP 829287)]
+[New Thread 0x7fffe77fe6c0 (LWP 829288)]
+[New Thread 0x7fffe6ffd6c0 (LWP 829289)]
+[New Thread 0x7fffe67fc6c0 (LWP 829290)]
+[New Thread 0x7fffe5ffb6c0 (LWP 829291)]
+[New Thread 0x7fffe57fa6c0 (LWP 829292)]
+[New Thread 0x7fffe4ff96c0 (LWP 829293)]
+[New Thread 0x7fffdbfff6c0 (LWP 829294)]
+[New Thread 0x7fffdb7fe6c0 (LWP 829295)]
+[New Thread 0x7fffdaffd6c0 (LWP 829296)]
+[success] [mc_rtc::ROS] Starting ROS services
+[New Thread 0x7fffda7fc6c0 (LWP 829297)]
+[New Thread 0x7fffd9ffb6c0 (LWP 829298)]
+[New Thread 0x7fffd97fa6c0 (LWP 829299)]
+[New Thread 0x7fffd8ff96c0 (LWP 829300)]
+
+Thread 1 "mc_rtc_ticker" received signal SIGSEGV, Segmentation fault.
+0x00007ffff7ecd066 in mc_control::ControllerServer::update_rate (this=this@entry=0x0, dt=<optimized out>, server_dt=<optimized out>, server_dt@entry=0.050000000000000003) at ../../src/mc_rtc/src/mc_control/ControllerServer.cpp:127
+warning: 127	../../src/mc_rtc/src/mc_control/ControllerServer.cpp: No such file or directory
+#0  0x00007ffff7ecd066 in mc_control::ControllerServer::update_rate (this=this@entry=0x0, dt=<optimized out>, server_dt=<optimized out>, server_dt@entry=0.050000000000000003) at ../../src/mc_rtc/src/mc_control/ControllerServer.cpp:127
+#1  0x00007ffff7f6efdf in mc_control::Ticker::run (this=this@entry=0x7fffffffc170) at ../../src/mc_rtc/src/mc_control/Ticker.cpp:244
+#2  0x0000555555566f0b in main (argc=<optimized out>, argv=<optimized out>) at ../../sb_src/mc_rtc/utils/mc_rtc_ticker.cpp:51
