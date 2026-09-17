@@ -2423,6 +2423,7 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
     p.switchDwell = readDouble(ca, "switchDwell", p.switchDwell);
     p.requireObjectStopped = readBool(ca, "requireObjectStopped", p.requireObjectStopped);
     p.matchedExperiment = readBool(ca, "matchedExperiment", p.matchedExperiment);
+    p.capabilityDiagnostics = readBool(ca, "capabilityDiagnostics", p.capabilityDiagnostics);
     p.lookaheadSeconds = readDouble(ca, "lookaheadSeconds", p.lookaheadSeconds);
     if(ca.has("matchedCandidateIds")) { ca("matchedCandidateIds", p.matchedCandidateIds); }
     p.diagnoseContinuation = readBool(ca, "diagnoseContinuation", p.diagnoseContinuation);
@@ -2689,7 +2690,7 @@ std::vector<call_handover::AuthorityEvaluation> HandoverInterceptionController::
   Eigen::MatrixXd Jfull = Eigen::MatrixXd::Zero(6, mb.nrDof());
   v2CaRuntimeJacobian_->fullJacobian(mb, Jc, Jfull);
   std::vector<int> cols;
-  std::vector<double> q, qMin, qMax, vMin, vMax;
+  std::vector<double> q, qdot, qMin, qMax, vMin, vMax;
   for(int j = 0; j < mb.nrJoints(); ++j)
   {
     if(mb.joint(j).dof() != 1) { continue; }
@@ -2697,6 +2698,7 @@ std::vector<call_handover::AuthorityEvaluation> HandoverInterceptionController::
     const std::size_t sj = static_cast<std::size_t>(j);
     cols.push_back(mb.jointPosInDof(j));
     q.push_back(mbc.q[sj][0]);
+    qdot.push_back(mbc.alpha[sj][0]);
     qMin.push_back(robot().ql()[sj].empty() ? -std::numeric_limits<double>::infinity() : robot().ql()[sj][0]);
     qMax.push_back(robot().qu()[sj].empty() ? std::numeric_limits<double>::infinity() : robot().qu()[sj][0]);
     vMin.push_back(robot().vl()[sj].empty() ? -std::numeric_limits<double>::infinity() : robot().vl()[sj][0]);
@@ -2726,6 +2728,22 @@ std::vector<call_handover::AuthorityEvaluation> HandoverInterceptionController::
       e.residual = call_handover::boxConstrainedLeastSquares(A, y, box.lower, box.upper).residual;
       e.realizable = e.residual <= v2CaParams_.residualTolerance;
       e.reserve = e.realizable ? v2CaParams_.kappaMin : 0.0;
+    }
+    if(d.label == "diagnostic_path")
+    {
+      e = call_handover::evaluateAuthorityDemand(J, box, d, L, v2CaParams_.residualTolerance, v2CaParams_.kappaMaximum);
+      const auto generic = call_handover::scaledCapability(J, L);
+      const auto weighted = call_handover::scaledCapability(J * ((box.upper - box.lower) * 0.5).asDiagonal(), L);
+      const Eigen::VectorXd actual = J * toVec(qdot);
+      const auto vec = [](const Eigen::VectorXd & x)
+      {
+        std::string s = "[";
+        for(Eigen::Index i = 0; i < x.size(); ++i) { s += fmt::format("{}{:.9g}", i ? "," : "", x[i]); }
+        return s + "]";
+      };
+      mc_rtc::log::info("[TriadRepairCapability] t={:.6f} planId={} kappa={:.8f} residual={:.8f} sigmaMin={:.8f} conditionIndex={:.8f} manipulability={:.10g} velocityWeightedSigma={:.8f} q={} qdot={} requested={} executed={} lower={} upper={} bounds=conservative_history_free frame=world_tool_body cadence=0.05",
+          controllerTime_, provisionalReceiverPlan_.planId, e.reserve, e.residual, generic.sigmaMin, generic.conditionIndex,
+          generic.manipulability, weighted.sigmaMin, vec(toVec(q)), vec(toVec(qdot)), vec(d.twist), vec(actual), vec(box.lower), vec(box.upper));
     }
     out.push_back(e);
   }
@@ -3485,6 +3503,15 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
         (v2ReferencePose_.translation() - current.translation()).norm());
     const sva::PTransformd W_T_B_cmd = basePoseFromMouthPose(v2ReferencePose_);
     const Eigen::Vector3d vBody = v + w.cross(W_T_B_cmd.translation() - v2ReferencePose_.translation());
+    if(v2CaParams_.capabilityDiagnostics)
+    {
+      call_handover::AuthorityDemand demand;
+      demand.label = "diagnostic_path";
+      demand.twist.head<3>() = w;
+      demand.twist.tail<3>() = vBody;
+      bool inside = false;
+      controlAwareAuthorityAtRuntimeV2({demand}, inside);
+    }
     mc_rtc::log::info(
         "[TriadLiteInterceptTrack] planId={} graspId={} phase={} timeToRendezvous={:.4f} referenceToGoal={:.5f} commandToMeasured={:.5f} bodyLinearSpeed={:.5f} bodyAngularSpeed={:.5f} clearance={:.5f} t={:.6f}",
         active.planId, v2Icpt_.graspId, intercepting ? "intercept" : "synchronize", v2Icpt_.tRendezvous - now,

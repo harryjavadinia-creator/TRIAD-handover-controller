@@ -2405,6 +2405,7 @@ private:
   {
     int graspsPerSign = 32;
     double clearanceFloor = 0.025;
+    bool capabilityDiagnostics = false; ///< Sampled logging only; never alters commands.
     bool matchedExperiment = false;
     std::vector<int> matchedCandidateIds;
     double lookaheadSeconds = 0.20;

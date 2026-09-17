@@ -341,8 +341,22 @@ void testHysteresisAndFreeze()
 }
 } // namespace
 
+void testMatchedCapabilityMetrics()
+{
+  Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6,7);
+  J.leftCols(6).setIdentity();
+  const auto m = call_handover::scaledCapability(J, 0.2);
+  CHECK(std::abs(m.sigmaMin - 0.2) < 1e-12);
+  CHECK(std::abs(m.conditionIndex - 0.2) < 1e-12);
+  CHECK(std::abs(m.manipulability - 0.008) < 1e-12);
+  J.row(5).setZero();
+  const auto singular = call_handover::scaledCapability(J, 0.2);
+  CHECK(singular.sigmaMin == 0.0 && singular.manipulability == 0.0);
+}
+
 int main()
 {
+  testMatchedCapabilityMetrics();
   testGraspFamily();
   testVelocityBox();
   testBoxLeastSquares();

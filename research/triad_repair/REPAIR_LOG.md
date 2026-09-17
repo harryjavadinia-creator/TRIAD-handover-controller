@@ -109,3 +109,27 @@ shortlist BEFORE downstream checks. They are not selected from successful
 predictive outcomes. A population experiment is still gated on preview/execution
 validity and independent preregistration. The present code is not validated as a
 new control method.
+
+## Gate 6: matched H2 diagnostic samples
+
+Opt-in `capabilityDiagnostics` logs the requested tool-body/world twist and
+J(q)dq at the SAME executed configuration, alongside directional reserve and
+row-scaled sigma_min, condition index, manipulability, and velocity-box-width
+weighted sigma_min. Sampling is 50 ms in the precommit tracking phase; aggregates
+must use that same sample set, not a path minimum versus endpoint comparison.
+The ray calculation is capped at 8 and the box is labelled conservative/history-
+free, not the actual history-dependent Tasks constraint. q/dq and box bounds are
+logged. Binary controller logs retain the higher-rate state stream.
+
+This adds diagnostic compute load and must be enabled identically in diagnostic
+comparisons. It does not alter selection, admission or reference commands.
+Insertion/synchronization preview metrics remain model quantities; actual contact
+and terminal-phase capability inference is NOT claimed by these precommit logs.
+No held-out predictive-performance analysis or intervention is authorized by
+these implementation diagnostics alone.
+
+The isolated ticker has two framework issues retained in evidence: disabling its
+GUI server crashes at startup (null ControllerServer), and normal run-for return
+crashes after execution. The diagnostic wrapper now follows the existing runner's
+explicit process termination at a terminal event and records that status. This
+avoids teardown, not a controller failure; historical crash logs remain unchanged.

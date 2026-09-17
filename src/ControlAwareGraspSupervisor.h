@@ -371,6 +371,29 @@ inline AuthorityEvaluation evaluateAuthorityDemand(const Eigen::MatrixXd & J,
   return e;
 }
 
+struct CapabilityMetrics
+{
+  double sigmaMin = 0.0;
+  double conditionIndex = 0.0;
+  double manipulability = 0.0;
+};
+
+/** Same task-row scaling for reserve and generic capability. No selection use. */
+inline CapabilityMetrics scaledCapability(const Eigen::MatrixXd & J, double angularLength)
+{
+  CapabilityMetrics m;
+  if(J.rows() != 6 || !J.allFinite()) { return m; }
+  Eigen::MatrixXd A = J;
+  A.topRows(3) *= angularLength;
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double,6,6>> e(A * A.transpose());
+  if(e.info() != Eigen::Success) { return m; }
+  const auto lambda = e.eigenvalues().cwiseMax(0.0).eval();
+  m.sigmaMin = std::sqrt(lambda.minCoeff());
+  m.conditionIndex = m.sigmaMin / std::sqrt(std::max(1e-12, lambda.maxCoeff()));
+  m.manipulability = std::sqrt(lambda.prod());
+  return m;
+}
+
 // ---------------------------------------------------------------------------
 // Candidate records, lexicographic selection and hysteresis
 // ---------------------------------------------------------------------------
