@@ -10,7 +10,7 @@ p = argparse.ArgumentParser()
 p.add_argument('output', type=P)
 p.add_argument('--build', type=P, default=P('/tmp/triad-scientific-repair-build'))
 p.add_argument('--scenario', choices=['longitudinal','lateral-low','near-ground','diagonal'], default='longitudinal')
-p.add_argument('--seconds', type=float, default=35)
+p.add_argument('--seconds', type=float, default=35, help='nominal wall-time allowance; wrapper adds 60 s startup/computation grace')
 p.add_argument('--override', type=P)
 a = p.parse_args()
 out = a.output.resolve(); out.mkdir(parents=True, exist_ok=False)
@@ -53,18 +53,32 @@ manifest={'commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,t
 env=dict(os.environ); env['LD_LIBRARY_PATH']=str(a.build.resolve()/'src')+':'+env.get('LD_LIBRARY_PATH','')
 start=time.monotonic()
 with (out/'run.log').open('w') as f:
-    proc=subprocess.Popen(['/home/harry/mc_rtc_ws/install/bin/mc_rtc_ticker','-f',str(out/'global.yaml'),'--run-for',str(a.seconds)],stdout=f,stderr=subprocess.STDOUT,env=env)
+    proc=subprocess.Popen(['/home/harry/mc_rtc_ws/install/bin/mc_rtc_ticker','-f',str(out/'global.yaml')],stdout=f,stderr=subprocess.STDOUT,env=env)
     time.sleep(1)
     if proc.poll() is None:
         maps=P(f'/proc/{proc.pid}/maps').read_text()
         (out/'loaded_libraries.txt').write_text('\n'.join(x for x in maps.splitlines() if 'HandoverInterception' in x))
         if str(a.build.resolve()/'src/libHandoverInterceptionController.so') not in maps:
             proc.terminate(); proc.wait(); raise RuntimeError('wrong controller library loaded')
-    try: rc=proc.wait(timeout=a.seconds+60)
-    except subprocess.TimeoutExpired:
+    # This installation faults in ticker teardown after run_for returns.
+    # Use the historical runner's explicit terminal/timeout termination policy;
+    # preserve exit status and distinguish it from spontaneous crashes.
+    stop_reason = 'spontaneous_exit'
+    while proc.poll() is None:
+        elapsed = time.monotonic()-start
+        content = (out/'run.log').read_text(errors='replace')
+        if '[Completed] full plan-once handover completed' in content or 'Starting state HandoverInterceptionController_Failure' in content:
+            stop_reason = 'wrapper_terminal'; break
+        if elapsed > a.seconds+60:
+            stop_reason = 'wrapper_timeout'; break
+        time.sleep(.25)
+    if proc.poll() is None:
         proc.terminate()
         try: rc=proc.wait(timeout=5)
         except subprocess.TimeoutExpired: proc.kill(); rc=proc.wait()
+    else: rc=proc.returncode
+    manifest['stop_reason']=stop_reason
+
 manifest.update(exit_code=rc,wall_seconds=time.monotonic()-start)
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2))
 print(json.dumps(manifest | {'diff':'see manifest'},indent=2))

@@ -1,0 +1,5 @@
+# Preserve large native logs locally; archive their hashes and text evidence.
+evidence/**/*.bin
+# Generated absolute-path loader links; copy effective configuration separately.
+evidence/**/modules/
+__pycache__/
