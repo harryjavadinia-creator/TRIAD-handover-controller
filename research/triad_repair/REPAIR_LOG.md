@@ -71,3 +71,19 @@ local_synchronization timestamp is renamed rendezvous_time_elapsed.
 Fidelity gate: do not launch H1 or interpret hard kappa as physical feasibility
 until preview/runtime correspondence is demonstrated. Unit tests prove boundary
 conditions and expose the old mixed-epoch initialization, not this correspondence.
+
+## Gate 4: linked terminal posture diagnostic
+
+The actual terminal checker is now factored through terminalFromStateV2; normal
+terminal execution supplies exactly its previous request and snapshot. An opt-in
+`diagnoseContinuation` evaluates that SAME full checker from (1) the snapshot q
+and (2) the terminal q_R produced by the moving rollout, with identical grasp
+geometry and hypothetical stationary object pose. It never filters or ranks.
+This adds computation and is therefore used in held-arm characterization only,
+not counted as performance evidence.
+
+Both checks use the existing stopped terminal semantics (zero velocity). They
+isolate posture/configuration compatibility, NOT braking, force transfer, or a
+robust continuation while the giver keeps moving. Static exact-layer acceptance
+and full terminal acceptance are logged separately. Axial offsets remain separate
+levels; no axial sample is removed to improve results.

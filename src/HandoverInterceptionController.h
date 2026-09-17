@@ -2227,6 +2227,7 @@ private:
     double syncResidual = 0.0;
     bool insideSecurity = false;
     std::map<std::string, std::vector<double>> rendezvousArmPosture;
+    rbd::MultiBodyConfig rendezvousState;
   };
 
   /** Phase C: one (g, tau) attempt of the ascending event sweep (log record). */
@@ -2367,6 +2368,8 @@ private:
   void runReceiverWorkerJobV2(std::uint64_t generation);
   void runRecertifyActiveRolloutV2(ReceiverJobResultV2 & result);
   void runTerminalCertificationV2(ReceiverJobResultV2 & result);
+  void terminalFromStateV2(ReceiverJobResultV2 & result, const ReceiverJobRequestV2 & request,
+                           const rbd::MultiBodyConfig & startState);
   RouteStepOutcome runRouteStepToCompletionV2();
   void processReceiverJobResultV2(double now);
   bool adoptFullSearchResultV2(double now);
@@ -2402,6 +2405,7 @@ private:
   {
     int graspsPerSign = 32;
     double clearanceFloor = 0.025;
+    bool diagnoseContinuation = false; ///< Diagnostic only; changes compute work, never admissibility.
     double kappaMin = 1.0;
     double kappaMaximum = 8.0;
     double residualTolerance = 1.0e-4;

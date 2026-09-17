@@ -874,7 +874,12 @@ void HandoverInterceptionController::runRecertifyActiveRolloutV2(ReceiverJobResu
 
 void HandoverInterceptionController::runTerminalCertificationV2(ReceiverJobResultV2 & result)
 {
-  const ReceiverJobRequestV2 & request = v2Request_;
+  terminalFromStateV2(result, v2Request_, planningSnapshot_.frozenRobotState);
+}
+
+void HandoverInterceptionController::terminalFromStateV2(
+    ReceiverJobResultV2 & result, const ReceiverJobRequestV2 & request, const rbd::MultiBodyConfig & startState)
+{
   const sva::PTransformd objectPose = request.terminalObjectPose;
   CaptureCandidate candidate = request.candidate;
   InterceptionPlan plan = request.plan;
@@ -893,7 +898,7 @@ void HandoverInterceptionController::runTerminalCertificationV2(ReceiverJobResul
   plannerContext_.planningM_T_O = sva::PTransformd::Identity();
   plannerContext_.plannerWorldActive = true;
 
-  rbd::MultiBodyConfig mbc = planningSnapshot_.frozenRobotState;
+  rbd::MultiBodyConfig mbc = startState;
   for(auto & a : mbc.alpha) { std::fill(a.begin(), a.end(), 0.0); }
   for(auto & aD : mbc.alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
   setPreviewGripperClosure(mbc, 0.0);
@@ -2417,6 +2422,7 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
     p.disturbanceSpeed = readDouble(ca, "disturbanceSpeed", p.disturbanceSpeed);
     p.switchDwell = readDouble(ca, "switchDwell", p.switchDwell);
     p.requireObjectStopped = readBool(ca, "requireObjectStopped", p.requireObjectStopped);
+    p.diagnoseContinuation = readBool(ca, "diagnoseContinuation", p.diagnoseContinuation);
     p.admissionRequiresCurrentAuthority = readBool(ca, "admissionRequiresCurrentAuthority", p.admissionRequiresCurrentAuthority);
     p.reselectWhileTracking = readBool(ca, "reselectWhileTracking", p.reselectWhileTracking);
     p.trustIncumbentReevaluation = readBool(ca, "trustIncumbentReevaluation", p.trustIncumbentReevaluation);
@@ -3747,6 +3753,7 @@ void HandoverInterceptionController::rolloutInterceptionV2(
   out.finalRelativeLinearSpeed = (vM - vG).norm();
   out.finalRelativeAngularSpeed = (wM - omega).norm();
   out.rendezvousArmPosture = armPostureFromMbc(mbc);
+  out.rendezvousState = mbc;
   {
     // Generic capability at the rendezvous (B2 tie-break): condition index of
     // the length-scaled tool Jacobian, as previewReachStep's decision metric.
@@ -4026,6 +4033,27 @@ void HandoverInterceptionController::solveInterceptionV2(
       attempt(at, "rollout", rollout.reason, sc, required, exactWall + rolloutWall);
       pushNext(cur, cur.event + 1);
       continue;
+    }
+    if(v2CaParams_.diagnoseContinuation)
+    {
+      // Paired POSTURE compatibility diagnostic: same grasp/object pose and
+      // same full terminal checker; only its start q differs. This assumes the
+      // object and arm have stopped at this pose. It does not certify braking,
+      // continued moving-object following, force transfer, or physical contact.
+      ReceiverJobRequestV2 terminal = request;
+      terminal.candidate = eval.candidate;
+      terminal.terminalObjectPose = W_T_O_tau;
+      terminal.plan = makeInterceptionPlan(eval.candidate, W_T_O_tau, request.snapshotTime,
+          eval.reachStandoffDuration, eval.reachCaptureDuration, eval.closureDuration, eval.retreatDuration);
+      ReceiverJobResultV2 fromSnapshot, fromRendezvous;
+      terminalFromStateV2(fromSnapshot, terminal, planningSnapshot_.frozenRobotState);
+      terminalFromStateV2(fromRendezvous, terminal, rollout.rendezvousState);
+      mc_rtc::log::info("[TriadRepairContinuation] generation={} graspId={} axial={:.6f} tau={:.6f} initialLayers=true snapshotTerminal={} rendezvousTerminal={} snapshotReason={} rendezvousReason={} assumption=stopped_posture_only",
+          request.planningGeneration, ic.graspId, eval.axialOffset, at.tau,
+          fromSnapshot.success, fromRendezvous.success, fromSnapshot.reason, fromRendezvous.reason);
+      plannerContext_.W_T_O = W_T_O_tau;
+      plannerContext_.W_T_H = compose(W_T_O_tau, O_T_H_);
+      plannerContext_.planningM_T_O = sva::PTransformd::Identity();
     }
     // Phase D: kappa(g, tau) = min over path, synchronization and insertion
     // (insertion = eval.record.reserve under the phase demands).
