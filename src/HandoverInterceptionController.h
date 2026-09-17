@@ -2520,6 +2520,7 @@ private:
   bool predictiveVariantV2() const { return v2ControlAware_ && v2CaParams_.variant != "reactive"; }
   call_handover::RendezvousReferenceState interceptionExecutionReferenceV2(
       double t, const ObjectPredictionRecordV2 & prediction) const;
+  bool matchesActiveGraspGeometryV2(const InterceptionCandidateV2 & candidate) const;
   void setInterceptionExecutionV2(const InterceptionCandidateV2 & candidate, double tRendezvous, double now);
   void handlePredictiveSelectionV2(const PendingJobV2 & pending, const ReceiverJobResultV2 & result, double now);
   bool adoptControlAwareCandidateV2(const ControlAwareCandidateEvalV2 & eval, double now, const std::string & event);

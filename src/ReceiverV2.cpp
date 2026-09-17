@@ -4149,15 +4149,39 @@ call_handover::RendezvousReferenceState HandoverInterceptionController::intercep
                                             worldRotation(G), prediction.angularVelocity);
 }
 
+bool HandoverInterceptionController::matchesActiveGraspGeometryV2(const InterceptionCandidateV2 & candidate) const
+{
+  if(!provisionalReceiverPlan_.valid) { return false; }
+  const auto & c = candidate.eval.candidate;
+  const auto & p = provisionalReceiverPlan_.plan;
+  const auto same = [&](const sva::PTransformd & world, const sva::PTransformd & local)
+  {
+    const auto actual = relativePose(candidate.objectPoseAtRendezvous, world);
+    return call_handover::sameReceivingPose(worldRotation(actual), actual.translation(),
+                                            worldRotation(local), local.translation());
+  };
+  return same(c.W_T_M_standoff, p.O_T_M_standoff)
+      && same(c.W_T_M_pre, p.O_T_M_capture)
+      && same(c.W_T_M_retreat, p.O_T_M_retreat);
+}
+
 void HandoverInterceptionController::setInterceptionExecutionV2(const InterceptionCandidateV2 & candidate,
                                                                 double tRendezvous, double now)
 {
+  if(!matchesActiveGraspGeometryV2(candidate))
+  {
+    mc_rtc::log::error("[TriadRepairContract] geometry_mismatch stage=patch graspId={} t={:.6f}", candidate.graspId, now);
+    invalidateProvisionalPlanV2("geometry_contract/patch", now);
+    return;
+  }
   const ObjectPredictionRecordV2 prediction = currentObjectPredictionV2();
   InterceptionExecutionV2 x;
   x.valid = true;
   x.graspId = candidate.graspId;
-  x.O_T_M_standoff = relativePose(candidate.objectPoseAtRendezvous, candidate.eval.candidate.W_T_M_standoff);
-  x.meetingPose = candidate.eval.candidate.W_T_M_standoff;
+  // One immutable geometry owner: terminal gate, certification and tracking
+  // all use this plan. A patch changes reference timing, never the grasp.
+  x.O_T_M_standoff = provisionalReceiverPlan_.plan.O_T_M_standoff;
+  x.meetingPose = compose(candidate.objectPoseAtRendezvous, x.O_T_M_standoff);
   v2IcptReplanClosed_ = false;
   x.t0 = now;
   x.tRendezvous = std::max(tRendezvous, now + 2.0 * controlDt_);
@@ -4206,6 +4230,16 @@ void HandoverInterceptionController::handlePredictiveSelectionV2(const PendingJo
       mc_rtc::log::warning(
           "[TriadLiteEvent] type=result_inconclusive reason=budget planningGeneration={} anyFeasible={} incumbentUnresolved={} incumbentId={} t={:.6f}",
           pending.planningGeneration, anyFeasible, incumbentUnresolved, v2CaSelector_.incumbentId, now);
+      return;
+    }
+  }
+  // Reject an inconsistent result BEFORE mutating selector/reference state.
+  for(const auto & ic : result.interceptionCandidates)
+  {
+    if(provisionalReceiverPlan_.valid && ic.graspId == v2CaSelector_.incumbentId
+       && ic.status == "feasible" && !matchesActiveGraspGeometryV2(ic))
+    {
+      mc_rtc::log::error("[TriadRepairContract] geometry_mismatch stage=retention graspId={} t={:.6f}", ic.graspId, now);
       return;
     }
   }

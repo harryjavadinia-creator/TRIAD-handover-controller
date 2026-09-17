@@ -179,6 +179,14 @@ inline ReceivingGraspPoses objectFixedReceivingGraspPoses(
   return p;
 }
 
+/** Numerical identity, not an acquisition tolerance. Reject nonfinite poses. */
+inline bool sameReceivingPose(const Eigen::Matrix3d & Ra, const Eigen::Vector3d & pa,
+                              const Eigen::Matrix3d & Rb, const Eigen::Vector3d & pb)
+{
+  return Ra.allFinite() && Rb.allFinite() && pa.allFinite() && pb.allFinite()
+      && (Ra - Rb).norm() <= 1e-8 && (pa - pb).norm() <= 1e-8;
+}
+
 /** Legacy TRIAD (sigma, phi) ring angle equivalent to (sigma, theta):
  * sigma = +1: theta = phi - pi/2;  sigma = -1: theta = pi/2 - phi. */
 inline double legacyPhiFromTheta(int sign, double theta)

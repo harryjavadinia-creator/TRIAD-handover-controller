@@ -93,6 +93,18 @@ void testPhysicalIdentity()
   }
 }
 
+void testGeometryContract()
+{
+  const Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
+  const Eigen::Vector3d p(0.1,0.2,0.3);
+  CHECK(sameReceivingPose(R, p, R, p));
+  CHECK(sameReceivingPose(R, p, R, p + Eigen::Vector3d::Constant(1e-10)));
+  CHECK(!sameReceivingPose(R, p, R, p + Eigen::Vector3d(0,0,0.0175)));
+  const Eigen::Matrix3d changed = Eigen::AngleAxisd(0.001, Eigen::Vector3d::UnitZ()).toRotationMatrix();
+  CHECK(!sameReceivingPose(R, p, changed, p));
+  CHECK(!sameReceivingPose(R, p, R, Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN())));
+}
+
 void testTaskConstraintReduction()
 {
   GripperInterface gi;
@@ -227,6 +239,7 @@ int main()
 {
   testFrameAndContacts();
   testPhysicalIdentity();
+  testGeometryContract();
   testTaskConstraintReduction();
   testResolutionAndConvergenceHelper();
   testLegacyEquivalence();
