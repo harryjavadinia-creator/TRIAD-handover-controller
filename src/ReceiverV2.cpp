@@ -2422,6 +2422,9 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
     p.disturbanceSpeed = readDouble(ca, "disturbanceSpeed", p.disturbanceSpeed);
     p.switchDwell = readDouble(ca, "switchDwell", p.switchDwell);
     p.requireObjectStopped = readBool(ca, "requireObjectStopped", p.requireObjectStopped);
+    p.matchedExperiment = readBool(ca, "matchedExperiment", p.matchedExperiment);
+    p.lookaheadSeconds = readDouble(ca, "lookaheadSeconds", p.lookaheadSeconds);
+    if(ca.has("matchedCandidateIds")) { ca("matchedCandidateIds", p.matchedCandidateIds); }
     p.diagnoseContinuation = readBool(ca, "diagnoseContinuation", p.diagnoseContinuation);
     p.admissionRequiresCurrentAuthority = readBool(ca, "admissionRequiresCurrentAuthority", p.admissionRequiresCurrentAuthority);
     p.reselectWhileTracking = readBool(ca, "reselectWhileTracking", p.reselectWhileTracking);
@@ -2491,12 +2494,12 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
   {
     p.variant = static_cast<std::string>(stateConfig("controlAware")("variant"));
   }
-  if(p.variant != "reactive" && p.variant != "predictive" && p.variant != "predictive_capability" && p.variant != "full")
+  if(p.variant != "reactive" && p.variant != "predictive" && p.variant != "predictive_capability" && p.variant != "full" && p.variant != "lookahead")
   {
     mc_rtc::log::error("[TriadLiteConfig] variant must be reactive, predictive, predictive_capability or full, got {}", p.variant);
     return false;
   }
-  if(p.variant != "reactive")
+  if(p.variant != "reactive" && p.variant != "lookahead")
   {
     if(p.graspFamily != "receiving" || p.interceptionMode != "disabled")
     {
@@ -2511,6 +2514,21 @@ bool HandoverInterceptionController::loadControlAwareConfigV2(const mc_rtc::Conf
         : (p.variant == "predictive_capability" ? call_handover::InterceptionTieBreak::Capability
                                                 : call_handover::InterceptionTieBreak::Clearance);
   }
+  if(p.matchedExperiment)
+  {
+    if(p.graspFamily != "receiving" || p.matchedCandidateIds.empty()
+       || (p.variant != "reactive" && p.variant != "predictive" && p.variant != "lookahead")
+       || !std::isfinite(p.lookaheadSeconds) || p.lookaheadSeconds < 0.0)
+    {
+      mc_rtc::log::error("[TriadRepairConfig] matched comparison requires receiving family, explicit common IDs, and reactive/predictive/lookahead");
+      return false;
+    }
+    p.authorityFilter = false;
+    p.admissionRequiresCurrentAuthority = false;
+    mc_rtc::log::info("[TriadRepairConfig] matched=true poolSize={} authority=diagnostic admissionAuthority=false variant={} lookahead={}",
+                     p.matchedCandidateIds.size(), p.variant, p.lookaheadSeconds);
+  }
+  else if(p.variant == "lookahead") { return false; }
   if(p.graspFamily != "legacy_ring" && p.graspFamily != "receiving")
   {
     mc_rtc::log::error("[TriadLiteConfig] graspFamily must be legacy_ring or receiving, got {}", p.graspFamily);
@@ -2861,7 +2879,7 @@ void HandoverInterceptionController::evaluateControlAwareExactLayersV2(
     return;
   }
   eval.record.authorityFeasible = eval.record.reserve >= v2CaParams_.kappaMin;
-  if(!eval.record.authorityFeasible)
+  if(!eval.record.authorityFeasible && !v2CaParams_.matchedExperiment)
   {
     reject("authority", fmt::format("kappa={:.4f}<kappaMin={:.3f}", eval.record.reserve, v2CaParams_.kappaMin));
     return;
@@ -2926,7 +2944,7 @@ void HandoverInterceptionController::runControlAwareSelectionV2(ReceiverJobResul
     eval.shortlisted = hyp.shortlisted;
     CaptureCandidate c = hyp.candidate;
     eval.record.name = c.name;
-    if(std::isnan(result.controlAwareFrameConsistency) && std::abs(hyp.axialOffset) < 1e-12)
+    if(hyp.family != "receiving" && std::isnan(result.controlAwareFrameConsistency) && std::abs(hyp.axialOffset) < 1e-12)
     {
       // Guard against divergence between the pure grasp-frame definitions and
       // the controller's buildCandidate (single geometric source of V2).
@@ -3156,6 +3174,22 @@ HandoverInterceptionController::controlAwareHypothesesV2(const ReceiverJobReques
       }
     }
   }
+  if(v2CaParams_.matchedExperiment)
+  {
+    // Explicit, preregistered pool shared across treatments. No outcome or
+    // future-event ranking may change its membership. Per-event feasibility
+    // checks still reject members normally.
+    stats.shortlisted = 0;
+    for(auto & h : out)
+    {
+      h.shortlisted = std::find(v2CaParams_.matchedCandidateIds.begin(), v2CaParams_.matchedCandidateIds.end(), h.grasp.id)
+          != v2CaParams_.matchedCandidateIds.end();
+      h.evaluate = h.shortlisted && h.mechanicalPassed;
+      if(h.shortlisted) { ++stats.shortlisted; }
+    }
+    if(stats.shortlisted != static_cast<int>(v2CaParams_.matchedCandidateIds.size()))
+    { throw std::runtime_error("matched candidate pool contains unknown or duplicate IDs"); }
+  }
   if(v2CaParams_.funnelCharacterizeAll)
   {
     // Characterization: evaluate every mechanically valid hypothesis exactly;
@@ -3180,7 +3214,11 @@ void HandoverInterceptionController::handleControlAwareSelectionV2(const Pending
   std::map<std::string, int> layers;
   for(const auto & e : result.controlAwareCandidates)
   {
-    if(e.shortlisted) { records.push_back(e.record); }
+    if(e.shortlisted)
+    {
+      records.push_back(e.record);
+      if(v2CaParams_.matchedExperiment) { records.back().reserve = 0.0; } // diagnostic only, no ranking leakage
+    }
     ++layers[e.record.rejectionLayer];
     const sva::PTransformd O_T_G = relativePose(e.objectPose, e.candidate.W_T_M_pre);
     const Eigen::Quaterniond qG(worldRotation(O_T_G));
@@ -3298,7 +3336,8 @@ bool HandoverInterceptionController::adoptControlAwareCandidateV2(const ControlA
     ++v2Counters_.replacements;
     ++v2CaSwitches_;
   }
-  const bool continuousReference = predictiveVariantV2() && replacement && v2Phase_ == ReceiverPhaseV2::ControlAwareTrack;
+  const bool continuousReference = (predictiveVariantV2() || v2CaParams_.matchedExperiment)
+      && replacement && v2Phase_ == ReceiverPhaseV2::ControlAwareTrack;
   v2Phase_ = ReceiverPhaseV2::ControlAwareTrack;
   v2PhaseEntryTime_ = now;
   if(!continuousReference)
@@ -3398,7 +3437,23 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
         active.planId, v2Icpt_.graspId, v2Icpt_.tRendezvous, (target.translation() - current.translation()).norm(),
         orientationError(current, target), now);
   }
-  const sva::PTransformd rateLimited = advancePoseReference(v2ReferencePose_, referenceGoal, linearSpeedLimit, angularSpeedLimit);
+  sva::PTransformd referenceStart = v2ReferencePose_;
+  if(v2CaParams_.matchedExperiment && !predictiveVariantV2())
+  {
+    // Competent reactive feedforward: advect the reference with observed rigid
+    // object motion, then correct its object-relative error. Look-ahead differs
+    // only in target horizon; neither baseline searches rendezvous time.
+    const auto prediction = currentObjectPredictionV2();
+    const auto objectNow = predictionPoseAtV2(prediction, now);
+    const auto objectNext = predictionPoseAtV2(prediction, now + controlDt_);
+    referenceStart = compose(objectNext, relativePose(objectNow, v2ReferencePose_));
+    const double horizon = v2CaParams_.variant == "lookahead" ? v2CaParams_.lookaheadSeconds : 0.0;
+    referenceGoal = compose(predictionPoseAtV2(prediction, now + controlDt_ + horizon), active.plan.O_T_M_standoff);
+  }
+  const auto relativeCorrection = advancePoseReference(referenceStart, referenceGoal, linearSpeedLimit, angularSpeedLimit);
+  const sva::PTransformd rateLimited = v2CaParams_.matchedExperiment
+      ? boundedPoseStep(v2ReferencePose_, relativeCorrection, linearSpeedLimit * controlDt_, angularSpeedLimit * controlDt_)
+      : relativeCorrection;
   const sva::PTransformd next = boundedPoseStep(current, rateLimited, linearLeadLimit, angularLeadLimit);
   sva::PTransformd safe;
   HandoverSafetyReport report;
@@ -3418,7 +3473,7 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
   if(w.norm() > angularSpeedLimit && w.norm() > 1e-12) { w *= angularSpeedLimit / w.norm(); }
   commandMouthTargetWithWorldVelocity(v2ReferencePose_, v, w);
   v2CaCommandLinearVelocity_ = v;
-  if(predictiveVariantV2() && (v2IcptLastLog_ < 0.0 || now >= v2IcptLastLog_ + 0.05 - 1e-9))
+  if((predictiveVariantV2() || v2CaParams_.matchedExperiment) && (v2IcptLastLog_ < 0.0 || now >= v2IcptLastLog_ + 0.05 - 1e-9))
   {
     v2IcptLastLog_ = now;
     const auto observed = currentObjectPredictionV2();

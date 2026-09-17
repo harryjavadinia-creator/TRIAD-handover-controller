@@ -87,3 +87,25 @@ isolate posture/configuration compatibility, NOT braking, force transfer, or a
 robust continuation while the giver keeps moving. Static exact-layer acceptance
 and full terminal acceptance are logged separately. Axial offsets remain separate
 levels; no axial sample is removed to improve results.
+
+## Gate 5: matched baseline interfaces (H1 not launched)
+
+An explicit `matchedExperiment` switch requires a shared receiving-family ID
+pool. Its membership bypasses method-specific shortlist ranking; exact geometry
+checks can still reject members at the method's evaluated object pose. Kappa is
+computed but cannot reject, gate acquisition, or rank reactive candidates. The
+runtime safety constraints and stopped-object terminal controller remain intact.
+
+Reactive uses the current object-relative target with observed rigid-motion
+feedforward (advect reference by the observed object transform increment, then
+correct relative pose), with the same world speed/lead/safety limits. Lookahead
+uses the same law at a fixed future target, with no encounter search. Predictive
+uses sampled rendezvous search and its patch. The treatment is the supervisory
+reference-generation policy, including unavoidable future-time feasibility and
+selection coupling; it is NOT merely toggling the predictor.
+
+Pools for implementation diagnostics are frozen from the current-pose SDF
+shortlist BEFORE downstream checks. They are not selected from successful
+predictive outcomes. A population experiment is still gated on preview/execution
+validity and independent preregistration. The present code is not validated as a
+new control method.

@@ -32,5 +32,14 @@ assert f.index('matchesActiveGraspGeometryV2') < f.index('updateGraspSelector')
 for name in ['predictionPoseAtV2','rolloutInterceptionV2','solveInterceptionV2','controlAwareHypothesesV2']:
     f=body(name)
     assert not any(x in f for x in ['independentGiverScript_', 'independentGiverStateAt(', 'presentationStopTime_'])
+f=body('controlAwareHypothesesV2')
+assert 'v2CaParams_.matchedCandidateIds' in f
+f=body('evaluateControlAwareExactLayersV2')
+assert '!eval.record.authorityFeasible && !v2CaParams_.matchedExperiment' in f
+f=body('handleControlAwareSelectionV2')
+assert 'records.back().reserve = 0.0' in f
+f=body('stepControlAwareTrackV2')
+assert 'referenceStart = compose(objectNext, relativePose(objectNow, v2ReferencePose_))' in f
+print('PASS matched explicit pool, diagnostic authority, observed-motion feedforward')
 print('PASS identity, immutable geometry, snapshot epoch, linked terminal state, no truth-stop reads in decision functions')
 print('LIMIT: source wiring checks; not a physical execution certificate')

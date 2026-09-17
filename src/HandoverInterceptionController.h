@@ -2405,6 +2405,9 @@ private:
   {
     int graspsPerSign = 32;
     double clearanceFloor = 0.025;
+    bool matchedExperiment = false;
+    std::vector<int> matchedCandidateIds;
+    double lookaheadSeconds = 0.20;
     bool diagnoseContinuation = false; ///< Diagnostic only; changes compute work, never admissibility.
     double kappaMin = 1.0;
     double kappaMaximum = 8.0;
@@ -2524,7 +2527,7 @@ private:
   int v2IcptLatencyRefused_ = 0;
   bool v2IcptReplanClosed_ = false;
   int v2IcptInconclusive_ = 0;
-  bool predictiveVariantV2() const { return v2ControlAware_ && v2CaParams_.variant != "reactive"; }
+  bool predictiveVariantV2() const { return v2ControlAware_ && v2CaParams_.variant != "reactive" && v2CaParams_.variant != "lookahead"; }
   call_handover::RendezvousReferenceState interceptionExecutionReferenceV2(
       double t, const ObjectPredictionRecordV2 & prediction) const;
   bool matchesActiveGraspGeometryV2(const InterceptionCandidateV2 & candidate) const;
