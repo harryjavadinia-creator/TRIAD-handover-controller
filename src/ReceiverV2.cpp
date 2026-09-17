@@ -653,12 +653,12 @@ bool HandoverInterceptionController::submitReceiverCertificationV2(
     request.incumbentGraspId = v2CaSelector_.incumbentId;
     if(predictiveVariantV2() && v2Icpt_.valid && provisionalReceiverPlan_.valid)
     {
-      // Hujic planning-time shift: the patch starts where the executed
-      // reference is predicted to be when the result can be adopted.
-      const auto ref = interceptionExecutionReferenceV2(now + v2CaParams_.interceptionComputationLatency, prediction);
+      // Snapshot proposal: q, dq and command/reference state share epoch now.
+      // No unpropagated future reference is combined with the snapshot robot.
       request.interceptionStartValid = true;
-      request.interceptionStartPose = fromWorldPose(ref.rotation, ref.position);
-      request.interceptionStartLinearVelocity = ref.linearVelocity;
+      request.interceptionStartPose = v2ReferencePose_;
+      request.interceptionStartLinearVelocity = v2CaCommandLinearVelocity_;
+      request.interceptionStartClearanceScale = v2ClearanceScale_;
     }
   }
 
@@ -3328,6 +3328,13 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
   }
 
   const sva::PTransformd current = actualMouthPose();
+  Eigen::Vector3d measuredV = Eigen::Vector3d::Zero(), measuredW = Eigen::Vector3d::Zero();
+  const bool velocitySampleValid = v2RepairLastActualTime_ >= 0.0
+      && now > v2RepairLastActualTime_ && now - v2RepairLastActualTime_ < 2.0 * controlDt_;
+  if(velocitySampleValid)
+  { worldPoseTwist(v2RepairLastActualPose_, current, now - v2RepairLastActualTime_, measuredV, measuredW); }
+  v2RepairLastActualPose_ = current;
+  v2RepairLastActualTime_ = now;
   HandoverSafetyReport currentReport;
   if(!evaluateCurrentPoseSafety(currentReport, false))
   {
@@ -3381,7 +3388,7 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
   {
     v2Icpt_.synchronizationLogged = true;
     mc_rtc::log::success(
-        "[TriadLiteEvent] type=local_synchronization planId={} graspId={} tRendezvous={:.6f} distToStandoff={:.5f} angle={:.5f} t={:.6f}",
+        "[TriadLiteEvent] type=rendezvous_time_elapsed planId={} graspId={} tRendezvous={:.6f} distToStandoff={:.5f} angle={:.5f} t={:.6f}",
         active.planId, v2Icpt_.graspId, v2Icpt_.tRendezvous, (target.translation() - current.translation()).norm(),
         orientationError(current, target), now);
   }
@@ -3408,6 +3415,13 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
   if(predictiveVariantV2() && (v2IcptLastLog_ < 0.0 || now >= v2IcptLastLog_ + 0.05 - 1e-9))
   {
     v2IcptLastLog_ = now;
+    const auto observed = currentObjectPredictionV2();
+    const Eigen::Vector3d objectV = observed.linearVelocity
+        + observed.angularVelocity.cross(current.translation() - W_T_O_.translation());
+    mc_rtc::log::info("[TriadRepairMotion] planId={} t={:.6f} valid={} actualMouthV={} actualMouthW={} requestedMouthV={} requestedMouthW={} relativeLinear={:.8f} relativeAngular={:.8f} tracking={:.8f}",
+        active.planId, now, velocitySampleValid, caVec3(measuredV), caVec3(measuredW), caVec3(v), caVec3(w),
+        (measuredV - objectV).norm(), (measuredW - observed.angularVelocity).norm(),
+        (v2ReferencePose_.translation() - current.translation()).norm());
     const sva::PTransformd W_T_B_cmd = basePoseFromMouthPose(v2ReferencePose_);
     const Eigen::Vector3d vBody = v + w.cross(W_T_B_cmd.translation() - v2ReferencePose_.translation());
     mc_rtc::log::info(
@@ -3583,11 +3597,10 @@ void HandoverInterceptionController::rolloutInterceptionV2(
   };
   plannerContext_.planningM_T_O = sva::PTransformd::Identity();
 
-  // Frozen decision state (robot assumed held during L_calc; exact for a
-  // first plan from rest, approximate while the arm moves).
+  // Counterfactual snapshot-start proposal, NOT a result-use certificate.
+  // Preserve observed model q/dq/ddq; previewReachStep remains an approximate
+  // differential-IK model, not a replay of the mc_rtc feedback QP.
   rbd::MultiBodyConfig mbc = planningSnapshot_.frozenRobotState;
-  for(auto & a : mbc.alpha) { std::fill(a.begin(), a.end(), 0.0); }
-  for(auto & aD : mbc.alphaD) { std::fill(aD.begin(), aD.end(), 0.0); }
   setPreviewGripperClosure(mbc, 0.0);
   sva::PTransformd startMouth;
   if(!previewMouthPose(mbc, startMouth)) { return fail("preview_kinematics_unavailable"); }
@@ -3605,9 +3618,7 @@ void HandoverInterceptionController::rolloutInterceptionV2(
   Eigen::Vector3d pG0, vG0;
   Eigen::Matrix3d RG0;
   graspState(tStart, pG0, vG0, RG0);
-  // Patch start: the executed reference state at tStart when replanning while
-  // moving (the arm configuration is still the snapshot: approximation), else
-  // the frozen mouth at rest.
+  // Robot and reference initial conditions have the same snapshot epoch.
   const sva::PTransformd referenceStart = startReference != nullptr ? *startReference : startMouth;
   const Eigen::Vector3d p0 = referenceStart.translation();
   const Eigen::Matrix3d R0 = worldRotation(referenceStart);
@@ -3626,12 +3637,10 @@ void HandoverInterceptionController::rolloutInterceptionV2(
   PreviewResult reach;
   reach.minClearance = std::numeric_limits<double>::infinity();
   int iteration = 0;
-  // The command chain starts at the arm the rollout integrates (snapshot
-  // mouth). Starting it at the shifted reference state made the first
-  // commanded step jump between two instants (Phase F: 4.4-4.9 m/s spurious
-  // path-demand peaks on replans from a moving arm).
-  sva::PTransformd commandReference = startMouth;
-  double clearanceScale = 1.0;
+  // Preserve the actual reference lead, rather than erasing it or shifting it.
+  sva::PTransformd commandReference = referenceStart;
+  double clearanceScale = v2Request_.interceptionStartValid
+      ? v2Request_.interceptionStartClearanceScale : 1.0;
   const int steps = std::max(1, static_cast<int>(std::ceil(duration / dt)));
   sva::PTransformd previousMouth = startMouth;
   sva::PTransformd currentMouth = startMouth;
@@ -4001,7 +4010,7 @@ void HandoverInterceptionController::solveInterceptionV2(
     }
     const auto rolloutStart = std::chrono::steady_clock::now();
     InterceptionRolloutV2 rollout;
-    rolloutInterceptionV2(prediction, request.snapshotTime + Lcalc, request.snapshotTime + at.tau,
+    rolloutInterceptionV2(prediction, request.snapshotTime, request.snapshotTime + at.tau,
                           relativePose(W_T_O_tau, c.W_T_M_standoff), eval.candidate.plannedStandoffArmPosture, rollout,
                           request.interceptionStartValid ? &request.interceptionStartPose : nullptr,
                           request.interceptionStartLinearVelocity);
@@ -4201,9 +4210,19 @@ void HandoverInterceptionController::handlePredictiveSelectionV2(const PendingJo
                                                                  const ReceiverJobResultV2 & result, double now)
 {
   const auto & st = result.interception;
-  // The rollout assumed adoption no later than snapshot + L_calc. A later
-  // result violates its start-state assumption and is not used at all.
+  // Result-age budget only. Snapshot-start rollout does not certify the
+  // evolved robot state at adoption, even when this budget is respected.
   const double latency = now - pending.submitTime;
+  double dqMax = 0.0;
+  const auto & live = robot().mbc();
+  const auto & snap = planningSnapshot_.frozenRobotState;
+  for(std::size_t j = 0; j < live.q.size() && j < snap.q.size(); ++j)
+  {
+    for(std::size_t k = 0; k < live.q[j].size() && k < snap.q[j].size(); ++k)
+    { dqMax = std::max(dqMax, std::abs(live.q[j][k] - snap.q[j][k])); }
+  }
+  mc_rtc::log::info("[TriadRepairUse] generation={} snapshot={:.6f} use={:.6f} age={:.6f} maxJointPositionDrift={:.8f} model=snapshot_proposal certificate=false",
+      pending.planningGeneration, pending.submitTime, now, latency, dqMax);
   if(latency > v2CaParams_.interceptionComputationLatency + 1e-9)
   {
     ++v2IcptLatencyRefused_;

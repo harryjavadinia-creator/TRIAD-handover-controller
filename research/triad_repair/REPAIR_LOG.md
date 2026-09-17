@@ -46,3 +46,28 @@ Gate 1 makes these physically stable. Legacy-ring experiments are not part of th
 repaired receiving-family comparison. Pure geometry tests include rotation,
 axial displacement and nonfinite mismatch rejection. Existing historical evidence
 is not reclassified as evidence for the repaired branch.
+
+## Gate 3: one-epoch snapshot proposal (not valid-at-use certification)
+
+x_R(t_k) = (q_k, dq_k, ddq_k) from the controller model snapshot;
+eta(t_k) = (command pose, command velocity, clearance governor scale).
+Both are now initialized at t_k. Previously eta was shifted to t_k+0.8 while
+q remained at t_k. The rollout no longer resets dq/ddq on entry. Its first
+command starts from eta(t_k), retaining measured reference lead.
+
+The preview computes a counterfactual proposal starting at t_k. Latency remains
+an encounter-time allowance and result-age refusal budget; it does NOT advance
+physical state. No x_R(t_u) is predicted or certified. At actual use t_u the
+execution patch starts from the actual eta(t_u), and state drift is logged.
+This deliberately chooses the snapshot-based option rather than pretending the
+DLS preview is the actual QP. The model still overwrites velocity according to
+its differential IK law; preserving its initial state does not make it a QP.
+
+Measured simulation motion is finite-differenced from executed mouth poses every
+controller step, with invalid samples flagged; it is not reference velocity.
+Relative velocity uses observed rigid-object motion at the mouth. The old
+local_synchronization timestamp is renamed rendezvous_time_elapsed.
+
+Fidelity gate: do not launch H1 or interpret hard kappa as physical feasibility
+until preview/runtime correspondence is demonstrated. Unit tests prove boundary
+conditions and expose the old mixed-epoch initialization, not this correspondence.

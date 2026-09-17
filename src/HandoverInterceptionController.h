@@ -2119,11 +2119,12 @@ private:
     sva::PTransformd snapshotMouthPose = sva::PTransformd::Identity();
     sva::PTransformd terminalObjectPose = sva::PTransformd::Identity();
     // Phase E receding interception: incumbent grasp (always resolved) and the
-    // executed reference state predicted at snapshotTime + L_calc (patch start).
+    // executed command/reference state AT snapshotTime (not latency shifted).
     int incumbentGraspId = -1;
     bool interceptionStartValid = false;
     sva::PTransformd interceptionStartPose = sva::PTransformd::Identity();
     Eigen::Vector3d interceptionStartLinearVelocity = Eigen::Vector3d::Zero();
+    double interceptionStartClearanceScale = 1.0;
     // Work units per cancellation check in the worker rollout. The rollout is
     // invariant to this suspension granularity (see stepPredictiveRouteCandidate).
     int routeWorkUnits = 128;
@@ -2512,6 +2513,8 @@ private:
   InterceptionExecutionV2 v2Icpt_;
   Eigen::Vector3d v2CaCommandLinearVelocity_ = Eigen::Vector3d::Zero();
   double v2IcptLastLog_ = -1.0;
+  sva::PTransformd v2RepairLastActualPose_ = sva::PTransformd::Identity();
+  double v2RepairLastActualTime_ = -1.0;
   int v2IcptRetained_ = 0;
   int v2IcptPatched_ = 0;
   int v2IcptLatencyRefused_ = 0;

@@ -170,6 +170,22 @@ void testRendezvousReference()
   CHECK((a.position - p0).norm() < 1e-12);
   CHECK((a.linearVelocity - v0).norm() < 1e-12);  // patch continuity
   CHECK((a.rotation - R0).norm() < 1e-9);
+  // Negative regression for the old mixed-epoch initialization: advancing
+  // eta by compute latency while leaving q at t0 is not a snapshot start.
+  CHECK((ref(t0 + 0.8).position - p0).norm() > 0.01);
+  // Re-anchoring at actual result use must start from the ACTUAL command state,
+  // irrespective of result age. This is a boundary property, not QP fidelity.
+  for(double age : {0.0, 0.1, 0.8})
+  {
+    const Eigen::Vector3d actualP = p0 + age * v0;
+    Eigen::Vector3d pg;
+    Eigen::Matrix3d rg;
+    target(t0 + age, pg, rg);
+    const auto patch = rendezvousReference(t0 + age, t0 + age, T, actualP, v0, R0,
+        pg, vG, rg, pg, vG, rg, wG);
+    CHECK((patch.position - actualP).norm() < 1e-12);
+    CHECK((patch.linearVelocity - v0).norm() < 1e-12);
+  }
   const auto b = ref(t0 + T);
   Eigen::Vector3d pG;
   Eigen::Matrix3d RG;
