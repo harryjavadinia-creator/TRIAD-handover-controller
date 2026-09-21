@@ -1,0 +1,37 @@
+# FULL/B1/B2 selection decisions per run (post-fix): adopt/abort limit cycles
+r1/full/diagonal {'initial': 1}
+r1/full/lateral-low {'initial': 15, 'abort_to_hold': 14}
+r1/full/longitudinal {'initial': 50, 'abort_to_hold': 49, 'keep': 8, 'challenger_pending': 7, 'switch_dominated': 1}
+r1/full/near-ground {'initial': 2, 'keep': 18, 'keep_within_bands': 1, 'challenger_pending': 1, 'switch_inadmissible': 1, 'abort_to_hold': 1}
+r1/predictive/diagonal {'initial': 1, 'challenger_pending': 1, 'keep': 1}
+r1/predictive/lateral-low {'initial': 2, 'keep': 7, 'switch_inadmissible': 1, 'keep_within_bands': 4}
+r1/predictive/longitudinal {'initial': 3, 'keep_within_bands': 2, 'challenger_pending': 1, 'keep': 23}
+r1/predictive/near-ground {'initial': 1, 'keep': 7, 'switch_inadmissible': 4, 'challenger_pending': 4, 'switch_dominated': 1}
+r1/predictive_capability/diagonal {'initial': 2, 'challenger_pending': 1, 'keep': 12}
+r1/predictive_capability/lateral-low {'initial': 2, 'keep': 8, 'switch_inadmissible': 1, 'keep_within_bands': 2}
+r1/predictive_capability/longitudinal {'initial': 3, 'challenger_pending': 2, 'keep_within_bands': 1, 'keep': 20}
+r1/predictive_capability/near-ground {'initial': 2, 'switch_inadmissible': 6, 'challenger_pending': 1, 'keep': 23, 'abort_to_hold': 1}
+r2/full/diagonal {'initial': 1}
+r2/full/lateral-low {'initial': 16, 'abort_to_hold': 14}
+r2/full/longitudinal {'initial': 46, 'abort_to_hold': 44, 'keep': 9, 'challenger_pending': 7}
+r2/full/near-ground {'initial': 1}
+r2/predictive/diagonal {'initial': 1, 'challenger_pending': 1, 'keep': 1}
+r2/predictive/lateral-low {'initial': 2, 'keep': 7, 'switch_inadmissible': 1, 'keep_within_bands': 4}
+r2/predictive/longitudinal {'initial': 3, 'keep_within_bands': 2, 'challenger_pending': 1, 'keep': 21}
+r2/predictive/near-ground {'initial': 2, 'keep': 21, 'switch_inadmissible': 6, 'challenger_pending': 6, 'abort_to_hold': 1}
+r2/predictive_capability/diagonal {'initial': 2, 'challenger_pending': 1, 'keep_within_bands': 1, 'keep': 11}
+r2/predictive_capability/lateral-low {'initial': 2, 'keep': 11, 'switch_inadmissible': 1}
+r2/predictive_capability/longitudinal {'initial': 3, 'challenger_pending': 2, 'keep': 19}
+r2/predictive_capability/near-ground {'initial': 2, 'keep': 26, 'challenger_pending': 3, 'switch_inadmissible': 4, 'abort_to_hold': 1}
+r3/full/diagonal {'initial': 1}
+r3/full/lateral-low {'initial': 16, 'abort_to_hold': 15}
+r3/full/longitudinal {'initial': 46, 'abort_to_hold': 44, 'keep': 8, 'challenger_pending': 8}
+r3/full/near-ground {'initial': 2, 'keep': 17, 'challenger_pending': 1, 'keep_within_bands': 1, 'switch_inadmissible': 1, 'abort_to_hold': 1}
+r3/predictive/diagonal {'initial': 1, 'challenger_pending': 1, 'keep': 1}
+r3/predictive/lateral-low {'initial': 2, 'keep': 7, 'switch_inadmissible': 1, 'keep_within_bands': 4}
+r3/predictive/longitudinal {'initial': 3, 'keep_within_bands': 2, 'challenger_pending': 1, 'keep': 23}
+r3/predictive/near-ground {'initial': 1, 'switch_inadmissible': 6, 'challenger_pending': 1, 'keep': 5, 'keep_within_bands': 3}
+r3/predictive_capability/diagonal {'initial': 2, 'challenger_pending': 1, 'keep_within_bands': 1, 'keep': 11}
+r3/predictive_capability/lateral-low {'initial': 2, 'keep': 9, 'switch_inadmissible': 1, 'challenger_pending': 1, 'keep_within_bands': 1}
+r3/predictive_capability/longitudinal {'initial': 3, 'challenger_pending': 2, 'keep_within_bands': 1, 'keep': 20}
+r3/predictive_capability/near-ground {'initial': 2, 'keep': 5, 'challenger_pending': 2, 'switch_inadmissible': 3, 'abort_to_hold': 1}

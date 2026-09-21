@@ -1,0 +1,6 @@
+observed_position=[0.9, 0.0, 0.3]
+observed_velocity=[-0.0566, 0.0, 0.0566]
+position_ok=True
+velocity_ok=True
+scenario_identity_result=PASS
+scenario identity verified: diagonal
