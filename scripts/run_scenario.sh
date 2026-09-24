@@ -22,9 +22,13 @@
 #   TRIAD_RECEIVER_MODE=v2               TRIAD V2 receding receiver, independent giver
 #   TRIAD_EXTRA_OVERRIDE=<file>          YAML appended to the override (fault injection)
 #   TRIAD_MAX_WAIT=<seconds>             wall-clock bound for the ticker (default 180)
+#   TRIAD_BUILD_DIR=<dir>                run the controller straight from this CMake build tree
+#                                        (no install into mc_rtc needed); MC_RTC_INSTALL locates
+#                                        mc_rtc's own FSM states (default $HOME/mc_rtc_ws/install)
 #
 # Requires:
-#   - the controller already built and installed (see docs/simulation.md)
+#   - the controller built (docs/quickstart.md); either installed into mc_rtc or
+#     run from the build tree with TRIAD_BUILD_DIR
 #   - MAIN_ROBOT_MODULE_PATH set to a local Kinova Gen3 + Robotiq 2F-85
 #     mc_rtc robot-module directory (see configs/mc_rtc.yaml.example)
 #   - mc_rtc_ticker on PATH
@@ -189,6 +193,27 @@ echo "  receiver mode:      ${RECEIVER_MODE}"
 GLOBAL_CONFIG="${RUN_HOME}/mc_rtc.yaml"
 sed "s#\${MAIN_ROBOT_MODULE_PATH}#${MAIN_ROBOT_MODULE_PATH}#" \
   "${REPO_ROOT}/configs/mc_rtc.yaml.example" > "${GLOBAL_CONFIG}"
+
+# Build-tree mode: point mc_rtc at the controller library, its configuration and
+# its FSM states inside the build directory instead of the mc_rtc install.
+if [[ -n "${TRIAD_BUILD_DIR:-}" ]]; then
+  MC_RTC_INSTALL="${MC_RTC_INSTALL:-$HOME/mc_rtc_ws/install}"
+  MODS="${RUN_HOME}/mods"; mkdir -p "${MODS}/etc"
+  ln -s "${TRIAD_BUILD_DIR}/src/HandoverInterceptionController_controller.so" "${MODS}/"
+  ln -s "${TRIAD_BUILD_DIR}/etc/HandoverInterceptionController.yaml" "${MODS}/etc/"
+  printf 'ControllerModulePaths: ["%s"]\n' "${MODS}" >> "${GLOBAL_CONFIG}"
+  {
+    echo "StatesLibraries:"
+    echo "- \"${MC_RTC_INSTALL}/lib/mc_controller/fsm/states\""
+    echo "- \"${TRIAD_BUILD_DIR}/src/states\""
+    echo "StatesFiles:"
+    echo "- \"${MC_RTC_INSTALL}/lib/mc_controller/fsm/states/data\""
+    cat "${RUN_HOME}/.config/mc_rtc/controllers/HandoverInterceptionController.yaml"
+  } > "${RUN_HOME}/override.tmp"
+  mv "${RUN_HOME}/override.tmp" "${RUN_HOME}/.config/mc_rtc/controllers/HandoverInterceptionController.yaml"
+  export LD_LIBRARY_PATH="${TRIAD_BUILD_DIR}/src:${MC_RTC_INSTALL}/lib:${LD_LIBRARY_PATH:-}"
+  echo "  controller:         build tree ${TRIAD_BUILD_DIR}"
+fi
 
 mkdir -p "${OUT_DIR}"
 LOG_FILE="${OUT_DIR}/${SCENARIO}.log"

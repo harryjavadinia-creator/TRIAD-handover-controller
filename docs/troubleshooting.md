@@ -46,6 +46,8 @@ is the supported path.
 
 ## Install always goes into the mc_rtc installation
 
+The supported way to run TRIAD is from the build tree (`TRIAD_BUILD_DIR`, see
+[Quick start](quickstart.md)); installation is not needed and not recommended.
 `cmake --install build` ignores `-DCMAKE_INSTALL_PREFIX` for this project.
 mc_rtc's exported CMake macros compute the controller install location
 (`MC_RTC_LIBDIR`/`MC_CONTROLLER_RUNTIME_INSTALL_PREFIX`) from the mc_rtc

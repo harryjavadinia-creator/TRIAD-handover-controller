@@ -1,6 +1,6 @@
 # Reproducibility
 
-Use [Quick start](quickstart.md) for installation, model reconstruction and live
+Use [Quick start](quickstart.md) for the build, model reconstruction and live
 simulation. Use [Results](results.md) to inspect the included result records
 without installing mc_rtc.
 

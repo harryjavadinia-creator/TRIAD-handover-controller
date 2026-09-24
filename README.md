@@ -42,7 +42,7 @@ neck. The July mc_rtc logs are inventoried separately and, in that log inventory
 
 | To… | Read |
 | --- | --- |
-| Build the controller and watch a simulation | [Quick start](docs/quickstart.md) |
+| Clone, build and run the simulations yourself | [Clone and run](#clone-and-run), then [Quick start](docs/quickstart.md) |
 | Understand the equations and decision rule | [Mathematical formulation](docs/mathematics.md) |
 | Follow the algorithm and execution stages | [Architecture and pseudocode](docs/architecture.md) |
 | Inspect the simulation results | [Results](docs/results.md) |
@@ -154,27 +154,65 @@ Historical implementation-performance measurements are documented separately in
 
 ## Clone and run
 
+Everything below is executed from a fresh clone; the numbers in `evidence/`
+and `results/` are what these commands produce, not something to read instead
+of running them. You need Linux, an mc_rtc installation
+(`TRIAD_MC_RTC_PREFIX`) and, for the two-robot run, the `Kinova` robot module
+from mc_kinova. Step-by-step detail: [Quick start](docs/quickstart.md).
+
 ```bash
+# 1. TRIAD and the two pinned robot-description packages
 git clone https://github.com/harryjavadinia-creator/TRIAD-handover-controller.git
 cd TRIAD-handover-controller
+export TRIAD_DEPENDENCIES="$PWD/../TRIAD-dependencies"
+git clone --depth 1 --branch 0.2.6 https://github.com/Kinovarobotics/ros2_kortex.git "$TRIAD_DEPENDENCIES/ros2_kortex"
+git clone --depth 1 --branch 0.0.1 https://github.com/PickNikRobotics/ros2_robotiq_gripper.git "$TRIAD_DEPENDENCIES/ros2_robotiq_gripper"
+
+# 2. the Gen3 + 2F-85 robot module (URDF and 26 meshes are hash-checked)
+python3 scripts/setup_gen3_2f85_module.py \
+  --upstream-urdf "$TRIAD_DEPENDENCIES/ros2_kortex/kortex_description/robots/gen3_2f85.urdf" \
+  --kortex-share  "$TRIAD_DEPENDENCIES/ros2_kortex/kortex_description" \
+  --robotiq-share "$TRIAD_DEPENDENCIES/ros2_robotiq_gripper/robotiq_description" \
+  --output "$PWD/gen3_2f85_module"
+
+# 3. build (nothing is installed)
+export TRIAD_MC_RTC_PREFIX=/path/to/your/mc_rtc/install
+env -u AMENT_PREFIX_PATH -u COLCON_PREFIX_PATH -u ROS_PACKAGE_PATH CMAKE_PREFIX_PATH="$TRIAD_MC_RTC_PREFIX" \
+  cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_DISABLE_FIND_PACKAGE_rclcpp=ON
+cmake --build build -j"$(nproc)"
+
+# 4. run from the build tree
+export PATH="$TRIAD_MC_RTC_PREFIX/bin:$PATH"
+export MAIN_ROBOT_MODULE_PATH="$PWD/gen3_2f85_module"
+export TRIAD_BUILD_DIR="$PWD/build"
+export MC_RTC_INSTALL="$TRIAD_MC_RTC_PREFIX"
+scripts/run_scenario.sh longitudinal          # one human-to-robot scenario
+bash two_robot/run_two_robot_sim.sh 80        # Robot B gives, Robot A receives
 ```
 
-Follow [Quick start](docs/quickstart.md) to prepare mc_rtc, reconstruct the
-robot module, build TRIAD, and open the viewer. Once configured, run:
+What you must see:
 
-```bash
-scripts/run_scenario.sh longitudinal
-```
+| run | success marker |
+| --- | --- |
+| `scripts/run_scenario.sh <scenario>` | `HANDOVER_COMPLETED=true`, `RUNTIME_CHECKER_RESULT=PASS`, `SCENARIO_IDENTITY_RESULT=PASS`, log under `results/` with the state sequence up to `Completed` and the committed `candidate=… route=… globalJ=…` |
+| `two_robot/run_two_robot_sim.sh` | Robot B phases Prepositioning → … → Holding, Robot A states up to `Completed`, `RESULT: COMPLETED`, log and timeline under `two_robot/results/` |
 
-The other scenarios are `near-ground`, `lateral-low`, and `diagonal`.
-The [simulation guide](docs/simulation.md) gives their inputs, completion
-markers, and reference outputs.
+The other scenarios are `near-ground`, `lateral-low` and `diagonal`. To watch a
+run, open an mc_rtc viewer (RViz or mc-rtc-magnum) before starting it;
+[Quick start §7](docs/quickstart.md#7-watch-it) gives the commands. The
+[simulation guide](docs/simulation.md) lists the reference winners for each
+scenario so that a run can be compared with the recorded one.
 
-To verify the included evidence without installing a simulator:
+To check the included evidence records without a simulator:
 
 ```bash
 python3 tools/check_evidence_manifest.py
 ```
+
+To run TRIAD on the physical arms (Robot A alone, or the two-robot setup),
+follow [Real robot](docs/real_robot.md) and
+[`two_robot/README.md`](two_robot/README.md); the laboratory videos of the two
+physical arms are in [`two_robot/media/`](two_robot/media/).
 
 ## Scope and limitations
 

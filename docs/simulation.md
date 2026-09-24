@@ -14,10 +14,11 @@ An earlier perception-latency matrix belongs to a separate source state and is
 attributed in [`provenance.md`](provenance.md). The corrected latency experiment
 is summarized in [`experiments.md`](experiments.md) and [`results.md`](results.md).
 
-## Build and install
+## Build
 
-Use the build procedure in [Quick start](quickstart.md). After installation, the
-dependency-free scientific checks can still be run from the source checkout:
+Use the build procedure in [Quick start](quickstart.md) (the controller runs from
+its build tree; nothing is installed). The dependency-free scientific checks run
+from the source checkout:
 
 ```bash
 bash tools/run_binding_cost_checks.sh

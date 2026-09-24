@@ -73,52 +73,107 @@ during robot-model validation. Keep the dependency directories in place:
 the generated module refers to their local meshes. Further model details
 are in [Robot module](robot_module.md).
 
-## 4. Build and install
+## 4. Build (do not install)
 
 From the repository root:
 
 ```bash
 env -u AMENT_PREFIX_PATH -u COLCON_PREFIX_PATH -u ROS_PACKAGE_PATH \
   CMAKE_PREFIX_PATH="$TRIAD_MC_RTC_PREFIX" \
-  cmake -S . -B build \
+  cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_DISABLE_FIND_PACKAGE_rclcpp=ON
 
 cmake --build build -j"$(nproc)"
-cmake --install build
 ```
 
-Installation uses the controller and FSM destinations of the selected mc_rtc
-installation. You need write access to those destinations. For configuration,
-linking, or loading errors, see [Troubleshooting](troubleshooting.md).
+The build produces `build/src/HandoverInterceptionController_controller.so`
+and the state libraries under `build/src/states/`. Every run script in this
+repository can load the controller straight from that build tree, so nothing
+has to be installed. Do not run `cmake --install build`: mc_rtc's CMake macros
+install controllers into the mc_rtc installation itself, whatever prefix you
+pass, and overwrite any controller already there (see
+[Troubleshooting](troubleshooting.md)).
 
-## 5. Open the viewer, then run a scenario
+## 5. Run a scenario and check the outcome
 
-Install the standalone [mc_rtc-magnum viewer](https://github.com/mc-rtc/mc_rtc-magnum)
-following its upstream instructions. In a second terminal, start:
-
-```bash
-mc-rtc-magnum
-```
-
-Use the local controller connection. TRIAD's GUI server uses TCP ports 4242
-and 4343. The viewer and controller need access to the same robot mesh files.
-The upstream [controller/viewer guide](https://jrl.cnrs.fr/mc_rtc/tutorials/introduction/running-a-controller.html)
-also documents RViz for environments built with ROS support.
-
-In the first terminal, where `MAIN_ROBOT_MODULE_PATH` is set, run:
+In the terminal where `MAIN_ROBOT_MODULE_PATH` and `PATH` are set:
 
 ```bash
+export TRIAD_BUILD_DIR="$PWD/build"
+export MC_RTC_INSTALL="$TRIAD_MC_RTC_PREFIX"
 scripts/run_scenario.sh longitudinal
 ```
 
-The script saves the scenario input and log, checks the outcome, and stops
-the ticker after a terminal state. Open the viewer first because the wrapper
-closes the completed run automatically.
+The script writes a scratch mc_rtc profile under a temporary `HOME`, points
+mc_rtc at the build tree, runs `mc_rtc_ticker`, saves the scenario input and
+log under `results/`, checks the outcome and stops the ticker after a terminal
+state. The last lines must read:
 
-The viewer procedure describes how to inspect the controller state; validation
-evidence and source attribution are listed separately in
-[Validation scope](release_validation.md).
+```text
+HANDOVER_COMPLETED=true
+RUNTIME_CHECKER_RESULT=PASS
+SCENARIO_IDENTITY_RESULT=PASS
+```
+
+The log itself (`results/<run>/longitudinal.log`) shows the state sequence
+`Initial → ObserveObject → SolveInterception → ExecuteCommittedReach →
+PresentationHold → MovePregrasp → CaptureTransfer → Retreat → Completed`, the
+size of the plan set (`completePlans`, `timingAdmissiblePlans`) and the
+committed plan (`candidate=… route=… globalJ=…`). The
+[simulation reference](simulation.md) lists the reference winners so you can
+compare your run with the recorded one. The other scenarios are
+`near-ground`, `lateral-low` and `diagonal`; all four complete from a fresh
+clone built as above.
+
+`mc_rtc_ticker` may print a segmentation fault when it exits after the
+wrapper stops it. That happens after the terminal state has been reached and
+checked; the three result lines above are the outcome.
+
+## 6. Run the two-robot handover
+
+Robot B (a second Kinova Gen3, module name `Kinova`) presents the object and
+Robot A receives it. Robot B's module comes from
+[mc_kinova](https://github.com/mathieu-celerier/mc_kinova) (the laboratory
+copy has the same layout; build and install it into your mc_rtc installation
+following its own instructions, it needs `xacro` and `kortex_description`).
+Then:
+
+```bash
+bash two_robot/run_two_robot_sim.sh 80
+```
+
+The script prints Robot B's phases (Prepositioning → StartSettling → Ready →
+Executing → TerminalSettling → Holding), Robot A's states, and ends with
+`RESULT: COMPLETED` after about 20 s of simulated time. Its log and timeline
+land under `two_robot/results/`. Details, the hardware procedure and the
+laboratory videos are in [`two_robot/`](../two_robot/README.md).
+
+## 7. Watch it
+
+Both runners start mc_rtc's GUI server (TCP 4242 / 4343 on localhost), so any
+mc_rtc viewer attached to the local controller shows the robots, the object
+and the **Handover → Methodology** markers while a run is in progress. Start
+the viewer first: the wrappers stop the ticker as soon as a run terminates.
+
+- **RViz** (if your mc_rtc was built with its ROS plugin): source ROS and
+  the mc_rtc ROS workspace in a second terminal, then
+
+  ```bash
+  rviz2 -d "$(ros2 pkg prefix mc_rtc_ticker)/share/mc_rtc_ticker/launch/display.rviz"
+  ```
+
+  The controller publishes `/control/gen3_2f85/robot_description`,
+  `/control/call_object/robot_description` and, in the two-robot run,
+  `/control/kinova/robot_description`; the shipped display file shows the
+  first one, add a RobotModel display for the others.
+- **mc-rtc-magnum** (no ROS needed): install the standalone
+  [mc_rtc-magnum viewer](https://github.com/mc-rtc/mc_rtc-magnum) and start
+  `mc-rtc-magnum` with the local controller connection. The viewer needs the
+  same robot mesh files as the controller.
+
+The upstream [controller/viewer guide](https://jrl.cnrs.fr/mc_rtc/tutorials/introduction/running-a-controller.html)
+covers both viewers.
 
 ## What to look for
 
@@ -141,15 +196,7 @@ Open **Handover → Methodology** in the GUI:
 These are controller outputs. “Certified” in the retreat label refers to the
 implemented sampled model checks.
 
-## Check the outcome
-
-A completed run must report all three:
-
-```text
-HANDOVER_COMPLETED=true
-RUNTIME_CHECKER_RESULT=PASS
-SCENARIO_IDENTITY_RESULT=PASS
-```
+## The four scenarios
 
 Logs and the exact scenario override are saved under `results/`.
 A rejected plan or execution failure is reported as a failed run.

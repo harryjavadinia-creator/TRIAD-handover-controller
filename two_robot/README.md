@@ -61,13 +61,19 @@ MC_RTC_INSTALL=$HOME/mc_rtc_ws/install \
 bash two_robot/run_two_robot_sim.sh 80
 ```
 
-The Kinova robot module (`Kinova`, from mc_kinova) must be installed in `MC_RTC_INSTALL`. The script
+The Kinova robot module (`Kinova`) must be installed in `MC_RTC_INSTALL`; it comes from
+[mc_kinova](https://github.com/mathieu-celerier/mc_kinova) (the laboratory copy has the same layout and
+registers `Kinova`, `KinovaDefault`, `KinovaCallib`, `KinovaBota`, `KinovaBotaDS4`). Build and install it
+following its own instructions; it needs `xacro` and `kortex_description`. Robot A's `gen3_2f85` module is
+the one built in `../docs/quickstart.md` §3. The script
 writes a scratch mc_rtc profile, points `ControllerModulePaths` and `StatesLibraries` at the build tree,
 appends the overlay to the controller configuration and prints the giver milestones and the receiver
 states. Expect `RESULT: COMPLETED` after about 20 s of simulated time. mc_rtc's ticker segfaults on exit
 after `--run-for`; that happens after Completed and is not part of the handover.
 
-To watch it, run the same configuration with `mc_rtc_ticker` and RViz as in `../docs/quickstart.md`.
+To watch it, open an mc_rtc viewer before starting the script (`../docs/quickstart.md` §7): with the ROS
+plugin the controller publishes `/control/gen3_2f85/robot_description`, `/control/kinova/robot_description`
+and `/control/call_object/robot_description`; add a RobotModel display for Robot B and the object in RViz.
 The July simulation recordings and the two physical laboratory clips are in `media/`.
 
 ## Run it on the two physical arms
