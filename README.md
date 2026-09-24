@@ -25,9 +25,10 @@ directional QP-authority filter — was compared against matched baselines under
 identical plant. The full variant completed 6/12 scenarios against 11/12 for a
 plain predictive baseline. That comparison is reported in full under
 [`triad_lite/`](triad_lite/) and summarised in
-[Measured performance](#measured-performance). **It concerns TRIAD-lite, not the
-controller in `src/` on this branch**, and is included because it is the part of
-the work most useful to anyone building on it.
+[Measured performance](#measured-performance). On this final branch the TRIAD-lite
+code is part of `src/` (see [FINAL_VERSION.md](FINAL_VERSION.md)); the default
+configuration still runs the V1 controller, and the comparison is included because
+it is the part of the work most useful to anyone building on it.
 
 ## Start here
 
@@ -80,10 +81,13 @@ local IK, objective terms, timing, ties, and commitment.
 **Scope of this section.** These results are from **TRIAD-lite**, a later variant
 developed on `research/triad-control-aware-supervisor` (starting HEAD `04e9efc`),
 which adds a predictive interception solver and a directional QP-authority filter.
-They are *not* a measurement of the controller in `src/` on this branch. The two
-headers the claims below rest on are included as
-[`triad_lite/src/`](triad_lite/src/), together with the phase reports and both
-campaigns, so every figure here can be checked against source and data.
+They are *not* a measurement of the default (V1) controller. On this branch the
+TRIAD-lite sources live in `src/` (`ControlAwareGraspSupervisor.h`,
+`PredictiveInterception.h`, `ReceivingGraspFamily.h`, `Gen3WristReachabilityMap.h`)
+and are selected with `receiverArchitecture: v2_receding` plus
+`supervisorMode: control_aware`; the two headers the claims rest on are also kept
+as [`triad_lite/src/`](triad_lite/src/), with the phase reports and both campaigns,
+so every figure here can be checked against source and data.
 
 Four selectors compared over four scenarios x three repeats, identical plant,
 identical grasp pool, one evaluator applied to every run:
@@ -167,8 +171,8 @@ python3 tools/check_evidence_manifest.py
 
 **No control-performance gap is established.** For TRIAD-lite the measured
 comparison does not show the joint selection outperforming a plain predictive
-baseline, and the authority filter's benefit is unsupported. For the controller in
-`src/` on this branch, no equivalent baseline comparison has been run at all — its
+baseline, and the authority filter's benefit is unsupported. For the default V1
+controller, no equivalent baseline comparison has been run at all — its
 scenarios are reference runs, not a controlled comparison against an alternative
 method. Read the contribution as a formulation, an implementation and an evidence
 trail, not as a demonstrated control improvement. Anyone building on the
@@ -192,7 +196,7 @@ and [Hardware status](docs/real_robot.md).
 
 | Directory | Contents |
 | --- | --- |
-| `src/` | Controller, finite selectors, and execution states |
+| `src/` | V1 controller, finite selectors and execution states; the V2 receding receiver (`ReceiverV2.cpp`), the independent giver model and the TRIAD-lite supervisor and interception solver |
 | `etc/`, `configs/` | Controller and simulation configuration |
 | `call_object_description/` | Handover object model |
 | `scripts/`, `tools/` | Reproduction, verification, and figure generation |
