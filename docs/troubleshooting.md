@@ -44,6 +44,15 @@ workspace/dependency-graph issue in colcon package discovery, not a TRIAD
 controller defect. Building with plain CMake, as described in [Quick start](quickstart.md),
 is the supported path.
 
+## `global_event_prediction_drift` with a viewer attached
+
+The search runs on a background worker in real time. A viewer connected to the
+controller (RViz, mc-rtc-magnum) lengthens it, and in `lateral-low` the
+simulated object reaches its 0.40 m travel cap 3.8 s after the search epoch,
+so a search slower than that fails the pre-commit consistency check. Run the
+simulation slower than real time while watching: `TRIAD_SYNC_RATIO=0.5`
+(both runners). The plan and the outcome are unchanged in simulated time.
+
 ## Install always goes into the mc_rtc installation
 
 The supported way to run TRIAD is from the build tree (`TRIAD_BUILD_DIR`, see

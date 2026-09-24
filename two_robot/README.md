@@ -74,6 +74,7 @@ pose to the scenario's start. All three complete in simulation with no discontin
 
 ```bash
 TRIAD_GIVER_SCENARIO=diagonal_xz bash two_robot/run_two_robot_sim.sh 80
+TRIAD_SYNC_RATIO=0.5 bash two_robot/run_two_robot_sim.sh 80     # half speed, for watching in a viewer
 ```
 
 The Kinova robot module (`Kinova`) must be installed in `MC_RTC_INSTALL`; it comes from

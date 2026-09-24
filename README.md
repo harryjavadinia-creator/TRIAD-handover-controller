@@ -179,8 +179,9 @@ What you must see:
 
 The other scenarios are `near-ground`, `lateral-low` and `diagonal`. To watch a
 run, open RViz with `two_robot/display_two_robot.rviz` (Robot A, Robot B and the
-object) before starting it; [Quick start §7](docs/quickstart.md#7-watch-it) gives
-the commands and shows what you should see. The
+object) before starting it and add `TRIAD_SYNC_RATIO=0.5` to the run command;
+[Quick start §7](docs/quickstart.md#7-watch-it) gives the commands, the reason
+for the half speed and what you should see. The
 [simulation guide](docs/simulation.md) lists the reference winners for each
 scenario so that a run can be compared with the recorded one.
 

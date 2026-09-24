@@ -158,6 +158,24 @@ mc_rtc viewer attached to the local controller shows the robots, the object
 and the **Handover → Methodology** markers while a run is in progress. Start
 the viewer first: the wrappers stop the ticker as soon as a run terminates.
 
+**Run at half speed while watching.** The finite search runs on a background
+worker in real time, and a viewer attached to the controller lengthens it (on
+the development machine from 3.9 s to 4.9 s for `lateral-low`). In that
+scenario the simulated object reaches its travel cap 3.8 s after the search
+epoch, so a longer search makes the pre-commit consistency check fail with
+`global_event_prediction_drift`. Both runners therefore accept
+`TRIAD_SYNC_RATIO`, the simulated-to-real time ratio of the ticker:
+
+```bash
+TRIAD_SYNC_RATIO=0.5 scripts/run_scenario.sh lateral-low
+TRIAD_SYNC_RATIO=0.5 bash two_robot/run_two_robot_sim.sh 80
+```
+
+At 0.5 the simulation runs at half speed, the outcome and the committed plan
+are the same as at full speed (the plant and the controller are deterministic
+in simulated time), and the three result lines are unchanged. Use full speed
+without a viewer for the recorded evidence.
+
 **RViz** (mc_rtc built with its ROS plugin). In a second terminal, source ROS
 and the mc_rtc ROS workspace, then open the display file shipped with this
 repository, which has a RobotModel display for Robot A, Robot B and the

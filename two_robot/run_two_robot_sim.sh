@@ -5,6 +5,9 @@
 #   TRIAD_BUILD_DIR=/path/to/build  MAIN_ROBOT_MODULE_PATH=/path/to/kinova_gen3_2f85_mcdesc \
 #   MC_RTC_INSTALL=$HOME/mc_rtc_ws/install  bash two_robot/run_two_robot_sim.sh [seconds] [out_dir]
 #
+# TRIAD_SYNC_RATIO=<sim/real> (e.g. 0.5) slows the simulation when a viewer is attached; --run-for
+# counts simulated seconds.
+#
 # Requirements: the Kinova robot module ("Kinova", from mc_kinova) installed in MC_RTC_INSTALL,
 # and a Gen3 + 2F-85 module directory named gen3_2f85 (see docs/robot_module.md).
 set -euo pipefail
@@ -71,7 +74,7 @@ cp "${RUN_HOME}/.config/mc_rtc/controllers/HandoverInterceptionController.yaml" 
 LOG="${OUT_DIR}/two_robot_sim.log"
 echo "Running ${TICKER} for ${RUN_FOR} s, giver scenario ${GIVER_SCENARIO} (log: ${LOG})"
 HOME="${RUN_HOME}" LD_LIBRARY_PATH="${TRIAD_BUILD_DIR}/src:${MC_RTC_INSTALL}/lib:${LD_LIBRARY_PATH:-}" \
-  "${TICKER}" -f "${RUN_HOME}/mc_rtc.yaml" --run-for "${RUN_FOR}" > "${LOG}" 2>&1 || true
+  "${TICKER}" -f "${RUN_HOME}/mc_rtc.yaml" --run-for "${RUN_FOR}" ${TRIAD_SYNC_RATIO:+--sync-ratio "${TRIAD_SYNC_RATIO}"} > "${LOG}" 2>&1 || true
 cp "${RUN_HOME}"/*.bin "${OUT_DIR}/" 2>/dev/null || true
 
 echo "--- Robot B (giver) milestones:"

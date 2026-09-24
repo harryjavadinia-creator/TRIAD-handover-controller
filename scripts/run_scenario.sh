@@ -22,6 +22,8 @@
 #   TRIAD_RECEIVER_MODE=v2               TRIAD V2 receding receiver, independent giver
 #   TRIAD_EXTRA_OVERRIDE=<file>          YAML appended to the override (fault injection)
 #   TRIAD_MAX_WAIT=<seconds>             wall-clock bound for the ticker (default 180)
+#   TRIAD_SYNC_RATIO=<sim/real>          run the simulation slower than real time (0.5 = half
+#                                        speed); use it when a viewer is attached, see docs/quickstart.md
 #   TRIAD_BUILD_DIR=<dir>                run the controller straight from this CMake build tree
 #                                        (no install into mc_rtc needed); MC_RTC_INSTALL locates
 #                                        mc_rtc's own FSM states (default $HOME/mc_rtc_ws/install)
@@ -55,7 +57,9 @@ run_ticker_autonomous() {
   local grace_seconds=2
   local max_wait_seconds="${TRIAD_MAX_WAIT:-180}"
 
-  HOME="${home_dir}" mc_rtc_ticker -f "${global_config}" > "${log_file}" 2>&1 &
+  # TRIAD_SYNC_RATIO=<sim/real> slows the simulation (e.g. 0.5 = half speed) so that a
+  # viewer attached to the controller does not eat into the planner's real-time budget.
+  HOME="${home_dir}" mc_rtc_ticker -f "${global_config}" ${TRIAD_SYNC_RATIO:+--sync-ratio "${TRIAD_SYNC_RATIO}"} > "${log_file}" 2>&1 &
   local ticker_pid=$!
 
   local waited=0
