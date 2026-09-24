@@ -69,6 +69,8 @@ private:
   bool ready_ = false;
   bool staticMode_ = false;
   bool globalTimePlanMode_ = false;
+  // Robot B (dual giver) presents on a fixed schedule: one event, its endpoint.
+  bool coordinatedGiverEvent_ = false;
   int fixedPointIteration_ = 0;
   int eventHypothesisCount_ = 0;
   int feasibleHypothesisCount_ = 0;

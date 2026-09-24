@@ -24,6 +24,8 @@ object:
   rpy: [0.0, 1.5708, 0.0]
 
 movingObject:
+  # Robot A observes the object that Robot B carries; it does not simulate its own object.
+  simulateMotion: false
   simulatedLinearVelocity: [-0.08, 0.0, 0.0]
 
 dualHandover:

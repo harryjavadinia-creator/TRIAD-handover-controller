@@ -1,6 +1,6 @@
 StatesLibraries:
 - "/home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states"
-- "/tmp/claude-1000/-home-harry-TRIAD-SCIENTIFIC-AUDIT/a9f03994-71e7-4a39-8e68-da77d1a17b29/scratchpad/triad_two/../triad_two_build/src/states"
+- "/home/harry/TRIAD-handover-controller/build/src/states"
 StatesFiles:
 - "/home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states/data"
 # Two-robot overlay for the TRIAD controller (HandoverInterceptionController).
@@ -29,6 +29,8 @@ object:
   rpy: [0.0, 1.5708, 0.0]
 
 movingObject:
+  # Robot A observes the object that Robot B carries; it does not simulate its own object.
+  simulateMotion: false
   simulatedLinearVelocity: [-0.08, 0.0, 0.0]
 
 dualHandover:

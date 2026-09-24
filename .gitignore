@@ -25,3 +25,7 @@ two_robot/results/**/*.bin
 paper/*.log
 paper/*.aux
 paper/*.out
+
+# Local two-robot simulation runs (the recorded run is sim_2026-09-24/)
+/two_robot/results/*/
+!/two_robot/results/sim_2026-09-24/

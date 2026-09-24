@@ -25,12 +25,13 @@ What is in it:
 
 ## What has been verified
 
-- **Simulation, 2026-09-24, this port**: full two-arm handover completed. Robot B prepositions, settles at the
-  start, waits Ready, executes the presentation in sync with Robot A's object observation, settles at the
-  terminal gate and holds; Robot A goes Initial → ObserveObject → SolveInterception → ExecuteCommittedReach →
-  PresentationHold → MovePregrasp → CaptureTransfer → Retreat → Completed and Robot B releases the object
-  at acquisition. See `results/sim_2026-09-24/TIMELINE.md`. The single-robot scenario on the same build
-  still completes, and so does a run with the second robot loaded but the giver disabled.
+- **Simulation**: full two-arm handover completed. Robot B prepositions, settles at the start, waits Ready,
+  executes the presentation in sync with Robot A's object observation, settles at the terminal gate and holds.
+  Robot A observes the carried object (it does not simulate its own: `movingObject.simulateMotion: false` in
+  the overlay), evaluates its complete grasp × route bank once at Robot B's fixed endpoint and time
+  (`SynchronizedPresentationSolve` in the log), commits, and goes ExecuteCommittedReach → PresentationHold →
+  MovePregrasp → CaptureTransfer → Retreat → Completed; Robot B releases the object at acquisition and Robot A
+  carries it away. See `results/sim_2026-09-24/TIMELINE.md`. The single-robot scenarios complete on the same build.
 - **Hardware, July 2026 — controller logs** (see `evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`): on 17 July Robot B executed
   its presentation alone on the physical arm (phases prepositioning → HOLD, log 22:30:31). The inventoried
   combined run of 18 July 00:51 reached Robot A's committed reach and then failed; the inventoried mc_rtc

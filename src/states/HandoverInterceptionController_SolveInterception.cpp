@@ -263,6 +263,8 @@ void HandoverInterceptionController_SolveInterception::start(
   staticMode_ = ctl.staticObjectModeSelected();
   globalTimePlanMode_ = !staticMode_
       && ctl.globalTimePlanSelectionEnabled();
+  coordinatedGiverEvent_ = !staticMode_
+      && ctl.dualGiverPresentationScheduleAvailable();
   phase_ = Phase::StartIteration;
   fixedPointIteration_ = 0;
   eventHypothesisCount_ = 0;
@@ -330,7 +332,31 @@ void HandoverInterceptionController_SolveInterception::start(
   else
   {
     buildBoundedEventLeadSchedule();
-    if(globalTimePlanMode_ && !boundedEventLeads_.empty())
+    if(coordinatedGiverEvent_)
+    {
+      // Robot B's presentation endpoint and time are fixed by its own
+      // scenario. Robot A evaluates the complete grasp x route bank once at
+      // that exact event: no event ladder, no extrapolated presentation pose.
+      const double giverLead = ctl.dualGiverTimeToPresentation();
+      const sva::PTransformd giverPose = ctl.dualGiverPresentationPoseWorld();
+      boundedEventLeads_.assign(1, giverLead);
+      boundedEventPresentationPoses_.clear();
+      boundedEventPresentationPoses_.emplace(giverLead, giverPose);
+      guessLead_ = giverLead;
+      eventSearchCursor_ = 1;
+      currentHypothesisSource_ = "dual_giver_fixed_endpoint";
+      const Eigen::Vector3d pe = giverPose.translation();
+      mc_rtc::log::warning(
+          "[SynchronizedPresentationSolve] Robot B endpoint/time is fixed: remaining={:.3f}s endpoint=[{:.3f},{:.3f},{:.3f}]. Robot A evaluates the complete candidate bank once at that exact event; no event extrapolation and no retry.",
+          giverLead, pe.x(), pe.y(), pe.z());
+      if(giverLead < minimumPresentationLead_ || giverLead > maximumPresentationLead_)
+      {
+        mc_rtc::log::warning(
+            "[SynchronizedPresentationSolve] Robot B lead {:.3f}s is outside the configured lead range [{:.3f},{:.3f}]; timing admission decides",
+            giverLead, minimumPresentationLead_, maximumPresentationLead_);
+      }
+    }
+    else if(globalTimePlanMode_ && !boundedEventLeads_.empty())
     {
       for(const double lead : boundedEventLeads_)
       {
@@ -379,7 +405,7 @@ void HandoverInterceptionController_SolveInterception::start(
       bank.minimumSafeCommitLead = std::max(
           minimumCommitRemainingTime_,
           ctl.presentationDecelerationDuration() + 0.25);
-      bank.source = "global_fixed_schedule";
+      bank.source = currentHypothesisSource_;
       for(const double lead : boundedEventLeads_)
       {
         bank.leads.push_back(lead);
