@@ -1,4 +1,4 @@
-# TRIAD_PREDICTIVE_INTERCEPTION_AUDIT
+# Supervisory mode: design review of predictive interception
 
 Phase A: read-only audit written before the predictive-interception implementation, starting from the control-aware supervisor as first implemented (`supervisor_design_review.md`, `supervisor_implementation.md`). "Phase 2–6" and "TRIAD Phase n" below refer to the receding-mode characterisation studies whose numbers are quoted inline; those studies are not part of this repository.
 

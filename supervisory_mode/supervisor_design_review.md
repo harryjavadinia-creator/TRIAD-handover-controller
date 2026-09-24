@@ -1,4 +1,4 @@
-# TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT
+# Supervisory mode: design review of the control-aware supervisor
 
 Read-only audit written **before any code change** of the supervisory mode.
 Subject: the proposal that TRIAD becomes a *control-aware supervisory grasp/entry selector* (not a feedback controller).
