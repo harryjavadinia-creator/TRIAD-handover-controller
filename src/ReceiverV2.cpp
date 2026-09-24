@@ -3274,7 +3274,7 @@ void HandoverInterceptionController::handleControlAwareSelectionV2(const Pending
   // trustIncumbentReevaluation (default true): a re-evaluation of the executing
   // incumbent from the moving arm state may remove it. Distrusting it was tested
   // in simulation and failed 3/4 runs on the runtime clearance reserve
-  // (supervisory_mode/TRIAD_CONTROL_AWARE_IMPLEMENTATION.md).
+  // (supervisory_mode/supervisor_implementation.md).
   const bool trustIncumbent = v2Phase_ != ReceiverPhaseV2::ControlAwareTrack || v2CaParams_.trustIncumbentReevaluation;
   const auto decision = call_handover::updateGraspSelector(v2CaSelector_, records, outcome, now, v2CaParams_.switchDwell,
                                                            trustIncumbent);
@@ -3632,7 +3632,7 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
 
 // =============================================================================
 // TRIAD supervisory mode Phase C: predictive interception solver (worker thread)
-// supervisory_mode/TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md sec. 3.3-3.5
+// supervisory_mode/interception_design_review.md sec. 3.3-3.5
 // =============================================================================
 
 sva::PTransformd HandoverInterceptionController::controlAwareGraspPoseAtV2(

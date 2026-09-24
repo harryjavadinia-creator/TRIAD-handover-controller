@@ -1,6 +1,6 @@
 # TRIAD_PREDICTIVE_INTERCEPTION_AUDIT
 
-Phase A: read-only audit written before the predictive-interception implementation, starting from the control-aware supervisor as first implemented (`TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md`, `TRIAD_CONTROL_AWARE_IMPLEMENTATION.md`). "Phase 2–6" and "TRIAD Phase n" below refer to the receding-mode characterisation studies whose numbers are quoted inline; those studies are not part of this repository.
+Phase A: read-only audit written before the predictive-interception implementation, starting from the control-aware supervisor as first implemented (`supervisor_design_review.md`, `supervisor_implementation.md`). "Phase 2–6" and "TRIAD Phase n" below refer to the receding-mode characterisation studies whose numbers are quoted inline; those studies are not part of this repository.
 
 
 Evidence tags: `CODE` (this repository), `DEP` (mc_rtc / Tasks / Kortex), `UPSTREAM` (jingxixu/dynamic-grasping @ `5c1e01f`, read in full for the functions cited), `LIT` (primary text read), `REPO DOC`, `DERIVED`, `ARBITRARY` (engineering choice without further provenance).

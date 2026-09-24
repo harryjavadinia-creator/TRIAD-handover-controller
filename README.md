@@ -102,7 +102,7 @@ the state sequence up to `Completed`, the size of the plan set and the committed
 plan (`candidate=… route=… globalJ=…`). The committed plans of the reference
 runs are listed in [docs/experiments.md](docs/experiments.md#reference-run-winners)
 and their logs are in [`evidence/reference_runs/`](evidence/reference_runs/).
-`TRIAD_RECEIVER_MODE=v2 scripts/run_scenario.sh <scenario>` runs the receding
+`TRIAD_RECEIVER_MODE=receding scripts/run_scenario.sh <scenario>` runs the receding
 mode instead; `TRIAD_MAX_WAIT` bounds the wall-clock wait (default 180 s).
 
 **What a run leaves behind.** `results/<run>/` holds the text log, the scenario

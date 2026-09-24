@@ -125,7 +125,7 @@ committed plans of the reference runs are listed in
 [Experiments](experiments.md#reference-run-winners) so you can compare your run
 with the recorded one. The other scenarios are
 `near-ground`, `lateral-low` and `diagonal`; all four complete from a fresh
-clone built as above. `TRIAD_RECEIVER_MODE=v2 scripts/run_scenario.sh <scenario>`
+clone built as above. `TRIAD_RECEIVER_MODE=receding scripts/run_scenario.sh <scenario>`
 runs the receding mode (its log is checked by `tools/check_v2_run_log.py`);
 `TRIAD_MAX_WAIT` bounds the wall-clock wait (default 180 s).
 

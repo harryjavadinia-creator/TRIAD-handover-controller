@@ -1,8 +1,8 @@
 # TRIAD_CONTROL_AWARE_IMPLEMENTATION
 
-The supervisory mode: TRIAD as a **control-aware supervisory grasp/entry selector**, implemented behind a feature flag. Audit and verdict (IMPLEMENT WITH MODIFICATIONS): [TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md](TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md).
+The supervisory mode: TRIAD as a **control-aware supervisory grasp/entry selector**, implemented behind a feature flag. Audit and verdict (IMPLEMENT WITH MODIFICATIONS): [supervisor_design_review.md](supervisor_design_review.md).
 
-Handover outcomes of this supervisor: §6.2 below and `TRIAD_PREDICTIVE_INTERCEPTION_FINAL_REPORT.md` §11.
+Handover outcomes of this supervisor: §6.2 below and `results.md` §11.
 
 ## 1. Switch
 

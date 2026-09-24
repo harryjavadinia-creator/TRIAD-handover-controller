@@ -1,7 +1,7 @@
 # Phase B: receiving-grasp family and cheap reachability funnel
 
 Scope: the grasp front end only. Execution is unchanged, and the default is still `graspFamily: legacy_ring`.
-Formulation: `TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md` §4–5.
+Formulation: `interception_design_review.md` §4–5.
 Tags: `CODE` / `DERIVED` / `LIT` / `NUM` (numerical choice) / `EXP` (measured here).
 
 ## 1. Grasp family (`src/ReceivingGraspFamily.h`)

@@ -17,9 +17,9 @@
 #   scripts/run_scenario.sh <near-ground|longitudinal|lateral-low|diagonal> [output-dir]
 #
 # Optional environment:
-#   TRIAD_RECEIVER_MODE=v1 (default)     finite-plan mode, giver follows the commit
-#   TRIAD_RECEIVER_MODE=v1-independent   finite-plan mode against the robot-independent giver
-#   TRIAD_RECEIVER_MODE=v2               receding mode, independent giver
+#   TRIAD_RECEIVER_MODE=finite-plan (default)        giver follows the commit (alias v1)
+#   TRIAD_RECEIVER_MODE=finite-plan-independent      against the robot-independent giver (alias v1-independent)
+#   TRIAD_RECEIVER_MODE=receding                     receding mode, independent giver (alias v2)
 #   TRIAD_EXTRA_OVERRIDE=<file>          YAML appended to the override (fault injection)
 #   TRIAD_MAX_WAIT=<seconds>             wall-clock bound for the ticker (default 180)
 #   TRIAD_SYNC_RATIO=<sim/real>          run the simulation slower than real time (0.5 = half
@@ -175,6 +175,12 @@ movingObject:
 EOF
 
 RECEIVER_MODE="${TRIAD_RECEIVER_MODE:-v1}"
+# mode names as in the documentation map to the configuration keys
+case "$RECEIVER_MODE" in
+  finite-plan) RECEIVER_MODE=v1 ;;
+  finite-plan-independent) RECEIVER_MODE=v1-independent ;;
+  receding) RECEIVER_MODE=v2 ;;
+esac
 case "$RECEIVER_MODE" in
   v1) ;;
   v1-independent)

@@ -2,7 +2,7 @@
 
 // TRIAD supervisory mode predictive interception: pure math (Eigen + std only).
 //
-// Formulation: supervisory_mode/TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md sec. 3.
+// Formulation: supervisory_mode/interception_design_review.md sec. 3.
 // Literature: earliest feasible rendezvous on the predicted object trajectory with
 // the robot travel time bounded by the target arrival time (Croft, Fenton,
 // Benhabib, IEEE TSMC 1998; Hujic et al., IEEE/ASME T-Mech 1998), replanned with

@@ -4,7 +4,7 @@
 // necessary-condition filters and a cheap Gen3 reachability funnel.
 // Pure (Eigen + standard library + generated map); no controller state.
 //
-// Derivation (supervisory_mode/TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md, sec. 4):
+// Derivation (supervisory_mode/interception_design_review.md, sec. 4):
 //  * parallel-jaw antipodal contact on a cylinder of radius R: the closing axis
 //    passes through, and is orthogonal to, the handle axis h. Contacts
 //    c+/- = p_H + s h +/- R n(theta), n(theta) = e1 cos(theta) + e2 sin(theta);

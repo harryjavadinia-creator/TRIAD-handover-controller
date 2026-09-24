@@ -1,6 +1,6 @@
 # Phase C: predictive interception solver (characterization; execution unchanged)
 
-Formulation: `TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md` §3.3–3.5.
+Formulation: `interception_design_review.md` §3.3–3.5.
 Code: `src/PredictiveInterception.h` (pure math, unit-tested) and `ReceiverV2.cpp` (`solveInterceptionV2`, `rolloutInterceptionV2`, `evaluateControlAwareExactLayersV2`).
 
 The config switch is `controlAware.interception.mode`:

@@ -2415,7 +2415,7 @@ private:
   // ---------------------- TRIAD supervisory mode control-aware supervisor ---------------
   // Feature-flagged by ReceiverV2 `supervisorMode: control_aware` (default
   // `bank_search` keeps TRIAD V2 unchanged). See
-  // supervisory_mode/TRIAD_CONTROL_AWARE_IMPLEMENTATION.md.
+  // supervisory_mode/supervisor_implementation.md.
   struct ControlAwareParametersV2
   {
     int graspsPerSign = 32;
@@ -2448,7 +2448,7 @@ private:
     double funnelPruneTolerance = 0.02;
     double funnelThetaBinWidth = 0.2374;
     bool funnelCharacterizeAll = false;
-    // Phase C predictive interception solver (TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md sec. 3).
+    // Phase C predictive interception solver (interception_design_review.md sec. 3).
     std::string interceptionMode = "disabled";     ///< disabled | characterize | characterize_hold (no adoption)
     double interceptionHorizon = 8.0;              ///< numerical (s)
     double interceptionMinimumStep = 0.02;         ///< numerical floor on the event spacing (s)

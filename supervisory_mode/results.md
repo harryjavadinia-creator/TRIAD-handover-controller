@@ -13,15 +13,15 @@ No novelty is claimed. The architecture instantiates the Croft–Hujić earliest
 
 ## 0. Documents
 
-Starting point: the control-aware supervisor as first implemented (`TRIAD_CONTROL_AWARE_IMPLEMENTATION.md`). "Phase 2–6" and "TRIAD Phase n" below refer to the receding-mode characterisation studies whose numbers are quoted inline; those studies are not part of this repository.
+Starting point: the control-aware supervisor as first implemented (`supervisor_implementation.md`). "Phase 2–6" and "TRIAD Phase n" below refer to the receding-mode characterisation studies whose numbers are quoted inline; those studies are not part of this repository.
 
 | Phase | Document |
 |---|---|
-| A audit | `TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md` |
-| B grasp front end and funnel | `PHASE_B_GRASP_FAMILY_AND_FUNNEL.md` |
-| C interception solver | `PHASE_C_INTERCEPTION_SOLVER.md` |
-| D authority demands, 𝓕_C | `PHASE_D_AUTHORITY_DEMANDS.md` |
-| E receding execution, variants | `PHASE_E_RECEDING_EXECUTION.md` |
+| A audit | `interception_design_review.md` |
+| B grasp front end and funnel | `grasp_family_and_funnel.md` |
+| C interception solver | `interception_solver.md` |
+| D authority demands, 𝓕_C | `authority_demands.md` |
+| E receding execution, variants | `receding_execution.md` |
 | F baselines, rollout fix | this file; campaigns `evidence/phaseF_sim_prefix/` and `evidence/phaseF_sim/` |
 
 ## 1. Audit result (Phase A)

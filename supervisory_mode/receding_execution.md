@@ -1,6 +1,6 @@
 # Phase E: receding predictive interception execution and baseline variants
 
-Formulation: `TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md` §3.6.
+Formulation: `interception_design_review.md` §3.6.
 Code: `ReceiverV2.cpp` (`handlePredictiveSelectionV2`, `setInterceptionExecutionV2`, `interceptionExecutionReferenceV2`, execution branch in `stepControlAwareTrackV2`).
 Tags: `CODE` / `DERIVED` / `LIT` / `NUM` / `EXP`.
 
@@ -61,4 +61,4 @@ Both first grasps had |s| > 0. Whether the Phase B axial bound (35 mm) is consis
 
 **Defect.** A rollout defect on replans from a moving arm was found by comparing executed and rollout demands: the command chain started at the shifted reference instead of the integrated arm. It produced spurious path-demand peaks of 4.4–4.9 m/s.
 
-**Fix and consequences.** The fix is in the Phase F commit. The Phase E pilots and the first Phase F campaign (`evidence/phaseF_sim_prefix`) predate it, and the fix changed the FULL vs B1 ordering (`TRIAD_PREDICTIVE_INTERCEPTION_FINAL_REPORT.md` §11).
+**Fix and consequences.** The fix is in the Phase F commit. The Phase E pilots and the first Phase F campaign (`evidence/phaseF_sim_prefix`) predate it, and the fix changed the FULL vs B1 ordering (`results.md` §11).

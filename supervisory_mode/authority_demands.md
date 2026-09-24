@@ -1,6 +1,6 @@
 # Phase D: controller-authority demand from the actual downstream commands
 
-Formulation: `TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md` §3.7.
+Formulation: `interception_design_review.md` §3.7.
 The authority solver is unchanged: `qpJointVelocityBox`, `boxConstrainedLeastSquares`, `directionalReserve` (04e9efc).
 Only the demand vectors y and the role of κ change.
 Tags: `CODE` / `DERIVED` / `LIT` / `NUM` / `EXP`.

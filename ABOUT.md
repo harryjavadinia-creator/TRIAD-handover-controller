@@ -88,11 +88,11 @@ path-demand signal the supervisor consumes. Both campaigns are included,
 [`supervisory_mode/evidence/phaseF_sim_prefix`](supervisory_mode/evidence/phaseF_sim_prefix)
 and [`supervisory_mode/evidence/phaseF_sim`](supervisory_mode/evidence/phaseF_sim),
 so the sensitivity is auditable. Supporting analyses:
-[grasp family and funnel](supervisory_mode/PHASE_B_GRASP_FAMILY_AND_FUNNEL.md),
-[interception solver](supervisory_mode/PHASE_C_INTERCEPTION_SOLVER.md),
-[authority demands](supervisory_mode/PHASE_D_AUTHORITY_DEMANDS.md),
-[receding execution](supervisory_mode/PHASE_E_RECEDING_EXECUTION.md),
-[supervisor audit](supervisory_mode/TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md).
+[grasp family and funnel](supervisory_mode/grasp_family_and_funnel.md),
+[interception solver](supervisory_mode/interception_solver.md),
+[authority demands](supervisory_mode/authority_demands.md),
+[receding execution](supervisory_mode/receding_execution.md),
+[supervisor design review](supervisory_mode/supervisor_design_review.md).
 
 **Two robots.** With a second Kinova Gen3 as the giver, the full handover
 completes in simulation (Robot B presents, Robot A observes, plans, reaches,
