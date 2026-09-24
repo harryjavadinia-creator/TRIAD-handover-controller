@@ -44,6 +44,8 @@ real-life video; the recordings are screen captures of the simulation. See [`two
 | Follow the algorithm and execution stages | [Architecture and pseudocode](docs/architecture.md) |
 | Inspect the simulation results | [Results](docs/results.md) |
 | Position the contribution in the literature | [Related work](docs/related_work.md) |
+| Read the paper that matches this repository | [`paper/triad_system_paper.pdf`](paper/triad_system_paper.pdf) (24 Sep 2026; source `paper/triad_system_paper.tex`) |
+| Run it with two robots, or on the two physical arms | [`two_robot/`](two_robot/README.md), [Real robot](docs/real_robot.md) |
 | Check data, source versions, and validation | [Reproducibility](docs/reproducibility.md) |
 
 ## Method

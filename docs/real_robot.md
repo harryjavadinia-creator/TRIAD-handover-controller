@@ -76,3 +76,29 @@ execution.
 Accordingly, the hardware material in this repository is a prerequisite
 checklist and staged commissioning path, not a validated end-to-end real-robot
 handover procedure.
+
+## 4. Two-robot setup (Robot A receiver, Robot B giver) — what exists and what was reached
+
+The July 2026 laboratory setup is integrated on this branch under [`two_robot/`](../two_robot/README.md):
+a second Kinova Gen3 (`kinova`, 192.168.1.11) presents the object to Robot A (`gen3_2f85`, 192.168.1.10)
+along a fixed world-frame trajectory, coordinated inside the controller (`dualHandover`), or from a second
+laptop by the standalone `robot_b_standalone/` mover.
+
+- **Receiver switches for hardware** are collected in
+  [`two_robot/HandoverInterceptionController.hardware_receiver.yaml`](../two_robot/HandoverInterceptionController.hardware_receiver.yaml):
+  `decisionCost.allowPhysicalExecution: true`, `gripper.physicalBridge` enabled with command and feedback,
+  and the gripper closure calibration measured on the real gripper on 16 July 2026 (`closePercent`/`maxPercent`
+  50.37, `openPercent` 0.87). The repository default keeps the 15 July value (35.0); the 16 July value is the
+  later calibration and the one the last hardware runs used. `transfer.source` stayed `virtual_sensor` in
+  every hardware run: no physical force path has been validated.
+- **Reached on hardware (July 2026):** Robot A gripper commissioning (tag `v6.4.2`, 15 July); Robot B alone
+  executing its presentation with the integrated coordinator (17 July 22:30, phases Prepositioning → Holding);
+  the combined run reaching `ExecuteCommittedReach` before failing (18 July 00:51). **No hardware run reached
+  `CaptureTransfer`.** Inventory: [`two_robot/evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`](../two_robot/evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md).
+- **Verified in simulation with this code (24 September 2026):** the full two-arm handover completes
+  ([`two_robot/results/sim_2026-09-24/TIMELINE.md`](../two_robot/results/sim_2026-09-24/TIMELINE.md)).
+- **Procedure:** the seven steps in [`two_robot/README.md`](../two_robot/README.md), motion disabled until
+  each step passes.
+
+The statement at the top of this page still holds: no TRIAD handover has been validated end-to-end on
+physical hardware.

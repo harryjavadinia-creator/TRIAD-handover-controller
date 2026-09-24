@@ -20,3 +20,8 @@ __pycache__/
 
 # mc_rtc binary logs of two-robot simulation runs (hundreds of MB)
 two_robot/results/**/*.bin
+
+# LaTeX build products of the paper
+paper/*.log
+paper/*.aux
+paper/*.out

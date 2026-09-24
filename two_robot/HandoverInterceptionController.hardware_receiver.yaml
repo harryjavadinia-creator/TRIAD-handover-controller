@@ -1,0 +1,26 @@
+# Receiver-side (Robot A) hardware overlay for the TRIAD controller.
+#
+# These are the switches and calibration values used on the physical Kinova Gen3 + Robotiq 2F-85
+# in the July 2026 sessions (runtime profile of 16-17 July, branch v6.5-real-grasp-contact-entry).
+# Append AFTER the two-robot overlay to $HOME/.config/mc_rtc/controllers/HandoverInterceptionController.yaml,
+# and use two_robot/mc_rtc.two_kortex.yaml (with real IPs and credentials) as the global mc_rtc profile.
+#
+# Order of operations that worked in July: gripper commissioning smoke test first
+# (gripper.hardwareGripperCommissioning.enabled: true, arm frozen), then Robot B alone, then the combined run.
+
+decisionCost:
+  allowPhysicalExecution: true        # default false: the planner refuses to execute on hardware otherwise
+
+gripper:
+  physicalBridge:
+    enabled: true                     # use the physical Robotiq bridge (mc_kortex gripper datastore)
+    commandEnabled: true              # actually send closure commands to the real gripper
+    requireFeedback: true             # fail closed if physical gripper feedback is unavailable
+    openPercent: 0.87                 # measured fully-open resting value (commissioning, 15 July 2026)
+    closePercent: 50.37               # closure endpoint measured on the real gripper, 16 July 2026
+    maxPercent: 50.37                 # hard command cap; the repository default (35.0) is the 15 July value
+  hardwareGripperCommissioning:
+    enabled: false                    # set true for the no-contact smoke test (arm frozen, gripper only)
+
+transfer:
+  source: virtual_sensor              # as in every July hardware run: no physical force path was ever validated

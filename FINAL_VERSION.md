@@ -48,3 +48,20 @@ two extra states, four hooks in the controller that are no-ops unless `dualHando
 overlay, the hardware procedure, the Kortex patch and the July evidence. Verified in simulation on 2026-09-24: the full
 two-arm handover completes (see `two_robot/results/sim_2026-09-24/TIMELINE.md`); the single-robot scenario still
 completes on the same build. Not verified on hardware with this code. Details: `two_robot/README.md`.
+
+## Manuscript (24 September 2026)
+
+`paper/triad_system_paper.tex` / `.pdf` (5 pages, IEEEtran) replaces the drafts of 3, 7 and 10 September. It makes no
+novelty claim: the decision structure is attributed to Croft/Fenton/Benhabib 1998, Hujić 1998, Menon 2014, Salehian 2016,
+Islam 2020, Akinola 2021 and Yang 2021/2022; it reports the four reference scenarios, the latency sweep, the exact-serial
+performance, the matched TRIAD-lite comparison (6/12 vs 11/12), the two-robot setup (simulation completed 2026-09-24;
+hardware status of July 2026 stated exactly) and the measured limits. The two 1998 bibliographic entries carry a
+"to be verified" note. The 62/66-scenario campaigns of the earlier drafts are not reported (removed from main on
+2026-09-10).
+
+## Receiver-side hardware overlay
+
+`two_robot/HandoverInterceptionController.hardware_receiver.yaml`: the switches and gripper calibration of the July 2026
+hardware runs (`allowPhysicalExecution: true`, physical bridge on, `closePercent`/`maxPercent` 50.37 measured 16 July;
+the repository default 35.0 is the 15 July value). `transfer.source` stays `virtual_sensor`: no physical force path was
+ever validated. See `docs/real_robot.md` §4.
