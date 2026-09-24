@@ -20,6 +20,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUN_HOME="$(mktemp -d)"
 trap 'rm -rf "${RUN_HOME}"' EXIT
 
+# Giver scenario: TRIAD_GIVER_SCENARIO=<name from dualHandover.scenarios> (default pure_x).
+# The object's initial pose is moved to that scenario's objectStartWorld.
+GIVER_SCENARIO="${TRIAD_GIVER_SCENARIO:-pure_x}"
+OVERLAY="${SCRIPT_DIR}/HandoverInterceptionController.two_robot.yaml"
+if [[ "${GIVER_SCENARIO}" != "pure_x" ]]; then
+  START="$(awk -v s="${GIVER_SCENARIO}:" '$1==s{f=1;next} f&&/objectStartWorld:/{sub(/.*objectStartWorld: */,"");print;exit}' "${OVERLAY}")"
+  [[ -n "${START}" ]] || { echo "unknown giver scenario: ${GIVER_SCENARIO}" >&2; exit 2; }
+  sed -e "s/^  scenario: pure_x/  scenario: ${GIVER_SCENARIO}/" \
+      -e "s/translation: \[0.92, 0.0, 0.55\]/translation: ${START}/" \
+      "${OVERLAY}" > "${RUN_HOME}/overlay.yaml"
+  OVERLAY="${RUN_HOME}/overlay.yaml"
+fi
+
 # A scratch controller-module directory that points at the build tree.
 MODS="${RUN_HOME}/mods"; mkdir -p "${MODS}/etc"
 ln -s "${TRIAD_BUILD_DIR}/src/HandoverInterceptionController_controller.so" "${MODS}/"
@@ -32,7 +45,7 @@ mkdir -p "${RUN_HOME}/.config/mc_rtc/controllers"
   echo "- \"${TRIAD_BUILD_DIR}/src/states\""
   echo "StatesFiles:"
   echo "- \"${MC_RTC_INSTALL}/lib/mc_controller/fsm/states/data\""
-  cat "${SCRIPT_DIR}/HandoverInterceptionController.two_robot.yaml"
+  cat "${OVERLAY}"
 } > "${RUN_HOME}/.config/mc_rtc/controllers/HandoverInterceptionController.yaml"
 
 cat > "${RUN_HOME}/mc_rtc.yaml" <<EOF
@@ -56,7 +69,7 @@ EOF
 mkdir -p "${OUT_DIR}"
 cp "${RUN_HOME}/.config/mc_rtc/controllers/HandoverInterceptionController.yaml" "${OUT_DIR}/controller_override.yaml"
 LOG="${OUT_DIR}/two_robot_sim.log"
-echo "Running ${TICKER} for ${RUN_FOR} s (log: ${LOG})"
+echo "Running ${TICKER} for ${RUN_FOR} s, giver scenario ${GIVER_SCENARIO} (log: ${LOG})"
 HOME="${RUN_HOME}" LD_LIBRARY_PATH="${TRIAD_BUILD_DIR}/src:${MC_RTC_INSTALL}/lib:${LD_LIBRARY_PATH:-}" \
   "${TICKER}" -f "${RUN_HOME}/mc_rtc.yaml" --run-for "${RUN_FOR}" > "${LOG}" 2>&1 || true
 cp "${RUN_HOME}"/*.bin "${OUT_DIR}/" 2>/dev/null || true

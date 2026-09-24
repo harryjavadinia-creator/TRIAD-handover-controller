@@ -62,12 +62,26 @@ dualHandover:
     workspaceMinLocal: [-0.2, -0.8, 0.05]
     workspaceMaxLocal: [1.0, 0.8, 1.2]
     enforceTrackingError: false
+  # Select one with `scenario:` above or TRIAD_GIVER_SCENARIO=<name> for run_two_robot_sim.sh
+  # (the runner also moves the object's start pose to the scenario's objectStartWorld).
   scenarios:
     pure_x:
       objectStartWorld: [0.92, 0.0, 0.55]
       objectEndWorld: [0.55, 0.0, 0.55]
       objectVelocityWorld: [-0.08, 0.0, 0.0]
       decelerationDuration: 0.85
+    diagonal_xz:
+      objectStartWorld: [0.9, 0.0, 0.3]
+      objectEndWorld: [0.62394572, 0.0, 0.57605428]
+      objectVelocityWorld: [-0.0565685, 0.0, 0.0565685]
+      decelerationDuration: 0.85
+    static_nominal:
+      objectStartWorld: [0.55, 0.0, 0.55]
+      objectEndWorld: [0.55, 0.0, 0.55]
+      objectVelocityWorld: [0.0, 0.0, 0.0]
+      decelerationDuration: 0.0
+    # The July lateral scenarios canonical_yz (start [0.55,-0.56,0.15]) and ground_near (start
+    # [0.25,0.62,0.15]) are not reachable by Robot B from its base at [1.35,0,0] and are not listed.
   carriedObject:
     enabled: true
     releaseOnReceiverAttach: true

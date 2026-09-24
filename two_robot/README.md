@@ -63,6 +63,19 @@ MC_RTC_INSTALL=$HOME/mc_rtc_ws/install \
 bash two_robot/run_two_robot_sim.sh 80
 ```
 
+`TRIAD_GIVER_SCENARIO` selects Robot B's presentation (default `pure_x`); the runner moves the object's start
+pose to the scenario's start. All three complete in simulation with no discontinuity in the object pose:
+
+| scenario | Robot B presents | Robot A |
+|---|---|---|
+| `pure_x` | straight toward Robot A along −x, 0.08 m/s, from [0.92, 0, 0.55] to [0.55, 0, 0.55] m | commits to the endpoint, captures at 14.3 s, completes at 18.6 s |
+| `diagonal_xz` | forward and upward, from [0.90, 0, 0.30] to [0.62, 0, 0.58] m | captures at 14.6 s, completes at 18.8 s |
+| `static_nominal` | holds the object still at [0.55, 0, 0.55] m | plans at the current pose, captures at 12.6 s, completes at 16.9 s |
+
+```bash
+TRIAD_GIVER_SCENARIO=diagonal_xz bash two_robot/run_two_robot_sim.sh 80
+```
+
 The Kinova robot module (`Kinova`) must be installed in `MC_RTC_INSTALL`; it comes from
 [mc_kinova](https://github.com/mathieu-celerier/mc_kinova) (the laboratory copy has the same layout and
 registers `Kinova`, `KinovaDefault`, `KinovaCallib`, `KinovaBota`, `KinovaBotaDS4`). Build and install it

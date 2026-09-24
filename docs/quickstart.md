@@ -146,8 +146,10 @@ bash two_robot/run_two_robot_sim.sh 80
 The script prints Robot B's phases (Prepositioning → StartSettling → Ready →
 Executing → TerminalSettling → Holding), Robot A's states, and ends with
 `RESULT: COMPLETED` after about 20 s of simulated time. Its log and timeline
-land under `two_robot/results/`. Details, the hardware procedure and the
-laboratory videos are in [`two_robot/`](../two_robot/README.md).
+land under `two_robot/results/`. `TRIAD_GIVER_SCENARIO=diagonal_xz` or
+`TRIAD_GIVER_SCENARIO=static_nominal` selects another presentation by Robot B.
+Details, the hardware procedure and the laboratory videos are in
+[`two_robot/`](../two_robot/README.md).
 
 ## 7. Watch it
 
