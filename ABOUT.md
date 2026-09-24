@@ -99,7 +99,8 @@ completes in simulation (Robot B presents, Robot A observes, plans, reaches,
 captures and retreats). Phone videos in [`two_robot/media/`](two_robot/media/)
 show both physical arms in the laboratory setup, Robot B holding the bottle
 while Robot A's gripper approaches and closes on its neck. The July mc_rtc logs
-are inventoried separately and do not record `CaptureTransfer`; see
+record nine runs that entered `CaptureTransfer` on the physical arms and stopped at the
+closure check against the virtual object model, none reaching `Retreat`; see
 [`two_robot/`](two_robot/README.md) and the
 [video evidence note](two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md).
 

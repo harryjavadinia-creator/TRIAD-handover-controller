@@ -100,8 +100,12 @@ laptop by the standalone `robot_b_standalone/` mover.
   the inventoried hardware runs: no physical force path has been validated.
 - **Controller-log evidence (July 2026):** Robot A gripper commissioning (15 July, sandbox controller logs); Robot B alone
   executing its presentation with the integrated coordinator (17 July 22:30, phases Prepositioning → StartSettling → Ready → Executing → TerminalSettling → Holding);
-  and the inventoried combined run reaching `ExecuteCommittedReach` before failing (18 July 00:51). The
-  inventoried mc_rtc logs do not record `CaptureTransfer`. Inventory:
+  and, on 18 July, nine combined runs in which Robot A entered `CaptureTransfer` on the physical arms with
+  the gripper bridge enabled and stopped in the fail-safe hold at the closure check against the virtual
+  object model (no physical contact signal); no run reached `Retreat`
+  ([`two_robot/evidence/hardware_runs_2026-07-18/`](../two_robot/evidence/hardware_runs_2026-07-18/README.md)).
+  In the first four of those runs Robot B was driven by a fixed-joint override in the Kortex driver, in the
+  last five by the giver coordinator's references. Inventory of the binary logs:
   [`two_robot/evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`](../two_robot/evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md).
 - **Direct visual hardware evidence:**
   [`two_robot/media/dual_robot_physical_01.mp4`](../two_robot/media/dual_robot_physical_01.mp4) and

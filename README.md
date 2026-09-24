@@ -176,8 +176,11 @@ The same controller drives the physical arms through
 the simulation ticker. Robot A is the Gen3 with the Robotiq gripper at
 192.168.1.10, Robot B the Gen3 at 192.168.1.11, the laptop at 192.168.1.12 (edit
 these in the profile if your network differs). Physical two-robot operation and
-interaction are on video in [`two_robot/media/`](two_robot/media/); what has and
-has not been reached on hardware is stated in [docs/real_robot.md](docs/real_robot.md).
+interaction are on video in [`two_robot/media/`](two_robot/media/); nine logged
+runs entered the capture state on the physical arms and stopped at the closure
+check against the virtual object model, none reached the retreat
+([`two_robot/evidence/hardware_runs_2026-07-18/`](two_robot/evidence/hardware_runs_2026-07-18/README.md),
+[docs/real_robot.md](docs/real_robot.md)).
 
 Prerequisites: mc_kortex built with the three patched files in
 `two_robot/mc_kortex_patch/` (per-robot joint maps for two arms), the `Kinova`

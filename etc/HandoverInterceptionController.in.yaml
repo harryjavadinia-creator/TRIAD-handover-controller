@@ -42,7 +42,7 @@ robots:
   call_object:
     module:
       - object
-      - "@CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX@"
+      - "@CALL_OBJECT_DESCRIPTION_RUNTIME_DIR@"
       - call_object
     init_pos:
       translation: [0.90, 0.00, 0.30]

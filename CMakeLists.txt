@@ -27,5 +27,11 @@ set(CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX "${MC_CONTROLLER_RUNTIME_INSTALL_PREF
 install(FILES call_object_description/README.md DESTINATION "${CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX}")
 install(FILES call_object_description/urdf/call_object.urdf DESTINATION "${CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX}/urdf")
 
+# The configuration in the build tree points at the object model in the source tree, so the
+# controller runs from the build tree without installing (docs/quickstart.md). The installed copy
+# points at the installed model.
+set(CALL_OBJECT_DESCRIPTION_RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}/call_object_description")
 configure_file(etc/HandoverInterceptionController.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/HandoverInterceptionController.yaml")
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/etc/HandoverInterceptionController.yaml" DESTINATION "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc")
+set(CALL_OBJECT_DESCRIPTION_RUNTIME_DIR "${CALL_OBJECT_DESCRIPTION_INSTALL_PREFIX}")
+configure_file(etc/HandoverInterceptionController.in.yaml "${CMAKE_CURRENT_BINARY_DIR}/etc/install/HandoverInterceptionController.yaml")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/etc/install/HandoverInterceptionController.yaml" DESTINATION "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc")

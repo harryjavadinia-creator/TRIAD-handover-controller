@@ -1,15 +1,106 @@
 #include "KinovaRobot.h"
+#include <csignal>
+#include <exception>
 #include <Eigen/src/Core/Matrix.h>
 #include <mc_rtc/DataStore.h>
 #include <mc_rbdyn/ForceSensor.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 // the block of 329 and 737 is chqnged but the real version is preserved as comments
 namespace mc_kinova {
 
 namespace
 {
+
+// CALL_PHYSICAL_ROBOT_B_FIXED_Q_OVERRIDE_V2
+// CALL_PHYSICAL_ROBOT_B_SYNCED_PRESENTATION_V3
+//
+// Physical Robot B follows the normal dual-controller output during the
+// existing preposition. After that reference has moved and then remained
+// stationary, the next reference-motion onset is the existing Pure-X
+// presentation start. At that instant we capture the real Robot-B joints and
+// synchronously interpolate them to the requested final configuration.
+//
+// Robot A, virtual Robot B, virtual object, Pure-X timing and the FSM are not
+// modified.
+constexpr double kCallPhysicalRobotBTargetDeg[7] = {
+    7.60, 40.41, 166.25, 319.26, 17.70, 350.52, 80.22};
+
+constexpr double kCallPureXDistanceM = 0.370;
+constexpr double kCallPureXSpeedMPerS = 0.080;
+constexpr double kCallPureXDecelerationDurationS = 0.850;
+constexpr double kCallPureXConstantDurationS =
+    (kCallPureXDistanceM
+     - 0.5 * kCallPureXSpeedMPerS
+               * kCallPureXDecelerationDurationS)
+    / kCallPureXSpeedMPerS;
+constexpr double kCallPureXTotalDurationS =
+    kCallPureXConstantDurationS
+    + kCallPureXDecelerationDurationS;
+
+bool callPhysicalRobotBFixedQEnabled()
+{
+  static const bool enabled = []() {
+    const char * value =
+        std::getenv("CALL_PHYSICAL_ROBOT_B_FIXED_JOINTS");
+    return value && value[0] == '1' && value[1] == '\0';
+  }();
+  return enabled;
+}
+
+double callWrapDegrees360(double value)
+{
+  value = std::fmod(value, 360.0);
+  if(value < 0.0) { value += 360.0; }
+  return value;
+}
+
+double callShortestDegreeError(double target, double current)
+{
+  return std::remainder(target - current, 360.0);
+}
+
+double callPureXProgress(double elapsed)
+{
+  if(elapsed <= 0.0) { return 0.0; }
+
+  if(elapsed < kCallPureXConstantDurationS)
+  {
+    return std::min(
+        1.0,
+        kCallPureXSpeedMPerS * elapsed / kCallPureXDistanceM);
+  }
+
+  if(elapsed < kCallPureXTotalDurationS)
+  {
+    const double decelerationElapsed =
+        elapsed - kCallPureXConstantDurationS;
+    const double deceleration =
+        kCallPureXSpeedMPerS
+        / kCallPureXDecelerationDurationS;
+    const double distance =
+        kCallPureXSpeedMPerS * kCallPureXConstantDurationS
+        + kCallPureXSpeedMPerS * decelerationElapsed
+        - 0.5 * deceleration
+                  * decelerationElapsed
+                  * decelerationElapsed;
+    return std::min(1.0, distance / kCallPureXDistanceM);
+  }
+
+  return 1.0;
+}
+
+// CALL_PHYSICAL_ROBOT_B_EXACT_EVENT_SYNC_V4
+volatile std::sig_atomic_t g_callPhysicalRobotBPresentationStartV4 = 0;
+
+void callPhysicalRobotBPresentationSignalV4(int)
+{
+  g_callPhysicalRobotBPresentationStartV4 = 1;
+}
+
+
 constexpr const char * kGripperCloseKey =
     "HandoverInterceptionController::gripperClose";
 constexpr const char * kGripperOpenPercentKey =
@@ -100,17 +191,125 @@ KinovaRobot::KinovaRobot(const std::string &name, const std::string &ip_address,
 }
 
 KinovaRobot::~KinovaRobot() {
-  // Close API sessions and transports defensively so a preflight failure can
-  // still unwind without dereferencing a partially initialized client.
-  if(m_session_manager) { m_session_manager->CloseSession(); }
-  if(m_session_manager_real_time) { m_session_manager_real_time->CloseSession(); }
+  // CALL_MCKORTEX_SAFE_SHUTDOWN_V2_2
+  //
+  // A destructor must never allow a Kortex session timeout to escape.
+  // CloseSession may throw when a robot has already released the session or
+  // when teardown acknowledgement is late. Such an exception previously
+  // called std::terminate after a successful --init-only preflight.
+  const auto closeSessionSafely =
+      [this](k_api::SessionManager * manager, const char * channel)
+      {
+        if(!manager) { return; }
+        try
+        {
+          manager->CloseSession();
+        }
+        catch(const std::exception & exception)
+        {
+          mc_rtc::log::warning(
+              "[mc_kortex][{}] ignoring {} CloseSession exception during "
+              "shutdown: {}",
+              m_name,
+              channel,
+              exception.what());
+        }
+        catch(...)
+        {
+          mc_rtc::log::warning(
+              "[mc_kortex][{}] ignoring unknown {} CloseSession exception "
+              "during shutdown",
+              m_name,
+              channel);
+        }
+      };
 
-  if(m_router) { m_router->SetActivationStatus(false); }
-  if(m_transport) { m_transport->disconnect(); }
-  if(m_router_real_time) { m_router_real_time->SetActivationStatus(false); }
-  if(m_transport_real_time) { m_transport_real_time->disconnect(); }
+  const auto deactivateRouterSafely =
+      [this](k_api::RouterClient * router, const char * channel)
+      {
+        if(!router) { return; }
+        try
+        {
+          router->SetActivationStatus(false);
+        }
+        catch(const std::exception & exception)
+        {
+          mc_rtc::log::warning(
+              "[mc_kortex][{}] ignoring {} router-deactivation exception "
+              "during shutdown: {}",
+              m_name,
+              channel,
+              exception.what());
+        }
+        catch(...)
+        {
+          mc_rtc::log::warning(
+              "[mc_kortex][{}] ignoring unknown {} router-deactivation "
+              "exception during shutdown",
+              m_name,
+              channel);
+        }
+      };
 
-  // Destroy the API
+  const auto disconnectTcpSafely =
+      [this](k_api::TransportClientTcp * transport)
+      {
+        if(!transport) { return; }
+        try
+        {
+          transport->disconnect();
+        }
+        catch(const std::exception & exception)
+        {
+          mc_rtc::log::warning(
+              "[mc_kortex][{}] ignoring TCP transport-disconnect exception "
+              "during shutdown: {}",
+              m_name,
+              exception.what());
+        }
+        catch(...)
+        {
+          mc_rtc::log::warning(
+              "[mc_kortex][{}] ignoring unknown TCP transport-disconnect "
+              "exception during shutdown",
+              m_name);
+        }
+      };
+
+  const auto disconnectUdpSafely =
+      [this](k_api::TransportClientUdp * transport)
+      {
+        if(!transport) { return; }
+        try
+        {
+          transport->disconnect();
+        }
+        catch(const std::exception & exception)
+        {
+          mc_rtc::log::warning(
+              "[mc_kortex][{}] ignoring UDP transport-disconnect exception "
+              "during shutdown: {}",
+              m_name,
+              exception.what());
+        }
+        catch(...)
+        {
+          mc_rtc::log::warning(
+              "[mc_kortex][{}] ignoring unknown UDP transport-disconnect "
+              "exception during shutdown",
+              m_name);
+        }
+      };
+
+  closeSessionSafely(m_session_manager, "TCP");
+  closeSessionSafely(m_session_manager_real_time, "UDP");
+
+  deactivateRouterSafely(m_router, "TCP");
+  disconnectTcpSafely(m_transport);
+  deactivateRouterSafely(m_router_real_time, "UDP");
+  disconnectUdpSafely(m_transport_real_time);
+
+  // Destroy API clients after all best-effort network teardown.
   delete m_actuator_config;
   delete m_device_manager;
   delete m_session_manager_real_time;
@@ -880,10 +1079,110 @@ bool KinovaRobot::sendCommand(mc_rbdyn::Robot &robot, bool &running) {
     const auto armJointIndex = robot.jointIndexByName(armJointName);
     double kt = (i > 3) ? 0.076 : 0.11;
     if (m_control_mode == k_api::ActuatorConfig::ControlMode::POSITION) {
-      m_base_command.mutable_actuators(i)->set_position(
-          radToJointPose(i, m_command.q[armJointIndex][0]));
-      m_base_command.mutable_actuators(i)->set_current_motor(
-          m_state_local.mutable_actuators(i)->current_motor());
+      if(callPhysicalRobotBFixedQEnabled()
+         && m_name == "kinova"
+         && i < 7)
+      {
+        constexpr double kDt = 0.001;
+
+        static thread_local bool signalHandlerInstalled = false;
+        static thread_local bool presentationStarted = false;
+        static thread_local bool terminalLogged = false;
+        static thread_local size_t presentationCycles = 0;
+        static thread_local double physicalStartDeg[7] = {0.0};
+        static thread_local double physicalDeltaDeg[7] = {0.0};
+        static thread_local double synchronizedProgress = 0.0;
+
+        if(i == 0)
+        {
+          if(!signalHandlerInstalled)
+          {
+            std::signal(
+                SIGUSR2,
+                callPhysicalRobotBPresentationSignalV4);
+            signalHandlerInstalled = true;
+
+            mc_rtc::log::warning(
+                "[mc_kortex PHYSICAL-B EXACT-EVENT V4] armed; "
+                "following normal Robot-B output until DualGiver START");
+          }
+
+          if(!presentationStarted
+             && g_callPhysicalRobotBPresentationStartV4 != 0)
+          {
+            presentationStarted = true;
+            presentationCycles = 0;
+            synchronizedProgress = 0.0;
+
+            for(size_t joint = 0; joint < 7; ++joint)
+            {
+              physicalStartDeg[joint] =
+                  m_state_local.mutable_actuators(joint)->position();
+              physicalDeltaDeg[joint] =
+                  callShortestDegreeError(
+                      kCallPhysicalRobotBTargetDeg[joint],
+                      physicalStartDeg[joint]);
+            }
+
+            mc_rtc::log::warning(
+                "[mc_kortex PHYSICAL-B EXACT-EVENT V4] "
+                "DualGiver START received; captured measured real start "
+                "and beginning synchronized {:.3f}s motion to "
+                "[7.60,40.41,166.25,319.26,17.70,350.52,80.22]deg",
+                kCallPureXTotalDurationS);
+          }
+
+          if(presentationStarted)
+          {
+            const double elapsed =
+                static_cast<double>(presentationCycles) * kDt;
+            synchronizedProgress = callPureXProgress(elapsed);
+            ++presentationCycles;
+
+            if(presentationCycles == 1
+               || presentationCycles % 1000 == 0)
+            {
+              mc_rtc::log::warning(
+                  "[mc_kortex PHYSICAL-B EXACT-EVENT V4] "
+                  "progress={:.3f} elapsed={:.3f}/{:.3f}s",
+                  synchronizedProgress,
+                  elapsed,
+                  kCallPureXTotalDurationS);
+            }
+
+            if(synchronizedProgress >= 1.0 && !terminalLogged)
+            {
+              terminalLogged = true;
+              mc_rtc::log::success(
+                  "[mc_kortex PHYSICAL-B EXACT-EVENT V4] "
+                  "final target command reached and held");
+            }
+          }
+        }
+
+        if(!presentationStarted)
+        {
+          m_base_command.mutable_actuators(i)->set_position(
+              radToJointPose(i, m_command.q[armJointIndex][0]));
+        }
+        else
+        {
+          const double command = callWrapDegrees360(
+              physicalStartDeg[i]
+              + synchronizedProgress * physicalDeltaDeg[i]);
+          m_base_command.mutable_actuators(i)->set_position(command);
+        }
+
+        m_base_command.mutable_actuators(i)->set_current_motor(
+            m_state_local.mutable_actuators(i)->current_motor());
+      }
+      else
+      {
+        m_base_command.mutable_actuators(i)->set_position(
+            radToJointPose(i, m_command.q[armJointIndex][0]));
+        m_base_command.mutable_actuators(i)->set_current_motor(
+            m_state_local.mutable_actuators(i)->current_motor());
+      }
       continue;
     } else {
       m_base_command.mutable_actuators(i)->set_position(

@@ -46,7 +46,7 @@ State sequences were extracted with `mc_bin_utils convert --entries Executor_Mai
 | 2026-07-18 00:45 | dual (A + B) | 81 MB |  |
 | 2026-07-18 00:46 | dual (A + B) | 72 MB |  |
 | 2026-07-18 00:46 | dual (A + B) | 65 MB |  |
-| 2026-07-18 00:51 | dual (A + B) | 77 MB | hw. Combined run: Initial → ObserveObject → SolveInterception → ExecuteCommittedReach → Failure; giver phases 1→4 then 7. The furthest hardware run. |
+| 2026-07-18 00:51 | dual (A + B) | 77 MB | hw. Combined run: Initial → ObserveObject → SolveInterception → ExecuteCommittedReach → Failure; giver phases 1→4 then 7. The furthest run among these binary logs; the driver text logs of the afternoon go further, see `hardware_runs_2026-07-18/`. |
 | 2026-07-18 00:56 | dual (A + B) | 72 MB |  |
 | 2026-07-18 00:57 | dual (A + B) | 74 MB |  |
 | 2026-07-18 00:58 | dual (A + B) | 76 MB |  |
@@ -142,7 +142,7 @@ State sequences were extracted with `mc_bin_utils convert --entries Executor_Mai
 | 2026-07-17 16:08 | dual (A + B) | 27 MB |  |
 | 2026-07-17 16:40 | dual (A + B) | 5.9 GB |  |
 
-134 logs, 31.0 GB in total. In this mc_rtc log inventory, no hardware run is recorded as reaching `CaptureTransfer`.
+134 logs, 31.0 GB in total. Among these binary logs no run reaches `CaptureTransfer`. The driver text logs of the same afternoon (rows 13:11–13:54 and the 14:xx runs), archived in `hardware_runs_2026-07-18/`, record nine runs on the physical arms that entered `CaptureTransfer` and ended in the fail-safe hold at the closure check against the virtual object model.
 
 ## Physical dual-robot video evidence
 

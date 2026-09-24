@@ -16,12 +16,12 @@ What is in it:
 | `run_two_robot_sim.sh` | runs the two-arm handover in mc_rtc's ticker straight from a build tree, without installing |
 | `display_two_robot.rviz` | RViz display file with Robot A, Robot B and the object |
 | `mc_rtc.two_kortex.yaml` | the global mc_rtc profile for two physical Kortex arms (credentials are placeholders) |
-| `mc_kortex_patch/` | the three mc_kortex source files that map Robot A (`gen3_joint_1..7`) and Robot B (`joint_1..7`) independently, with its source audit |
+| `mc_kortex_patch/` | the three mc_kortex source files that ran the July sessions: per-robot joint maps for two arms, exception-safe shutdown, and a gated fixed-joint override for Robot B that is off unless `CALL_PHYSICAL_ROBOT_B_FIXED_JOINTS=1` (`SOURCE_AUDIT.md`) |
 | `prepare_hardware_config.sh`, `check_dual_network.sh`, `run_dual_init_only.sh`, `disable_and_stop.sh`, `tools/set_override_key.py` | the hardware procedure: write the mc_rtc profile and override from the repository files, check the network, no-motion preflight, switch one override key, stop |
 | `robot_b_standalone/` | `CALLRobotBFaceToFaceMover`: the alternative where Robot B runs from a second laptop with no communication with Robot A (fixed start, one trigger file `/tmp/call_robot_b_start`, one trajectory in Robot B's base frame); its `tools/install.sh` installs into that laptop's mc_rtc, which is the one place where an install is used |
 | `results/sim_2026-09-24/` | the recorded runs: log, override and 20 ms timeline of `pure_x`, and the logs of `diagonal_xz` and `static_nominal` |
 | `tools/extract_timeline.py` | turns a run's binary log into the 20 ms timeline (states, giver phase, object pose as carried and as planned with) |
-| `evidence/` | inventory of the 134 July 2026 mc_rtc logs (31 GB, kept on the lab laptop), the 3.3 MB hardware `StaticXTouch` log of 17 July 22:27, Robot B's standalone validation log, and the physical-video evidence note |
+| `evidence/` | inventory of the 134 July 2026 mc_rtc logs (31 GB, kept on the lab laptop), the 3.3 MB hardware `StaticXTouch` log of 17 July 22:27, the driver logs of the nine 18 July runs that reached capture (`hardware_runs_2026-07-18/`), Robot B's standalone validation log, and the physical-video evidence note |
 | `media/` | five screen recordings of the two-arm simulation from 18–19 July 2026 (`.webm`) plus two real-world physical dual-robot videos (`dual_robot_physical_01.mp4`, `dual_robot_physical_02.mp4`) |
 
 ## What has been verified
@@ -33,11 +33,16 @@ What is in it:
   (`SynchronizedPresentationSolve` in the log), commits, and goes ExecuteCommittedReach → PresentationHold →
   MovePregrasp → CaptureTransfer → Retreat → Completed; Robot B releases the object at acquisition and Robot A
   carries it away. See `results/sim_2026-09-24/TIMELINE.md`. The single-robot scenarios complete on the same build.
-- **Hardware, July 2026 — controller logs** (see `evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`): on 17 July Robot B executed
-  its presentation alone on the physical arm (Prepositioning → StartSettling → Ready → Executing → TerminalSettling → Holding, log of 22:30). The inventoried
-  combined run of 18 July 00:51 reached Robot A's committed reach and then failed; the inventoried mc_rtc
-  state logs do not record `CaptureTransfer`. Robot A alone had its physical gripper commissioned on
-  15–16 July (sandbox controller logs).
+- **Hardware, July 2026 — controller logs** (`evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`,
+  `evidence/hardware_runs_2026-07-18/`): on 17 July Robot B executed its presentation alone on the physical
+  arm (Prepositioning → StartSettling → Ready → Executing → TerminalSettling → Holding, log of 22:30). On
+  18 July nine runs on the two physical arms went Initial → ObserveObject → SolveInterception →
+  ExecuteCommittedReach → PresentationHold → MovePregrasp → CaptureTransfer with the physical gripper bridge
+  enabled, and every one ended in the fail-safe hold inside `CaptureTransfer`: the closure check against the
+  virtual object model reported the inner pad touching the modelled handle (the controller has no physical
+  contact or force signal). No run reached `Retreat`. In the first four of those runs Robot B was driven by a
+  fixed-joint override in the Kortex driver; in the last five by the giver coordinator's references, which
+  is this repository's configuration. Robot A alone had its physical gripper commissioned on 15–16 July.
 - **Hardware, real-world video evidence**: `media/dual_robot_physical_01.mp4` and
   `media/dual_robot_physical_02.mp4` directly show both physical Kinova arms operating together in the lab
   handover setup. In the second clip Robot B supports/presents the bottle while Robot A's Robotiq gripper
@@ -48,7 +53,8 @@ What is in it:
 
 - Real-world video of the two physical robots **does exist** and is included in `media/`.
 - The physical videos establish dual-robot operation and interaction, but they are not synchronized controller
-  logs; therefore they are not used on their own to assign a particular FSM state such as `CaptureTransfer`.
+  logs; the driver logs of the same day place the gripper closure in `CaptureTransfer`, the videos are not
+  used on their own to assign a state.
 - The July runs used the same coordinator and states, then inside a sandbox controller; their integration
   into this controller is verified end-to-end in simulation (`results/sim_2026-09-24/`).
 - Robot B's tool has no role in the handover: it carries the object in simulation and, on hardware, the
