@@ -1,5 +1,0 @@
-configs:
-  HandoverInterceptionController_ReceiverV2:
-    characterizeOnly: true
-capture:
-  candidateCount: 64

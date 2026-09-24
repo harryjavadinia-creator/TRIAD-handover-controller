@@ -1,6 +1,0 @@
-FAIL: velocity (-0.16, 0.0, 0.0) does not match scenario 'longitudinal' expected (-0.08, 0.0, 0.0)
-observed_position=[0.92, 0.0, 0.55]
-observed_velocity=[-0.16, 0.0, 0.0]
-position_ok=True
-velocity_ok=False
-scenario_identity_result=FAIL

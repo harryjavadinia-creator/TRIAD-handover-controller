@@ -1,6 +1,0 @@
-configs:
-  HandoverInterceptionController_ReceiverV2:
-    supervisorMode: control_aware
-    controlAware:
-      variant: predictive
-      graspFamily: receiving

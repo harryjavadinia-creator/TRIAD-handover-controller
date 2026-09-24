@@ -1,9 +1,0 @@
-characterize longitudinal exit=1 completed=0
-characterize near-ground exit=1 completed=0
-characterize lateral-low exit=1 completed=0
-characterize diagonal exit=1 completed=0
-receiving longitudinal exit=1 completed=0
-receiving near-ground exit=1 completed=0
-receiving lateral-low exit=1 completed=0
-receiving diagonal exit=1 completed=0
-CAMPAIGN_DONE

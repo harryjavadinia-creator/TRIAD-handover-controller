@@ -1,9 +1,0 @@
-{
-  "commit": "ebbc593b5cc098355d7bee93913e5732a09602a9",
-  "diff": "",
-  "scenario": "longitudinal",
-  "controller_sha256": "b253d584d24d6f294e766d466617a5859f23ddaeb59fdad36c4180581fb5157a",
-  "purpose": "diagnostic, not H1/outcome inference",
-  "exit_code": -11,
-  "wall_seconds": 33.68290035898099
-}

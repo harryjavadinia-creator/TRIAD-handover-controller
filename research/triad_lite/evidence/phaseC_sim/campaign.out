@@ -1,9 +1,0 @@
-hold_skip longitudinal exit=1 completed=0
-hold_skip near-ground exit=1 completed=0
-hold_skip lateral-low exit=1 completed=0
-hold_skip diagonal exit=1 completed=0
-hold_noskip longitudinal exit=1 completed=0
-hold_noskip near-ground exit=1 completed=0
-hold_noskip lateral-low exit=1 completed=0
-hold_noskip diagonal exit=1 completed=0
-CAMPAIGN_DONE

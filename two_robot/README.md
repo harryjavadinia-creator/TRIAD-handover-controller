@@ -1,10 +1,9 @@
 # TRIAD with two robots — Robot A receives, Robot B gives
 
-This folder makes the final TRIAD controller run a **robot-to-robot handover**: Robot A (Kinova Gen3 +
+This folder makes TRIAD run a **robot-to-robot handover**: Robot A (Kinova Gen3 +
 Robotiq 2F-85, the TRIAD receiver, unchanged) receives the CALL object from Robot B (a second Kinova Gen3,
 no gripper role) which presents it along a fixed world-frame trajectory. It is the July 2026 two-robot
-setup of the CALL laboratory (Robot A at 192.168.1.10, Robot B at 192.168.1.11), ported onto the final
-TRIAD code base on 2026-09-24.
+setup of the CALL laboratory (Robot A at 192.168.1.10, Robot B at 192.168.1.11).
 
 What is in it:
 
@@ -19,7 +18,7 @@ What is in it:
 | `mc_kortex_patch/` | the three mc_kortex source files that map Robot A (`gen3_joint_1..7`) and Robot B (`joint_1..7`) independently, with its source audit |
 | `check_dual_network.sh`, `run_dual_init_only.sh`, `disable_and_stop.sh` | the hardware procedure scripts of July 2026 |
 | `robot_b_standalone/` | `CALLRobotBFaceToFaceMover`: the alternative where Robot B runs from a second laptop with no communication with Robot A (fixed start, one trigger, one trajectory) |
-| `results/sim_2026-09-24/` | the verification run of this port: log, override, timeline |
+| `results/sim_2026-09-24/` | the verification run: log, override, timeline |
 | `evidence/` | inventory of the 134 July 2026 mc_rtc logs (31 GB, kept on the lab laptop), one 3.3 MB hardware log, Robot B's validation log |
 | `media/` | five screen recordings of the two-arm simulation from 18–19 July 2026 (RViz / mc_rtc), `.webm` |
 
@@ -40,9 +39,8 @@ What is in it:
 
 - **There is no real-life video of the two arms on this laptop.** The recordings in `media/` are screen
   captures of the simulation. If a phone video was taken in the lab in July, it is not here.
-- Nothing in this folder has run on hardware with the final TRIAD code; the July hardware runs used the
-  July controller (`CALLDualRobotHandoverController`, base V6.4.3). The port is source-identical in the
-  giver layer (54 changed controller lines + the coordinator) but has only been verified in simulation.
+- The July hardware runs predate the integration in this repository; nothing here has run on hardware
+  with this code. The giver layer has been verified in simulation only.
 - Robot B has no gripper role: it carries the object rigidly in simulation and, on hardware, the object
   was held by Robot B's tool physically.
 
@@ -88,5 +86,5 @@ configuration; they are off by default.
   and `~/Downloads/CALL_DUAL_ROBOT_ACTUAL_HANDOVER_V1_1_PLAIN_TRAJECTORY_B_20260717` (17–18 July 2026).
 - Robot B standalone mover: `~/mc_rtc_ws/Sandbox/CALLRobotBFaceToFaceMover`, validated 17 July 11:38
   (`evidence/CALL_ROBOT_B_20260717_113843.log`: start [0.4567, 0.0010, 0.4337], 0.08 m/s, terminal error ≈ 0.2 mm).
-- Port onto TRIAD final: constructor, reset, run and observation-start hooks, eight pass-through methods,
-  two states, CMake entries. All are no-ops unless `dualHandover.enabled: true`.
+- Integration in the controller: constructor, reset, run and observation-start hooks, eight pass-through
+  methods, two states, CMake entries. All are no-ops unless `dualHandover.enabled: true`.

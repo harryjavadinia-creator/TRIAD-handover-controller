@@ -19,16 +19,15 @@ mathematical formulation, canonical simulation scenarios, verification tools, an
 source/evidence provenance. There is no validated end-to-end physical
 human-to-robot handover campaign.
 
-**A later variant was measured against baselines, and lost.** *TRIAD-lite* — a
-separate line of work that adds a predictive interception solver and a
-directional QP-authority filter — was compared against matched baselines under an
-identical plant. The full variant completed 6/12 scenarios against 11/12 for a
-plain predictive baseline. That comparison is reported in full under
-[`triad_lite/`](triad_lite/) and summarised in
-[Measured performance](#measured-performance). On this final branch the TRIAD-lite
-code is part of `src/` (see [FINAL_VERSION.md](FINAL_VERSION.md)); the default
-configuration still runs the V1 controller, and the comparison is included because
-it is the part of the work most useful to anyone building on it.
+**The TRIAD-lite mode was measured against baselines, and lost.** *TRIAD-lite* adds
+a predictive interception solver and a directional QP-authority filter to the
+receiver; compared against matched baselines under an identical plant, the full
+variant completed 6/12 scenarios against 11/12 for a plain predictive baseline.
+That comparison is reported in full under [`triad_lite/`](triad_lite/) and
+summarised in [Measured performance](#measured-performance). The TRIAD-lite code
+is part of `src/` (see [ABOUT.md](ABOUT.md)); the default configuration runs the
+finite-plan controller, and the comparison is included because it is the part of
+the work most useful to anyone building on it.
 
 **Two robots.** The July 2026 laboratory setup — Robot A receiving from a second Kinova Gen3 that presents the
 object — is integrated on this branch and verified in simulation (a full robot-to-robot handover completes).
@@ -44,7 +43,7 @@ real-life video; the recordings are screen captures of the simulation. See [`two
 | Follow the algorithm and execution stages | [Architecture and pseudocode](docs/architecture.md) |
 | Inspect the simulation results | [Results](docs/results.md) |
 | Position the contribution in the literature | [Related work](docs/related_work.md) |
-| Read the paper that matches this repository | [`paper/triad_system_paper.pdf`](paper/triad_system_paper.pdf) (24 Sep 2026; source `paper/triad_system_paper.tex`) |
+| Read the paper | [`paper/triad_system_paper.pdf`](paper/triad_system_paper.pdf) (source `paper/triad_system_paper.tex`) |
 | Run it with two robots, or on the two physical arms | [`two_robot/`](two_robot/README.md), [Real robot](docs/real_robot.md) |
 | Check data, source versions, and validation | [Reproducibility](docs/reproducibility.md) |
 
@@ -78,17 +77,16 @@ instantiation: the feasibility screens, the copied-state discipline, the tie
 conventions, and the evidence trail — not the decision rule.
 
 The seven objective weights are fixed engineering preferences;
-**no weight-sensitivity result is reported**, and a later analysis found a
+**no weight-sensitivity result is reported**, and off-line replay found that a
 two-level lexicographic rule (completion → clearance → effort) captures the
 useful part. The [full formulation](docs/mathematics.md) covers prediction,
 local IK, objective terms, timing, ties, and commitment.
 
 ## Measured performance
 
-**Scope of this section.** These results are from **TRIAD-lite**, a later variant
-developed on `research/triad-control-aware-supervisor` (starting HEAD `04e9efc`),
-which adds a predictive interception solver and a directional QP-authority filter.
-They are *not* a measurement of the default (V1) controller. On this branch the
+**Scope of this section.** These results are from **TRIAD-lite**, the mode that
+adds a predictive interception solver and a directional QP-authority filter.
+They are *not* a measurement of the default finite-plan controller. The
 TRIAD-lite sources live in `src/` (`ControlAwareGraspSupervisor.h`,
 `PredictiveInterception.h`, `ReceivingGraspFamily.h`, `Gen3WristReachabilityMap.h`)
 and are selected with `receiverArchitecture: v2_receding` plus
@@ -109,7 +107,7 @@ identical grasp pool, one evaluator applied to every run:
 **The proposed variant is the second-worst of the four.** Used as a hard filter it
 makes selection start-state dependent and produces adopt/abort cycling.
 
-An earlier campaign reported FULL 12/12, B1 9/12. That result came from a
+A first campaign reported FULL 12/12, B1 9/12. That result came from a
 predictive-rollout defect on replans from a moving arm, which inflated exactly the
 path-demand signal the authority filter consumes. Both campaigns are included —
 [`triad_lite/evidence/phaseF_sim_prefix`](triad_lite/evidence/phaseF_sim_prefix)
@@ -178,8 +176,8 @@ python3 tools/check_evidence_manifest.py
 
 **No control-performance gap is established.** For TRIAD-lite the measured
 comparison does not show the joint selection outperforming a plain predictive
-baseline, and the authority filter's benefit is unsupported. For the default V1
-controller, no equivalent baseline comparison has been run at all — its
+baseline, and the authority filter's benefit is unsupported. For the default
+finite-plan controller, no equivalent baseline comparison has been run at all — its
 scenarios are reference runs, not a controlled comparison against an alternative
 method. Read the contribution as a formulation, an implementation and an evidence
 trail, not as a demonstrated control improvement. Anyone building on the

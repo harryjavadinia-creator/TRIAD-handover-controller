@@ -1,9 +1,0 @@
-configs:
-  HandoverInterceptionController_ReceiverV2:
-    controlAware:
-      variant: reactive
-      diagnoseContinuation: true
-      admissionRequiresCurrentAuthority: false
-      interception:
-        mode: characterize_hold
-        authorityFilter: false

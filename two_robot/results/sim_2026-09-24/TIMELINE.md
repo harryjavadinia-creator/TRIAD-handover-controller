@@ -1,4 +1,4 @@
-# Two-robot handover, simulation, 2026-09-24 (branch triad/two-robot-2026-09-24, run from the build tree, nothing installed)
+# Two-robot handover, simulation, 2026-09-24 (run from the build tree, nothing installed)
 
 Scenario `pure_x`: the object starts at [0.92, 0, 0.55] m; Robot B presents it at 0.08 m/s along −x and stops at [0.55, 0, 0.55] m. Robot A receives. Time from the 1 kHz log index. Phase codes from `DualGiverCoordinator::Phase` (1 Prepositioning, 2 StartSettling, 3 Ready, 4 Executing, 5 TerminalSettling, 6 Holding, 7 Failed).
 

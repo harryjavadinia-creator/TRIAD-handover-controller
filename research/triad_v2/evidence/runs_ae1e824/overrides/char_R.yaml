@@ -1,6 +1,0 @@
-configs:
-  HandoverInterceptionController_ReceiverV2:
-    characterizeOnly: true
-transitPlanning:
-  routeDirections: 16
-  apexOffsets: [0.04, 0.08, 0.14, 0.20]

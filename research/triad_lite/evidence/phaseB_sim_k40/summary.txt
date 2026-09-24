@@ -1,4 +1,0 @@
-longitudinal outcome=fail reason=control_aware_track_clearance_reserve switches=3 selections=15 noAdmissible=6
-near-ground outcome=fail reason=unsafe_while_held switches=7 selections=38 noAdmissible=1
-lateral-low outcome=freeze  switches=6 selections=93 noAdmissible=0
-diagonal outcome=fail reason=control_aware_track_clearance_reserve switches=5 selections=63 noAdmissible=41

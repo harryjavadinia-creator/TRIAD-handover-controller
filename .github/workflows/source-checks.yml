@@ -78,8 +78,8 @@ jobs:
             SCIENTIFIC_BASELINE.sha256 \
             --commit scientific-baseline
 
-      - name: Verify final-version source manifest
-        run: sha256sum -c docs/source_sync_triad-final-2026-09-24.sha256
+      - name: Verify source manifest
+        run: sha256sum -c docs/source_sync_triad-2026-09-24.sha256
 
       - name: Verify frozen V1 source preserved in history
         run: bash tools/verify_frozen_v1_preserved.sh

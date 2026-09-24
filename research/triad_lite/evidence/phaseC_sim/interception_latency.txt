@@ -1,4 +1,0 @@
-moving: sweepMs n=61 median=529 p90=752 max=3574
-moving: jobWall s n=61 median=0.605 p90=0.816 p95=0.975 max=3.709
-rest: sweepMs n=325 median=75 p90=141 max=181
-rest: jobWall s n=325 median=0.141 p90=0.293 p95=0.312 max=0.370

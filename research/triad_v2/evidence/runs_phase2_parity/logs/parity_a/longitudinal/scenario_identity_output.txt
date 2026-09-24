@@ -1,6 +1,0 @@
-FAIL: expected a completed handover but [Completed] was not found
-observed_position=[0.92, 0.0, 0.55]
-observed_velocity=[-0.08, 0.0, 0.0]
-position_ok=True
-velocity_ok=True
-scenario_identity_result=FAIL

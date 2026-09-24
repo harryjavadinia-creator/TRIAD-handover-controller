@@ -1,1 +1,0 @@
-global time-grasp-route runtime log proof: PASS

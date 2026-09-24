@@ -1,1 +1,0 @@
-worker snapshot purity: PASS (78 worker-reachable functions, 1 root(s), no unguarded live robot/estimator/world access)
