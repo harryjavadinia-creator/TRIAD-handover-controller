@@ -93,11 +93,12 @@ dualHandover:
     objectToGiverToolTranslation: [0.0, 0.0, 0.1556]
     objectToGiverToolRPY: [0.0, 0.0, 0.0]
 
-# Optional states (only meaningful with dualHandover.enabled: true):
+# Initial FSM state. HandoverInterceptionController_Initial runs the handover. The two commissioning
+# states (only meaningful with dualHandover.enabled: true):
 #   HandoverInterceptionController_RobotBScenarioPreview  Robot B alone executes the scenario, Robot A holds.
 #   HandoverInterceptionController_StaticXTouch           deliberately simple static two-arm rendezvous.
-# Select one by overriding `init:` in this file, e.g.
-#   init: HandoverInterceptionController_RobotBScenarioPreview
+# two_robot/tools/set_override_key.py init <state> switches it in the hardware override.
+init: HandoverInterceptionController_Initial
 HandoverInterceptionController_RobotBScenarioPreview: {}
 HandoverInterceptionController_StaticXTouch:
   giverRobot: kinova

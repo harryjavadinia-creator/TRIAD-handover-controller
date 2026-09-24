@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Laptop and robot addresses of the laboratory setup; override with IFACE, LAPTOP_IP, ROBOT_A_IP, ROBOT_B_IP.
 IFACE="${IFACE:-enp0s31f6}"
-LAPTOP="192.168.1.12"
-A="192.168.1.10"
-B="192.168.1.11"
+LAPTOP="${LAPTOP_IP:-192.168.1.12}"
+A="${ROBOT_A_IP:-192.168.1.10}"
+B="${ROBOT_B_IP:-192.168.1.11}"
 
 ip -4 -br address show "$IFACE" | grep -q "$LAPTOP/24" || {
   echo "ERROR: laptop must be $LAPTOP/24 on $IFACE" >&2; exit 1;

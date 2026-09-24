@@ -744,4 +744,11 @@ transitions:
 
 - [HandoverInterceptionController_Completed, FAIL, HandoverInterceptionController_Failure, Auto]
 
+# Two-robot commissioning states (two_robot/): selected with `init:` in the override; they hold and never
+# emit an output, the entries only register them as valid initial states.
+- [HandoverInterceptionController_RobotBScenarioPreview, OK, HandoverInterceptionController_Completed, Auto]
+- [HandoverInterceptionController_RobotBScenarioPreview, FAIL, HandoverInterceptionController_Failure, Auto]
+- [HandoverInterceptionController_StaticXTouch, OK, HandoverInterceptionController_Completed, Auto]
+- [HandoverInterceptionController_StaticXTouch, FAIL, HandoverInterceptionController_Failure, Auto]
+
 init: HandoverInterceptionController_Initial

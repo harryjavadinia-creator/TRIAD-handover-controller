@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 FILES = [
     "README.md",
+    "ABOUT.md",
     "docs/architecture.md",
     "docs/mathematics.md",
     "docs/performance.md",
@@ -95,12 +96,12 @@ for label, phrase in {
     check(label + " absent from scientific documentation surface",
           norm(phrase) not in scientific_surface)
 
-readme = norm_files["README.md"]
+about = norm_files["ABOUT.md"]
 check(
-    "README qualifies background-worker lifecycle",
-    "background worker" in readme
-    and "shutdown/reset" in readme
-    and "wcet" in readme,
+    "ABOUT qualifies background-worker lifecycle",
+    "background worker" in about
+    and "shutdown/reset" in about
+    and "wcet" in about,
 )
 
 architecture = norm_files["docs/architecture.md"]

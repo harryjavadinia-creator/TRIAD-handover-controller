@@ -110,8 +110,9 @@ laptop by the standalone `robot_b_standalone/` mover.
   [`two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md`](../two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md).
 - **Verified in simulation with this code (24 September 2026):** the full two-arm handover completes
   ([`two_robot/results/sim_2026-09-24/TIMELINE.md`](../two_robot/results/sim_2026-09-24/TIMELINE.md)).
-- **Procedure:** the seven steps in [`two_robot/README.md`](../two_robot/README.md), motion disabled until
-  each step passes.
+- **Procedure:** README §4 and [`two_robot/README.md`](../two_robot/README.md): `prepare_hardware_config.sh`
+  writes the mc_rtc profile and the controller override from the repository files, then network check,
+  no-motion preflight, gripper smoke test, Robot B alone, the handover; motion disabled until each step passes.
 
 The evidence therefore supports physical two-robot operation and handover interaction. What remains
 unestablished is a synchronized, reproducible end-to-end TRIAD hardware validation in which the complete

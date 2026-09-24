@@ -17,7 +17,7 @@ What is in it:
 | `display_two_robot.rviz` | RViz display file with Robot A, Robot B and the object |
 | `mc_rtc.two_kortex.yaml` | the global mc_rtc profile for two physical Kortex arms (credentials are placeholders) |
 | `mc_kortex_patch/` | the three mc_kortex source files that map Robot A (`gen3_joint_1..7`) and Robot B (`joint_1..7`) independently, with its source audit |
-| `check_dual_network.sh`, `run_dual_init_only.sh`, `disable_and_stop.sh` | the hardware procedure scripts of July 2026 |
+| `prepare_hardware_config.sh`, `check_dual_network.sh`, `run_dual_init_only.sh`, `disable_and_stop.sh`, `tools/set_override_key.py` | the hardware procedure: write the mc_rtc profile and override from the repository files, check the network, no-motion preflight, switch one override key, stop |
 | `robot_b_standalone/` | `CALLRobotBFaceToFaceMover`: the alternative where Robot B runs from a second laptop with no communication with Robot A (fixed start, one trigger, one trajectory) |
 | `results/sim_2026-09-24/` | the verification run: log, override, timeline |
 | `evidence/` | inventory of the 134 July 2026 mc_rtc logs (31 GB, kept on the lab laptop), one 3.3 MB hardware log, Robot B's validation log, and the physical-video evidence note |
@@ -75,6 +75,7 @@ pose to the scenario's start. All three complete in simulation with no discontin
 ```bash
 TRIAD_GIVER_SCENARIO=diagonal_xz bash two_robot/run_two_robot_sim.sh 80
 TRIAD_SYNC_RATIO=0.5 bash two_robot/run_two_robot_sim.sh 80     # half speed, for watching in a viewer
+TRIAD_INIT_STATE=HandoverInterceptionController_RobotBScenarioPreview bash two_robot/run_two_robot_sim.sh 30   # Robot B alone, Robot A holds
 ```
 
 The Kinova robot module (`Kinova`) must be installed in `MC_RTC_INSTALL`; it comes from
@@ -94,20 +95,42 @@ The July simulation recordings and the two physical laboratory clips are in `med
 
 ## Run it on the two physical arms
 
-Follow the July procedure, in this order, with motion disabled until each step passes:
+The controller is driven by `mc_kortex` (mc_rtc's Kortex interface) instead of the ticker. Prerequisites:
+mc_kortex rebuilt with the three files in `mc_kortex_patch/` (Robot A `gen3_joint_1..7` and Robot B
+`joint_1..7` mapped independently), the `Kinova` module for Robot B, and the receiver's gripper values in
+`HandoverInterceptionController.hardware_receiver.yaml` (July 2026 calibration: `openPercent` 0.87,
+`closePercent`/`maxPercent` 50.37; measure your own). Motion stays disabled until each step passes.
 
-1. Apply `mc_kortex_patch/` to your mc_kortex checkout and rebuild it (per-robot joint maps).
-2. Copy `mc_rtc.two_kortex.yaml` to `~/.config/mc_rtc/mc_rtc.yaml`, fill in the IPs and credentials.
-3. `bash two_robot/check_dual_network.sh` — both arms reachable.
-4. `bash two_robot/run_dual_init_only.sh` — both robots initialise, no motion; the log must show separate
-   states for `gen3_2f85` and `kinova`.
-5. Robot B alone: set `init: HandoverInterceptionController_RobotBScenarioPreview` in the overlay, then
-   `dualHandover.motionEnabled: true`. This is what worked on 17 July.
-6. The combined run: default `init`, `motionEnabled: true`. On 18 July the inventoried logged run reached the committed reach.
-7. `bash two_robot/disable_and_stop.sh` after every run.
+```bash
+# with the four variables of the README set (PATH, MAIN_ROBOT_MODULE_PATH, TRIAD_BUILD_DIR, MC_RTC_INSTALL)
+bash two_robot/prepare_hardware_config.sh      # writes ~/.config/mc_rtc/mc_rtc.yaml + the controller override
+                                               # from mc_rtc.two_kortex.yaml, the two-robot overlay and the
+                                               # receiver hardware overlay; backs up existing files.
+#   -> edit ~/.config/mc_rtc/mc_rtc.yaml: Kortex username/password, IPs (A 192.168.1.10, B 192.168.1.11)
+bash two_robot/check_dual_network.sh           # laptop 192.168.1.12, both arms reachable, distinct MACs
+bash two_robot/run_dual_init_only.sh           # mc_kortex --init-only: connect, read, initialise, disconnect
 
-Robot A's physical gripper bridge stays under the existing `physicalBridge` switches of the TRIAD
-configuration; they are off by default.
+# Robot A's gripper alone, arm frozen
+python3 two_robot/tools/set_override_key.py gripper.hardwareGripperCommissioning.enabled true
+mc_kortex
+python3 two_robot/tools/set_override_key.py gripper.hardwareGripperCommissioning.enabled false
+
+# Robot B alone presents, Robot A holds (what ran on 17 July)
+python3 two_robot/tools/set_override_key.py init HandoverInterceptionController_RobotBScenarioPreview
+python3 two_robot/tools/set_override_key.py dualHandover.motionEnabled true
+mc_kortex
+
+# the handover
+python3 two_robot/tools/set_override_key.py init HandoverInterceptionController_Initial
+mc_kortex
+
+bash two_robot/disable_and_stop.sh             # after every run: stops the driver, motion off
+```
+
+`set_override_key.py` edits one key of `~/.config/mc_rtc/controllers/HandoverInterceptionController.yaml`
+in place. `prepare_hardware_config.sh --single` writes the configuration without Robot B for the gripper
+smoke test alone. Hardware logs go to `~/TRIAD_hardware_logs` (`TRIAD_HARDWARE_LOG_DIR`). What has and has
+not been reached on hardware is stated in `../docs/real_robot.md`.
 
 ## Provenance
 

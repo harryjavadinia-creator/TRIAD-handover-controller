@@ -26,14 +26,19 @@ trap 'rm -rf "${RUN_HOME}"' EXIT
 # Giver scenario: TRIAD_GIVER_SCENARIO=<name from dualHandover.scenarios> (default pure_x).
 # The object's initial pose is moved to that scenario's objectStartWorld.
 GIVER_SCENARIO="${TRIAD_GIVER_SCENARIO:-pure_x}"
+# TRIAD_INIT_STATE=HandoverInterceptionController_RobotBScenarioPreview runs Robot B alone (Robot A holds);
+# HandoverInterceptionController_StaticXTouch is the static two-arm rendezvous. Default: the handover.
+INIT_STATE="${TRIAD_INIT_STATE:-HandoverInterceptionController_Initial}"
 OVERLAY="${SCRIPT_DIR}/HandoverInterceptionController.two_robot.yaml"
-if [[ "${GIVER_SCENARIO}" != "pure_x" ]]; then
-  START="$(awk -v s="${GIVER_SCENARIO}:" '$1==s{f=1;next} f&&/objectStartWorld:/{sub(/.*objectStartWorld: */,"");print;exit}' "${OVERLAY}")"
-  [[ -n "${START}" ]] || { echo "unknown giver scenario: ${GIVER_SCENARIO}" >&2; exit 2; }
-  sed -e "s/^  scenario: pure_x/  scenario: ${GIVER_SCENARIO}/" \
-      -e "s/translation: \[0.92, 0.0, 0.55\]/translation: ${START}/" \
-      "${OVERLAY}" > "${RUN_HOME}/overlay.yaml"
-  OVERLAY="${RUN_HOME}/overlay.yaml"
+if [[ "${GIVER_SCENARIO}" != "pure_x" || "${INIT_STATE}" != "HandoverInterceptionController_Initial" ]]; then
+  cp "${OVERLAY}" "${RUN_HOME}/overlay.yaml"; OVERLAY="${RUN_HOME}/overlay.yaml"
+  if [[ "${GIVER_SCENARIO}" != "pure_x" ]]; then
+    START="$(awk -v s="${GIVER_SCENARIO}:" '$1==s{f=1;next} f&&/objectStartWorld:/{sub(/.*objectStartWorld: */,"");print;exit}' "${OVERLAY}")"
+    [[ -n "${START}" ]] || { echo "unknown giver scenario: ${GIVER_SCENARIO}" >&2; exit 2; }
+    sed -i -e "s/^  scenario: pure_x/  scenario: ${GIVER_SCENARIO}/" \
+           -e "s/translation: \[0.92, 0.0, 0.55\]/translation: ${START}/" "${OVERLAY}"
+  fi
+  sed -i -e "s/^init: .*/init: ${INIT_STATE}/" "${OVERLAY}"
 fi
 
 # A scratch controller-module directory that points at the build tree.
@@ -72,7 +77,7 @@ EOF
 mkdir -p "${OUT_DIR}"
 cp "${RUN_HOME}/.config/mc_rtc/controllers/HandoverInterceptionController.yaml" "${OUT_DIR}/controller_override.yaml"
 LOG="${OUT_DIR}/two_robot_sim.log"
-echo "Running ${TICKER} for ${RUN_FOR} s, giver scenario ${GIVER_SCENARIO} (log: ${LOG})"
+echo "Running ${TICKER} for ${RUN_FOR} s, giver scenario ${GIVER_SCENARIO}, init ${INIT_STATE} (log: ${LOG})"
 HOME="${RUN_HOME}" LD_LIBRARY_PATH="${TRIAD_BUILD_DIR}/src:${MC_RTC_INSTALL}/lib:${LD_LIBRARY_PATH:-}" \
   "${TICKER}" -f "${RUN_HOME}/mc_rtc.yaml" --run-for "${RUN_FOR}" ${TRIAD_SYNC_RATIO:+--sync-ratio "${TRIAD_SYNC_RATIO}"} > "${LOG}" 2>&1 || true
 cp "${RUN_HOME}"/*.bin "${OUT_DIR}/" 2>/dev/null || true
@@ -81,4 +86,6 @@ echo "--- Robot B (giver) milestones:"
 grep -E "\[DualGiver" "${LOG}" | head -20 || true
 echo "--- Robot A (receiver) states:"
 grep -E "Starting state|\[Completed\]|\[Failure" "${LOG}" | head -20 || true
-if grep -q "\[Completed\] full plan-once handover completed" "${LOG}"; then echo "RESULT: COMPLETED"; else echo "RESULT: NOT COMPLETED (see log)"; fi
+if [[ "${INIT_STATE}" != "HandoverInterceptionController_Initial" ]]; then
+  if grep -q "\[DualGiver HOLD\]" "${LOG}"; then echo "RESULT: ${INIT_STATE#HandoverInterceptionController_} HELD (Robot B presented and holds; no handover in this state)"; else echo "RESULT: ${INIT_STATE#HandoverInterceptionController_} NOT HELD (see log)"; fi
+elif grep -q "\[Completed\] full plan-once handover completed" "${LOG}"; then echo "RESULT: COMPLETED"; else echo "RESULT: NOT COMPLETED (see log)"; fi
