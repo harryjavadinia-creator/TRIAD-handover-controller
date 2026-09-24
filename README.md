@@ -31,8 +31,12 @@ the work most useful to anyone building on it.
 
 **Two robots.** The July 2026 laboratory setup — Robot A receiving from a second Kinova Gen3 that presents the
 object — is integrated here and verified in simulation (a full robot-to-robot handover completes).
-Hardware runs of July 2026 reached Robot A's committed reach and are inventoried with their logs. There is no
-real-life video; the recordings are screen captures of the simulation. See [`two_robot/`](two_robot/README.md).
+Real-world phone videos now included under [`two_robot/media/`](two_robot/media/) directly document both
+physical Kinova arms operating together in the laboratory handover setup; one clip shows Robot B
+supporting/presenting the bottle while Robot A's Robotiq gripper approaches and closes around the bottle
+neck. The July mc_rtc logs are inventoried separately and, in that log inventory, do not record
+`CaptureTransfer`. See [`two_robot/`](two_robot/README.md) and the
+[physical-video evidence note](two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md).
 
 ## Start here
 
