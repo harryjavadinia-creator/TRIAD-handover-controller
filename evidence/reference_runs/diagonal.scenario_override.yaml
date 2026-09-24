@@ -1,0 +1,13 @@
+StatesLibraries:
+- "/home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states"
+- "/home/harry/TRIAD-handover-controller/build/src/states"
+StatesFiles:
+- "/home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states/data"
+robots:
+  call_object:
+    init_pos:
+      translation: [0.90, 0.00, 0.30]
+object:
+  translation: [0.90, 0.00, 0.30]
+movingObject:
+  simulatedLinearVelocity: [-0.0565685, 0.0, 0.0565685]

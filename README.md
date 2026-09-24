@@ -101,6 +101,24 @@ the state sequence up to `Completed`, the size of the plan set and the committed
 plan (`candidate=… route=… globalJ=…`); [docs/simulation.md](docs/simulation.md)
 lists the reference winners.
 
+**What a run leaves behind.** `results/<run>/` holds the text log, the scenario
+override and the checker outputs; mc_rtc's binary log of the same run is in
+`/tmp/mc-control-HandoverInterceptionController-<date>.bin` (convert it with
+`mc_bin_utils convert --in <bin> --out <name> --format csv --entries t Executor_Main …`).
+The text log lists every certified plan with its seven objective terms, and
+
+```bash
+python3 tools/plot_plan_costs.py results/<run>/longitudinal.log
+```
+
+draws them: every plan against its event lead, the weighted terms of the best
+plan of each event hypothesis, and the ten cheapest plans, with the committed
+plan marked. The reference logs of the four scenarios are in
+[`evidence/reference_runs/`](evidence/reference_runs/) and their figures in
+[docs/results.md](docs/results.md#the-objective-of-every-certified-plan):
+
+![objective terms of every certified plan, longitudinal](docs/figures/plan_costs_longitudinal.png)
+
 **Half speed while watching.** The planner's search runs on a background worker
 in real time and a viewer lengthens it; in `lateral-low` the simulated object
 reaches its travel cap 3.8 s after the search starts, so a slower search fails

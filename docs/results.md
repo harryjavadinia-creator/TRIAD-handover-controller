@@ -23,6 +23,28 @@ predict event
 → execute capture and retreat
 ```
 
+## The objective of every certified plan
+
+`tools/plot_plan_costs.py <scenario.log>` reads the `[GlobalPlanCost]` and
+`[CompletePlanCost]` lines of a run and draws, for that run, every certified
+complete plan against its event lead (panel A), the seven weighted terms of the
+best plan of each event hypothesis (panel B: which term moves when the event
+time moves) and the ten lowest-cost plans (panel C). The committed plan is the
+timing-admissible argmin at the moment the search returns, which is why it is
+not always the lowest point of panel A. The figures below come from the
+reference runs in [`evidence/reference_runs/`](../evidence/reference_runs/).
+
+![plan costs, longitudinal](figures/plan_costs_longitudinal.png)
+![plan costs, near-ground](figures/plan_costs_near-ground.png)
+![plan costs, lateral-low](figures/plan_costs_lateral-low.png)
+![plan costs, diagonal](figures/plan_costs_diagonal.png)
+
+Read across the four: the execution-time term `T` is the largest contribution
+of every plan and barely changes between plans of one hypothesis; the reserve
+terms (`C`, `Q`, `K`) are what separates plans at the same event time; and the
+schedule term grows with the event lead, so later events cost more unless the
+motion terms drop.
+
 ## What does delay compensation change?
 
 ![Recorded position error across the corrected latency sweep](figures/latency.svg)

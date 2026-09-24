@@ -60,3 +60,12 @@ Their source attribution is described in [`../docs/provenance.md`](../docs/prove
 These records are retained for traceability and implementation analysis. Timing
 measurements are machine- and source-state dependent and do not establish a
 WCET bound, hard-real-time guarantee, or formal schedulability result.
+
+## `reference_runs/` — the four scenarios run from a fresh clone
+
+For each scenario (`longitudinal`, `near-ground`, `lateral-low`, `diagonal`): the full controller log
+(`<scenario>.log.xz`, every certified plan with its seven objective terms, the timing admission, the
+commitment and the execution), the scenario override that produced it and the checker output. They were
+produced by `scripts/run_scenario.sh` from the build tree without a viewer; `xz -d` restores the log.
+`tools/plot_plan_costs.py <log>` draws `docs/figures/plan_costs_<scenario>.png` from it. Your own run
+writes the same log under `results/<run>/`.
