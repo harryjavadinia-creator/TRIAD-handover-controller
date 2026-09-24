@@ -1,13 +1,13 @@
 #pragma once
 
-// TRIAD-lite control-aware grasp supervisor: pure, deterministic math.
+// TRIAD supervisory mode control-aware grasp supervisor: pure, deterministic math.
 //
 // This header deliberately depends only on Eigen and the standard library so
 // that every decision rule can be unit-tested offline. It contains no
 // controller state and reads no robot. The controller integration lives in
 // ReceiverV2.cpp behind ReceiverV2 `supervisorMode: control_aware`.
 //
-// Scope (see research/triad_lite/TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md):
+// Scope (see supervisory_mode/TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md):
 //  * the decision variable is a receiving grasp g = (sign, phi) about the
 //    handle axis, no time bank, no route bank, no weighted objective;
 //  * robot authority is evaluated at velocity level against the hard bounds of

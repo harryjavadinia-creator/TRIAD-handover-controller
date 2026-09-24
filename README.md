@@ -1,42 +1,24 @@
 # TRIAD
 
-**An auditable implementation of event-time, grasp and route selection for
-human-to-robot handover**
+**Finite complete-plan selection for predictive human-to-robot handover**
 
-TRIAD is a research controller for a Kinova Gen3 arm with a Robotiq 2F-85
-gripper, implemented in C++ on mc_rtc. It enumerates a bounded finite set of
-(event-time, grasp, route) plans, screens them by copied-state feasibility
-checks, commits once, and executes through acquisition and retreat.
+TRIAD is the receiver-side controller of a Kinova Gen3 arm with a Robotiq
+2F-85 gripper, implemented in C++ on mc_rtc. It predicts where the object
+will be, enumerates a bounded finite set of complete plans over event time,
+grasp and transit route, screens each plan through a modelled feasibility
+chain that reaches through acquisition and retreat, commits to one plan, and
+executes it. The same controller runs in three modes: the finite-plan mode
+(default), a receding mode that re-plans while the object moves, and a
+supervisory mode that adds a sampled interception solver and a control-aware
+grasp supervisor. A second Kinova Gen3 can act as the giver, so a complete
+robot-to-robot handover runs in simulation and on the two physical arms of the
+laboratory.
 
-**What this repository is for.** It is a complete, reproducible instantiation
-with its decision structure written down, its prior art attributed, and its
-performance measured against matched baselines — including where those
-measurements are unfavourable. It is not a claim of a new decision method; the
-structure is prior art, and we say whose below.
-
-**Validation scope: simulation.** The repository contains the controller,
-mathematical formulation, canonical simulation scenarios, verification tools, and
-source/evidence provenance. There is no validated end-to-end physical
-human-to-robot handover campaign.
-
-**The TRIAD-lite mode was measured against baselines, and lost.** *TRIAD-lite* adds
-a predictive interception solver and a directional QP-authority filter to the
-receiver; compared against matched baselines under an identical plant, the full
-variant completed 6/12 scenarios against 11/12 for a plain predictive baseline.
-That comparison is reported in full under [`triad_lite/`](triad_lite/) and
-summarised in [Measured performance](#measured-performance). The TRIAD-lite code
-is part of `src/` (see [ABOUT.md](ABOUT.md)); the default configuration runs the
-finite-plan controller, and the comparison is included because it is the part of
-the work most useful to anyone building on it.
-
-**Two robots.** The July 2026 laboratory setup — Robot A receiving from a second Kinova Gen3 that presents the
-object — is integrated here and verified in simulation (a full robot-to-robot handover completes).
-Real-world phone videos now included under [`two_robot/media/`](two_robot/media/) directly document both
-physical Kinova arms operating together in the laboratory handover setup; one clip shows Robot B
-supporting/presenting the bottle while Robot A's Robotiq gripper approaches and closes around the bottle
-neck. The July mc_rtc logs are inventoried separately and, in that log inventory, do not record
-`CaptureTransfer`. See [`two_robot/`](two_robot/README.md) and the
-[physical-video evidence note](two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md).
+This repository contains the controller and its configuration, the four
+reference scenarios and the perception-latency sweep with their logs, the
+comparison of the supervisory-mode selectors, the two-robot setup with its
+hardware procedure and laboratory videos, verification tools that check every
+reported number against source and data, and the paper.
 
 ## Start here
 
@@ -61,24 +43,20 @@ before any ranking. A final prediction-consistency check precedes a one-time
 commitment; TRIAD then governs task-space references that the mc_rtc task/QP
 layer realises at the joint level.
 
-**How large the search actually is.** For the moving-object bank,
-14 × 32 × 17 = 7616 bounds the generated set before pruning. That figure is an
-upper bound on generation, not a count of ranked alternatives, and two
-mechanisms reduce it:
+**Size of the search.** For the moving-object bank, 14 × 32 × 17 = 7616 bounds
+the generated set before pruning. Candidates are screened by hard feasibility
+before any ranking, and the timing axis is resolved by admission rather than by
+trading against the objective, so the number of plans actually ranked is much
+smaller (198 to 432 complete plans and 10 to 227 timing-admissible ones in the
+four reference scenarios).
 
-That figure bounds generation, and the number of alternatives actually ranked is
-smaller: candidates are screened by hard feasibility before any ranking, and the
-timing axis is resolved by admission rather than by trading against the objective.
-The TRIAD-lite measurements in [Measured performance](#measured-performance)
-quantify how far this goes in that variant.
-
-**Attribution.** This decision structure is not new and we do not present it as
-new. The timing rule is earliest-feasible rendezvous (Croft, Fenton & Benhabib,
-*IEEE T-SMC* 1998; Hujić et al., *T-Mech* 1998), cited in the source header
-itself. The grasp stage is a cheap-ranking → bounded-exact-IK → first-success
-funnel in the manner of Akinola et al. (2021). TRIAD's contribution is the
-instantiation: the feasibility screens, the copied-state discipline, the tie
-conventions, and the evidence trail — not the decision rule.
+**Origins of the decision rule.** The timing rule is earliest-feasible
+rendezvous (Croft, Fenton & Benhabib, *IEEE T-SMC* 1998; Hujić et al.,
+*T-Mech* 1998), cited in the source header itself. The grasp stage is a
+cheap-ranking → bounded-exact-IK → first-success funnel in the manner of
+Akinola et al. (2021). What TRIAD adds is the complete instantiation: the
+feasibility screens, the copied-state discipline, the tie conventions, the
+timing admission and the evidence trail.
 
 The seven objective weights are fixed engineering preferences;
 **no weight-sensitivity result is reported**, and off-line replay found that a
@@ -86,57 +64,59 @@ two-level lexicographic rule (completion → clearance → effort) captures the
 useful part. The [full formulation](docs/mathematics.md) covers prediction,
 local IK, objective terms, timing, ties, and commitment.
 
+## Modes
+
+| mode | configuration | what it does |
+| --- | --- | --- |
+| finite-plan (default) | `receiverArchitecture: v1_frozen_prereach` | one frozen planning state, the full bank, one commitment, execution through acquisition and retreat |
+| receding | `receiverArchitecture: v2_receding` | re-plans against a robot-independent giver while the object moves |
+| supervisory | `v2_receding` + `supervisorMode: control_aware` | sampled earliest-feasible interception over a 530-hypothesis grasp family, with a directional QP-authority supervisor |
+
+Acquisition closes on the object once it is at rest (`requireObjectStopped`,
+4 mm/s) in every mode; the predictive selectors reach the grasp pose before the
+giver stops (1.5–3 mm, up to 1.6 s early) and then wait for that gate.
+
 ## Measured performance
 
-**Scope of this section.** These results are from **TRIAD-lite**, the mode that
-adds a predictive interception solver and a directional QP-authority filter.
-They are *not* a measurement of the default finite-plan controller. The
-TRIAD-lite sources live in `src/` (`ControlAwareGraspSupervisor.h`,
-`PredictiveInterception.h`, `ReceivingGraspFamily.h`, `Gen3WristReachabilityMap.h`)
-and are selected with `receiverArchitecture: v2_receding` plus
-`supervisorMode: control_aware`; the two headers the claims rest on are also kept
-as [`triad_lite/src/`](triad_lite/src/), with the phase reports and both campaigns,
-so every figure here can be checked against source and data.
+**Finite-plan mode.** The four reference scenarios (longitudinal, near-ground,
+lateral-low, diagonal) complete with recorded event time, grasp, route and
+objective values; the perception-latency sweep shows completion up to 0.30 s
+of latency. See [Results](docs/results.md) and [Experiments](docs/experiments.md).
 
-Four selectors compared over four scenarios x three repeats, identical plant,
-identical grasp pool, one evaluator applied to every run:
+**Supervisory mode.** Four selectors were compared over four scenarios × three
+repeats, identical plant, identical grasp pool, one evaluator applied to every
+run:
 
 | selector | description | completions |
 | --- | --- | --- |
-| B0 | reactive baseline | 5/12 |
-| **B1** | **plain predictive baseline** | **11/12** |
-| B2 | capability tie-break | 10/12 |
-| **FULL** | **joint selection with the authority filter** | **6/12** |
+| B0 | reactive tracker | 5/12 |
+| B1 | plain predictive interception | 11/12 |
+| B2 | predictive with a capability tie-break | 10/12 |
+| FULL | predictive with the authority supervisor as a hard filter | 6/12 |
 
-**The proposed variant is the second-worst of the four.** Used as a hard filter it
-makes selection start-state dependent and produces adopt/abort cycling.
+The plain predictive selector completes the most scenarios. Used as a hard
+filter the authority supervisor makes selection start-state dependent and
+produces adopt/abort cycling, so B1 is the configuration to build on. A first
+campaign had reported FULL 12/12 and B1 9/12; that came from a
+predictive-rollout defect on replans from a moving arm, which inflated the
+path-demand signal the supervisor consumes. Both campaigns are included,
+[`supervisory_mode/evidence/phaseF_sim_prefix`](supervisory_mode/evidence/phaseF_sim_prefix)
+and [`supervisory_mode/evidence/phaseF_sim`](supervisory_mode/evidence/phaseF_sim),
+so the sensitivity is auditable. Supporting analyses:
+[grasp family and funnel](supervisory_mode/PHASE_B_GRASP_FAMILY_AND_FUNNEL.md),
+[interception solver](supervisory_mode/PHASE_C_INTERCEPTION_SOLVER.md),
+[authority demands](supervisory_mode/PHASE_D_AUTHORITY_DEMANDS.md),
+[receding execution](supervisory_mode/PHASE_E_RECEDING_EXECUTION.md),
+[supervisor audit](supervisory_mode/TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md).
 
-A first campaign reported FULL 12/12, B1 9/12. That result came from a
-predictive-rollout defect on replans from a moving arm, which inflated exactly the
-path-demand signal the authority filter consumes. Both campaigns are included —
-[`triad_lite/evidence/phaseF_sim_prefix`](triad_lite/evidence/phaseF_sim_prefix)
-and [`triad_lite/evidence/phaseF_sim`](triad_lite/evidence/phaseF_sim) — so the
-sensitivity is auditable.
-
-**Acquisition requires a stationary object (TRIAD-lite).** `requireObjectStopped`
-defaults to `true`. The predictive variants meet the grasp pose before the giver
-stops (1.5-3 mm, up to 1.6 s early), but acquisition itself is gated on the object
-having stopped; the variant does not close on a moving object.
-
-**Timing reduces to earliest-feasible (TRIAD-lite).** The τ axis is an ascending
-first-feasible scan and the selector is `selectEarliestInterception`: admissible →
-within a tie band of the earliest → tie-breaks → final order by τ. Below
-`restLinearSpeed = 0.004` m/s the τ axis emits a single event
-(`triad_lite/src/PredictiveInterception.h`), so with
-`requireObjectStopped = true` the operative event-time axis is of size 1. Grasp
-and route break ties among plans already near the earliest feasible one; they do
-not trade against it.
-
-Supporting analyses: [Phase B](triad_lite/PHASE_B_GRASP_FAMILY_AND_FUNNEL.md),
-[C](triad_lite/PHASE_C_INTERCEPTION_SOLVER.md),
-[D](triad_lite/PHASE_D_AUTHORITY_DEMANDS.md),
-[E](triad_lite/PHASE_E_RECEDING_EXECUTION.md),
-[supervisor audit](triad_lite/TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md).
+**Two robots.** With a second Kinova Gen3 as the giver, the full handover
+completes in simulation (Robot B presents, Robot A observes, plans, reaches,
+captures and retreats). Phone videos in [`two_robot/media/`](two_robot/media/)
+show both physical arms in the laboratory setup, Robot B holding the bottle
+while Robot A's gripper approaches and closes on its neck. The July mc_rtc logs
+are inventoried separately and do not record `CaptureTransfer`; see
+[`two_robot/`](two_robot/README.md) and the
+[video evidence note](two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md).
 
 ## Evidence
 
@@ -214,42 +194,39 @@ follow [Real robot](docs/real_robot.md) and
 [`two_robot/README.md`](two_robot/README.md); the laboratory videos of the two
 physical arms are in [`two_robot/media/`](two_robot/media/).
 
-## Scope and limitations
+## Scope
 
-**No control-performance gap is established.** For TRIAD-lite the measured
-comparison does not show the joint selection outperforming a plain predictive
-baseline, and the authority filter's benefit is unsupported. For the default
-finite-plan controller, no equivalent baseline comparison has been run at all — its
-scenarios are reference runs, not a controlled comparison against an alternative
-method. Read the contribution as a formulation, an implementation and an evidence
-trail, not as a demonstrated control improvement. Anyone building on the
-predictive variant should treat B1 (plain predictive) as the baseline to beat,
-because on this evidence it is.
+The reference scenarios and the selector comparison are simulation results.
+The physical work is the two-robot setup and its videos; there is no validated
+end-to-end physical human-to-robot handover campaign in this repository, and
+physical execution is disabled in the tracked configuration.
 
 The method uses deterministic prediction, a finite engineering discretization,
 local numerical IK, and sampled object/ground proxy checks. No bank-resolution
 convergence study, continuous collision proof, arbitrary-clutter perception,
 human-body model, comprehensive self-collision checking, or post-commit global
-replanning is established.
+replanning is included.
 
-The finite search is executed by a background worker. Ordinary result polling
-is nonblocking, while shutdown/reset paths may cancel and join the worker; no
-WCET or formal schedulability guarantee is claimed. Residual live
-fingertip-frame reads affect aperture checks, so complete copied-state purity or
-formal race freedom is not established. See [Architecture](docs/architecture.md)
-and [Hardware status](docs/real_robot.md).
+The finite search runs on a background worker. Ordinary result polling is
+nonblocking, while shutdown/reset paths may cancel and join the worker; no
+WCET or formal schedulability guarantee is given. Residual live
+fingertip-frame reads affect aperture checks, so complete copied-state purity
+or formal race freedom is not established. See
+[Architecture](docs/architecture.md) and [Real robot](docs/real_robot.md).
 
 ## Repository contents
 
 | Directory | Contents |
 | --- | --- |
-| `src/` | V1 controller, finite selectors and execution states; the V2 receding receiver (`ReceiverV2.cpp`), the independent giver model and the TRIAD-lite supervisor and interception solver |
+| `src/` | The controller: finite-plan selectors and execution states, the receding receiver (`ReceiverV2.cpp`), the robot-independent giver model, the supervisory-mode interception solver and grasp supervisor, the two-robot giver coordinator |
 | `etc/`, `configs/` | Controller and simulation configuration |
 | `call_object_description/` | Handover object model |
 | `scripts/`, `tools/` | Reproduction, verification, and figure generation |
 | `docs/` | Method, setup, results, provenance, and technical notes |
 | `evidence/` | Evidence records and integrity manifests |
-| `triad_lite/` | TRIAD-lite variant: phase reports, the two headers the claims rest on, tooling, and the pre/post-fix campaigns |
+| `supervisory_mode/` | Supervisory mode: phase reports, the two headers the results rest on, tooling, and both selector campaigns |
+| `two_robot/` | Robot-to-robot handover: giver configuration, hardware procedure, receiver hardware overlay, log inventory, videos |
+| `paper/` | The paper and the script that generates its figures from the repository data |
 
 TRIAD is the method name; `HandoverInterceptionController`, `call_handover`,
 and `call_object` are implementation identifiers used by the build and logs.

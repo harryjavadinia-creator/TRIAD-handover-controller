@@ -10,7 +10,7 @@ reported number, a robot-to-robot test setup, and the paper that describes it.
   state, a bounded bank of complete plans over event time, grasp and route, modelled feasibility through
   acquisition and retreat, timing admission at selection, one commitment.
 - The receding receiver (`receiverArchitecture: v2_receding`) with a robot-independent scripted giver.
-- The TRIAD-lite supervisor (`supervisorMode: control_aware`): a sampled earliest-feasible rendezvous solver
+- The supervisory mode (`supervisorMode: control_aware`): a sampled earliest-feasible rendezvous solver
   over a 530-hypothesis grasp family and a directional QP-authority filter.
 - The two-robot giver coordinator and its two commissioning states, inactive unless `dualHandover.enabled: true`.
 
@@ -22,15 +22,16 @@ Acquisition requires the object to be at rest (`requireObjectStopped: true`, 4 m
   `.github/workflows/source-checks.yml` pass.
 - Four reference scenarios, a perception-latency sweep and an exact-serial performance measurement
   (`docs/results.md`, `docs/performance.md`).
-- A matched comparison of the TRIAD-lite selectors (`triad_lite/`): FULL 6/12 against 11/12 for a plain
-  predictive baseline.
+- A matched comparison of the supervisory-mode selectors (`supervisory_mode/`): the plain predictive
+  selector completes 11/12 scenarios, the authority supervisor used as a hard filter 6/12.
 - The two-robot handover completes in simulation (`two_robot/results/sim_2026-09-24/TIMELINE.md`).
 
-## Not claimed
+## Scope
 
-- No new decision method: the decision structure is attributed to prior work in `docs/related_work.md` and
-  in the paper.
-- No control-performance gap, no hardware-validated handover, no acquisition of a moving object.
+- The decision structure builds on earliest-feasible rendezvous and grasp-funnel prior work, attributed
+  in `docs/related_work.md` and in the paper.
+- The scenario results are simulation; the physical work is the two-robot setup and its videos.
+- Acquisition waits for the object to be at rest.
 
 ## Paper and hardware
 

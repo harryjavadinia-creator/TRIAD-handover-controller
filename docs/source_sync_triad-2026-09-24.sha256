@@ -2,7 +2,7 @@
 #
 # The implementation files listed below are the controller sources of TRIAD: the
 # V1 finite-plan controller, the V2 receding receiver with its
-# robot-independent giver, the TRIAD-lite supervisor and interception solver, the
+# robot-independent giver, the supervisory-mode interception solver and grasp supervisor, the
 # repair-branch fixes, and the two-robot giver coordinator with its two states.
 #
 # The frozen V1 background-planning state (f56add3) is still pinned by
@@ -15,17 +15,17 @@
 #   sha256sum -c docs/source_sync_triad-2026-09-24.sha256
 #
 # Columns: <sha256>  <path>
-d891c121feda8d4620491f5bd71b81d638ecf93e1e0e8a0ce0cf8e9c936202f3  etc/HandoverInterceptionController.in.yaml
+75755ae79de135f7febc2a2793391f9aa6f02550bbc607d5ac69de4d43bd361d  etc/HandoverInterceptionController.in.yaml
 c0162d5eb76cbec015b66789e7d303adc52b4f3b7dc94ad66ecbbcc18e84e4a9  src/HandoverInterceptionController.cpp
-191e064d4deda73f57583865c6282f3f37d6d3f3ecb3f1161cc757b611d8d402  src/HandoverInterceptionController.h
-32d5c2f5960cd55585fbc50cd52f6e5cf325c9735f24c443dd302817d60a4d02  src/ReceiverV2.cpp
+8bf9e6d3b36665e598c6924f65fc3be835916019ee1c9e2a3d7b74ad46b46e10  src/HandoverInterceptionController.h
+f369edbf407863ae3c70b4994c2057068527af7fc31dec95230b25f3e07c965e  src/ReceiverV2.cpp
 2533c4d9204e23cca80c480027b1ca5e64264ca804e25a40e65aa9855a73da02  src/DualGiverCoordinator.cpp
 48aecfbb05e68894ded04fc45caa69df0486ea2fa3c9fab15b1f42ad3d3f58fd  src/DualGiverCoordinator.h
 646ef6209f569ac522f94b5a32395e72ee70ef4581ed3ded4c880fa9492326f6  src/IndependentGiverModel.h
-f8e2b615d85c033fab32be419c45dc209e09143dd1549f1564ee0e6dbbf12cc0  src/ControlAwareGraspSupervisor.h
-89e9ee4aec646b070d1e9879e9f23551f485905a924e7af4fb4e5b67901a6ceb  src/PredictiveInterception.h
-69bb253ceb36e6b90567e3b66c60f4ae950816f6d30864106a61767f8b68de0f  src/ReceivingGraspFamily.h
-6f269b9297671be4360fa079b6b697afc8791c259757587008e02b4c7b7ea1eb  src/Gen3WristReachabilityMap.h
+2194e8cdf790816eec3cfc7aefe8bc8cf55b502b8a4f2e453272cb6257c6bced  src/ControlAwareGraspSupervisor.h
+a362340c39fc491edaa1c17891d95c30a72c3da2ae9ae03c1ae35b575feac5d4  src/PredictiveInterception.h
+318eb90a3b24b29570930108b9ad071e13612b149e695595ad8f385d5e65efdb  src/ReceivingGraspFamily.h
+db5350f798fd2cf1715fdbc1b773e3bbbf376f35294698b24e912e4870cb2309  src/Gen3WristReachabilityMap.h
 d0bd4f047a1683a3dd4133f7f2a7ac85f383db41c6eafc365a064bd0404673a0  src/BoundedEventLeadSchedule.h
 b83f51ea72194271b00b75476351f5af7187ff68a7477e962962ac958545c991  src/FinitePlanSelector.h
 c259f2fff0f73ff2be1cbbb193a9afe28f17599281ee3d2f5f321e20d8cba58f  src/FiniteEventPlanSelector.h

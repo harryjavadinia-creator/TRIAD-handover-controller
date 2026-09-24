@@ -107,7 +107,7 @@ G0 → G_mech → G_R (score ≥ −tol) → G_K (shortlist) → exact controlle
 
 **What the convergence data show.** Admissibility converges by N_θ ≈ 13, and the median clearance by N_θ ≈ 26. **The worst case has not converged** in either θ or s. A finer family (N_θ = 106) was not run, so 53 is the derived resolution floor, not a demonstrated convergence point. Axial sampling matters in some generations (a 28 mm worst-case loss when s ≡ 0).
 
-## 5. In-situ receiving family with K = 40 (descriptive only; execution = TRIAD-lite reactive tracker)
+## 5. In-situ receiving family with K = 40 (descriptive only; execution = TRIAD supervisory mode reactive tracker)
 
 `evidence/phaseB_sim_k40/summary.txt`:
 - lateral-low: acquisition admitted and frozen;

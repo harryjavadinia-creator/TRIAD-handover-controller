@@ -15,7 +15,7 @@ No novelty is claimed. The architecture instantiates the Croft–Hujić earliest
 
 - **Repo:** `/home/harry/TRIAD_SCIENTIFIC_AUDIT`
 - **Branch:** `research/triad-control-aware-supervisor` (not pushed)
-- **Starting HEAD:** `04e9efcb0b3a066f70b22ecf5cb195e7da604696` (TRIAD-lite)
+- **Starting HEAD:** `04e9efcb0b3a066f70b22ecf5cb195e7da604696` (TRIAD supervisory mode)
 - **Untracked by instruction:** `research/triad_control_shot/`
 
 | Phase | Commit | Document |
@@ -140,7 +140,7 @@ Hysteresis is the unchanged `updateGraspSelector` with a 0.3 s dwell.
   - logging.
 - `etc/HandoverInterceptionController.in.yaml`: `graspFamily`, `receivingFamily`, `reachabilityFunnel`, `interception`, `variant` (defaults keep 04e9efc behaviour).
 - `tools/test_receiving_grasp_family.cpp`, `tools/test_predictive_interception.cpp`, `tools/run_control_aware_supervisor_unit_tests.sh`.
-- `research/triad_lite/tools/`:
+- `supervisory_mode/tools/`:
   - `build_gen3_wrist_reachability.py`, `characterize_reachability_surrogate.py`, `funnel_characterization.py`;
   - `interception_characterization.py`, `interception_latency.py`, `authority_characterization.py`;
   - `phaseF_outcomes.py`, `demand_vs_execution.py`.

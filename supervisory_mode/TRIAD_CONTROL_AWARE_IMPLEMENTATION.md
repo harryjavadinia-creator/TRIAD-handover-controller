@@ -1,6 +1,6 @@
 # TRIAD_CONTROL_AWARE_IMPLEMENTATION
 
-TRIAD-lite: TRIAD as a **control-aware supervisory grasp/entry selector**, implemented behind a feature flag. Audit and verdict (IMPLEMENT WITH MODIFICATIONS): [TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md](TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md).
+TRIAD supervisory mode: TRIAD as a **control-aware supervisory grasp/entry selector**, implemented behind a feature flag. Audit and verdict (IMPLEMENT WITH MODIFICATIONS): [TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md](TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md).
 
 Branch `research/triad-control-aware-supervisor`, created from `research/triad-continuation-control` @ `0e26083`. **Not validated for handover outcome.**
 
@@ -10,10 +10,10 @@ Branch `research/triad-control-aware-supervisor`, created from `research/triad-c
 
 ```yaml
 supervisorMode: bank_search   # default: TRIAD V2 unchanged
-# supervisorMode: control_aware   # TRIAD-lite
+# supervisorMode: control_aware   # TRIAD supervisory mode
 ```
 
-TRIAD-lite also requires `receiverArchitecture: v2_receding` (run with `TRIAD_RECEIVER_MODE=v2`). Override used in the simulation evidence: `evidence/runs_sim_20260916/overrides/control_aware.yaml`.
+TRIAD supervisory mode also requires `receiverArchitecture: v2_receding` (run with `TRIAD_RECEIVER_MODE=v2`). Override used in the simulation evidence: `evidence/runs_sim_20260916/overrides/control_aware.yaml`.
 
 ## 2. Files changed
 
@@ -25,7 +25,7 @@ TRIAD-lite also requires `receiverArchitecture: v2_receding` (run with `TRIAD_RE
 | `etc/HandoverInterceptionController.in.yaml` | `supervisorMode` and `controlAware:` block (default `bank_search`) |
 | `tools/test_control_aware_grasp_supervisor.cpp`, `tools/run_control_aware_supervisor_unit_tests.sh` | **new** unit tests |
 | `.github/workflows/source-checks.yml` | installs `libeigen3-dev`; runs the new unit tests |
-| `research/triad_lite/` | audit, this report, offline check (`tools/authority_offline.py` + `evidence/authority_offline.json`), log summarizer, simulation evidence |
+| `supervisory_mode/` | audit, this report, offline check (`tools/authority_offline.py` + `evidence/authority_offline.json`), log summarizer, simulation evidence |
 
 ## 3. Exact equations implemented
 
@@ -148,7 +148,7 @@ Controller installed temporarily into `~/mc_rtc_ws/install`. The prior install w
 
 Campaign 1, `evidence/runs_sim_20260916`, default semantics:
 
-| scenario | V2 bank_search | TRIAD-lite control_aware | TRIAD-lite supervisor events |
+| scenario | V2 bank_search | TRIAD supervisory mode control_aware | TRIAD supervisory mode supervisor events |
 |---|---|---|---|
 | longitudinal | FAIL (no certified plan in window; 11 full searches, 362 recertifications) | FAIL (same reason) | 2 initial, 1 switch, 2 abort-to-hold |
 | near-ground | **completed**, commit t = 17.34 s | **completed**, commit t = 15.68 s | 1 initial, 18 switches, admit, freeze |
@@ -206,9 +206,9 @@ Authority rejection example (near-ground): `axisP_side_68deg`, clearance 79.4 mm
 ```bash
 tools/run_control_aware_supervisor_unit_tests.sh
 cmake -S . -B build -DCMAKE_INSTALL_PREFIX=$HOME/mc_rtc_ws/install && cmake --build build -j && cmake --install build   # back up the install first
-research/triad_lite/evidence/runs_sim_20260916/campaign.sh research/triad_lite/evidence/<new_dir>
-python3 research/triad_lite/tools/summarize_triad_lite_logs.py <logs...>
-python3 research/triad_lite/tools/authority_offline.py
+supervisory_mode/evidence/runs_sim_20260916/campaign.sh supervisory_mode/evidence/<new_dir>
+python3 supervisory_mode/tools/summarize_supervisory_mode_logs.py <logs...>
+python3 supervisory_mode/tools/authority_offline.py
 ```
 
 ## 9. Classification
@@ -224,7 +224,7 @@ python3 research/triad_lite/tools/authority_offline.py
 **New implementation.**
 - An authority test built from the *exact* hard bounds of this controller's mc_rtc Tasks kinematics constraint, in the direction of the declared acquisition demand, per receiving grasp.
 - A layered, fully logged rejection taxonomy (geometry / IK / joint limits / collision / security distance / clearance / authority).
-- A feature-flagged TRIAD-lite supervisor that replaces the (τ, g, r) bank search with continuous tracking and measured admission, reusing the existing certificate and commit.
+- A feature-flagged TRIAD supervisory mode supervisor that replaces the (τ, g, r) bank search with continuous tracking and measured admission, reusing the existing certificate and commit.
 
 **Unproven scientific hypothesis.**
 - **Hypothesis.** Among grasps passing identical geometric and robot feasibility, selecting by constrained directional authority improves closed-loop acquisition completion and/or time over reachability-only selection. The difference must persist after the insertion speed is tuned competently.

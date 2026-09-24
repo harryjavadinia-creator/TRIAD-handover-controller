@@ -2065,7 +2065,7 @@ private:
     RecertifyActive,
     TerminalCertify,
     CertifySelected,
-    // TRIAD-lite (supervisorMode: control_aware): evaluate the receiving grasp
+    // TRIAD supervisory mode (supervisorMode: control_aware): evaluate the receiving grasp
     // family from the frozen current state and the current object estimate.
     ControlAwareSelect
   };
@@ -2079,7 +2079,7 @@ private:
     TerminalTrack,
     Committed,
     Failed,
-    // TRIAD-lite: continuously track the selected object-relative standoff;
+    // TRIAD supervisory mode: continuously track the selected object-relative standoff;
     // acquisition entry is a measured gate, not a searched event time.
     ControlAwareTrack
   };
@@ -2167,7 +2167,7 @@ private:
     std::vector<double> postureTarget;
   };
 
-  /** TRIAD-lite: layered evaluation of one receiving grasp (worker output). */
+  /** TRIAD supervisory mode: layered evaluation of one receiving grasp (worker output). */
   struct ControlAwareCandidateEvalV2
   {
     call_handover::GraspCandidateRecord record;
@@ -2412,10 +2412,10 @@ private:
   void filterHypothesisFreshnessV2(const PendingJobV2 & pending, double now);
   double independentGiverSpeedForLogV2(double now) const;
 
-  // ---------------------- TRIAD-lite control-aware supervisor ---------------
+  // ---------------------- TRIAD supervisory mode control-aware supervisor ---------------
   // Feature-flagged by ReceiverV2 `supervisorMode: control_aware` (default
   // `bank_search` keeps TRIAD V2 unchanged). See
-  // research/triad_lite/TRIAD_CONTROL_AWARE_IMPLEMENTATION.md.
+  // supervisory_mode/TRIAD_CONTROL_AWARE_IMPLEMENTATION.md.
   struct ControlAwareParametersV2
   {
     int graspsPerSign = 32;

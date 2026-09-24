@@ -169,7 +169,7 @@ for name, (p0, v) in SCEN.items():
                     rec[f"res_{vobj}_{vins}"] = residual(J, lo, hi, y)
             rows.append(rec)
     out[name] = rows
-json.dump(out, open("research/triad_lite/evidence/authority_offline.json", "w"), indent=1)
+json.dump(out, open("supervisory_mode/evidence/authority_offline.json", "w"), indent=1)
 
 def q(a, p): return float(np.percentile(a, p)) if len(a) else float("nan")
 for name, rows in out.items():

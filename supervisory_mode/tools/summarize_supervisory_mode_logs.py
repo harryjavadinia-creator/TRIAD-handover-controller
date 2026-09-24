@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Summarize TRIAD-lite (supervisorMode: control_aware) and TRIAD V2 bank-search logs.
+"""Summarize TRIAD supervisory mode (supervisorMode: control_aware) and TRIAD V2 bank-search logs.
 
 Sanity characterization only: does the directional authority layer discriminate
 among grasps that pass geometry, robot and clearance layers? No outcome claim.
 
-usage: summarize_triad_lite_logs.py LOG [LOG ...]
+usage: summarize_supervisory_mode_logs.py LOG [LOG ...]
 """
 import lzma, re, statistics, sys
 from collections import Counter

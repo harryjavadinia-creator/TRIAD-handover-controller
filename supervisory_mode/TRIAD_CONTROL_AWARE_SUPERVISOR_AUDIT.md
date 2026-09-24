@@ -62,7 +62,7 @@ So **g = (σ, φ)**. The proposed axial coordinate s is not currently a variable
 
 ### F1 — "The authority test is just manipulability." **Partly falsified.** `MEASURED`
 
-Offline check (`research/triad_lite/tools/authority_offline.py`, real URDF, exact 𝔅(q) above with ξ = 0.5, IK from the ready posture, 64 φ per sign, required twist = object velocity + insertion along −y_M). Correlation between the directional reserve along the object-motion direction and σ_min(J_lin), across IK-feasible grasps: **+0.72 near-ground, +0.95 longitudinal, +0.31 lateral-low, +0.23 diagonal**. In two geometries an isotropic index would rank grasps almost identically; in the other two it would not. The directional constrained test carries information manipulability does not — but not everywhere.
+Offline check (`supervisory_mode/tools/authority_offline.py`, real URDF, exact 𝔅(q) above with ξ = 0.5, IK from the ready posture, 64 φ per sign, required twist = object velocity + insertion along −y_M). Correlation between the directional reserve along the object-motion direction and σ_min(J_lin), across IK-feasible grasps: **+0.72 near-ground, +0.95 longitudinal, +0.31 lateral-low, +0.23 diagonal**. In two geometries an isotropic index would rank grasps almost identically; in the other two it would not. The directional constrained test carries information manipulability does not — but not everywhere.
 
 ### F2 — "The test never binds inside the CALL envelope." **Falsified (it binds), with an important qualification.** `MEASURED`
 

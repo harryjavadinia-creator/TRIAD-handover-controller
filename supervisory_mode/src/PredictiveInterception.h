@@ -1,8 +1,8 @@
 #pragma once
 
-// TRIAD-lite predictive interception: pure math (Eigen + std only).
+// TRIAD supervisory mode predictive interception: pure math (Eigen + std only).
 //
-// Formulation: research/triad_lite/TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md sec. 3.
+// Formulation: supervisory_mode/TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md sec. 3.
 // Literature: earliest feasible rendezvous on the predicted object trajectory with
 // the robot travel time bounded by the target arrival time (Croft, Fenton,
 // Benhabib, IEEE TSMC 1998; Hujic et al., IEEE/ASME T-Mech 1998), replanned with
@@ -179,7 +179,7 @@ inline RendezvousReferenceState rendezvousReference(double t, double t0, double 
 // Phase-specific authority demands (tool-body twist, world frame, [w; v])
 // ---------------------------------------------------------------------------
 
-/** TRIAD-lite (04e9efc) demand: follow the rigid object at the body origin and
+/** TRIAD supervisory mode (04e9efc) demand: follow the rigid object at the body origin and
  * insert along -y_M at the insertion speed. */
 inline Eigen::Matrix<double, 6, 1> followInsertTwist(const Eigen::Vector3d & vO, const Eigen::Vector3d & wO,
                                                      const Eigen::Vector3d & pBody, const Eigen::Vector3d & pObject,

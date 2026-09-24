@@ -645,7 +645,7 @@ configs:
     characterizationRestDwell: 1.0
     # Phase 2B preview/runtime parity traces (logging only, default off).
     parityTrace: false
-    # TRIAD-lite supervisor selection (research/triad_lite). bank_search
+    # TRIAD supervisory mode supervisor selection (supervisory_mode/). bank_search
     # (default) keeps TRIAD V2 unchanged. control_aware replaces the
     # (tau, grasp, route) bank search with a layered receiving-grasp selector
     # (geometry -> robot -> clearance floor -> directional QP velocity
@@ -673,14 +673,14 @@ configs:
       requireObjectStopped: true     # downstream MovePregrasp freezes its goal at commit
       admissionRequiresCurrentAuthority: true
       reselectWhileTracking: true
-      trustIncumbentReevaluation: true   # false was tested and failed 3/4 sim runs on the runtime clearance reserve (research/triad_lite)
+      trustIncumbentReevaluation: true   # false was tested and failed 3/4 sim runs on the runtime clearance reserve (supervisory_mode/)
       clearanceTieBand: 0.005
       reserveTieBand: 0.10
       reserveSaturation: 2.0
       # Phase B receiving-grasp front end. legacy_ring (default) keeps the
       # inherited (sigma, phi) ring; receiving uses the mechanically derived
       # (sigma, theta, s) family with necessary-condition screens and the Gen3
-      # wrist-reachability funnel (research/triad_lite).
+      # wrist-reachability funnel (supervisory_mode/).
       graspFamily: legacy_ring
       receivingFamily:
         thetaSamples: 53             # numerical; Phase 4 pose-change floor ceil(2pi/6.8deg)
@@ -691,7 +691,7 @@ configs:
       reachabilityFunnel:
         enabled: true
         shortlistSize: 40            # numerical K: smallest tested K with recall=1 and best-clearance grasp retained in all 32 characterized generations (per-scenario max 33); evidence/phaseB_sim/funnel_characterization.txt
-        pruneTolerance: 0.02         # m; deepest surrogate false negative 12.9 mm (research/triad_lite)
+        pruneTolerance: 0.02         # m; deepest surrogate false negative 12.9 mm (supervisory_mode/)
         thetaBinWidthDeg: 13.6       # numerical; 2 x the 6.8 deg resolution floor
         characterizeAll: false       # evaluate every mechanical hypothesis exactly (characterization only)
       # Phase C predictive interception solver (TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md sec. 3).

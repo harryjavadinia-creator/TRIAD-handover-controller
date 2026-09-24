@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Offline unit tests for the TRIAD-lite control-aware grasp supervisor math.
+# Offline unit tests for the TRIAD supervisory mode control-aware grasp supervisor math.
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -1,4 +1,4 @@
-// Deterministic unit tests for src/PredictiveInterception.h (TRIAD-lite Phase C).
+// Deterministic unit tests for src/PredictiveInterception.h (TRIAD supervisory mode Phase C).
 // Build: tools/run_control_aware_supervisor_unit_tests.sh
 
 #include "../src/PredictiveInterception.h"
@@ -268,7 +268,7 @@ void testSelectionAndHysteresis()
 void testAuthorityDemands()
 {
   // Same y -> identical authority (the solver is unchanged): at rest the
-  // TRIAD-lite follow_insert demand equals the Phase D insertion demand.
+  // TRIAD supervisory mode follow_insert demand equals the Phase D insertion demand.
   const Eigen::Vector3d yM = Eigen::Vector3d(0.2, -0.9, 0.3).normalized();
   const Eigen::Vector3d pB(0.5, 0.1, 0.4);
   const Eigen::Vector3d pO(0.6, 0.0, 0.3);

@@ -2289,7 +2289,7 @@ void HandoverInterceptionController::logParityRuntimeV2()
 }
 
 // =============================================================================
-// TRIAD-lite: control-aware supervisory grasp selection
+// TRIAD supervisory mode: control-aware supervisory grasp selection
 // (ReceiverV2 supervisorMode: control_aware; default bank_search is unchanged)
 // =============================================================================
 //
@@ -2843,7 +2843,7 @@ void HandoverInterceptionController::evaluateControlAwareExactLayersV2(
   // Interception mode: insertion is the only demand at the standoff/capture
   // configurations because acquisition starts with the object at rest (sec. 3.7,
   // interface limitation); following and synchronization are evaluated on the
-  // rollout. Otherwise the TRIAD-lite follow(+insert) demands are unchanged.
+  // rollout. Otherwise the TRIAD supervisory mode follow(+insert) demands are unchanged.
   const bool phaseDemands = v2CaParams_.interceptionMode != "disabled";
   eval.standoffAuthority = controlAwareAuthorityAtPreviewV2(
       standoffMbc, phaseDemands ? insertionDemandV2(c.W_T_M_pre)
@@ -3274,7 +3274,7 @@ void HandoverInterceptionController::handleControlAwareSelectionV2(const Pending
   // trustIncumbentReevaluation (default true): a re-evaluation of the executing
   // incumbent from the moving arm state may remove it. Distrusting it was tested
   // in simulation and failed 3/4 runs on the runtime clearance reserve
-  // (research/triad_lite/TRIAD_CONTROL_AWARE_IMPLEMENTATION.md).
+  // (supervisory_mode/TRIAD_CONTROL_AWARE_IMPLEMENTATION.md).
   const bool trustIncumbent = v2Phase_ != ReceiverPhaseV2::ControlAwareTrack || v2CaParams_.trustIncumbentReevaluation;
   const auto decision = call_handover::updateGraspSelector(v2CaSelector_, records, outcome, now, v2CaParams_.switchDwell,
                                                            trustIncumbent);
@@ -3631,8 +3631,8 @@ int HandoverInterceptionController::stepControlAwareTrackV2(double now, bool wor
 }
 
 // =============================================================================
-// TRIAD-lite Phase C: predictive interception solver (worker thread)
-// research/triad_lite/TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md sec. 3.3-3.5
+// TRIAD supervisory mode Phase C: predictive interception solver (worker thread)
+// supervisory_mode/TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md sec. 3.3-3.5
 // =============================================================================
 
 sva::PTransformd HandoverInterceptionController::controlAwareGraspPoseAtV2(
@@ -4252,7 +4252,7 @@ void HandoverInterceptionController::logInterceptionResultV2(const PendingJobV2 
 }
 
 // =============================================================================
-// TRIAD-lite Phase E: receding predictive interception execution (control thread)
+// TRIAD supervisory mode Phase E: receding predictive interception execution (control thread)
 // predict -> intercept -> move concurrently -> update -> correct
 // =============================================================================
 

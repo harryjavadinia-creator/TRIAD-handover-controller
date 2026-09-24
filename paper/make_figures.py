@@ -7,7 +7,7 @@ Nothing is drawn by hand: the grasp and route banks follow the construction rule
 src/HandoverInterceptionController.cpp (buildCandidate, transitRouteBank) with the values of
 etc/HandoverInterceptionController.in.yaml; the prediction figure uses the quintic stop of
 docs/mathematics.md; the funnel, cost, latency, mode and two-robot figures read evidence/,
-triad_lite/evidence/ and two_robot/results/.
+supervisory_mode/evidence/ and two_robot/results/.
 """
 import os, re, json, csv
 import numpy as np
@@ -220,7 +220,7 @@ save(fig, "fig_latency")
 
 # ------------------------------------------------------------------ 8. selector modes
 tab = {}
-for line in open(os.path.join(ROOT, "triad_lite", "evidence", "phaseF_sim", "outcomes.md")):
+for line in open(os.path.join(ROOT, "supervisory_mode", "evidence", "phaseF_sim", "outcomes.md")):
     m = re.match(r"\| (near-ground|longitudinal|lateral-low|diagonal) \| (\w+) \| (\d)/(\d) \|", line)
     if m: tab.setdefault(m.group(2), {})[m.group(1)] = int(m.group(3))
 order = [("reactive", "reactive (B0)"), ("predictive", "predictive (B1)"), ("predictive_capability", "predictive + capability tie-break (B2)"), ("full", "predictive + hard authority filter (FULL)")]

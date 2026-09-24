@@ -5,7 +5,7 @@ Code: `src/PredictiveInterception.h` (pure math, unit-tested) and `ReceiverV2.cp
 
 The config switch is `controlAware.interception.mode`:
 - `disabled` (default): no change;
-- `characterize`: solve and log alongside TRIAD-lite;
+- `characterize`: solve and log alongside TRIAD supervisory mode;
 - `characterize_hold`: solve and log, never adopt.
 
 Tags: `CODE` / `DERIVED` / `LIT` / `NUM` / `EXP`.
@@ -21,12 +21,12 @@ Tags: `CODE` / `DERIVED` / `LIT` / `NUM` / `EXP`.
 | 1 | every mouth centre of T_G above ground at τ | necessary | `DERIVED` |
 | 2 | ‖p_G(τ) − p_M(t)‖ ≤ v̄ (τ − L_calc) + lead, angle ≤ ω̄ (τ − L_calc) + lead (skipped at rest) | necessary | `DERIVED` (rate cap and lead tube of the shared reach policy) |
 | 3 | wrist SDF ≥ −20 mm at standoff and capture | necessary | Phase B |
-| 4 | exact layers at the event pose: standoff reach, corridor capture, closure, carried retreat, security distance, clearance ≥ 25 mm | controller model | `CODE` (unchanged TRIAD-lite layers; now a shared helper) |
+| 4 | exact layers at the event pose: standoff reach, corridor capture, closure, carried retreat, security distance, clearance ≥ 25 mm | controller model | `CODE` (unchanged TRIAD supervisory mode layers; now a shared helper) |
 | 5 | τ ≥ armScale · T_reach,static + L_calc + L_entry | timing | `LIT` (Hujić: travel time ≤ arrival time, planning-time shift) |
 | 6 | timed rollout from the frozen state tracks the Hermite rendezvous reference with the V2 reach law. Ends within 12 mm / 0.05 rad, clearance ≥ 20 mm. | dynamic | `CODE` law + `LIT` boundary-condition form |
 | 7 | terminal relative speed ≤ 0.04 m/s and 0.08 rad/s | terminal | `CODE` (MovePregrasp entry gate) |
 
-**Authority** is logged but is not part of 𝓕_I (§3.7). Phase C evaluates it with the TRIAD-lite demand; Phase D replaces the demand.
+**Authority** is logged but is not part of 𝓕_I (§3.7). Phase C evaluates it with the TRIAD supervisory mode demand; Phase D replaces the demand.
 
 **Reference.** p_ref = p_G(t) + h00(u) e0 + D h10(u) ė0, and R_ref = R_G(t) Exp(h00(u) Log(R_G0ᵀ R0)).
 - Unit tests show position and velocity continuity at t0, and position and velocity matching at t0 + D.
@@ -86,7 +86,7 @@ Legacy regression is covered by `test_control_aware_grasp_supervisor` and `test_
 | sweep, at-rest jobs (n = 325) | 75 ms | 141 ms | 181 ms |
 | exact layers per evaluation | ≈ 1–1.4 ms | | |
 | rollout per (g, τ) | ≈ 2–4 ms | | |
-| job wall, moving (includes the TRIAD-lite at-rest selection) | 0.605 s | 0.816 s | 3.709 s |
+| job wall, moving (includes the TRIAD supervisory mode at-rest selection) | 0.605 s | 0.816 s | 3.709 s |
 
 **L_calc.** The initial value of 0.25 s was wrong for moving objects. The default is now **0.80 s**, the p90 moving-job wall. Ten percent of moving jobs exceed it; Phase E must refuse an adoption whose realised latency exceeds L_calc. This is a measured bound on this machine. It is not portable.
 
@@ -111,7 +111,7 @@ Legacy regression is covered by `test_control_aware_grasp_supervisor` and `test_
 - The other 39 grasps are dominated (lower bound 2.738 s).
 - Selected by B1 = B2 = FULL: 388.
 
-**Execution-coupled run** (`tracked_run`, mode `characterize`, reactive TRIAD-lite execution):
+**Execution-coupled run** (`tracked_run`, mode `characterize`, reactive TRIAD supervisory mode execution):
 - The tracker failed early in 7/8 runs (clearance reserve), so the solver saw few jobs. That motivated the hold mode.
 - Disabled-path smoke runs completed: `legacy_control_aware` and `bank_search` on lateral-low.
 

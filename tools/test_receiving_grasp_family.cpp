@@ -1,4 +1,4 @@
-// Deterministic unit tests for src/ReceivingGraspFamily.h (TRIAD-lite Phase B).
+// Deterministic unit tests for src/ReceivingGraspFamily.h (TRIAD supervisory mode Phase B).
 // Build: tools/run_control_aware_supervisor_unit_tests.sh
 
 #include "../src/ControlAwareGraspSupervisor.h"

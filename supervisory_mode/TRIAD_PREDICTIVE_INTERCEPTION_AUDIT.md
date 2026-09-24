@@ -163,7 +163,7 @@ On every completed worker job, with the newest prediction:
 4. **Local synchronization**: from t ≥ τ* − T_sync (the reference within the terminal tolerance), control passes to the existing live object-relative tracking law (TerminalTrack: bounded step toward T̂_O(t)·ᴼT_G with object-twist feedforward). The repository has no terminal local-sync law beyond this.
 5. **Freeze** only at the irreversible acquisition commit.
 
-### 3.7 Controller-authority demand (replaces TRIAD-lite's y_follow + 0.38·y_insert)
+### 3.7 Controller-authority demand (replaces the supervisory mode's y_follow + 0.38·y_insert)
 
 The previous sum mixed two phases that cannot co-occur under the current interface: insertion starts only after the object is at rest. The demand is now the **set of phase-specific task-space twists the downstream controllers actually command**. The existing solver is used unchanged.
 

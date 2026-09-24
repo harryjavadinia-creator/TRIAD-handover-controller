@@ -21,7 +21,7 @@ jobs:
       - name: Finite selector and runtime-checker tests
         run: bash tools/run_binding_cost_checks.sh
 
-      - name: TRIAD-lite control-aware supervisor unit tests
+      - name: Supervisory-mode unit tests
         run: bash tools/run_control_aware_supervisor_unit_tests.sh
 
       - name: Timing-frontier replay tests

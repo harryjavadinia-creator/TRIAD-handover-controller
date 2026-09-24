@@ -14,7 +14,7 @@ implementation, experiment and validation claims remain traceable.
 | 4 | **`f56add3`** | frozen background-planning implementation with corrected perception-latency configuration read | corrected nonzero-delay latency ablation and source synchronization |
 
 The `f56add3` implementation is pinned by
-[`source_sync_f56add3.sha256`](source_sync_f56add3.sha256). Since `src/` also holds the V2, TRIAD-lite and two-robot code, that manifest is verified against the commit that preserved the V1-only files (`ebaedfa`, also tag `csi-2026-release`) by `tools/verify_frozen_v1_preserved.sh`; the current tree is pinned by [`source_sync_triad-2026-09-24.sha256`](source_sync_triad-2026-09-24.sha256).
+[`source_sync_f56add3.sha256`](source_sync_f56add3.sha256). Since `src/` also holds the receding, supervisory-mode and two-robot code, that manifest is verified against the commit that preserved the V1-only files (`ebaedfa`, also tag `csi-2026-release`) by `tools/verify_frozen_v1_preserved.sh`; the current tree is pinned by [`source_sync_triad-2026-09-24.sha256`](source_sync_triad-2026-09-24.sha256).
 
 ## Background-planning evidence
 
@@ -43,7 +43,7 @@ Historical runtime timing traces retain their original source attribution.
 | Manifest | Pins | Verify against |
 | --- | --- | --- |
 | [`source_sync_f56add3.sha256`](source_sync_f56add3.sha256) | frozen background-planning implementation files | `f56add3` source state |
-| [`source_sync_triad-2026-09-24.sha256`](source_sync_triad-2026-09-24.sha256) | controller sources: V1 finite-plan controller, V2 receding receiver, TRIAD-lite, two-robot giver coordinator | tag `triad-2026-09-24` |
+| [`source_sync_triad-2026-09-24.sha256`](source_sync_triad-2026-09-24.sha256) | controller sources: V1 finite-plan controller, V2 receding receiver, supervisory mode, two-robot giver coordinator | tag `triad-2026-09-24` |
 | [`source_sync_82e6eaa.sha256`](source_sync_82e6eaa.sha256) | exact-serial implementation files | `csi-2026-release` tag |
 | [`../SCIENTIFIC_BASELINE.sha256`](../SCIENTIFIC_BASELINE.sha256) | frozen Dataset-B source snapshot | `scientific-baseline` tag |
 
