@@ -1,0 +1,186 @@
+[info] Loading default global configuration /usr/local/etc/mc_rtc.yaml
+[info] Loading additional global configuration /home/harry/.config/mc_rtc/mc_rtc.yaml
+[warning] Aliases object/box was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/door was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/litter was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/nail was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/pole was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/seesaw was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/valve was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/valve_handle was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases env/beam was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/box was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/box_table was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/chair was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/corniche was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/crapahut was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/crapahut_bricks was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/door was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/drc_terrain was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/ground was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/litter was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/nail was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/platform was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/pole was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/seesaw was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/table was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/table_printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/valve was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/valve_handle was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[info] GlobalPluginPaths: /usr/local/lib/mc_plugins
+[info] GUI server enabled
+[info] Publishing data on:
+[info] - ipc:///tmp/mc_rtc_pub.ipc
+[info] - tcp://*:4242
+[info] Handling requests on:
+[info] - ipc:///tmp/mc_rtc_rep.ipc
+[info] - tcp://*:4343
+[info] Enabled plugins: ROS (autoload)
+[info] Loading additional plugin configuration: /usr/local/lib/mc_plugins/etc/ROS.yaml
+[info] Loading additional controller configuration: /home/harry/mc_rtc_ws/install/lib/mc_controller/etc/CALLRobotBFaceToFaceMover.yaml
+[info] Create controller CALLRobotBFaceToFaceMover
+[info] Robots loaded in controller:
+[info] - gen3_2f85
+[info] MCController(base) ready
+[info] Looking for state files in /home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states/data
+[warning] State file /home/harry/mc_rtc_ws/install/lib/mc_controller/CALLRobotBFaceToFaceMover/states/data does not exist
+[info] Added task FSM_posture_gen3_2f85
+[warning] [RobotB] deterministic scenario mover loaded scenario=canonical_yz motionEnabled=true predefinedStartConfigured=true vA=[0.00000,0.08000,0.00000] vB=[-0.00000,-0.08000,0.00000] constant=4.425s decel=0.850s task=[stiffness:50.0,weight:6500.0] preposition=[v:0.080m/s,w:0.400rad/s,pos:0.0040m,ori:0.0350rad] terminal=[pos:0.0040m,vel:0.0100m/s,dwell:0.150s,timeout:4.000s]. No communication with Robot A.
+[warning] [MCController::CALLRobotBFaceToFaceMover] No state observation pipeline configured: the state of the real robots will not be estimated
+[info] [mc_kortex] mc_rtc running at 1000Hz
+[info] [mc_kortex] Initializing connection to the robot at 192.168.1.10:10000
+[info] [mc_kortex] gen3_2f85 hardwareActuators=7 modelReferenceJoints=13 sharedRobotiqModel=true
+[warning] [mc_kortex] Direct Robotiq motor command initialized
+[success] [PhysicalWrenchBridge] registered sensor=EEForceSensor parent=gen3_end_effector_link collection=control passiveOnly=true
+[info] [PhysicalWrenchBridge] sample=1 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.1007,-1.0503,3.5918]N couple=[-0.0029,-1.3686,0.5287]Nm forceNorm=3.7436N coupleNorm=1.4672Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper PREFLIGHT] feedbackValid=true measured=0.00% velocity=0.00%/s commandEnabled=false commandSeen=false
+[success] [mc_kortex] Connected succesfuly to robot at 192.168.1.10:10000
+[info] qInit = [4.79369e-06, 0.261828, -3.14158, -2.26886, -1.33158e-05, 0.959906, 1.5708, 0, -0, -0, 0, 0, -0]
+[WARN] [1784281125.177885119] [rcl]: ROS_LOCALHOST_ONLY is deprecated but still honored if it is enabled. Use ROS_AUTOMATIC_DISCOVERY_RANGE and ROS_STATIC_PEERS instead.
+[WARN] [1784281125.177899684] [rcl]: 'localhost_only' is enabled, 'automatic_discovery_range' and 'static_peers' will be ignored.
+[success] [mc_rtc::ROS] Starting ROS services
+[info] [mc_kortex] Starting control loop
+[success] Starting state CALLRobotBFaceToFaceMover_Run
+[info] Added task transform_gen3_2f85_gen3_robotiq_85_base_link
+[success] [RobotB] Cartesian tool task activated frame=gen3_robotiq_85_base_link
+[success] [RobotB PREPOSITION START] scenario=canonical_yz current=[0.4567,0.0013,0.4337] predefinedStart=[0.4567,0.0010,0.4337] distance=0.0003m orientationDistance=0.0000rad duration=1.000s. Robot B moves to the predefined scenario start before READY.
+[info] [RobotB PREPOSITION] t=0.001/1.000s actual=[0.457,0.001,0.434] target=[0.457,0.001,0.434] positionError=0.0000m orientationError=0.0000rad speed=0.0000m/s angularSpeed=0.0000rad/s
+[info] [mc_kortex gripper BRIDGE] iter=1 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB PREPOSITION] t=0.201/1.000s actual=[0.457,0.001,0.434] target=[0.457,0.001,0.434] positionError=0.0000m orientationError=0.0000rad speed=0.0002m/s angularSpeed=0.0000rad/s
+[info] [RobotB PREPOSITION] t=0.401/1.000s actual=[0.457,0.001,0.434] target=[0.457,0.001,0.434] positionError=0.0000m orientationError=0.0000rad speed=0.0006m/s angularSpeed=0.0000rad/s
+[info] [mc_kortex gripper BRIDGE] iter=500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB PREPOSITION] t=0.601/1.000s actual=[0.457,0.001,0.434] target=[0.457,0.001,0.434] positionError=0.0000m orientationError=0.0000rad speed=0.0006m/s angularSpeed=0.0000rad/s
+[info] [RobotB PREPOSITION] t=0.801/1.000s actual=[0.457,0.001,0.434] target=[0.457,0.001,0.434] positionError=0.0000m orientationError=0.0000rad speed=0.0003m/s angularSpeed=0.0000rad/s
+[info] [PhysicalWrenchBridge] sample=1000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[warning] [RobotB START-GATE] predefined scenario start reached by reference; measured admission begins target=[0.4567,0.0010,0.4337] tolerances=[pos:0.0040m,ori:0.0350rad,v:0.0100m/s,w:0.0500rad/s] dwell=0.200s
+[info] [RobotB START-GATE] t=0.001s positionError=0.0000m orientationError=0.0000rad speed=0.0000m/s angularSpeed=0.0000rad/s stable=true dwell=0.001/0.200s
+[info] [mc_kortex gripper BRIDGE] iter=1000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[success] [RobotB READY] scenario=canonical_yz at predefined start actual=[0.4567,0.0010,0.4337] positionError=0.0000m orientationError=0.0000rad speed=0.0000m/s angularSpeed=0.0000rad/s stableDwell=0.200s maxPrepositionTrackingError=0.0000m trigger=/tmp/call_robot_b_start. Waiting for one manual scenario-motion trigger.
+[info] [mc_kortex gripper BRIDGE] iter=1500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=2000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=2000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=2500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=3000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=3000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=3500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=4000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=4000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=4500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=5000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=5000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=5500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=6000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=6000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=6500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=7000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=7000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=7500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=8000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=8000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=8500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=9000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=9000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=9500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=10000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=10000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=10500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=11000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=11000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=11500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=12000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=12000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=12500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=13000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=13000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=13500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=14000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=14000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[success] [RobotB START] scenario=canonical_yz predefinedStart=[0.4567,0.0010,0.4337] final=[0.4567,-0.3870,0.4337] constant=4.425s decel=0.850s prepositioned=true feedforward=true terminalAdmission=true manualSynchronization=true noRobotCommunication=true
+[info] [RobotB EXECUTE] t=0.018s segment=constant actual=[0.457,0.001,0.434] target=[0.457,-0.000,0.434] vRef=0.0800m/s vActual=0.0092m/s positionError=0.0013m
+[info] [RobotB EXECUTE] t=0.218s segment=constant actual=[0.457,-0.012,0.434] target=[0.457,-0.016,0.434] vRef=0.0800m/s vActual=0.0881m/s positionError=0.0040m
+[info] [mc_kortex gripper BRIDGE] iter=14500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB EXECUTE] t=0.418s segment=constant actual=[0.457,-0.030,0.434] target=[0.457,-0.032,0.434] vRef=0.0800m/s vActual=0.0888m/s positionError=0.0020m
+[info] [RobotB EXECUTE] t=0.618s segment=constant actual=[0.457,-0.048,0.434] target=[0.457,-0.048,0.434] vRef=0.0800m/s vActual=0.0838m/s positionError=0.0009m
+[info] [PhysicalWrenchBridge] sample=15000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [RobotB EXECUTE] t=0.818s segment=constant actual=[0.457,-0.064,0.434] target=[0.457,-0.064,0.434] vRef=0.0800m/s vActual=0.0813m/s positionError=0.0004m
+[info] [mc_kortex gripper BRIDGE] iter=15000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB EXECUTE] t=1.018s segment=constant actual=[0.457,-0.080,0.434] target=[0.457,-0.080,0.434] vRef=0.0800m/s vActual=0.0804m/s positionError=0.0003m
+[info] [RobotB EXECUTE] t=1.218s segment=constant actual=[0.457,-0.096,0.434] target=[0.457,-0.096,0.434] vRef=0.0800m/s vActual=0.0801m/s positionError=0.0002m
+[info] [mc_kortex gripper BRIDGE] iter=15500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB EXECUTE] t=1.418s segment=constant actual=[0.457,-0.112,0.434] target=[0.457,-0.112,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0002m
+[info] [RobotB EXECUTE] t=1.618s segment=constant actual=[0.457,-0.128,0.434] target=[0.457,-0.128,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0002m
+[info] [PhysicalWrenchBridge] sample=16000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [RobotB EXECUTE] t=1.818s segment=constant actual=[0.457,-0.144,0.434] target=[0.457,-0.144,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0002m
+[info] [mc_kortex gripper BRIDGE] iter=16000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB EXECUTE] t=2.018s segment=constant actual=[0.457,-0.160,0.434] target=[0.457,-0.160,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0002m
+[info] [RobotB EXECUTE] t=2.218s segment=constant actual=[0.457,-0.176,0.434] target=[0.457,-0.176,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0002m
+[info] [mc_kortex gripper BRIDGE] iter=16500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB EXECUTE] t=2.418s segment=constant actual=[0.457,-0.192,0.434] target=[0.457,-0.192,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0002m
+[info] [RobotB EXECUTE] t=2.618s segment=constant actual=[0.457,-0.208,0.434] target=[0.457,-0.208,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0002m
+[info] [PhysicalWrenchBridge] sample=17000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [RobotB EXECUTE] t=2.818s segment=constant actual=[0.457,-0.224,0.434] target=[0.457,-0.224,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0002m
+[info] [mc_kortex gripper BRIDGE] iter=17000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB EXECUTE] t=3.018s segment=constant actual=[0.457,-0.240,0.434] target=[0.457,-0.240,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0003m
+[info] [RobotB EXECUTE] t=3.218s segment=constant actual=[0.457,-0.256,0.434] target=[0.457,-0.256,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0003m
+[info] [mc_kortex gripper BRIDGE] iter=17500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB EXECUTE] t=3.418s segment=constant actual=[0.457,-0.272,0.434] target=[0.457,-0.272,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0003m
+[info] [RobotB EXECUTE] t=3.618s segment=constant actual=[0.457,-0.288,0.434] target=[0.457,-0.288,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0003m
+[info] [PhysicalWrenchBridge] sample=18000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [RobotB EXECUTE] t=3.818s segment=constant actual=[0.457,-0.304,0.434] target=[0.457,-0.304,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0003m
+[info] [mc_kortex gripper BRIDGE] iter=18000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB EXECUTE] t=4.018s segment=constant actual=[0.457,-0.320,0.434] target=[0.457,-0.320,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0003m
+[info] [RobotB EXECUTE] t=4.218s segment=constant actual=[0.457,-0.336,0.434] target=[0.457,-0.336,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0003m
+[info] [mc_kortex gripper BRIDGE] iter=18500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB EXECUTE] t=4.418s segment=constant actual=[0.457,-0.352,0.434] target=[0.457,-0.352,0.434] vRef=0.0800m/s vActual=0.0800m/s positionError=0.0003m
+[info] [RobotB EXECUTE] t=4.618s segment=deceleration actual=[0.457,-0.368,0.434] target=[0.457,-0.368,0.434] vRef=0.0735m/s vActual=0.0744m/s positionError=0.0003m
+[info] [PhysicalWrenchBridge] sample=19000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [RobotB EXECUTE] t=4.818s segment=deceleration actual=[0.457,-0.380,0.434] target=[0.457,-0.380,0.434] vRef=0.0456m/s vActual=0.0475m/s positionError=0.0002m
+[info] [mc_kortex gripper BRIDGE] iter=19000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB EXECUTE] t=5.018s segment=deceleration actual=[0.457,-0.386,0.434] target=[0.457,-0.386,0.434] vRef=0.0133m/s vActual=0.0147m/s positionError=0.0002m
+[info] [RobotB EXECUTE] t=5.218s segment=deceleration actual=[0.457,-0.387,0.434] target=[0.457,-0.387,0.434] vRef=0.0002m/s vActual=0.0003m/s positionError=0.0002m
+[warning] [RobotB TERMINAL] reference motion finished; measured admission started target=[0.457,-0.387,0.434] tolerances=[pos:0.0040m,vel:0.0100m/s] dwell=0.150s timeout=4.000s
+[info] [mc_kortex gripper BRIDGE] iter=19500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [RobotB TERMINAL] t=0.143s actual=[0.457,-0.387,0.434] target=[0.457,-0.387,0.434] positionError=0.0002m speed=0.0001m/s stable=true dwell=0.143/0.150s
+[success] [RobotB HOLD] terminal gate passed finalActual=[0.4567,-0.3868,0.4336] finalTarget=[0.4567,-0.3870,0.4337] finalError=0.0002m finalSpeed=0.0001m/s stableDwell=0.150s maxTrackingError=0.0044m. Robot B keeps holding; it does not release or retreat.
+[info] [PhysicalWrenchBridge] sample=20000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=20000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=20500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=21000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=21000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=21500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=22000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=22000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=22500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=23000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=23000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=23500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=24000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=24000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=24500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=25000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=25000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [mc_kortex gripper BRIDGE] iter=25500 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s
+[info] [PhysicalWrenchBridge] sample=26000 source=KortexBaseCyclic sensor=EEForceSensor frame=KortexToolRaw force=[0.0116,-1.1459,3.5904]N couple=[-0.0130,-1.3850,0.5793]Nm forceNorm=3.7689N coupleNorm=1.5014Nm passiveOnly=true syntheticTransferUnchanged=true
+[info] [mc_kortex gripper BRIDGE] iter=26000 enabled=false commandValid=false feedbackValid=true close=0.000 calibration=[0.87,35.0]% cap=35.0% target=0.0% measured=0.0% velocity=0.0%/s

@@ -1,4 +1,5 @@
 #include "HandoverInterceptionController.h"
+#include "DualGiverCoordinator.h"
 #include "FiniteEventPlanSelector.h"
 #include "FinitePlanSelector.h"
 
@@ -104,6 +105,10 @@ HandoverInterceptionController::HandoverInterceptionController(
   toolTask_ = std::make_shared<mc_tasks::TransformTask>(
       robot().frame(toolFrame_), taskStiffness_, taskWeight_);
   toolTaskActive_ = false;
+
+  // Optional integrated Robot-B giver (two-robot setup). Inactive unless the
+  // configuration has dualHandover.enabled: true; the single-robot behaviour is unchanged.
+  dualGiver_.reset(new DualGiverCoordinator(*this, config));
 
   refreshObjectPose();
   W_T_O_predicted_ = W_T_O_;
@@ -303,6 +308,7 @@ HandoverInterceptionController::HandoverInterceptionController(
 void HandoverInterceptionController::reset(const mc_control::ControllerResetData & reset_data)
 {
   mc_control::fsm::Controller::reset(reset_data);
+  if(dualGiver_) { dualGiver_->reset(*this); }
   detachObject();
   invalidateSelectedCandidate();
   mouthCalibrationValid_ = false;
@@ -364,6 +370,7 @@ void HandoverInterceptionController::reset(const mc_control::ControllerResetData
 bool HandoverInterceptionController::run()
 {
   controllerTime_ += controlDt_;
+  if(dualGiver_) { dualGiver_->run(*this); }
   refreshPhysicalGripperBridge();
   if(!objectAttached_ && simulatedObjectMotionActive_)
   {
@@ -2896,6 +2903,11 @@ void HandoverInterceptionController::refreshObjectPose()
 
 void HandoverInterceptionController::beginObjectObservation()
 {
+  if(!startDualGiverPresentation())
+  {
+    mc_rtc::log::error_and_throw<std::runtime_error>(
+        "[DualHandover] object observation cannot start before Robot B is READY");
+  }
   objectObservationActive_ = true;
   simulatedObjectMotionActive_ = false;
   simulatedObjectPoseFrozen_ = false;
@@ -9893,4 +9905,48 @@ void HandoverInterceptionController::addMethodologyGui()
         Eigen::Vector3d pL, pR;
         return livePadCenters(pL, pR) ? pR : Eigen::Vector3d::Zero();
       }));
+}
+
+// ---------------------------------------------------------------------------
+// Integrated Robot-B giver coordination (two-robot setup). Every method is a
+// no-op / pass-through when dualHandover is not enabled in the configuration.
+// ---------------------------------------------------------------------------
+bool HandoverInterceptionController::dualGiverEnabled() const
+{
+  return dualGiver_ && dualGiver_->enabled();
+}
+
+bool HandoverInterceptionController::dualGiverReady() const
+{
+  return !dualGiver_ || !dualGiver_->enabled() || dualGiver_->ready();
+}
+
+bool HandoverInterceptionController::dualGiverFailed() const
+{
+  return dualGiver_ && dualGiver_->failed();
+}
+
+bool HandoverInterceptionController::startDualGiverPresentation()
+{
+  return !dualGiver_ || dualGiver_->requestPresentation(*this);
+}
+
+void HandoverInterceptionController::commandDualGiverSafeHold()
+{
+  if(dualGiver_) { dualGiver_->safeHold(*this); }
+}
+
+bool HandoverInterceptionController::dualGiverPresentationScheduleAvailable() const
+{
+  return dualGiver_ && dualGiver_->presentationScheduleAvailable();
+}
+
+double HandoverInterceptionController::dualGiverTimeToPresentation() const
+{
+  return dualGiver_ ? dualGiver_->timeToPresentation() : 0.0;
+}
+
+sva::PTransformd HandoverInterceptionController::dualGiverPresentationPoseWorld() const
+{
+  return dualGiver_ ? dualGiver_->presentationObjectPoseWorld() : sva::PTransformd::Identity();
 }

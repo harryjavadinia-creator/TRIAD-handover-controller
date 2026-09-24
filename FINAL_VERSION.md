@@ -1,4 +1,4 @@
-# TRIAD — final version (branch `triad/final-2026-09-24`)
+# TRIAD — final version (branch `triad/final-2026-09-24`; two-robot extension on `triad/two-robot-2026-09-24`)
 
 This branch is the last state of TRIAD. It is the union of the two lines that existed at the end:
 
@@ -40,3 +40,11 @@ Acquisition requires the object to be at rest (`requireObjectStopped: true`, 4 m
 - Tag `csi-2026-release` (a006912, 2026-09-03): the first TRIAD publication package. Superseded; omits the
   prior-art attribution.
 - `main` (ebaedfa): V1 code only, corrected docs. This branch supersedes it.
+
+## Two-robot extension (branch `triad/two-robot-2026-09-24`, 2026-09-24)
+
+The July 2026 two-arm setup (Robot A receiver, Robot B giver) ported onto this final code: `src/DualGiverCoordinator.*`,
+two extra states, four hooks in the controller that are no-ops unless `dualHandover.enabled: true`, the configuration
+overlay, the hardware procedure, the Kortex patch and the July evidence. Verified in simulation on 2026-09-24: the full
+two-arm handover completes (see `two_robot/results/sim_2026-09-24/TIMELINE.md`); the single-robot scenario still
+completes on the same build. Not verified on hardware with this code. Details: `two_robot/README.md`.

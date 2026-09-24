@@ -1,0 +1,92 @@
+# TRIAD with two robots — Robot A receives, Robot B gives
+
+This folder makes the final TRIAD controller run a **robot-to-robot handover**: Robot A (Kinova Gen3 +
+Robotiq 2F-85, the TRIAD receiver, unchanged) receives the CALL object from Robot B (a second Kinova Gen3,
+no gripper role) which presents it along a fixed world-frame trajectory. It is the July 2026 two-robot
+setup of the CALL laboratory (Robot A at 192.168.1.10, Robot B at 192.168.1.11), ported onto the final
+TRIAD code base on 2026-09-24.
+
+What is in it:
+
+| path | what |
+|---|---|
+| `../src/DualGiverCoordinator.{h,cpp}` | Robot B as an integrated giver inside the TRIAD controller: preposition → READY → present → terminal gate → HOLD, with the object rigidly coupled to Robot B's tool until Robot A acquires it |
+| `../src/states/HandoverInterceptionController_RobotBScenarioPreview.*` | Robot B alone executes the scenario while Robot A holds (the first thing to run on hardware) |
+| `../src/states/HandoverInterceptionController_StaticXTouch.*` | a deliberately simple static two-arm rendezvous with no planning, for commissioning |
+| `HandoverInterceptionController.two_robot.yaml` | the configuration overlay: second robot, giver scenario `pure_x`, object coupling, safety limits (values of the July sessions) |
+| `run_two_robot_sim.sh` | runs the two-arm handover in mc_rtc's ticker straight from a build tree, without installing |
+| `mc_rtc.two_kortex.yaml` | the global mc_rtc profile for two physical Kortex arms (credentials are placeholders) |
+| `mc_kortex_patch/` | the three mc_kortex source files that map Robot A (`gen3_joint_1..7`) and Robot B (`joint_1..7`) independently, with its source audit |
+| `check_dual_network.sh`, `run_dual_init_only.sh`, `disable_and_stop.sh` | the hardware procedure scripts of July 2026 |
+| `robot_b_standalone/` | `CALLRobotBFaceToFaceMover`: the alternative where Robot B runs from a second laptop with no communication with Robot A (fixed start, one trigger, one trajectory) |
+| `results/sim_2026-09-24/` | the verification run of this port: log, override, timeline |
+| `evidence/` | inventory of the 134 July 2026 mc_rtc logs (31 GB, kept on the lab laptop), one 3.3 MB hardware log, Robot B's validation log |
+| `media/` | five screen recordings of the two-arm simulation from 18–19 July 2026 (RViz / mc_rtc), `.webm` |
+
+## What has been verified
+
+- **Simulation, 2026-09-24, this port**: full two-arm handover completed. Robot B prepositions, settles at the
+  start, waits Ready, executes the presentation in sync with Robot A's object observation, settles at the
+  terminal gate and holds; Robot A goes Initial → ObserveObject → SolveInterception → ExecuteCommittedReach →
+  PresentationHold → MovePregrasp → CaptureTransfer → Retreat → Completed and Robot B releases the object
+  at acquisition. See `results/sim_2026-09-24/TIMELINE.md`. The single-robot scenario on the same build
+  still completes, and so does a run with the second robot loaded but the giver disabled.
+- **Hardware, July 2026** (see `evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`): on 17 July Robot B executed
+  its presentation alone on the physical arm (phases prepositioning → HOLD, log 22:30:31). The combined
+  run of 18 July 00:51 reached Robot A's committed reach and then failed. **No hardware run reached the
+  capture.** Robot A alone had its physical gripper commissioned on 15–16 July (`v6.4.2`).
+
+## What does not exist
+
+- **There is no real-life video of the two arms on this laptop.** The recordings in `media/` are screen
+  captures of the simulation. If a phone video was taken in the lab in July, it is not here.
+- Nothing in this folder has run on hardware with the final TRIAD code; the July hardware runs used the
+  July controller (`CALLDualRobotHandoverController`, base V6.4.3). The port is source-identical in the
+  giver layer (54 changed controller lines + the coordinator) but has only been verified in simulation.
+- Robot B has no gripper role: it carries the object rigidly in simulation and, on hardware, the object
+  was held by Robot B's tool physically.
+
+## Run it in simulation
+
+```bash
+# build this branch (see ../docs/quickstart.md), then:
+TRIAD_BUILD_DIR=/path/to/build \
+MAIN_ROBOT_MODULE_PATH=/path/to/kinova_gen3_2f85_mcdesc \
+MC_RTC_INSTALL=$HOME/mc_rtc_ws/install \
+bash two_robot/run_two_robot_sim.sh 80
+```
+
+The Kinova robot module (`Kinova`, from mc_kinova) must be installed in `MC_RTC_INSTALL`. The script
+writes a scratch mc_rtc profile, points `ControllerModulePaths` and `StatesLibraries` at the build tree,
+appends the overlay to the controller configuration and prints the giver milestones and the receiver
+states. Expect `RESULT: COMPLETED` after about 20 s of simulated time. mc_rtc's ticker segfaults on exit
+after `--run-for`; that happens after Completed and is not part of the handover.
+
+To watch it, run the same configuration with `mc_rtc_ticker` and RViz as in `../docs/quickstart.md`, or
+use the July recordings in `media/`.
+
+## Run it on the two physical arms
+
+Follow the July procedure, in this order, with motion disabled until each step passes:
+
+1. Apply `mc_kortex_patch/` to your mc_kortex checkout and rebuild it (per-robot joint maps).
+2. Copy `mc_rtc.two_kortex.yaml` to `~/.config/mc_rtc/mc_rtc.yaml`, fill in the IPs and credentials.
+3. `bash two_robot/check_dual_network.sh` — both arms reachable.
+4. `bash two_robot/run_dual_init_only.sh` — both robots initialise, no motion; the log must show separate
+   states for `gen3_2f85` and `kinova`.
+5. Robot B alone: set `init: HandoverInterceptionController_RobotBScenarioPreview` in the overlay, then
+   `dualHandover.motionEnabled: true`. This is what worked on 17 July.
+6. The combined run: default `init`, `motionEnabled: true`. On 18 July this reached the committed reach.
+7. `bash two_robot/disable_and_stop.sh` after every run.
+
+Robot A's physical gripper bridge stays under the existing `physicalBridge` switches of the TRIAD
+configuration; they are off by default.
+
+## Provenance
+
+- Giver coordinator, states, scripts and Kortex patch: `~/mc_rtc_ws/Sandbox/CALLDualRobotHandoverController`
+  and `~/Downloads/CALL_DUAL_ROBOT_ACTUAL_HANDOVER_V1_1_PLAIN_TRAJECTORY_B_20260717` (17–18 July 2026).
+- Robot B standalone mover: `~/mc_rtc_ws/Sandbox/CALLRobotBFaceToFaceMover`, validated 17 July 11:38
+  (`evidence/CALL_ROBOT_B_20260717_113843.log`: start [0.4567, 0.0010, 0.4337], 0.08 m/s, terminal error ≈ 0.2 mm).
+- Port onto TRIAD final: constructor, reset, run and observation-start hooks, eight pass-through methods,
+  two states, CMake entries. All are no-ops unless `dualHandover.enabled: true`.

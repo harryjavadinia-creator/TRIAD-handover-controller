@@ -4,6 +4,7 @@
 #include "ControlAwareGraspSupervisor.h"
 #include "ReceivingGraspFamily.h"
 #include "PredictiveInterception.h"
+#include "DualGiverCoordinator.h"
 
 #include <mc_control/fsm/Controller.h>
 #include <mc_tasks/TransformTask.h>
@@ -1025,6 +1026,20 @@ public:
 
 public:
   std::shared_ptr<mc_tasks::TransformTask> toolTask_;
+
+  // Integrated Robot-B giver coordination (two-robot setup). Robot A keeps the
+  // original observe/evaluate/commit-once/execute-once FSM unchanged.
+public:
+  bool dualGiverEnabled() const;
+  bool dualGiverReady() const;
+  bool dualGiverFailed() const;
+  bool startDualGiverPresentation();
+  void commandDualGiverSafeHold();
+  bool dualGiverPresentationScheduleAvailable() const;
+  double dualGiverTimeToPresentation() const;
+  sva::PTransformd dualGiverPresentationPoseWorld() const;
+  std::unique_ptr<DualGiverCoordinator> dualGiver_;
+
 
 private:
   struct GripperSample

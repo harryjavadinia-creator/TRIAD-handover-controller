@@ -13,3 +13,8 @@ add_fsm_state_simple(HandoverInterceptionController_Completed)
 add_fsm_state_simple(HandoverInterceptionController_Failure)
 # TRIAD V2 receding receiver supervisor (entered only when receiverArchitecture: v2_receding).
 add_fsm_state_simple(HandoverInterceptionController_ReceiverV2)
+
+# Two-robot setup (Robot B = integrated giver): Robot-B-only scenario preview and the
+# deliberately simple static two-arm rendezvous. Both require dualHandover.enabled: true.
+add_fsm_state_simple(HandoverInterceptionController_RobotBScenarioPreview)
+add_fsm_state_simple(HandoverInterceptionController_StaticXTouch)

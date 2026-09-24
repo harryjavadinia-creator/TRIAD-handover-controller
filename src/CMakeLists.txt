@@ -1,6 +1,7 @@
 set(controller_SRC
   HandoverInterceptionController.cpp
   ReceiverV2.cpp
+  DualGiverCoordinator.cpp
 )
 
 set(controller_HDR
@@ -9,6 +10,7 @@ set(controller_HDR
   BoundedEventLeadSchedule.h
   IndependentGiverModel.h
   HandoverInterceptionController.h
+  DualGiverCoordinator.h
 )
 
 add_library(${PROJECT_NAME} SHARED ${controller_SRC} ${controller_HDR})

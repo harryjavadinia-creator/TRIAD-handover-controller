@@ -30,6 +30,11 @@ code is part of `src/` (see [FINAL_VERSION.md](FINAL_VERSION.md)); the default
 configuration still runs the V1 controller, and the comparison is included because
 it is the part of the work most useful to anyone building on it.
 
+**Two robots.** The July 2026 laboratory setup — Robot A receiving from a second Kinova Gen3 that presents the
+object — is integrated on this branch and verified in simulation (a full robot-to-robot handover completes).
+Hardware runs of July 2026 reached Robot A's committed reach and are inventoried with their logs. There is no
+real-life video; the recordings are screen captures of the simulation. See [`two_robot/`](two_robot/README.md).
+
 ## Start here
 
 | To… | Read |

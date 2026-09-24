@@ -1,0 +1,95 @@
+Managed: false
+StepByStep: false
+IdleKeepState: false
+StatesLibraries:
+- '@MC_STATES_DEFAULT_RUNTIME_INSTALL_PREFIX@'
+- '@MC_STATES_RUNTIME_INSTALL_PREFIX@'
+StatesFiles:
+- '@MC_STATES_DEFAULT_RUNTIME_INSTALL_PREFIX@/data'
+- '@MC_STATES_RUNTIME_INSTALL_PREFIX@/data'
+VerboseStateFactory: false
+toolFrame: gen3_robotiq_85_base_link
+task:
+  stiffness: 50.0
+  weight: 6500.0
+trajectory:
+  scenario: canonical_yz
+  faceToFaceYaw180: true
+  referenceAStart:
+  - 0.55
+  - -0.56
+  - 0.15
+  robotAVelocity:
+  - 0.0
+  - 0.08
+  - 0.0
+  constantVelocityDuration: 4.425
+  decelerationDuration: 0.85
+  maximumTravel: 0.45
+startPose:
+  configured: true
+  translation:
+  - 0.4567
+  - 0.001
+  - 0.4337
+  rotation:
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+preposition:
+  maximumLinearSpeed: 0.08
+  maximumAngularSpeed: 0.4
+  minimumDuration: 1.0
+  timeout: 20.0
+  positionTolerance: 0.004
+  orientationTolerance: 0.035
+  linearVelocityTolerance: 0.01
+  angularVelocityTolerance: 0.05
+  stableDuration: 0.2
+manual:
+  triggerFile: /tmp/call_robot_b_start
+safety:
+  motionEnabled: true
+  maximumLinearSpeed: 0.1
+  maximumTrackingError: 0.06
+  trackingErrorGrace: 0.4
+  workspaceMin:
+  - -1.0
+  - -1.0
+  - 0.08
+  workspaceMax:
+  - 1.0
+  - 1.0
+  - 1.2
+terminal:
+  positionTolerance: 0.004
+  velocityTolerance: 0.01
+  stableDuration: 0.15
+  timeout: 4.0
+  velocityFilterAlpha: 0.1
+constraints:
+- type: kinematics
+  robot: gen3_2f85
+  damper:
+  - 0.1
+  - 0.01
+  - 0.5
+  velocityPercent: 0.7
+collisions: []
+contacts: []
+configs:
+  CALLRobotBFaceToFaceMover_Run:
+    logEvery: 200
+states: {}
+transitions:
+- - CALLRobotBFaceToFaceMover_Run
+  - OK
+  - CALLRobotBFaceToFaceMover_Run
+  - Strict
+init: CALLRobotBFaceToFaceMover_Run

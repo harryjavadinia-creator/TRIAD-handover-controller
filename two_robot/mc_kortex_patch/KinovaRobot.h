@@ -1,0 +1,244 @@
+#include <mc_control/mc_global_controller.h>
+#include <mc_rbdyn/Robot.h>
+#include <mc_rtc/logging.h>
+
+#include <boost/circular_buffer.hpp>
+
+#include <atomic>
+#include <cstdint>
+
+#include <ActuatorConfigClientRpc.h>
+#include <BaseClientRpc.h>
+#include <BaseCyclicClientRpc.h>
+#include <DeviceManagerClientRpc.h>
+#include <GripperCyclicMessage.pb.h>
+#include <InterconnectConfigClientRpc.h>
+#include <RouterClient.h>
+#include <SessionManager.h>
+#include <TransportClientTcp.h>
+#include <TransportClientUdp.h>
+
+#include <google/protobuf/util/json_util.h>
+#define GEAR_RATIO 100.0
+
+namespace k_api = Kinova::Api;
+
+namespace mc_kinova {
+
+enum TorqueControlType { Default, Feedforward, Custom };
+
+class KinovaRobot {
+private:
+  k_api::RouterClient *m_router;
+  k_api::TransportClientTcp *m_transport;
+  k_api::RouterClient *m_router_real_time;
+  k_api::TransportClientUdp *m_transport_real_time;
+  k_api::SessionManager *m_session_manager;
+  k_api::SessionManager *m_session_manager_real_time;
+  k_api::Base::BaseClient *m_base;
+  k_api::BaseCyclic::BaseCyclicClient *m_base_cyclic;
+  k_api::DeviceManager::DeviceManagerClient *m_device_manager;
+  k_api::ActuatorConfig::ActuatorConfigClient *m_actuator_config;
+
+  std::string m_username;
+  std::string m_password;
+  std::string m_ip_address;
+  int m_port;
+  int m_port_real_time;
+
+  std::string m_name;
+  int m_actuator_count;
+
+  std::atomic<bool> stop_controller{false};
+
+  int64_t m_dt;
+
+  double t_plot;
+
+  int m_control_id;
+  int m_prev_control_id;
+  std::mutex m_update_control_mutex;
+  rbd::MultiBodyConfig m_command;
+  k_api::BaseCyclic::Command m_base_command;
+
+  std::mutex m_update_sensor_mutex;
+  k_api::BaseCyclic::Feedback m_state;
+
+  k_api::Base::ServoingMode m_servoing_mode;
+  k_api::ActuatorConfig::ControlMode m_control_mode;
+  int m_control_mode_id;
+  int m_prev_control_mode_id;
+
+  std::vector<double> m_init_posture;
+  bool m_allow_init_posture_gui{true};
+
+  bool m_use_filtered_velocities;
+  double m_velocity_filter_ratio;
+  std::vector<double> m_filtered_velocities;
+
+  // ===== Gripper properties =====
+  bool m_model_has_robotiq_joints;
+  bool m_physical_gripper_present;
+  std::vector<std::string> m_arm_joint_names;
+  k_api::GripperCyclic::MotorCommand *m_gripper_motor_command;
+  float gripper_position;
+  float gripper_velocity;
+
+  // V6.4 hardware bridge state. The fixed-gripper RobotModule exposes only the
+  // seven arm encoders, so the physical Robotiq command and feedback travel
+  // through explicit datastore channels rather than the mc_rtc joint vector.
+  std::atomic<double> m_handover_gripper_close{0.0};
+  std::atomic<double> m_handover_gripper_open_percent{0.87};
+  std::atomic<double> m_handover_gripper_close_percent{35.0};
+  std::atomic<double> m_handover_gripper_max_percent{35.0};
+  std::atomic<bool> m_handover_gripper_command_enabled{false};
+  std::atomic<bool> m_handover_gripper_command_valid{false};
+  std::atomic<double> m_gripper_measured_percent{0.0};
+  std::atomic<double> m_gripper_measured_velocity_percent{0.0};
+  std::atomic<bool> m_gripper_feedback_valid{false};
+  std::atomic<uint64_t> m_gripper_feedback_sequence{0};
+
+  // Per-robot counters/warning latches. These cannot be function-local statics
+  // because Robot A and Robot B run concurrently in separate control threads.
+  uint64_t m_gripper_command_sequence{0};
+  bool m_missing_gripper_feedback_warned{false};
+  bool m_legacy_gripper_warning_logged{false};
+  uint64_t m_passive_wrench_samples{0};
+  bool m_invalid_wrench_warned{false};
+
+  // ===== Custom torque control properties =====
+  TorqueControlType m_torque_control_type;
+
+  std::vector<double> m_offsets;
+
+  double m_mu;
+  double m_friction_vel_threshold;
+  double m_friction_accel_threshold;
+  std::vector<double> m_stiction_values;
+  std::vector<double> m_friction_values;
+  std::vector<double> m_viscous_values;
+  std::vector<double> m_friction_compensation_mode;
+  std::vector<double> m_current_friction_compensation;
+
+  std::vector<double> m_prev_torque_error;
+  std::vector<double> m_torque_error;
+
+  std::vector<double> m_integral_slow_filter;
+  std::vector<double> m_integral_slow_filter_w_gain;
+  double m_integral_slow_theta;
+  double m_integral_slow_gain;
+  std::vector<double> m_integral_slow_bound;
+
+  std::vector<double> m_torque_measure_corrected;
+
+  std::vector<double> m_jac_transpose_f;
+  rbd::Jacobian m_jac;
+
+  std::vector<boost::circular_buffer<double>> m_filter_input_buffer;
+  std::vector<boost::circular_buffer<double>> m_filter_output_buffer;
+  std::vector<double> m_filter_command;
+  std::vector<double> m_filter_command_w_gain;
+  std::vector<double> m_lambda;
+
+  Eigen::VectorXd tau_fric;
+
+  Eigen::VectorXd m_current_command;
+  Eigen::VectorXd m_current_measurement;
+  Eigen::VectorXd m_torque_from_current_measurement;
+  Eigen::VectorXd m_tau_sensor;
+
+public:
+  KinovaRobot(const std::string &name, const std::string &ip_address,
+              const std::string &username, const std::string &password);
+  ~KinovaRobot();
+
+  // ============================== Getter ============================== //
+  std::vector<double> getJointPosition(void);
+  std::string getName(void);
+
+  // ============================== Setter ============================== //
+  void setLowServoingMode(void);
+  void setSingleServoingMode(void);
+  void setCustomTorque(mc_rtc::Configuration &torque_config);
+  void setControlMode(std::string mode);
+  void setTorqueMode(std::string mode);
+
+  void init(mc_control::MCGlobalController &gc,
+            mc_rtc::Configuration &kortexConfig,
+            bool enable_control); // Connect/read state; enable commands only when requested
+  void addLogEntry(mc_control::MCGlobalController &gc);
+  void removeLogEntry(mc_control::MCGlobalController &gc);
+  void cleanupControllerInterfaces(mc_control::MCGlobalController &gc);
+
+  void updateState();
+  void updateState(bool &running);
+  void updateState(const k_api::BaseCyclic::Feedback data);
+  bool sendCommand(mc_rbdyn::Robot &robot, bool &running);
+  void updateSensors(mc_control::MCGlobalController &gc);
+  void updateControl(mc_control::MCGlobalController &controller);
+
+
+  void torqueFrictionComputation(mc_rbdyn::Robot &robot,
+                               k_api::BaseCyclic::Feedback m_state_local,
+                               size_t joint_idx);
+  double currentTorqueControlLaw(mc_rbdyn::Robot &robot,
+                                 k_api::BaseCyclic::Feedback m_state_local,
+                                 double joint_idx);
+  void checkBaseFaultBanks(uint32_t fault_bank_a, uint32_t fault_bank_b);
+  void checkActuatorsFaultBanks(k_api::BaseCyclic::Feedback feedback);
+  std::vector<std::string> getBaseFaultList(uint32_t fault_bank);
+  std::vector<std::string> getActuatorFaultList(uint32_t fault_bank);
+
+  void controlThread(mc_control::MCGlobalController &controller,
+                     std::mutex &startM, std::condition_variable &startCV,
+                     bool &start, bool &running);
+  void stopController();
+  void moveToHomePosition(void);
+  void moveToInitPosition(void);
+
+  std::string
+  controlLoopParamToString(k_api::ActuatorConfig::LoopSelection &loop_selected,
+                           int actuator_idx);
+
+  void printState(void);
+  void printJointActiveControlLoop(int joint_id);
+
+  // ============================== Private methods
+  // ============================== //
+private:
+  bool isPrimaryRobot(mc_control::MCGlobalController & gc) const;
+  std::string scopedHandoverKey(const std::string & leaf) const;
+  std::string scopedRuntimeKey(const std::string & leaf) const;
+  std::string logKey(mc_control::MCGlobalController & gc,
+                     const std::string & base) const;
+
+  void initFiltersBuffers(void);
+
+  void addGui(mc_control::MCGlobalController &gc);
+  void removeGui(mc_control::MCGlobalController &gc);
+
+  void addPlot(mc_control::MCGlobalController &gc);
+  void removePlot(mc_control::MCGlobalController &gc);
+
+  double jointPoseToRad(int joint_idx, double deg);
+  double radToJointPose(int joint_idx, double rad);
+  std::vector<double>
+  computePostureTaskOffset(mc_rbdyn::Robot &robot,
+                           mc_tasks::PostureTaskPtr posture_task,
+                           bool use_model_reference_if_missing = false);
+  uint32_t jointIdFromCommandID(google::protobuf::uint32 cmd_id);
+  int64_t GetTickUs(void);
+  void printError(const k_api::Error &err);
+  void printException(k_api::KDetailedException &ex);
+  std::function<void(k_api::Base::ActionNotification)>
+  check_for_end_or_abort(bool &finished);
+  std::function<void(k_api::Base::ActionNotification)>
+  create_event_listener_by_promise(
+      std::promise<k_api::Base::ActionEvent> &finish_promise_cart);
+};
+
+using KinovaRobotPtr = std::unique_ptr<KinovaRobot>;
+
+std::string printVec(std::vector<double> vec);
+
+} // namespace mc_kinova

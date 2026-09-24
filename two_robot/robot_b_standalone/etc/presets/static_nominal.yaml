@@ -1,0 +1,39 @@
+scenario: static_nominal
+referenceAStart:
+- 0.55
+- 0.0
+- 0.55
+robotAVelocity:
+- 0.0
+- 0.0
+- 0.0
+constantVelocityDuration: 0.0
+decelerationDuration: 0.0
+maximumTravel: 0.05
+robotBStartPose:
+  configured: true
+  translation:
+  - 0.4567
+  - -0.559
+  - 0.8337
+  rotation:
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+mapping:
+  referenceScenario: canonical_yz
+  referenceAStart:
+  - 0.55
+  - -0.56
+  - 0.15
+  referenceBStart:
+  - 0.4567
+  - 0.001
+  - 0.4337
+  yawDegrees: 180.0

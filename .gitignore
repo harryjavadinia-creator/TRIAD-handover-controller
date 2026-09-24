@@ -17,3 +17,6 @@ __pycache__/
 
 # Optional environment used to regenerate result figures
 /.venv-figures/
+
+# mc_rtc binary logs of two-robot simulation runs (hundreds of MB)
+two_robot/results/**/*.bin

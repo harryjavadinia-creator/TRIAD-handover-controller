@@ -1,0 +1,18 @@
+ROBOT B FIXED START WORKFLOW
+============================
+
+python3 tools/select_scenario.py canonical_yz
+python3 tools/set_motion_enabled.py true
+rm -f /tmp/call_robot_b_start
+bash tools/preflight.sh
+bash tools/run_robot_b.sh
+
+Wait for [RobotB READY]. In terminal 2:
+
+bash tools/start_motion.sh
+
+Wait for [RobotB HOLD], then:
+
+bash tools/stop_and_disable.sh
+
+No teaching. No communication. Current pose -> predefined start -> READY -> trigger -> motion -> HOLD.
