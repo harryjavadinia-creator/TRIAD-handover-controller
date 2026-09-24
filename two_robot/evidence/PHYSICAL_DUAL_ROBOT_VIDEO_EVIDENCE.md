@@ -7,7 +7,7 @@ Two real-world phone videos supplied on 24 September 2026 document the July 2026
 - [`../media/dual_robot_physical_01.mp4`](../media/dual_robot_physical_01.mp4): both physical Kinova arms are active in the same laboratory setup around the bottle/object.
 - [`../media/dual_robot_physical_02.mp4`](../media/dual_robot_physical_02.mp4): Robot B supports/presents the bottle while Robot A's Robotiq gripper approaches the bottle neck and closes around it.
 
-This is direct visual evidence of physical dual-robot operation and interaction. The driver logs of the same day (`hardware_runs_2026-07-18/`) record nine runs in which Robot A entered `CaptureTransfer` with the physical gripper bridge enabled and stopped at the closure check against the virtual object model; the footage is consistent with those runs but is not time-synchronized with them. It is independent of the mc_rtc state-log inventory. The footage alone should not be used to infer a particular logged FSM state such as `CaptureTransfer` without synchronized controller data.
+This is direct visual evidence of physical dual-robot operation and interaction. The driver logs of the same day (`hardware_runs_2026-07-18/`) record nine runs in which Robot A entered `CaptureTransfer` with the physical gripper bridge enabled and closed on the object (reach-and-close was the objective: the object was taped to Robot B's tool); the footage is consistent with those runs but is not time-synchronized with them. It is independent of the mc_rtc state-log inventory. The footage alone should not be used to infer a particular logged FSM state such as `CaptureTransfer` without synchronized controller data.
 
 ## Source integrity
 

@@ -101,8 +101,10 @@ laptop by the standalone `robot_b_standalone/` mover.
 - **Controller-log evidence (July 2026):** Robot A gripper commissioning (15 July, sandbox controller logs); Robot B alone
   executing its presentation with the integrated coordinator (17 July 22:30, phases Prepositioning → StartSettling → Ready → Executing → TerminalSettling → Holding);
   and, on 18 July, nine combined runs in which Robot A entered `CaptureTransfer` on the physical arms with
-  the gripper bridge enabled and stopped in the fail-safe hold at the closure check against the virtual
-  object model (no physical contact signal); no run reached `Retreat`
+  the gripper bridge enabled and closed the gripper on the object. Reach-and-close was the objective of those
+  sessions (the object was taped to Robot B's tool; no transfer or retreat by design); each run then stopped
+  in the fail-safe hold at the closure check against the virtual object model, as expected without a
+  physical contact signal
   ([`two_robot/evidence/hardware_runs_2026-07-18/`](../two_robot/evidence/hardware_runs_2026-07-18/README.md)).
   In the first four of those runs Robot B was driven by a fixed-joint override in the Kortex driver, in the
   last five by the giver coordinator's references. Inventory of the binary logs:

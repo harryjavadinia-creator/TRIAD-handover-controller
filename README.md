@@ -177,8 +177,9 @@ the simulation ticker. Robot A is the Gen3 with the Robotiq gripper at
 192.168.1.10, Robot B the Gen3 at 192.168.1.11, the laptop at 192.168.1.12 (edit
 these in the profile if your network differs). Physical two-robot operation and
 interaction are on video in [`two_robot/media/`](two_robot/media/); nine logged
-runs entered the capture state on the physical arms and stopped at the closure
-check against the virtual object model, none reached the retreat
+runs reached the capture state on the physical arms and closed the gripper on
+the object, which was the objective of those sessions (the object was taped to
+Robot B's tool; no transfer or retreat by design)
 ([`two_robot/evidence/hardware_runs_2026-07-18/`](two_robot/evidence/hardware_runs_2026-07-18/README.md),
 [docs/real_robot.md](docs/real_robot.md)).
 

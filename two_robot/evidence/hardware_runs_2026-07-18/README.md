@@ -2,6 +2,8 @@
 
 These are the `mc_kortex` text logs (the driver's stdout, which carries the controller's log) of the
 two-arm sessions of 18 July 2026 in which Robot A entered `CaptureTransfer` on the physical arms.
+The objective of these sessions was **reach and close**: the object was taped to Robot B's tool, so no
+load transfer and no retreat were attempted by design. All nine runs reached that objective.
 They complement the binary-log inventory in `../JULY_2026_HARDWARE_LOG_INVENTORY.md`, whose rows of
 13:11–13:54 correspond to the same session. Robot A ran with `allowPhysicalExecution: true` and the
 physical Robotiq bridge enabled with command and feedback (`controller_config_13-56.yaml`); the transfer
@@ -19,12 +21,13 @@ force source was the virtual sensor.
 | 14:40 | `ground_near_shifted_more_toward_b` | controller references (giver coordinator) | Initial → ObserveObject → SolveInterception → ExecuteCommittedReach → PresentationHold → MovePregrasp → CaptureTransfer → Failure | `[Acquire] hard closure geometry violation` | `ground_near_shifted_more_toward_b_20260718_144032.mc_kortex.log.xz` |
 | 14:51 | `ground_near_shifted_more_toward_b (z 0.20)` | controller references (giver coordinator) | Initial → ObserveObject → SolveInterception → ExecuteCommittedReach → PresentationHold → MovePregrasp → CaptureTransfer → Failure | `[Acquire] hard closure geometry violation` | `ground_near_shifted_more_toward_b_20260718_145118.mc_kortex.log.xz` |
 
-Every one of these runs ended inside `CaptureTransfer` with the same message: the closure check against
-the **virtual** object model (`clear=-0.0000 limiting=left_inner_pad/robot_blue_handle`) reported the
-inner pad touching the modelled handle, and the controller entered its fail-safe hold. The physical
-gripper had closed on the physical object (video evidence in `../PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md`);
-the controller had no physical contact or force signal, so it judged the closure on the model. No run
-reached `Retreat`.
+After the closure, every run ended inside `CaptureTransfer` with the same message: the closure check
+against the **virtual** object model (`clear=-0.0000 limiting=left_inner_pad/robot_blue_handle`) reported
+the inner pad touching the modelled handle, and the controller entered its fail-safe hold. That is the
+expected end of a reach-and-close session: the physical gripper had closed on the physical object (video
+evidence in `../PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md`), the object was fixed to Robot B, and the
+controller had no physical contact or force signal to continue the transfer with. `Retreat` was not part
+of the objective and was not reached.
 
 How Robot B was driven: in the 13:10–13:39 runs the Kortex driver interpolated Robot B's joints to a
 fixed measured target on the presentation time law (`CALL_PHYSICAL_ROBOT_B_FIXED_JOINTS=1`, see

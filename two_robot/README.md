@@ -38,9 +38,10 @@ What is in it:
   arm (Prepositioning → StartSettling → Ready → Executing → TerminalSettling → Holding, log of 22:30). On
   18 July nine runs on the two physical arms went Initial → ObserveObject → SolveInterception →
   ExecuteCommittedReach → PresentationHold → MovePregrasp → CaptureTransfer with the physical gripper bridge
-  enabled, and every one ended in the fail-safe hold inside `CaptureTransfer`: the closure check against the
-  virtual object model reported the inner pad touching the modelled handle (the controller has no physical
-  contact or force signal). No run reached `Retreat`. In the first four of those runs Robot B was driven by a
+  enabled and closed the gripper on the object. That was the objective of those sessions: the object was
+  taped to Robot B's tool, so no transfer and no retreat were attempted by design. After the closure each run
+  ended in the fail-safe hold inside `CaptureTransfer`, at the closure check against the virtual object model
+  (the controller has no physical contact or force signal), as expected in that setup. In the first four of those runs Robot B was driven by a
   fixed-joint override in the Kortex driver; in the last five by the giver coordinator's references, which
   is this repository's configuration. Robot A alone had its physical gripper commissioned on 15–16 July.
 - **Hardware, real-world video evidence**: `media/dual_robot_physical_01.mp4` and
