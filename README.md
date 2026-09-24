@@ -178,8 +178,9 @@ What you must see:
 | `two_robot/run_two_robot_sim.sh` | Robot B phases Prepositioning → … → Holding, Robot A states up to `Completed`, `RESULT: COMPLETED`, log and timeline under `two_robot/results/` |
 
 The other scenarios are `near-ground`, `lateral-low` and `diagonal`. To watch a
-run, open an mc_rtc viewer (RViz or mc-rtc-magnum) before starting it;
-[Quick start §7](docs/quickstart.md#7-watch-it) gives the commands. The
+run, open RViz with `two_robot/display_two_robot.rviz` (Robot A, Robot B and the
+object) before starting it; [Quick start §7](docs/quickstart.md#7-watch-it) gives
+the commands and shows what you should see. The
 [simulation guide](docs/simulation.md) lists the reference winners for each
 scenario so that a run can be compared with the recorded one.
 

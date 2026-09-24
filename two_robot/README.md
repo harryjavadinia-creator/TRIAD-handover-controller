@@ -14,6 +14,7 @@ What is in it:
 | `../src/states/HandoverInterceptionController_StaticXTouch.*` | a deliberately simple static two-arm rendezvous with no planning, for commissioning |
 | `HandoverInterceptionController.two_robot.yaml` | the configuration overlay: second robot, giver scenario `pure_x`, object coupling, safety limits (values of the July sessions) |
 | `run_two_robot_sim.sh` | runs the two-arm handover in mc_rtc's ticker straight from a build tree, without installing |
+| `display_two_robot.rviz` | RViz display file with Robot A, Robot B and the object |
 | `mc_rtc.two_kortex.yaml` | the global mc_rtc profile for two physical Kortex arms (credentials are placeholders) |
 | `mc_kortex_patch/` | the three mc_kortex source files that map Robot A (`gen3_joint_1..7`) and Robot B (`joint_1..7`) independently, with its source audit |
 | `check_dual_network.sh`, `run_dual_init_only.sh`, `disable_and_stop.sh` | the hardware procedure scripts of July 2026 |
@@ -71,9 +72,9 @@ appends the overlay to the controller configuration and prints the giver milesto
 states. Expect `RESULT: COMPLETED` after about 20 s of simulated time. mc_rtc's ticker segfaults on exit
 after `--run-for`; that happens after Completed and is not part of the handover.
 
-To watch it, open an mc_rtc viewer before starting the script (`../docs/quickstart.md` §7): with the ROS
-plugin the controller publishes `/control/gen3_2f85/robot_description`, `/control/kinova/robot_description`
-and `/control/call_object/robot_description`; add a RobotModel display for Robot B and the object in RViz.
+To watch it, open RViz with `display_two_robot.rviz` from this folder before starting the script (it shows
+Robot A, Robot B and the object; `../docs/quickstart.md` §7 has the commands and a screenshot,
+`media/rviz_two_robot.png`).
 The July simulation recordings and the two physical laboratory clips are in `media/`.
 
 ## Run it on the two physical arms

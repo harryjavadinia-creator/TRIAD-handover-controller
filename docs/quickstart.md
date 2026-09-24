@@ -151,26 +151,35 @@ laboratory videos are in [`two_robot/`](../two_robot/README.md).
 
 ## 7. Watch it
 
-Both runners start mc_rtc's GUI server (TCP 4242 / 4343 on localhost), so any
+Both runners start mc_rtc's GUI server (TCP 4242 / 4343 on localhost), so an
 mc_rtc viewer attached to the local controller shows the robots, the object
 and the **Handover → Methodology** markers while a run is in progress. Start
 the viewer first: the wrappers stop the ticker as soon as a run terminates.
 
-- **RViz** (if your mc_rtc was built with its ROS plugin): source ROS and
-  the mc_rtc ROS workspace in a second terminal, then
+**RViz** (mc_rtc built with its ROS plugin). In a second terminal, source ROS
+and the mc_rtc ROS workspace, then open the display file shipped with this
+repository, which has a RobotModel display for Robot A, Robot B and the
+object:
 
-  ```bash
-  rviz2 -d "$(ros2 pkg prefix mc_rtc_ticker)/share/mc_rtc_ticker/launch/display.rviz"
-  ```
+```bash
+source /opt/ros/jazzy/setup.bash          # your ROS distribution
+source /path/to/mc_rtc_ros_ws/install/setup.bash
+rviz2 -d two_robot/display_two_robot.rviz
+```
 
-  The controller publishes `/control/gen3_2f85/robot_description`,
-  `/control/call_object/robot_description` and, in the two-robot run,
-  `/control/kinova/robot_description`; the shipped display file shows the
-  first one, add a RobotModel display for the others.
-- **mc-rtc-magnum** (no ROS needed): install the standalone
-  [mc_rtc-magnum viewer](https://github.com/mc-rtc/mc_rtc-magnum) and start
-  `mc-rtc-magnum` with the local controller connection. The viewer needs the
-  same robot mesh files as the controller.
+Then start the run in the first terminal. This is what the two-robot run
+looks like in it (Robot A left, Robot B right holding the object):
+
+![RViz view of the two-robot handover](../two_robot/media/rviz_two_robot.png)
+
+The same file works for the single-robot scenarios; the Robot B display then
+simply reports that its topic is absent. mc_rtc's own `display.rviz` (in the
+`mc_rtc_ticker` package) shows Robot A only.
+
+**mc-rtc-magnum** (no ROS needed): install the standalone
+[mc_rtc-magnum viewer](https://github.com/mc-rtc/mc_rtc-magnum) and start
+`mc-rtc-magnum` with the local controller connection. The viewer needs the
+same robot mesh files as the controller.
 
 The upstream [controller/viewer guide](https://jrl.cnrs.fr/mc_rtc/tutorials/introduction/running-a-controller.html)
 covers both viewers.
