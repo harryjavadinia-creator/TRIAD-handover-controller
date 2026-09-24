@@ -142,4 +142,17 @@ State sequences were extracted with `mc_bin_utils convert --entries Executor_Mai
 | 2026-07-17 16:08 | dual (A + B) | 27 MB |  |
 | 2026-07-17 16:40 | dual (A + B) | 5.9 GB |  |
 
-134 logs, 31.0 GB in total. No hardware run reached CaptureTransfer; no real-life video of the two arms exists on this laptop (only screen recordings of the simulation, see ../media/).
+134 logs, 31.0 GB in total. In this mc_rtc log inventory, no hardware run is recorded as reaching `CaptureTransfer`.
+
+## Physical dual-robot video evidence
+
+Separate real-world video evidence is included in `../media/`: `dual_robot_physical_01.mp4` and
+`dual_robot_physical_02.mp4`. The footage shows both physical Kinova arms operating in the same laboratory
+handover setup. In the second clip Robot B supports/presents the bottle while Robot A's Robotiq gripper
+approaches and closes around the bottle neck.
+
+This visual evidence is independent of the state-log inventory above. The videos establish physical
+dual-robot operation and interaction, but should not be used by themselves to infer a particular logged
+FSM state without synchronized controller data. See
+[`PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md`](PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md) for the source-file hashes
+and evidence boundary.
