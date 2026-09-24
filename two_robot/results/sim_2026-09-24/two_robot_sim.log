@@ -106,8 +106,8 @@ Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/kinova_default/kin
 [warning] [MC_RTC_DEPRECATED] Prefer using addContact/removeContact for contacts manipulation instead of QPSolver::setContacts
 [success] MCHalfSitPoseController init done
 [warning] [MCController::HalfSitPose] No state observation pipeline configured: the state of the real robots will not be estimated
-[info] Will log controller outputs to /tmp/claude-1000/-home-harry-TRIAD-SCIENTIFIC-AUDIT/a9f03994-71e7-4a39-8e68-da77d1a17b29/scratchpad/objtrace3/mc-control-HandoverInterceptionController-2026-09-24-19-56-10.bin
-[info] Updated latest log symlink: /tmp/claude-1000/-home-harry-TRIAD-SCIENTIFIC-AUDIT/a9f03994-71e7-4a39-8e68-da77d1a17b29/scratchpad/objtrace3/mc-control-HandoverInterceptionController-latest.bin
+[info] Will log controller outputs to <log-directory>/mc-control-HandoverInterceptionController-2026-09-24-19-56-10.bin
+[info] Updated latest log symlink: <log-directory>/mc-control-HandoverInterceptionController-latest.bin
 [info] Added task FSM_body6d_call_object_call_object
 [info] Added task transform_kinova_tool_frame
 [success] [DualGiver] Cartesian task activated robot=kinova frame=tool_frame

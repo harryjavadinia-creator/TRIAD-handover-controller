@@ -12,7 +12,8 @@ import sys, json, math, xml.etree.ElementTree as ET
 import numpy as np
 from scipy.optimize import linprog, lsq_linear
 
-URDF = "/home/harry/mc_rtc_ws/Sandbox/kinova_gen3_2f85_mcdesc/urdf/gen3_2f85.urdf"
+import os
+URDF = os.path.join(os.environ.get("MAIN_ROBOT_MODULE_PATH", "gen3_2f85_module"), "urdf", "gen3_2f85.urdf")  # the module built in the README
 TOOL = "gen3_robotiq_85_base_link"
 VEL_PCT, D_INTER, D_SECUR, D_OFF = 0.95, 0.10, 0.01, 0.50   # etc: constraints[kinematics]
 B_T_M_T = np.array([0.0, 0.0, 0.0983262]); B_T_M_RPY = (-1.57079632679, 0.0, 0.0)

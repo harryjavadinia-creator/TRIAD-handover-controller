@@ -1,8 +1,8 @@
 StatesLibraries:
-- "/home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states"
-- "/home/harry/TRIAD-handover-controller/build/src/states"
+- "<mc_rtc-install>/lib/mc_controller/fsm/states"
+- "<repository>/build/src/states"
 StatesFiles:
-- "/home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states/data"
+- "<mc_rtc-install>/lib/mc_controller/fsm/states/data"
 # Two-robot overlay for the TRIAD controller (HandoverInterceptionController).
 #
 # Robot A = the TRIAD receiver (gen3_2f85, MainRobot). Robot B = a second Kinova Gen3 ("kinova")

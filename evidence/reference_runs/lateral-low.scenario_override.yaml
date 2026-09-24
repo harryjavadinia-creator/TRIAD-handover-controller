@@ -1,8 +1,8 @@
 StatesLibraries:
-- "/home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states"
-- "/home/harry/TRIAD-handover-controller/build/src/states"
+- "<mc_rtc-install>/lib/mc_controller/fsm/states"
+- "<repository>/build/src/states"
 StatesFiles:
-- "/home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states/data"
+- "<mc_rtc-install>/lib/mc_controller/fsm/states/data"
 robots:
   call_object:
     init_pos:
