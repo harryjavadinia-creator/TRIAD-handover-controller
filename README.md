@@ -168,6 +168,10 @@ export TRIAD_BUILD_DIR="$PWD/build"
 export MC_RTC_INSTALL="$TRIAD_MC_RTC_PREFIX"
 scripts/run_scenario.sh longitudinal          # one human-to-robot scenario
 bash two_robot/run_two_robot_sim.sh 80        # Robot B gives, Robot A receives
+
+# to watch in RViz: open two_robot/display_two_robot.rviz first, then run at half speed
+TRIAD_SYNC_RATIO=0.5 scripts/run_scenario.sh lateral-low
+TRIAD_SYNC_RATIO=0.5 TRIAD_GIVER_SCENARIO=diagonal_xz bash two_robot/run_two_robot_sim.sh 80
 ```
 
 What you must see:
@@ -177,11 +181,10 @@ What you must see:
 | `scripts/run_scenario.sh <scenario>` | `HANDOVER_COMPLETED=true`, `RUNTIME_CHECKER_RESULT=PASS`, `SCENARIO_IDENTITY_RESULT=PASS`, log under `results/` with the state sequence up to `Completed` and the committed `candidate=… route=… globalJ=…` |
 | `two_robot/run_two_robot_sim.sh` | Robot B phases Prepositioning → … → Holding, Robot A states up to `Completed`, `RESULT: COMPLETED`, log and timeline under `two_robot/results/` |
 
-The other scenarios are `near-ground`, `lateral-low` and `diagonal`. To watch a
-run, open RViz with `two_robot/display_two_robot.rviz` (Robot A, Robot B and the
-object) before starting it and add `TRIAD_SYNC_RATIO=0.5` to the run command;
-[Quick start §7](docs/quickstart.md#7-watch-it) gives the commands, the reason
-for the half speed and what you should see. The
+The single-robot scenarios are `longitudinal`, `near-ground`, `lateral-low` and
+`diagonal`; the two-robot presentations are `pure_x` (default), `diagonal_xz` and
+`static_nominal`. [Quick start §7](docs/quickstart.md#7-watch-it) explains the
+viewer, the reason for the half speed while watching, and what you should see. The
 [simulation guide](docs/simulation.md) lists the reference winners for each
 scenario so that a run can be compared with the recorded one.
 
