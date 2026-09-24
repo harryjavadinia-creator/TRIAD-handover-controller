@@ -1,9 +1,9 @@
 # Real robot
 
-**No result in this repository has been validated end-to-end on physical
-hardware.** This document separates verified simulation behavior from the
-configuration, calibration, and safety work still required before any physical
-handover is attempted.
+**Physical dual-robot operation is documented by real-world video, but no complete TRIAD
+handover has been validated end-to-end on physical hardware as a synchronized controller
+validation campaign.** This document separates direct hardware evidence, verified simulation
+behavior, and the calibration/safety work required for reproducible physical execution.
 
 ## 1. Simulation-validated
 
@@ -29,19 +29,21 @@ also use simulation.
   force_sensor | disabled`) for switching between simulated and physical
   force/contact sources.
 
-None of these elements has been exercised end-to-end on physical hardware as a
-TRIAD handover validation campaign.
+These elements are not documented here as a complete synchronized end-to-end TRIAD hardware
+validation campaign. Separate July 2026 evidence does document the two physical robots operating
+together; see Section 4.
 
-## 3. Unverified real-robot procedure
+## 3. Real-robot reproduction status
 
-There is currently no end-to-end tested procedure for reproducing a TRIAD
-handover on physical hardware. The required software/configuration pieces exist,
-but their presence is not evidence of hardware readiness.
+There is currently no end-to-end tested procedure in this repository for reproducing a complete
+TRIAD handover on physical hardware from a fresh checkout. The required software/configuration
+pieces exist, and the July laboratory evidence shows physical dual-robot operation, but those are
+different claims from a reproducible end-to-end controller validation.
 
 ## 4. Missing calibration and safety information
 
 The following are not established by this repository and must be defined and
-verified locally before any physical attempt:
+verified locally before a new physical attempt:
 
 - emergency-stop procedure;
 - safety-zone / workspace-boundary definition;
@@ -57,7 +59,7 @@ Real credentials must never be committed to the repository.
 
 ## Safety warning
 
-Any physical attempt must begin with the non-contact
+Any new physical attempt must begin with the non-contact
 `hardwareGripperCommissioning` smoke-test path, with the arm frozen and the
 gripper as the only active component. Do not enable `commandEnabled` or full
 FSM execution on hardware without independently establishing the calibration,
@@ -65,19 +67,21 @@ workspace, network, and emergency-stop procedures above.
 
 ## Implementation status
 
-The frozen scientific source was exercised entirely in simulation, with
+The frozen scientific-source simulation campaign was exercised with
 `allowPhysicalExecution: false`, the physical gripper bridge disabled, and the
-force-transfer source set to the virtual sensor.
+force-transfer source set to the virtual sensor. That statement describes the
+simulation validation campaign; it does **not** mean that the two-robot laboratory
+setup was never operated physically.
 
 `mc_kortex` is a hardware driver and `mc_rtc_ticker` is a simulation harness.
-The presence of either in the toolchain is **not** evidence of physical robot
-execution.
+The presence of either in the toolchain alone is **not** evidence of physical robot
+execution. The separate phone-video evidence in `two_robot/media/` is direct visual
+evidence of such physical execution.
 
-Accordingly, the hardware material in this repository is a prerequisite
-checklist and staged commissioning path, not a validated end-to-end real-robot
-handover procedure.
+Accordingly, distinguish three evidence classes: the reproducible simulation campaign, the
+July mc_rtc hardware logs, and the real-world dual-robot video footage.
 
-## 4. Two-robot setup (Robot A receiver, Robot B giver) — what exists and what was reached
+## 5. Two-robot setup (Robot A receiver, Robot B giver) — what exists and what was reached
 
 The July 2026 laboratory setup is integrated on this branch under [`two_robot/`](../two_robot/README.md):
 a second Kinova Gen3 (`kinova`, 192.168.1.11) presents the object to Robot A (`gen3_2f85`, 192.168.1.10)
@@ -90,15 +94,25 @@ laptop by the standalone `robot_b_standalone/` mover.
   and the gripper closure calibration measured on the real gripper on 16 July 2026 (`closePercent`/`maxPercent`
   50.37, `openPercent` 0.87). The repository default keeps the 15 July value (35.0); the 16 July value is the
   later calibration and the one the last hardware runs used. `transfer.source` stayed `virtual_sensor` in
-  every hardware run: no physical force path has been validated.
-- **Reached on hardware (July 2026):** Robot A gripper commissioning (tag `v6.4.2`, 15 July); Robot B alone
+  the inventoried hardware runs: no physical force path has been validated.
+- **Controller-log evidence (July 2026):** Robot A gripper commissioning (tag `v6.4.2`, 15 July); Robot B alone
   executing its presentation with the integrated coordinator (17 July 22:30, phases Prepositioning → Holding);
-  the combined run reaching `ExecuteCommittedReach` before failing (18 July 00:51). **No hardware run reached
-  `CaptureTransfer`.** Inventory: [`two_robot/evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`](../two_robot/evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md).
+  and the inventoried combined run reaching `ExecuteCommittedReach` before failing (18 July 00:51). The
+  inventoried mc_rtc logs do not record `CaptureTransfer`. Inventory:
+  [`two_robot/evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`](../two_robot/evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md).
+- **Direct visual hardware evidence:**
+  [`two_robot/media/dual_robot_physical_01.mp4`](../two_robot/media/dual_robot_physical_01.mp4) and
+  [`two_robot/media/dual_robot_physical_02.mp4`](../two_robot/media/dual_robot_physical_02.mp4) show both
+  physical Kinova arms operating together in the laboratory handover setup. In the second clip Robot B
+  supports/presents the bottle while Robot A's Robotiq gripper approaches and closes around the bottle neck.
+  This video evidence is separate from the state logs and does not by itself assign a specific FSM state.
+  Source hashes and the evidence boundary are recorded in
+  [`two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md`](../two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md).
 - **Verified in simulation with this code (24 September 2026):** the full two-arm handover completes
   ([`two_robot/results/sim_2026-09-24/TIMELINE.md`](../two_robot/results/sim_2026-09-24/TIMELINE.md)).
 - **Procedure:** the seven steps in [`two_robot/README.md`](../two_robot/README.md), motion disabled until
   each step passes.
 
-The statement at the top of this page still holds: no TRIAD handover has been validated end-to-end on
-physical hardware.
+The evidence therefore supports physical two-robot operation and handover interaction. What remains
+unestablished is a synchronized, reproducible end-to-end TRIAD hardware validation in which the complete
+FSM execution is tied to the physical run by controller logs and the required force/safety instrumentation.
