@@ -20,7 +20,8 @@ python3 tools/check_documentation_claims.py
 python3 tools/test_check_planner_core_purity.py
 python3 tools/check_planner_core_purity.py
 python3 tools/verify_scientific_baseline.py SCIENTIFIC_BASELINE.sha256 --commit scientific-baseline
-sha256sum -c docs/source_sync_f56add3.sha256
+sha256sum -c docs/source_sync_triad-final-2026-09-24.sha256
+bash tools/verify_frozen_v1_preserved.sh   # frozen V1 files, checked at the commit that preserved them
 python3 tools/check_evidence_manifest.py
 ```
 
