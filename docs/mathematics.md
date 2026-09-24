@@ -72,7 +72,7 @@ The reported event leads are:
 
 The configured cap is 15 event hypotheses; clamping and deduplication produce 14 distinct leads in the reported bank.
 
-The value 7616 is therefore the upper pre-pruning product. It is not the number of plans that survive complete evaluation, and it is not a claim of continuous-space global optimality.
+The value 7616 is therefore the upper pre-pruning product, not the number of plans that survive complete evaluation.
 
 ## 3. Object estimation and future-event prediction
 
@@ -368,7 +368,7 @@ The implementation first computes the numerical minimum `J_min`, then forms a de
 
 Secondary ordering uses predicted search-to-completion duration, event time, predicted reach/presentation duration, larger clearance, candidate name, route name, hypothesis index, and source index. A selected cost may therefore lie within the configured tie tolerance of the numerical minimum.
 
-The reported discretization uses 14 event times, 32 grasps, 17 route generators, and 25 evaluated swept poses per commanded segment. These are engineering resolutions; no bank-resolution convergence study is claimed.
+The reported discretization uses 14 event times, 32 grasps, 17 route generators, and 25 evaluated swept poses per commanded segment. These are engineering resolutions.
 
 ## 11. Commit-time prediction consistency
 

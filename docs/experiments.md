@@ -21,7 +21,7 @@ from the bounded finite plan bank.
 | Historical source | `c07368c`, preserved by tag `scientific-baseline` |
 | Checker | `tools/check_global_time_plan_log.py` |
 
-Reference winners:
+Reference winners at the scientific-baseline source state (tag `scientific-baseline`):
 
 | Scenario | Event lead (s) | Grasp | Route | Global cost |
 | --- | ---: | --- | --- | ---: |
@@ -29,6 +29,23 @@ Reference winners:
 | Longitudinal | 3.700 | `axisP_side_337deg` | `direct` | 0.686806299 |
 | Lateral-low | 4.150 | `axisN_side_337deg` | `direct` | 0.700830630 |
 | Diagonal | 4.600 | `axisP_side_337deg` | `ring140mm_2of8` | 0.684634405 |
+
+### Reference-run winners
+
+The logs in [`evidence/reference_runs/`](../evidence/reference_runs/) are the
+current sources run from a fresh clone (build tree, no viewer). Their committed
+plans differ from the frozen table above because timing admission is evaluated
+at the simulated time the background search returns
+([Simulation](simulation.md) explains the receipt-time admission):
+
+| Scenario | Event lead (s) | Grasp | Route | J_global | Plans (complete / cost-valid / admissible) |
+| --- | ---: | --- | --- | ---: | --- |
+| `longitudinal` | 5.500 | `axisP_side_337deg` | `ring80mm_1of8` | 0.806835232 | 198 / 198 / 48 |
+| `near-ground` | 6.850 | `axisP_side_68deg` | `ring80mm_1of8` | 1.126642447 | 283 / 283 / 10 |
+| `lateral-low` | 8.000 | `axisN_side_45deg` | `ring80mm_6of8` | 0.896429684 | 432 / 432 / 53 |
+| `diagonal` | 4.600 | `axisP_side_337deg` | `ring80mm_1of8` | 0.698600183 | 233 / 233 / 227 |
+
+(`[PresentationCommit] COMMITTED` and `[GlobalTimePlanSelection]` in each log.)
 
 These cases produce different complete `(event time, grasp, route)` decisions
 under different object motions and geometries.

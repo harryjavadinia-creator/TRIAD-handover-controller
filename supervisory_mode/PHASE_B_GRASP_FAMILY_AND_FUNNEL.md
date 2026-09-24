@@ -18,7 +18,7 @@ Tags: `CODE` / `DERIVED` / `LIT` / `NUM` (numerical choice) / `EXP` (measured he
 | axial bound | \|s\| ≤ min(L_H − w_f − m, corridor 35 mm) = 35 mm | `DERIVED` (w_f = 12.5 mm finger half-width from the Robotiq tip lattice, m = 3 mm) |
 | remaining DOF | (σ, θ, s); ψ is not free | `DERIVED` |
 | centred-grasp task constraint | `axialMax: 0` gives s ≡ 0 (unit-tested) | explicit option |
-| θ resolution floor | Δθ ≤ min(ε_p/ℓ, ε_R) with ε_p = 15 mm, ε_R = 0.12 rad, ℓ = 0.126 m, so N_θ = 53 per sign | `DERIVED` (TRIAD Phase 4) |
+| θ resolution floor | Δθ ≤ min(ε_p/ℓ, ε_R) with ε_p = 15 mm, ε_R = 0.12 rad, ℓ = 0.126 m, so N_θ = 53 per sign | `DERIVED` (resolution rule of the receding-mode characterisation, not part of this repository) |
 | legacy (σ, φ) ring | σ = +1: θ = φ − π/2; σ = −1: θ = π/2 − φ | unit test: identical frames |
 
 **Mechanical screen** (necessary conditions only): the axial bound, and every mouth centre above the ground plane.
@@ -29,14 +29,14 @@ Tags: `CODE` / `DERIVED` / `LIT` / `NUM` (numerical choice) / `EXP` (measured he
 
 **Reachable set.** Joint 1 is continuous about the base z axis, so the wrist-point reachable set is a solid of revolution. It is described exactly in (ρ, z).
 
-**Construction** (`tools/build_gen3_wrist_reachability.py`):
+**Construction** (`supervisory_mode/tools/build_gen3_wrist_reachability.py`):
 - 4·10⁶ uniform samples of q2..q6 within URDF limits, seed 20260916;
 - a 10 mm grid, binary closing, then a signed Euclidean distance transform;
 - URDF SHA-256 `3a7728a6…`.
 
 **Use.** The map gives a necessary condition only. It ignores orientation feasibility for joints 5–7, collisions, and the controller IK.
 
-**False negatives** (`evidence/reachability_surrogate_characterization.txt`, `EXP`). Truth is 400 k FK-generated tool poses with an independent seed; truth and surrogate come from the same kinematic model.
+**False negatives** (`evidence/reachability_surrogate_characterization.txt` (not included in this repository), `EXP`). Truth is 400 k FK-generated tool poses with an independent seed; truth and surrogate come from the same kinematic model.
 
 | prune threshold | false-negative rate |
 |---|---|
@@ -54,11 +54,11 @@ G0 → G_mech → G_R (score ≥ −tol) → G_K (shortlist) → exact controlle
 
 **Score.** min(sdf at standoff, sdf at capture).
 
-**Shortlist.** Candidates are ordered by score. A diversity pass keeps one per (σ, axial index, θ-bin of 13.6° = 2 × resolution), then the rest fill by score. The Python mirror in `tools/funnel_characterization.py` is used for the analysis.
+**Shortlist.** Candidates are ordered by score. A diversity pass keeps one per (σ, axial index, θ-bin of 13.6° = 2 × resolution), then the rest fill by score. The Python mirror in `supervisory_mode/tools/funnel_characterization.py` is used for the analysis.
 
 **Upstream comparison** (`LIT`, Akinola/Xu `dynamic_grasping_world.py`): SDF ranking followed by bounded exact IK. Their grasp database, `max_check`, back-offs and thresholds are not reused.
 
-## 4. Characterization (`evidence/phaseB_sim`, `EXP`)
+## 4. Characterization (`evidence/phaseB_sim` (not included in this repository), `EXP`)
 
 **Setup.** 4 scenarios in `characterizeAll` mode, where every mechanical hypothesis is evaluated by the exact layers.
 - 36 generations;
@@ -75,7 +75,7 @@ G0 → G_mech → G_R (score ≥ −tol) → G_K (shortlist) → exact controlle
 | wrist SDF | 0.827 | 0.838 |
 | −reach distance | 0.674 | 0.689 |
 
-**Recall@K.** Recall is the fraction of the 32 generations with at least one admissible grasp. "Clearance-best" means the shortlist retains an admissible grasp within the 5 mm clearance band of the full-family best.
+**Recall@K.** Recall is the fraction of the 32 generations used for the shortlist statistics with at least one admissible grasp (the phase-B records do not state why 4 of the 36 characterized generations are excluded). "Clearance-best" means the shortlist retains an admissible grasp within the 5 mm clearance band of the full-family best.
 
 | K | shortlist (runtime rule) | pure SDF order | −reach distance | random | clearance-best retained |
 |---:|---:|---:|---:|---:|---:|
@@ -92,7 +92,7 @@ G0 → G_mech → G_R (score ≥ −tol) → G_K (shortlist) → exact controlle
 **Latency.**
 - Front end: median 0.27 ms, max 0.98 ms (530 hypotheses).
 - Exact layers: median 1.2 ms per hypothesis, p90 3.3 ms.
-- Measured at K = 40 (`evidence/phaseB_sim_k40`): exact-evaluation median 38–63 ms per selection job by scenario, max 136 ms.
+- Measured at K = 40 (`evidence/phaseB_sim_k40` (not included in this repository)): exact-evaluation median 38–63 ms per selection job by scenario, max 136 ms.
 - The legacy ring evaluates 64 hypotheses exactly with no funnel.
 
 **Sampling-resolution convergence** (sub-families of the characterized 53 × 5 family; loss of best admissible clearance vs the full family):
@@ -107,7 +107,7 @@ G0 → G_mech → G_R (score ≥ −tol) → G_K (shortlist) → exact controlle
 
 **What the convergence data show.** Admissibility converges by N_θ ≈ 13, and the median clearance by N_θ ≈ 26. **The worst case has not converged** in either θ or s. A finer family (N_θ = 106) was not run, so 53 is the derived resolution floor, not a demonstrated convergence point. Axial sampling matters in some generations (a 28 mm worst-case loss when s ≡ 0).
 
-## 5. In-situ receiving family with K = 40 (descriptive only; execution = TRIAD supervisory mode reactive tracker)
+## 5. In-situ receiving family with K = 40 (descriptive only; execution = the reactive supervisor's tracker (B0))
 
 `evidence/phaseB_sim_k40/summary.txt`:
 - lateral-low: acquisition admitted and frozen;

@@ -47,11 +47,15 @@ is the supported path.
 ## `global_event_prediction_drift` with a viewer attached
 
 The search runs on a background worker in real time. A viewer connected to the
-controller (RViz, mc-rtc-magnum) lengthens it, and in `lateral-low` the
-simulated object reaches its 0.40 m travel cap 3.8 s after the search epoch,
-so a search slower than that fails the pre-commit consistency check. Run the
-simulation slower than real time while watching: `TRIAD_SYNC_RATIO=0.5`
-(both runners). The plan and the outcome are unchanged in simulated time.
+controller (RViz, mc-rtc-magnum) lengthens it: for `lateral-low`, 3.9 s in the
+reference log against 5.0 s with RViz attached (`workerWall` in
+`evidence/reference_runs/lateral-low.log.xz` and
+`lateral-low_viewer_attached.log.xz`). The simulated object reaches its 0.40 m
+travel cap about 4 s after the search epoch, so the longer search fails the
+pre-commit consistency check. Run the simulation slower than real time while
+watching: `TRIAD_SYNC_RATIO=0.5` (both runners). The run then completes, but
+the committed plan can differ from the full-speed reference because timing
+admission is evaluated at the simulated time the search returns.
 
 ## Install always goes into the mc_rtc installation
 
@@ -66,7 +70,7 @@ An mc_rtc controller plugin therefore cannot be treated as an ordinary
 standalone library installed into an unrelated prefix unless the corresponding
 mc_rtc runtime is also configured to use that installation.
 
-## Stale installed files masking a source change
+## Stale installed files masking a source change (only if you ever ran `cmake --install build`)
 
 Because installation targets the shared mc_rtc installation, an older build's
 `.so` files or FSM state data can remain if a later build stops partway through.

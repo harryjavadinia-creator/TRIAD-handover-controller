@@ -14,7 +14,7 @@ implementation, experiment and validation claims remain traceable.
 | 4 | **`f56add3`** | frozen background-planning implementation with corrected perception-latency configuration read | corrected nonzero-delay latency ablation and source synchronization |
 
 The `f56add3` implementation is pinned by
-[`source_sync_f56add3.sha256`](source_sync_f56add3.sha256). Since `src/` also holds the receding, supervisory-mode and two-robot code, that manifest is verified against the commit that preserved the V1-only files (`ebaedfa`, also tag `csi-2026-release`) by `tools/verify_frozen_v1_preserved.sh`; the current tree is pinned by [`source_sync_triad-2026-09-24.sha256`](source_sync_triad-2026-09-24.sha256).
+[`source_sync_f56add3.sha256`](source_sync_f56add3.sha256). Since `src/` also holds the receding, supervisory-mode and two-robot code, that manifest is verified against the commit that preserved the finite-plan-only files (`ebaedfa`, also tag `csi-2026-release`) by `tools/verify_frozen_v1_preserved.sh`; the current tree is pinned by [`source_sync_triad-2026-09-24.sha256`](source_sync_triad-2026-09-24.sha256).
 
 ## Background-planning evidence
 
@@ -23,9 +23,8 @@ planner-core records from the asynchronous development lineage. Compatibility
 with the frozen `f56add3` source does **not** by itself establish that every
 historical record was executed at `f56add3`.
 
-Each record therefore retains its recorded origin. A result should be described
-as measured at `f56add3` only when its own provenance establishes that source
-state.
+A result is described as measured at `f56add3` only when its own provenance
+establishes that source state.
 
 ## Exact-serial and background-planning implementations
 
@@ -36,7 +35,6 @@ candidate-bank generation, hard feasibility, objective construction, timing
 admission, deterministic tie handling, one-time commitment and no post-commit
 global reselection.
 
-Historical runtime timing traces retain their original source attribution.
 
 ## Source verification
 

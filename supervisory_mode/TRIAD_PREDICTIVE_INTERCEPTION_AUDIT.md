@@ -1,13 +1,7 @@
 # TRIAD_PREDICTIVE_INTERCEPTION_AUDIT
 
-Phase A, read-only, written before any code change. Date 2026-09-16.
+Phase A: read-only audit written before the predictive-interception implementation, starting from the control-aware supervisor as first implemented (`TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md`, `TRIAD_CONTROL_AWARE_IMPLEMENTATION.md`). "Phase 2–6" and "TRIAD Phase n" below refer to the receding-mode characterisation studies whose numbers are quoted inline; those studies are not part of this repository.
 
-**Starting point (verified):**
-- repo `/home/harry/TRIAD_SCIENTIFIC_AUDIT`;
-- branch `research/triad-control-aware-supervisor`;
-- HEAD `04e9efcb0b3a066f70b22ecf5cb195e7da604696`;
-- working tree clean except the pre-existing untracked `research/triad_control_shot/`;
-- reports `TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md` and `TRIAD_CONTROL_AWARE_IMPLEMENTATION.md` present.
 
 Evidence tags: `CODE` (this repository), `DEP` (mc_rtc / Tasks / Kortex), `UPSTREAM` (jingxixu/dynamic-grasping @ `5c1e01f`, read in full for the functions cited), `LIT` (primary text read), `REPO DOC`, `DERIVED`, `ARBITRARY` (engineering choice without further provenance).
 
@@ -37,7 +31,7 @@ Evidence tags: `CODE` (this repository), `DEP` (mc_rtc / Tasks / Kortex), `UPSTR
 
 **What transfers:** the funnel structure (cheap reachability ranking → bounded exact IK → first success), incumbent retention, seeded replanning, and prediction-conditioned grasp poses.
 
-**What does not transfer:** their 6-D SDF data, `max_check`, back-off distances and thresholds. Their horizon rule and constant approach speed are exactly the parts our formulation replaces.
+**What does not transfer:** their 6-D SDF data, `max_check`, back-off distances and thresholds. Their horizon rule and constant approach speed are exactly the parts the formulation here replaces.
 
 ### 1.2 Croft, Fenton, Benhabib (IEEE TSMC 28(2), 1998) and Hujić, Croft, Zak, Fenton, Mills, Benhabib (IEEE/ASME T-Mech 3(3), 1998) (`LIT`, open PDF of the latter)
 
@@ -59,7 +53,7 @@ Evidence tags: `CODE` (this repository), `DEP` (mc_rtc / Tasks / Kortex), `UPSTR
 
 ### 1.3 Other audited work
 
-- **Djeha RO-MAN 2022** (`LIT`): QP tracking of an observed moving grasp frame, with no future-time selection. This is our **B0** (reactive).
+- **Djeha RO-MAN 2022** (`LIT`): QP tracking of an observed moving grasp frame, with no future-time selection. This is **B0** here (reactive).
 - **Yang ICRA 2022** (`LIT`): MPC over a grasp set with learned reachability, then a blocking grasp.
 - **Faris et al. 2025/26** (`LIT`): reactive virtual-model tracking with reopen/retry.
 - **Finger Flow** (`LIT`): reactive, torque-controlled hand.
@@ -83,8 +77,8 @@ None of these contradicts the APPE structure. None provides a controller-authori
 ## 2. What the existing timed-reach machinery actually does (`CODE`)
 
 - `interceptionMouthPoseAt` (`HandoverInterceptionController.cpp:2245`) blends from `mouthAtReachStart` to the standoff at the object pose **at `standoffTime`** with `naturalReachStep(u)`. The reference therefore arrives at a *fixed* predicted meeting pose.
-- In `presentationMode` the object is modelled at rest from `presentationTime` (V2 `conditionalPresentationV2`). `executeProvisionalReachV2` zeroes the reference twist at `standoffTime`.
-- **Consequence:** V2's rendezvous is a meeting with an object *assumed to stop there*. If the object keeps moving, the terminal relative velocity equals the object velocity, and **there is no terminal velocity matching**. Hujić's rendezvous "state" includes the target's motion.
+- In `presentationMode` the object is modelled at rest from `presentationTime` (`conditionalPresentationV2`). `executeProvisionalReachV2` zeroes the reference twist at `standoffTime`.
+- **Consequence:** the receding receiver's rendezvous is a meeting with an object *assumed to stop there*. If the object keeps moving, the terminal relative velocity equals the object velocity, and **there is no terminal velocity matching**. Hujić's rendezvous "state" includes the target's motion.
 - The certification rollout (`stepPredictiveRouteCandidate`) integrates the **same** reference, with the clearance governor, lead limits, swept collision and joint limits. Its terminal chain (approach, dwell, closure, carried retreat) is certified with the object held at the rendezvous anchor.
 - **Downstream acquisition interface.** MovePregrasp freezes its world goal at commit. CaptureTransfer fails if the pose error to a fixed nominal target exceeds 30 mm, and centers only along the closing axis. **The existing acquisition controller cannot accept a moving terminal state.** This limitation is exposed here and is not hidden (§6).
 
@@ -144,7 +138,7 @@ The rollout and execution use the same function, preserving the Phase 2 from-sta
 
 ### 3.5 Solver for τ*_g (numerical method, not a bank)
 
-Hujić's secant-type intersection needs monotone travel time. Our predicate includes IK convergence, collision and joint limits, so it is **not monotone** (Phase 3 observed infeasible gaps). The defensible method is an **ascending first-feasible scan** of the continuous event at derived resolution.
+Hujić's secant-type intersection needs monotone travel time. The predicate here includes IK convergence, collision and joint limits, so it is **not monotone** (Phase 3 observed infeasible gaps). The defensible method is an **ascending first-feasible scan** of the continuous event at derived resolution.
 
 1. **Lower bound** (`DERIVED`, necessary condition): τ_lb = smallest τ ≥ 0 with ‖p_G(t+τ) − p_mouth(t)‖ ≤ v̄·τ.
    - v̄ = `predictiveReachPolicy.farLinearSpeed`, the reference speed cap;
@@ -157,13 +151,13 @@ Hujić's secant-type intersection needs monotone travel time. Our predicate incl
 ### 3.6 Receding update (Hujić replanning, Akinola incumbent retention)
 
 On every completed worker job, with the newest prediction:
-1. **Aimed-state check**: if the incumbent's predicted grasp pose at its τ lies within ε_p / ε_R of the plan's meeting pose, keep the plan; the V2 retain rule updates targets in place.
+1. **Aimed-state check**: if the incumbent's predicted grasp pose at its τ lies within ε_p / ε_R of the plan's meeting pose, keep the plan; the receding-mode retain rule updates targets in place.
 2. **Otherwise**: re-solve τ*_g for the incumbent from the current state. The new plan is a Hermite patch starting at the current reference position and velocity (§3.4). The robot never stops to compute.
 3. **Challengers**: an alternative (g′, τ′) replaces the incumbent only if the incumbent is infeasible, or if the challenger stays materially earlier (τ′ < τ_inc − Δτ) for the declared dwell. This uses the existing hysteresis machinery.
 4. **Local synchronization**: from t ≥ τ* − T_sync (the reference within the terminal tolerance), control passes to the existing live object-relative tracking law (TerminalTrack: bounded step toward T̂_O(t)·ᴼT_G with object-twist feedforward). The repository has no terminal local-sync law beyond this.
 5. **Freeze** only at the irreversible acquisition commit.
 
-### 3.7 Controller-authority demand (replaces the supervisory mode's y_follow + 0.38·y_insert)
+### 3.7 Controller-authority demand (replaces the reactive supervisor's y_follow + 0.38·y_insert)
 
 The previous sum mixed two phases that cannot co-occur under the current interface: insertion starts only after the object is at rest. The demand is now the **set of phase-specific task-space twists the downstream controllers actually command**. The existing solver is used unchanged.
 
@@ -281,4 +275,4 @@ It is implementable with three required modifications:
 
 **PROCEED to Phase B.** Stop conditions carried forward:
 - if Phase B shows the reachability surrogate has material false negatives that cannot be bounded, use exact IK on all mechanical hypotheses and report the latency instead;
-- if the Hermite reference cannot be introduced without changing V2 behaviour when disabled, stop and report.
+- if the Hermite reference cannot be introduced without changing receding-mode behaviour when disabled, stop and report.

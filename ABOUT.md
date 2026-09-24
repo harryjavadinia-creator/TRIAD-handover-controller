@@ -8,9 +8,9 @@ chain that reaches through acquisition and retreat, commits to one plan, and
 executes it. The same controller runs in three modes: the finite-plan mode
 (default), a receding mode that re-plans while the object moves, and a
 supervisory mode that adds a sampled interception solver and a control-aware
-grasp supervisor. A second Kinova Gen3 can act as the giver, so a complete
-robot-to-robot handover runs in simulation and on the two physical arms of the
-laboratory.
+grasp supervisor. A second Kinova Gen3 can act as the giver: the complete
+robot-to-robot handover runs in simulation, and the two physical arms are shown
+operating together on video (no complete synchronized hardware handover is logged).
 
 This repository contains the controller and its configuration, the four
 reference scenarios and the perception-latency sweep with their logs, the
@@ -45,7 +45,7 @@ timing admission and the evidence trail.
 
 The seven objective weights are fixed engineering preferences;
 **no weight-sensitivity result is reported**, and off-line replay found that a
-two-level lexicographic rule (completion → clearance → effort) captures the
+lexicographic rule (completion → clearance → effort) captures the
 useful part. The [full formulation](docs/mathematics.md) covers prediction,
 local IK, objective terms, timing, ties, and commitment.
 
@@ -59,7 +59,7 @@ local IK, objective terms, timing, ties, and commitment.
 
 Acquisition closes on the object once it is at rest (`requireObjectStopped`,
 4 mm/s) in every mode; the predictive selectors reach the grasp pose before the
-giver stops (1.5–3 mm, up to 1.6 s early) and then wait for that gate.
+giver stops (1.5–3.1 mm, up to 1.6 s early) and then wait for that gate.
 
 ## Measured performance
 
@@ -147,7 +147,7 @@ or formal race freedom is not established. See
 | `scripts/`, `tools/` | Reproduction, verification, and figure generation |
 | `docs/` | Method, setup, results, provenance, and technical notes |
 | `evidence/` | Evidence records and integrity manifests |
-| `supervisory_mode/` | Supervisory mode: phase reports, the two headers the results rest on, tooling, and both selector campaigns |
+| `supervisory_mode/` | Supervisory mode: phase reports, copies of `PredictiveInterception.h` and `ControlAwareGraspSupervisor.h` as measured (the other two supervisory-mode headers, `ReceivingGraspFamily.h` and `Gen3WristReachabilityMap.h`, are in `src/`), tooling, and both selector campaigns |
 | `two_robot/` | Robot-to-robot handover: giver configuration, hardware procedure, receiver hardware overlay, log inventory, videos |
 | `paper/` | The paper and the script that generates its figures from the repository data |
 

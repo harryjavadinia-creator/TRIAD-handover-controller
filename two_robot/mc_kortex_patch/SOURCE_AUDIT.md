@@ -1,4 +1,4 @@
-# V1.1 source contract
+# mc_kortex patch: source contract
 
 - Robot B loaded from installed `Kinova` RobotModule as instance `kinova`.
 - Robot-B frames: `base_link`, `tool_frame`.

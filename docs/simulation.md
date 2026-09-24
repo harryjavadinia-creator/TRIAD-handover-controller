@@ -1,17 +1,16 @@
 # Simulation reference
 
-For installation and live visualization, start with [Quick start](quickstart.md).
-The four named scenarios below are the historical Dataset-B inputs used for the
-finite event-time–grasp–route campaign.
+For the build and live visualization, start with [Quick start](quickstart.md).
+The four named scenarios below are the inputs of the finite-plan campaign (tag
+`scientific-baseline`).
 
 ## Scope
 
-Dataset B is the four-scenario moving-object campaign for the finite global
-event-time–grasp–route selector. It is simulation evidence with
+The four-scenario moving-object campaign exercises the finite-plan selector. It is simulation evidence with
 `allowPhysicalExecution: false`.
 
-An earlier perception-latency matrix belongs to a separate source state and is
-attributed in [`provenance.md`](provenance.md). The corrected latency experiment
+The perception-latency matrix (tag `dataset-a-baseline`) belongs to a separate
+source state and is attributed in [`provenance.md`](provenance.md). The corrected latency experiment
 is summarized in [`experiments.md`](experiments.md) and [`results.md`](results.md).
 
 ## Build
@@ -40,12 +39,14 @@ This mechanism means:
 
 ```bash
 export MAIN_ROBOT_MODULE_PATH=/path/to/gen3_2f85_module
+export TRIAD_BUILD_DIR=/path/to/TRIAD-handover-controller/build
+export MC_RTC_INSTALL=/path/to/your/mc_rtc/install
 scripts/run_scenario.sh <name> [output-dir]
 ```
 
 The default result directory is `results/<timestamp>_<name>/`.
 
-## Dataset-B scenarios
+## The four scenarios
 
 | Command | Internal label | Initial position `[x,y,z]` | Linear velocity `[vx,vy,vz]` |
 | --- | --- | --- | --- |
@@ -54,14 +55,16 @@ The default result directory is `results/<timestamp>_<name>/`.
 | `lateral-low` | `CANONICAL_YZ` | `[0.55, -0.56, 0.15]` | `[0.0, 0.08, 0.0]` |
 | `diagonal` | `DIAGONAL_XZ` | `[0.90, 0.00, 0.30]` | `[-0.0565685, 0.0, 0.0565685]` |
 
-The controller also contains a `static_nominal` preset. It is not part of
-Dataset B and is not exposed by `run_scenario.sh`.
+A static presentation (`static_nominal`) exists only as a Robot B scenario of
+the two-robot runner (`TRIAD_GIVER_SCENARIO=static_nominal`).
 
-## Frozen Dataset-B outputs
+## Reference winners
 
-The scientific campaign is anchored to the `scientific-baseline` source state
-listed in [`provenance.md`](provenance.md). The following deterministic
-selection quantities are the reference values:
+Two record sets exist and they commit different plans, because timing
+admission is evaluated at the simulated time the background search returns.
+
+**At the `scientific-baseline` source state** (exact-serial search, listed in
+[`provenance.md`](provenance.md); records in `evidence/async/*/frozen_plan_set.txt`):
 
 | Scenario | Event lead (s) | Grasp | Route | `J_global` |
 | --- | ---: | --- | --- | ---: |
@@ -70,20 +73,18 @@ selection quantities are the reference values:
 | lateral-low | 4.150 | `axisN_side_337deg` | `direct` | 0.700830630 |
 | diagonal | 4.600 | `axisP_side_337deg` | `ring140mm_2of8` | 0.684634405 |
 
-Additional reference metrics from that campaign are:
+**From the current sources, run from a fresh clone** (build tree, no viewer;
+logs in `evidence/reference_runs/`, table in
+[Experiments](experiments.md#reference-run-winners)): longitudinal 5.500 s /
+`axisP_side_337deg` / `ring80mm_1of8` / 0.806835232; near-ground 6.850 s /
+`axisP_side_68deg` / `ring80mm_1of8` / 1.126642447; lateral-low 8.000 s /
+`axisN_side_45deg` / `ring80mm_6of8` / 0.896429684; diagonal 4.600 s /
+`axisP_side_337deg` / `ring80mm_1of8` / 0.698600183.
 
-| Scenario | Predicted completion (s) | Actual completion (s) | Path length (m) | Min. reach clearance (m) | Joint-velocity utilization | Logical planning elapsed (s) |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| near-ground | 9.801 | 8.469 | 0.631 | 0.079 | 1.00 | ≈1.36 |
-| longitudinal | 8.703 | 7.289 | 0.275 | 0.080 | 1.00 | ≈1.39 |
-| lateral-low | 8.803 | 7.435 | 0.398 | 0.082 | 1.00 | ≈0.88 |
-| diagonal | 9.620 | 8.224 | 0.405 | 0.081 | ≈0.690 | ≈1.39 |
-
-These values describe historical Dataset-B results and exact-serial
-revalidation. They are not measurements of the later background-planning
-implementation. Current timing admission depends on result-receipt time, so an
-identical winner is not guaranteed under different timing conditions. See
-[Validation scope](release_validation.md).
+The first table is the exact-serial campaign and is not a measurement of the
+background-planning search; the second is. An identical winner is not
+guaranteed under a different timing condition (machine, viewer attached,
+`TRIAD_SYNC_RATIO`). See [Validation scope](release_validation.md).
 
 ## Runtime verification
 
@@ -140,7 +141,7 @@ See [`timing_frontiers.md`](timing_frontiers.md).
 
 ## Simulation limitations
 
-- Dataset-B runs use `allowPhysicalExecution: false`.
+- The scenario runs use `allowPhysicalExecution: false`.
 - The virtual load-transfer source is not a physical force measurement.
 - Copied-state preview is a predictive approximation, not exact QP-rollout parity.
 - Timing-frontier replay is a counterfactual analysis, not an end-to-end

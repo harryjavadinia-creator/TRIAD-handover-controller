@@ -31,7 +31,7 @@ Tags: `CODE` / `DERIVED` / `LIT` / `NUM` / `EXP`.
 
 The legacy demand now calls the same pure function, with identical arithmetic.
 
-## 2. Characterization (`evidence/phaseD_sim`, held arm, `EXP`)
+## 2. Characterization (`evidence/phaseD_sim` (not included in this repository), held arm, `EXP`)
 
 **Setup.** 4 scenarios × {log only (stride 5), FULL filter (stride 5), log only (stride 1)}.
 

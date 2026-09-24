@@ -10,7 +10,7 @@ All variants share the same perception and prediction, Phase B grasp family and 
 
 | Variant | Selection | 𝓕_C filter | Tie-break inside Δτ | Execution before rendezvous |
 |---|---|---|---|---|
-| `reactive` (B0, default) | TRIAD supervisory mode 04e9efc: admissible → clearance → reserve at the current object pose | TRIAD supervisory mode κ gate | — | tracks the live object-relative standoff |
+| `reactive` (B0, default) | the reactive supervisor (B0): admissible → clearance → reserve at the current object pose | its κ gate | — | tracks the live object-relative standoff |
 | `predictive` (B1) | earliest τ in 𝓕_I | no (κ logged) | clearance | velocity-matched Hermite rendezvous patch |
 | `predictive_capability` (B2) | earliest τ in 𝓕_I | no | condition index, then clearance | same |
 | `full` (FULL) | earliest τ in 𝓕_C | κ ≥ κ_min (path, sync, insertion) | min(κ, κ_sat), then clearance | same |
@@ -30,12 +30,12 @@ All variants share the same perception and prediction, Phase B grasp family and 
    - a challenger outside the tie bands persists for the dwell (`switch_dominated`), or
    - nothing is feasible (`abort_to_hold`).
 5. **Aimed-state retention** (Audit §3.6.1). The plan is kept while the newest prediction places the grasp, at the *planned* t_R, within ε_p = 15 mm / ε_R = 0.12 rad of the planned meeting pose. Otherwise it is patched: a new Hermite patch starting from the executed reference pose and velocity.
-6. **Execution** (control thread, every cycle). Before t_R the reference goal is the Hermite patch evaluated with the *live* prediction. It passes through the same rate cap, lead tube and safety filter as the TRIAD supervisory mode tracker.
+6. **Execution** (control thread, every cycle). Before t_R the reference goal is the Hermite patch evaluated with the *live* prediction. It passes through the same rate cap, lead tube and safety filter as the reactive supervisor's tracker.
 7. **Replanning closed.** A re-solve returns τ ≥ L_calc + L_entry, so once now + L_calc + L_entry ≥ t_R no result can patch the approach (`DERIVED`). No more selections are submitted.
 8. **Local synchronization.** After t_R the existing object-relative tracking law runs (Hujić fine motion).
 9. **Freeze.** The existing measured gate plus TERMINAL_CERTIFY leads to `grasp_freeze` at MovePregrasp commit.
 
-## 3. Design corrections found in pilots (`evidence/phaseE_sim/pilot*`, lateral-low)
+## 3. Design corrections found in pilots (`evidence/phaseE_sim/pilot*` (not included in this repository), lateral-low)
 
 | Pilot observation | Cause | Correction | Provenance |
 |---|---|---|---|
@@ -54,7 +54,7 @@ Both first grasps had |s| > 0. Whether the Phase B axial bound (35 mm) is consis
 
 - **Rollout start state.** The arm configuration is the snapshot, while the reference state is shifted by L_calc. With a moving arm this mixes two instants (lag ≤ tracking lead).
 - **Refused results.** 10 % of moving jobs exceed L_calc and are refused (latency is machine-dependent).
-- **Held-arm dead end.** After an abort mid-approach, the held pose can leave no certifiable grasp (pilot 2, all 40 shortlisted grasps fail closure / tube). This is the same failure mode as V2 Track 1.
+- **Held-arm dead end.** After an abort mid-approach, the held pose can leave no certifiable grasp (pilot 2, all 40 shortlisted grasps fail closure / tube). This is the same failure mode seen in the receding-mode characterisation.
 - **Acquisition and prediction.** Acquisition of a moving object is not implemented (interface limit). The prediction is constant twist.
 
 ## 5. Addendum (Phase F)

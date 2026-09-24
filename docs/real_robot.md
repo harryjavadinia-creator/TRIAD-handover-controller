@@ -17,7 +17,7 @@ also use simulation.
 - Robot naming convention: `toolFrame: gen3_robotiq_85_base_link`,
   `robot: gen3_2f85` (Kinova Gen3 + Robotiq 2F-85).
 - `gripper.physicalBridge` configuration block: calibrated feedback endpoints
-  (`openPercent: 0.87`, `closePercent: 35.0`, `maxPercent: 35.0`), gated by
+  (`openPercent: 0.87`; `closePercent`/`maxPercent` 35.0 by repository default, 50.37 in the 16 July hardware calibration), gated by
   `enabled`/`commandEnabled`/`requireFeedback`.
 - `hardwareGripperCommissioning`: a staged, non-contact smoke-test mode. When
   enabled, the arm freezes at the measured startup posture, only the physical
@@ -25,13 +25,13 @@ also use simulation.
   never enters observation, planning, reach, capture, transfer or retreat.
 - An optional `Kortex.init_posture` startup posture (disabled by default,
   `on_startup: false`).
-- A `physicalBridge.source` selector (`virtual_sensor | synthetic |
+- A `transfer.source` selector (`virtual_sensor | synthetic |
   force_sensor | disabled`) for switching between simulated and physical
   force/contact sources.
 
 These elements are not documented here as a complete synchronized end-to-end TRIAD hardware
 validation campaign. Separate July 2026 evidence does document the two physical robots operating
-together; see Section 4.
+together; see Section 5.
 
 ## 3. Real-robot reproduction status
 
@@ -47,17 +47,20 @@ verified locally before a new physical attempt:
 
 - emergency-stop procedure;
 - safety-zone / workspace-boundary definition;
-- network setup and robot IP/credentials (the example config in
-  `configs/mc_rtc.yaml.example` contains placeholders only);
+- network setup and robot IP/credentials (`two_robot/mc_rtc.two_kortex.yaml`
+  carries placeholders only);
+- an object-pose source (perception) for a handover from a human hand; the
+  repository provides none, so the single-robot hardware case is the gripper
+  smoke test;
 - mouth/tool calibration procedure;
 - object-frame calibration procedure;
-- operational changes required when moving `physicalBridge.source` from
+- operational changes required when moving `transfer.source` from
   `virtual_sensor` to `force_sensor`;
 - physical workspace/reachability assumptions beyond the simulated scenarios.
 
 Real credentials must never be committed to the repository.
 
-## Safety warning
+### 4.1 Safety warning
 
 Any new physical attempt must begin with the non-contact
 `hardwareGripperCommissioning` smoke-test path, with the arm frozen and the
@@ -65,7 +68,7 @@ gripper as the only active component. Do not enable `commandEnabled` or full
 FSM execution on hardware without independently establishing the calibration,
 workspace, network, and emergency-stop procedures above.
 
-## Implementation status
+### 4.2 Implementation status
 
 The frozen scientific-source simulation campaign was exercised with
 `allowPhysicalExecution: false`, the physical gripper bridge disabled, and the
@@ -95,8 +98,8 @@ laptop by the standalone `robot_b_standalone/` mover.
   50.37, `openPercent` 0.87). The repository default keeps the 15 July value (35.0); the 16 July value is the
   later calibration and the one the last hardware runs used. `transfer.source` stayed `virtual_sensor` in
   the inventoried hardware runs: no physical force path has been validated.
-- **Controller-log evidence (July 2026):** Robot A gripper commissioning (tag `v6.4.2`, 15 July); Robot B alone
-  executing its presentation with the integrated coordinator (17 July 22:30, phases Prepositioning → Holding);
+- **Controller-log evidence (July 2026):** Robot A gripper commissioning (15 July, sandbox controller logs); Robot B alone
+  executing its presentation with the integrated coordinator (17 July 22:30, phases Prepositioning → StartSettling → Ready → Executing → TerminalSettling → Holding);
   and the inventoried combined run reaching `ExecuteCommittedReach` before failing (18 July 00:51). The
   inventoried mc_rtc logs do not record `CaptureTransfer`. Inventory:
   [`two_robot/evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`](../two_robot/evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md).
@@ -104,7 +107,7 @@ laptop by the standalone `robot_b_standalone/` mover.
   [`two_robot/media/dual_robot_physical_01.mp4`](../two_robot/media/dual_robot_physical_01.mp4) and
   [`two_robot/media/dual_robot_physical_02.mp4`](../two_robot/media/dual_robot_physical_02.mp4) show both
   physical Kinova arms operating together in the laboratory handover setup. In the second clip Robot B
-  supports/presents the bottle while Robot A's Robotiq gripper approaches and closes around the bottle neck.
+  supports/presents the bottle while Robot A's Robotiq gripper approaches and closes on the bottle neck.
   This video evidence is separate from the state logs and does not by itself assign a specific FSM state.
   Source hashes and the evidence boundary are recorded in
   [`two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md`](../two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md).
@@ -114,6 +117,6 @@ laptop by the standalone `robot_b_standalone/` mover.
   writes the mc_rtc profile and the controller override from the repository files, then network check,
   no-motion preflight, gripper smoke test, Robot B alone, the handover; motion disabled until each step passes.
 
-The evidence therefore supports physical two-robot operation and handover interaction. What remains
+The evidence therefore supports physical two-robot operation and interaction. What remains
 unestablished is a synchronized, reproducible end-to-end TRIAD hardware validation in which the complete
 FSM execution is tied to the physical run by controller logs and the required force/safety instrumentation.

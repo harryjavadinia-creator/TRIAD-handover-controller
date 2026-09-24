@@ -6,8 +6,9 @@ TRIAD is the receiver-side controller of a Kinova Gen3 arm with a Robotiq 2F-85
 gripper, on mc_rtc. It predicts where the object will be, enumerates a bounded
 bank of complete plans over event time, grasp and transit route, certifies each
 plan through acquisition and retreat, commits to one, and executes it. A second
-Gen3 can act as the giver, so the handover runs robot-to-robot in simulation and
-on the two physical arms of the laboratory.
+Gen3 can act as the giver: the handover runs robot-to-robot in simulation, and
+the two physical arms of the laboratory were operated together (on video; no
+complete hardware handover was validated).
 
 What the method is, its three modes and what was measured: [ABOUT.md](ABOUT.md).
 The paper: [`paper/triad_system_paper.pdf`](paper/triad_system_paper.pdf).
@@ -39,7 +40,7 @@ python3 scripts/setup_gen3_2f85_module.py \
 # build against your mc_rtc (no install step)
 export TRIAD_MC_RTC_PREFIX=/path/to/your/mc_rtc/install      # e.g. $HOME/mc_rtc_ws/install
 env -u AMENT_PREFIX_PATH -u COLCON_PREFIX_PATH -u ROS_PACKAGE_PATH CMAKE_PREFIX_PATH="$TRIAD_MC_RTC_PREFIX" \
-  cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_DISABLE_FIND_PACKAGE_rclcpp=ON
+  cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_DISABLE_FIND_PACKAGE_rclcpp=ON   # -G Ninja needs ninja-build; drop it to use make
 cmake --build build -j"$(nproc)"
 ```
 
@@ -73,7 +74,7 @@ as the handover ends):
 
 ```bash
 source /opt/ros/jazzy/setup.bash                  # your ROS distribution
-source /path/to/mc_rtc_ros_ws/install/setup.bash  # the workspace with mc_rtc's ROS plugin and mc_rtc_ticker
+source /path/to/mc_rtc_ros_ws/install/setup.bash  # the mc_rtc_ros workspace (mc_rtc's ROS plugin)
 rviz2 -d two_robot/display_two_robot.rviz
 ```
 
@@ -98,13 +99,17 @@ SCENARIO_IDENTITY_RESULT=PASS
 
 and leaves its log, override and checker output under `results/`. The log holds
 the state sequence up to `Completed`, the size of the plan set and the committed
-plan (`candidate=… route=… globalJ=…`); [docs/simulation.md](docs/simulation.md)
-lists the reference winners.
+plan (`candidate=… route=… globalJ=…`). The committed plans of the reference
+runs are listed in [docs/experiments.md](docs/experiments.md#reference-run-winners)
+and their logs are in [`evidence/reference_runs/`](evidence/reference_runs/).
+`TRIAD_RECEIVER_MODE=v2 scripts/run_scenario.sh <scenario>` runs the receding
+mode instead; `TRIAD_MAX_WAIT` bounds the wall-clock wait (default 180 s).
 
 **What a run leaves behind.** `results/<run>/` holds the text log, the scenario
 override and the checker outputs; mc_rtc's binary log of the same run is in
 `/tmp/mc-control-HandoverInterceptionController-<date>.bin` (convert it with
-`mc_bin_utils convert --in <bin> --out <name> --format csv --entries t Executor_Main …`).
+`mc_bin_utils convert --in <bin> --out <name> --format csv --entries t Executor_Main …`;
+the two-robot runner copies its `.bin` into `two_robot/results/<run>/` instead).
 The text log lists every certified plan with its seven objective terms, and
 
 ```bash
@@ -120,11 +125,15 @@ plan marked. The reference logs of the four scenarios are in
 ![objective terms of every certified plan, longitudinal](docs/figures/plan_costs_longitudinal.png)
 
 **Half speed while watching.** The planner's search runs on a background worker
-in real time and a viewer lengthens it; in `lateral-low` the simulated object
-reaches its travel cap 3.8 s after the search starts, so a slower search fails
-the pre-commit consistency check. `TRIAD_SYNC_RATIO=0.5` runs the simulation at
-half speed; the plan and the outcome are the same as at full speed. Leave it
-unset for evidence runs without a viewer.
+in real time and a viewer lengthens it (`lateral-low`: 3.9 s in the reference
+log, 5.0 s with RViz attached, both in
+[`evidence/reference_runs/`](evidence/reference_runs/)). The simulated object
+reaches its 0.40 m travel cap about 4 s after the search epoch, so the longer
+search fails the pre-commit consistency check. `TRIAD_SYNC_RATIO=0.5` runs the
+simulation at half speed: the run completes with the same three result lines,
+but the committed plan can differ from the reference, because timing admission
+is evaluated at the simulated time the search returns. Leave it unset, without a
+viewer, to reproduce the reference winners.
 
 ## 3. See two robots
 
@@ -146,14 +155,18 @@ TRIAD_INIT_STATE=HandoverInterceptionController_RobotBScenarioPreview bash two_r
 
 The terminal prints Robot B's phases (Prepositioning → StartSettling → Ready →
 Executing → TerminalSettling → Holding), Robot A's states, and ends with
-`RESULT: COMPLETED`; the log and timeline land under `two_robot/results/`. This
-is the view during the default scenario:
+`RESULT: COMPLETED` (the Robot B-alone preview ends with
+`RESULT: RobotBScenarioPreview HELD`); the log, the override and the binary log
+land under `two_robot/results/<run>/`, and `two_robot/tools/extract_timeline.py`
+turns the binary log into the 20 ms timeline. This is the view during the
+default scenario:
 
 ![RViz view of the two-robot handover](two_robot/media/rviz_two_robot.png)
 
-The recorded reference run, with the object pose Robot A plans and retreats
-with agreeing with the pose Robot B carries to within 0.13 mm, is in
-[`two_robot/results/sim_2026-09-24/TIMELINE.md`](two_robot/results/sim_2026-09-24/TIMELINE.md).
+The recorded reference run is in
+[`two_robot/results/sim_2026-09-24/`](two_robot/results/sim_2026-09-24/TIMELINE.md);
+its timeline carries the object pose Robot A plans with and the pose Robot B
+carries, which differ by at most 0.5 mm over the run.
 Details of the giver module: [`two_robot/README.md`](two_robot/README.md).
 
 ## 4. Hardware
@@ -162,9 +175,9 @@ The same controller drives the physical arms through
 [mc_kortex](two_robot/mc_kortex_patch/), mc_rtc's Kortex interface, instead of
 the simulation ticker. Robot A is the Gen3 with the Robotiq gripper at
 192.168.1.10, Robot B the Gen3 at 192.168.1.11, the laptop at 192.168.1.12 (edit
-these in the profile if your network differs). The physical two-arm handover is
-on video in [`two_robot/media/`](two_robot/media/); what has and has not been
-reached on hardware is stated in [docs/real_robot.md](docs/real_robot.md).
+these in the profile if your network differs). Physical two-robot operation and
+interaction are on video in [`two_robot/media/`](two_robot/media/); what has and
+has not been reached on hardware is stated in [docs/real_robot.md](docs/real_robot.md).
 
 Prerequisites: mc_kortex built with the three patched files in
 `two_robot/mc_kortex_patch/` (per-robot joint maps for two arms), the `Kinova`
@@ -177,24 +190,25 @@ July 2026 ones).
 #    (existing files are backed up); then put your Kortex credentials into mc_rtc.yaml
 bash two_robot/prepare_hardware_config.sh
 
-# 2. both arms reachable, distinct
+# 2. both arms reachable, distinct (needs nc and sudo; IFACE=<nic> LAPTOP_IP=… override the laboratory defaults)
 bash two_robot/check_dual_network.sh
 
 # 3. connect, read state, initialise, disconnect: no motion
 bash two_robot/run_dual_init_only.sh
 
-# 4. Robot A's gripper alone, arm frozen (non-contact smoke test)
-python3 two_robot/tools/set_override_key.py gripper.hardwareGripperCommissioning.enabled true
+# 4. Robot A's gripper alone, arm frozen (non-contact smoke test; a switch of the Initial state)
+python3 two_robot/tools/set_override_key.py configs.HandoverInterceptionController_Initial.hardwareGripperCommissioning.enabled true
 mc_kortex
-python3 two_robot/tools/set_override_key.py gripper.hardwareGripperCommissioning.enabled false
+python3 two_robot/tools/set_override_key.py configs.HandoverInterceptionController_Initial.hardwareGripperCommissioning.enabled false
 
 # 5. Robot B alone presents, Robot A holds
 python3 two_robot/tools/set_override_key.py init HandoverInterceptionController_RobotBScenarioPreview
 python3 two_robot/tools/set_override_key.py dualHandover.motionEnabled true
 mc_kortex
 
-# 6. the handover
+# 6. the handover (disable_and_stop.sh switches Robot B's motion off after every run, so switch it on again)
 python3 two_robot/tools/set_override_key.py init HandoverInterceptionController_Initial
+python3 two_robot/tools/set_override_key.py dualHandover.motionEnabled true
 mc_kortex
 
 # after every run
@@ -204,7 +218,7 @@ bash two_robot/disable_and_stop.sh
 `prepare_hardware_config.sh --single` writes the same configuration with Robot B
 removed, for the gripper smoke test on Robot A alone. A handover from a human
 hand on hardware additionally needs an object-pose source (perception) that this
-repository does not provide; see [docs/real_robot.md](docs/real_robot.md) §4.
+repository does not provide; see [docs/real_robot.md](docs/real_robot.md) §3.
 Emergency stop, workspace limits, tool and object calibration are yours to
 establish before any motion; the receiver's force path (`transfer.source`)
 stayed on the virtual sensor in every laboratory run.

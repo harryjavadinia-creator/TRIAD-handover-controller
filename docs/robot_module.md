@@ -2,9 +2,9 @@
 
 TRIAD's simulation reproduction depends on an external mc_rtc robot-module
 description (URDF, meshes) for the Kinova Gen3 (7-DOF) arm with a Robotiq
-2F-85 gripper, named `gen3_2f85`. The same robot geometry is referenced by
-TRIAD's hardware configuration, but real-robot use is not validated — see
-`docs/real_robot.md`, which remains the authority on hardware limitations.
+2F-85 gripper, named `gen3_2f85`. The same geometry is used by the hardware
+configuration; what was reached on the physical arms is stated in
+[Real robot](real_robot.md).
 This module is not part of TRIAD's scientific source and is not redistributed
 by this repository. This page documents its verified provenance and how to
 reconstruct it deterministically from pinned upstream packages.
@@ -37,12 +37,10 @@ obtained copy — both hashes matched exactly.
 
 **Use this shipped file directly, not a regeneration from a live/newer
 xacro checkout.** A currently-checked-out `ros2_kortex` working tree can
-drift from the exact `0.2.6` release (this was directly observed: the arm's
-`gen3_macro.xacro` in one available checkout defined different joint-2/4/6
-limits than the `0.2.6`-tagged `gen3_2f85.urdf` does). The tagged, shipped
+drift from the exact `0.2.6` release (a later `gen3_macro.xacro` defines other joint-2/4/6 limits than the
+`0.2.6`-tagged `gen3_2f85.urdf`). The tagged, shipped
 URDF is the artifact that was verified, term for term, to contain the exact
-arm/gripper kinematic model and joint limits used by TRIAD's frozen scientific
-module — re-running xacro against whatever `kortex_description` checkout
+arm/gripper kinematic model and joint limits used by the module used for the reported results — re-running xacro against whatever `kortex_description` checkout
 happens to be on hand is not guaranteed to reproduce it.
 
 ## The three deterministic portability transformations
@@ -78,7 +76,7 @@ file is located on disk, not its content.
 
 Both the arm and gripper portions of the reconstructed module were
 programmatically compared, link by link and joint by joint, against TRIAD's
-frozen local `kinova_gen3_2f85_mcdesc` module:
+module used for the reported results:
 
 - Identical **19-link / 18-joint** model (12 camera links/joints correctly
   absent from both).
@@ -123,7 +121,7 @@ relative path and SHA-256 of all 26. Each hash was established twice and
 cross-checked: once from the installed package copy used in the equivalence
 test, and independently by fetching the same package-relative file fresh
 from the official upstream Git tag (`Kinovarobotics/ros2_kortex` tag `0.2.6`
-for `kortex_description/...`, `PicknikRobotics/ros2_robotiq_gripper` tag
+for `kortex_description/...`, `PickNikRobotics/ros2_robotiq_gripper` tag
 `0.0.1` for `robotiq_description/...`) — all 26 matched exactly between the
 two independently obtained copies.
 

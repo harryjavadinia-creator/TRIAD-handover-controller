@@ -18,7 +18,7 @@ establish priority over all handover methods or empirical superiority.
 
 Yang's goal-set formulation jointly reasons about grasp choice and motion; it is
 not accurately described as simply choosing a grasp and then planning motion.
-Its approach uses MPC, while its grasp phase uses a blocking policy. See the
+Its approach phase uses MPC, while its grasp phase uses a blocking policy. See the
 [primary paper, Sections III and V](https://arxiv.org/pdf/2204.00134).
 
 ## Scope of the distinction

@@ -2,14 +2,14 @@
 # Two-robot TRIAD handover in simulation (mc_rtc_ticker), Robot A = receiver, Robot B = giver.
 #
 # Runs straight from a build tree, without installing anything into the shared mc_rtc install:
-#   TRIAD_BUILD_DIR=/path/to/build  MAIN_ROBOT_MODULE_PATH=/path/to/kinova_gen3_2f85_mcdesc \
+#   TRIAD_BUILD_DIR=/path/to/build  MAIN_ROBOT_MODULE_PATH=/path/to/gen3_2f85_module \
 #   MC_RTC_INSTALL=$HOME/mc_rtc_ws/install  bash two_robot/run_two_robot_sim.sh [seconds] [out_dir]
 #
 # TRIAD_SYNC_RATIO=<sim/real> (e.g. 0.5) slows the simulation when a viewer is attached; --run-for
 # counts simulated seconds.
 #
 # Requirements: the Kinova robot module ("Kinova", from mc_kinova) installed in MC_RTC_INSTALL,
-# and a Gen3 + 2F-85 module directory named gen3_2f85 (see docs/robot_module.md).
+# and the Gen3 + 2F-85 module directory (see docs/robot_module.md).
 set -euo pipefail
 RUN_FOR="${1:-60}"
 OUT_DIR="${2:-two_robot/results/$(date +%Y%m%d_%H%M%S)_two_robot_sim}"

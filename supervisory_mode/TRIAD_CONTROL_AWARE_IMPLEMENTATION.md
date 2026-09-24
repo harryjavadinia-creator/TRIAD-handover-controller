@@ -1,19 +1,19 @@
 # TRIAD_CONTROL_AWARE_IMPLEMENTATION
 
-TRIAD supervisory mode: TRIAD as a **control-aware supervisory grasp/entry selector**, implemented behind a feature flag. Audit and verdict (IMPLEMENT WITH MODIFICATIONS): [TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md](TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md).
+The supervisory mode: TRIAD as a **control-aware supervisory grasp/entry selector**, implemented behind a feature flag. Audit and verdict (IMPLEMENT WITH MODIFICATIONS): [TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md](TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT.md).
 
-Branch `research/triad-control-aware-supervisor`, created from `research/triad-continuation-control` @ `0e26083`. **Not validated for handover outcome.**
+Handover outcomes of this supervisor: §6.2 below and `TRIAD_PREDICTIVE_INTERCEPTION_FINAL_REPORT.md` §11.
 
 ## 1. Switch
 
 `etc/HandoverInterceptionController.in.yaml`, state `HandoverInterceptionController_ReceiverV2`:
 
 ```yaml
-supervisorMode: bank_search   # default: TRIAD V2 unchanged
-# supervisorMode: control_aware   # TRIAD supervisory mode
+supervisorMode: bank_search   # default: the receding mode unchanged
+# supervisorMode: control_aware   # the supervisory mode
 ```
 
-TRIAD supervisory mode also requires `receiverArchitecture: v2_receding` (run with `TRIAD_RECEIVER_MODE=v2`). Override used in the simulation evidence: `evidence/runs_sim_20260916/overrides/control_aware.yaml`.
+The supervisory mode also requires `receiverArchitecture: v2_receding` (run with `TRIAD_RECEIVER_MODE=v2`). Override used in the simulation evidence: `evidence/runs_sim_20260916/overrides/control_aware.yaml` (not included in this repository; the phase-F campaign overrides are in `evidence/phaseF_sim/overrides/`).
 
 ## 2. Files changed
 
@@ -25,7 +25,7 @@ TRIAD supervisory mode also requires `receiverArchitecture: v2_receding` (run wi
 | `etc/HandoverInterceptionController.in.yaml` | `supervisorMode` and `controlAware:` block (default `bank_search`) |
 | `tools/test_control_aware_grasp_supervisor.cpp`, `tools/run_control_aware_supervisor_unit_tests.sh` | **new** unit tests |
 | `.github/workflows/source-checks.yml` | installs `libeigen3-dev`; runs the new unit tests |
-| `supervisory_mode/` | audit, this report, offline check (`tools/authority_offline.py` + `evidence/authority_offline.json`), log summarizer, simulation evidence |
+| `supervisory_mode/` | audit, this report, offline check (`supervisory_mode/tools/authority_offline.py` + `evidence/authority_offline.json` (not included in this repository)), log summarizer, simulation evidence |
 
 ## 3. Exact equations implemented
 
@@ -91,7 +91,7 @@ Hysteresis rules:
 
 ### 3.5 τ as a feedback event (`stepControlAwareTrackV2`)
 
-**Tracking.** The reference is rate-limited toward W T̂_O(t)·^O T_M,standoff (live estimate), using the V2 clearance governor and speed/lead limits (`predictiveReachPolicy`), then the geometric safety filter. Feedforward is the reference motion. The posture target is the certified standoff posture.
+**Tracking.** The reference is rate-limited toward W T̂_O(t)·^O T_M,standoff (live estimate), using the receding-mode clearance governor and speed/lead limits (`predictiveReachPolicy`), then the geometric safety filter. Feedforward is the reference motion. The posture target is the certified standoff posture.
 
 **Gate** (τ_g = first time it holds for `terminalStableDwell` 0.10 s):
 
@@ -140,22 +140,22 @@ Excluded on purpose: task weights, posture task (soft), and the external geometr
 - Existing tests: `run_binding_cost_checks.sh`, bounded-lead-schedule, independent-giver model, timing-frontier replay, module setup, latency-matrix, scenario identity, override YAML, markdown links, documentation claims.
 - Static checks: `check_worker_snapshot_purity.py` (100 worker-reachable functions, including the new worker function), `check_planner_core_purity.py`, `check_giver_truth_independence.py --static`.
 
-**Identical behavior when disabled.** Every new path is gated by `v2ControlAware_` (false unless `supervisorMode: control_aware`). The only non-gated edits relax a submission precondition for the new job type and add name-table entries. V1 is untouched. This is established by construction and the static checks; **no byte-level log comparison against a pre-change build was run**.
+**Identical behavior when disabled.** Every new path is gated by `v2ControlAware_` (false unless `supervisorMode: control_aware`). The only non-gated edits relax a submission precondition for the new job type and add name-table entries. the finite-plan mode is untouched. This is established by construction and the static checks; **no byte-level log comparison against a pre-change build was run**.
 
 ### 6.2 Simulation sanity runs (kinematic simulation, one run per cell — not a powered comparison)
 
-Controller installed temporarily into `~/mc_rtc_ws/install`. The prior install was backed up to `~/TRIAD_LITE_INSTALL_BACKUP_20260916_163345`, **restored afterwards and checksum-verified**.
+Controller installed temporarily into `~/mc_rtc_ws/install`. The prior install was backed up, **restored afterwards and checksum-verified**.
 
-Campaign 1, `evidence/runs_sim_20260916`, default semantics:
+Campaign 1, `evidence/runs_sim_20260916` (not included in this repository), default semantics:
 
-| scenario | V2 bank_search | TRIAD supervisory mode control_aware | TRIAD supervisory mode supervisor events |
+| scenario | receding mode (`bank_search`) | supervisory mode (`control_aware`) | supervisor events |
 |---|---|---|---|
 | longitudinal | FAIL (no certified plan in window; 11 full searches, 362 recertifications) | FAIL (same reason) | 2 initial, 1 switch, 2 abort-to-hold |
 | near-ground | **completed**, commit t = 17.34 s | **completed**, commit t = 15.68 s | 1 initial, 18 switches, admit, freeze |
 | lateral-low | FAIL (39 full searches) | **completed**, commit t = 19.30 s | 4 initial, 3 abort-to-hold, admit, freeze |
 | diagonal | FAIL | FAIL (no admissible grasp in window) | 1 initial, 1 switch, 1 abort |
 
-Authority characterization among grasps that passed geometry, robot and clearance layers (`evidence/summary.txt`):
+Authority characterization among grasps that passed geometry, robot and clearance layers (`evidence/summary.txt` (not included in this repository)):
 
 | scenario | passed other layers | rejected by authority | κ* min / median / max | max within-decision κ* ratio |
 |---|---:|---:|---|---:|
@@ -168,13 +168,13 @@ Sanity conclusion: the directional authority metric **does differ** among otherw
 
 ### 6.3 A rule tested and rejected by evidence
 
-Campaign 2 (`evidence/runs_sim_20260916b`) set `trustIncumbentReevaluation: false`, so an executing incumbent could be removed only by the terminal certificate, runtime safety or a dominating challenger. The motivation was Phase 2's resumed-evaluation defect.
+Campaign 2 (`evidence/runs_sim_20260916b` (not included in this repository)) set `trustIncumbentReevaluation: false`, so an executing incumbent could be removed only by the terminal certificate, runtime safety or a dominating challenger. The motivation was Phase 2's resumed-evaluation defect.
 
 Result: **1/4 completed. Longitudinal, near-ground and diagonal all failed on `control_aware_track_clearance_reserve`** (e.g. 7.9 mm < 8 mm): the arm kept tracking grasps that the re-evaluation had rejected. The default is therefore `true`; the option remains for study.
 
 ### 6.4 Example trace
 
-`evidence/example_trace.txt`, lateral-low, campaign 1:
+`evidence/example_trace.txt` (not included in this repository), lateral-low, campaign 1:
 
 1. **Candidates.** One decision evaluated 64 candidates, classified as `[collision:7, geometry:47, ik:1, none:9]`. Among them:
    - `axisP_side_0deg` admissible (clearance 80.4 mm, κ* = 1.92);
@@ -187,7 +187,7 @@ Result: **1/4 completed. Longitudinal, near-ground and diagonal all failed on `c
 
 Authority rejection example (near-ground): `axisP_side_68deg`, clearance 79.4 mm. The `follow_insert` demand at the standoff gives κ* = 0.82 (residual 0.039 m/s), so it was rejected with `kappa=0.8192<kappaMin=1.000`.
 
-## 7. Old TRIAD components: bypassed or retained (control_aware mode)
+## 7. Finite-plan and receding-mode components bypassed or retained in `control_aware` mode
 
 | Component | Status |
 |---|---|
@@ -199,14 +199,14 @@ Authority rejection example (near-ground): `axisP_side_68deg`, clearance 79.4 mm
 | Grasp geometry (`buildCandidate`), preview kinematics, closure sweep, carried retreat | **retained** as feasibility layers |
 | Clearance governor, safety filter, TERMINAL_CERTIFY, single commit | **retained** |
 | MovePregrasp / CaptureTransfer / Retreat | **retained, unchanged** |
-| V2 bank_search path, V1 | **retained, default** |
+| receding-mode `bank_search` path, finite-plan mode | **retained, default** |
 
 ## 8. Reproduce
 
 ```bash
 tools/run_control_aware_supervisor_unit_tests.sh
-cmake -S . -B build -DCMAKE_INSTALL_PREFIX=$HOME/mc_rtc_ws/install && cmake --build build -j && cmake --install build   # back up the install first
-supervisory_mode/evidence/runs_sim_20260916/campaign.sh supervisory_mode/evidence/<new_dir>
+cmake -S . -B build && cmake --build build -j      # run from the build tree, see docs/quickstart.md
+bash supervisory_mode/evidence/phaseF_sim/campaign.sh   # the phase-F campaign (the earlier campaign directories are not included)
 python3 supervisory_mode/tools/summarize_supervisory_mode_logs.py <logs...>
 python3 supervisory_mode/tools/authority_offline.py
 ```
@@ -224,7 +224,7 @@ python3 supervisory_mode/tools/authority_offline.py
 **New implementation.**
 - An authority test built from the *exact* hard bounds of this controller's mc_rtc Tasks kinematics constraint, in the direction of the declared acquisition demand, per receiving grasp.
 - A layered, fully logged rejection taxonomy (geometry / IK / joint limits / collision / security distance / clearance / authority).
-- A feature-flagged TRIAD supervisory mode supervisor that replaces the (τ, g, r) bank search with continuous tracking and measured admission, reusing the existing certificate and commit.
+- A feature-flagged control-aware supervisor that replaces the (τ, g, r) bank search with continuous tracking and measured admission, reusing the existing certificate and commit.
 
 **Unproven scientific hypothesis.**
 - **Hypothesis.** Among grasps passing identical geometric and robot feasibility, selecting by constrained directional authority improves closed-loop acquisition completion and/or time over reachability-only selection. The difference must persist after the insertion speed is tuned competently.

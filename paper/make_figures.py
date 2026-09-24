@@ -172,34 +172,39 @@ a2.invert_yaxis(); a2.set_xlabel("rejected grasp previews, near-ground, 14 hypot
 for a in (a1, a2): [a.spines[s].set_visible(False) for s in ("top", "right")]
 save(fig, "fig_funnel")
 
-# ------------------------------------------------------------------ 6. cost structure (near-ground)
-recs = []
-for line in open(os.path.join(ROOT, "evidence", "async", "near-ground", "normalized", "GlobalPlanCost_async.txt")):
-    m = re.search(r"hypothesis=(\d+) eventLead=([\d.]+)s .*candidate=(\S+) route=(\S+) valid=true motionJ=([\d.]+) .*globalJ=([\d.]+)", line)
-    if m: recs.append((int(m.group(1)), float(m.group(2)), m.group(3), m.group(4), float(m.group(5)), float(m.group(6))))
-terms = {}
-for line in open(os.path.join(ROOT, "evidence", "async", "near-ground", "normalized", "CompletePlanCost_async.txt")):
-    m = re.search(r"candidate=(\S+) route=(\S+) valid=true J=([\d.]+) .*terms=\[(.*?)\]", line)
-    if m: terms[(m.group(1), m.group(2))] = {k: float(v) for k, v in re.findall(r"([A-Z]):([\d.]+)", m.group(4))}
-winner = ("axisP_side_45deg", "ring80mm_0of8")
-fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.4), gridspec_kw={"width_ratios": [1.35, 1]})
-for lab, col, sel in [("direct route", C_OBJ, lambda r: r[3] == "direct"), ("ring 80 mm", C_OK, lambda r: r[3].startswith("ring80")), ("ring 140 mm", C_ROB, lambda r: r[3].startswith("ring140"))]:
-    pts = [r for r in recs if sel(r)]; a1.scatter([r[1] for r in pts], [r[5] for r in pts], s=7, color=col, alpha=0.7, label=lab)
-best = min(recs, key=lambda r: r[5]); a1.scatter([best[1]], [best[5]], s=60, facecolor="none", edgecolor=C_MUT, lw=1.0, label="argmin over all certified plans")
-tfr = open(os.path.join(ROOT, "evidence", "async", "near-ground", "timing_frontier_replay.txt")).read()
-mw = re.search(r"winner=h(\d+):(\S+?):(\S+?) minimumGlobalJ=([\d.]+)", tfr)
-hyp, wc, wr, wj = int(mw.group(1)), mw.group(2), mw.group(3), float(mw.group(4))
-wrec = [r for r in recs if r[0] == hyp and r[2] == wc and r[3] == wr][0]
-a1.scatter([wrec[1]], [wrec[5]], s=90, marker="*", color=C_BAD, zorder=5, label="committed: timing-admissible argmin at receipt")
-a1.axvspan(1.6, wrec[1] - 0.2, color=C_BAD, alpha=0.06); a1.text(4.2, 1.9, "shaded: leads no longer timing-admissible when the search returned (2.9 s)", fontsize=5.8, color=C_BAD, ha="center")
-best = wrec
-a1.set_xlabel("event lead $h$ (s)"); a1.set_ylabel("$J_{global}$"); a1.set_title(f"all {len(recs)} certified plans of near-ground", fontsize=7.5); a1.legend(fontsize=5.6, frameon=False, loc="upper right"); a1.set_ylim(0.55, 2.0); a1.set_xlim(1.5, 7.2)
-a1.grid(alpha=0.25)
-tw = terms.get((best[2], best[3]), {})
-keys = ["T", "E", "L", "C", "Q", "K", "V"]; contrib = [WEIGHTS[k] * tw.get(k, 0) for k in keys]
-a2.bar(keys, contrib, color=[C_OBJ, C_MUT, C_MUT, C_OK, C_ROB, C_ROB, C_MUT]); a2.set_ylabel("weight × term")
-a2.set_title(f"weighted terms of the committed plan\n{best[2]} / {best[3]}, $J_{{motion}}$ = {best[4]:.3f}", fontsize=7)
-for i, c in enumerate(contrib): a2.text(i, c + 0.005, f"{c:.3f}", ha="center", fontsize=5.8)
+# ------------------------------------------------------------------ 6. cost structure (near-ground reference run)
+import lzma, tempfile, sys as _sys
+_sys.path.insert(0, os.path.join(ROOT, "tools"))
+import plot_plan_costs as _ppc
+with lzma.open(os.path.join(ROOT, "evidence", "reference_runs", "near-ground.log.xz"), "rt", errors="replace") as fh, \
+     tempfile.NamedTemporaryFile("w", suffix=".log", delete=False) as tmp:
+    tmp.write(fh.read()); _tmpname = tmp.name
+plans, terms, commit, lead_commit = _ppc.parse(_tmpname); os.unlink(_tmpname)
+best_by_h = {}
+for pl in plans:
+    if pl["h"] not in best_by_h or pl["jg"] < best_by_h[pl["h"]]["jg"]: best_by_h[pl["h"]] = pl
+per_h = [best_by_h[h] for h in sorted(best_by_h)]
+committed = min([pl for pl in plans if (pl["cand"], pl["route"]) == commit and abs(pl["lead"] - lead_commit) < 1e-6], key=lambda r: r["jg"])
+argmin = min(plans, key=lambda r: r["jg"])
+fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.5), gridspec_kw={"width_ratios": [1.15, 1]})
+for lab, col, sel in [("direct", C_OBJ, lambda r: r == "direct"), ("ring 80 mm", C_OK, lambda r: r.startswith("ring80")), ("ring 140 mm", C_ROB, lambda r: r.startswith("ring140"))]:
+    pts = [pl for pl in plans if sel(pl["route"])]; a1.scatter([pl["lead"] for pl in pts], [pl["jg"] for pl in pts], s=6, color=col, alpha=0.65, label=f"{lab} ({len(pts)})")
+a1.plot([pl["lead"] for pl in per_h], [pl["jg"] for pl in per_h], "-", color="black", lw=0.7, label="best plan per event hypothesis")
+a1.scatter([argmin["lead"]], [argmin["jg"]], s=50, facecolor="none", edgecolor=C_MUT, lw=1.0, label=f"argmin over certified plans ($h$ = {argmin['lead']:.2f} s)")
+a1.scatter([committed["lead"]], [committed["jg"]], s=80, marker="*", color=C_BAD, zorder=5, label=f"committed after timing admission ($h$ = {committed['lead']:.2f} s)")
+a1.set_xlabel("event lead $h$ (s)"); a1.set_ylabel("$J_{\\mathrm{global}}$"); a1.set_title(f"all {len(plans)} certified plans, near-ground reference run", fontsize=7.5)
+a1.legend(fontsize=5.4, frameon=False, loc="upper right"); a1.grid(alpha=0.25)
+keys = ["T", "E", "L", "C", "Q", "K", "V"]; cols = {"T": C_OBJ, "E": "#7f7f7f", "L": "#b5b5b5", "C": C_OK, "Q": C_ROB, "K": "#e0a458", "V": "#5c5c5c"}
+xs = list(range(len(per_h))); bottoms = [0.0] * len(per_h)
+for k in keys:
+    vals = [_ppc.WEIGHTS[k] * terms.get((pl["cand"], pl["route"]), {}).get(k, 0.0) for pl in per_h]
+    a2.bar(xs, vals, bottom=bottoms, color=cols[k], width=0.75, label=k); bottoms = [b + v for b, v in zip(bottoms, vals)]
+sched = [pl["jg"] - pl["jm"] for pl in per_h]
+a2.bar(xs, [max(v, 0) for v in sched], bottom=bottoms, color=C_BAD, width=0.75, label="schedule")
+a2.bar(xs, [min(v, 0) for v in sched], bottom=[0.0] * len(per_h), color=C_BAD, alpha=0.4, width=0.75)
+a2.axhline(0, color="black", lw=0.5); a2.set_xticks(xs); a2.set_xticklabels([f"{pl['lead']:.2f}" for pl in per_h], fontsize=6, rotation=60)
+a2.set_xlabel("event lead $h$ of the hypothesis (s)"); a2.set_ylabel("weight × term"); a2.set_title("weighted terms of the best plan per hypothesis", fontsize=7.5)
+a2.legend(fontsize=5.2, frameon=False, ncol=4, loc="upper left")
 for a in (a1, a2): [a.spines[s].set_visible(False) for s in ("top", "right")]
 save(fig, "fig_costs")
 

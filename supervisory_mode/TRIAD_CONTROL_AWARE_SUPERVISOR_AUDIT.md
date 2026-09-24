@@ -1,6 +1,6 @@
 # TRIAD_CONTROL_AWARE_SUPERVISOR_AUDIT
 
-Read-only checkpoint written **before any code change**. Date 2026-09-16.
+Read-only audit written **before any code change** of the supervisory mode.
 Subject: the proposal that TRIAD becomes a *control-aware supervisory grasp/entry selector* (not a feedback controller).
 
 Evidence tags: `CODE` (read this session), `DEP` (mc_rtc / Tasks / mc_rbdyn / mc_kortex source), `CONFIG`, `MEASURED` (computed this session), `REPO DOC`, `LIT-FULL` (primary text read in this or the immediately preceding sessions), `BACKGROUND` (standard robotics, not re-read), `INFERENCE`.
@@ -9,11 +9,8 @@ Evidence tags: `CODE` (read this session), `DEP` (mc_rtc / Tasks / mc_rbdyn / mc
 
 ## 0. What was inspected
 
-- Reports: `/tmp/CALL_ROBOTIC_CONTROL_GAP_DISCOVERY.md`, `/tmp/CALL_FEEDBACK_CONTROL_GAP_AUDIT.md`, `/tmp/TRIAD_CONTROL_DIAGNOSTIC_CHECKPOINT.md`, Astra material (`~/last_5_astra_responses.txt`, `~/astra_contact_literature_recovered.txt`), `research/triad_v2/{V2_EVIDENCE, PHASE2..PHASE6}.md`, `research/triad_control_shot/*`.
-- Repositories (separately):
-  - **Scientific-audit snapshot** `/home/harry/TRIAD_SCIENTIFIC_AUDIT`, branch `research/triad-continuation-control` @ `0e26083`, remote `github.com/harryjavadinia-creator/TRIAD-handover-controller` (branches `main`, `publication/*`, `private/heldout-robustness-archive-20260910`). Only untracked item: `research/triad_control_shot/`. **This is the only tree containing the V2 receiver.**
-  - **Live sandbox** `~/mc_rtc_ws/Sandbox/handover_interception_controller`, checked out `v6.0-c2.1-committed-capture-window-entry` @ `89808a7` with 64 uncommitted paths, remote `CALL-handover-controller`; worktrees for `release/csi-2026`, `v6.4-hardware-staged-bringup`, `v6.5-real-grasp-contact-entry`, `v6.6-binding-cost-dev`, `v6.7.1-cost-validity-fix`. It is an **older controller generation** (no `ReceiverV2`, `Acquire` state instead of `CaptureTransfer`). `CODE`
-- Dependencies: `Tasks/src/QPConstr.cpp` (`DamperJointLimitsConstr`), `mc_rtc/src/mc_solver/KinematicsConstraint.cpp`, `mc_rbdyn/Robot.cpp`, `mc_kortex/src/KinovaRobot.cpp`, robot module `kinova_gen3_2f85_mcdesc`. `DEP`
+- The controller sources of this repository (finite-plan selectors, the receding receiver) and the receding-mode characterisation studies whose numbers are quoted inline below ("Phase 2–6"; those studies are not part of this repository).
+- Dependencies: `Tasks/src/QPConstr.cpp` (`DamperJointLimitsConstr`), `mc_rtc/src/mc_solver/KinematicsConstraint.cpp`, `mc_rbdyn/Robot.cpp`, `mc_kortex/src/KinovaRobot.cpp`, the Gen3 + 2F-85 robot module. `DEP`
 - Literature: Djeha RO-MAN 2022; Finger Flow RAS 2026; **Faris, Tadeja, Forni, arXiv 2511.19543 v2 (Apr 2026)**; CoorGrasp; Tokiwa; Costanzo; Medina; Yan; van Steen; Wang/Dehio/Tanguy/Kheddar; Akinola ICRA 2021 and Yang ICRA 2022 (grasp selection by reachability/manipulability). `LIT-FULL`. Maranci 2026, Koyama 2019 remain inaccessible.
 
 ---
@@ -51,7 +48,7 @@ So **g = (σ, φ)**. The proposed axial coordinate s is not currently a variable
 
 ### 1.3 Timing, routes, commitment `CODE`/`REPO DOC`
 
-- V2 commits only when the object is stopped (`ReceiverV2.cpp:1452-1460`); MovePregrasp's goal is frozen at commit and CaptureTransfer tracks the object only laterally. Prediction validity is 0.10–0.65 s against searched leads of 1.8–8 s (Phase 2).
+- The receding receiver commits only when the object is stopped (`ReceiverV2.cpp:1452-1460`); MovePregrasp's goal is frozen at commit and CaptureTransfer tracks the object only laterally. Prediction validity is 0.10–0.65 s against searched leads of 1.8–8 s (Phase 2).
 - Phase 5: "route required" in lateral-low is a reach-duration artefact.
 - Phase 2 §2.4: *resumed* preview rollouts disagree with the runtime they certify; from-start previews track runtime within 4.7 mm.
 - The FSM has no transition from MovePregrasp/CaptureTransfer back to the receiver: post-commit abort = FAIL.
@@ -81,7 +78,7 @@ Offline-check caveats: the Python IK is a plain DLS from one seed, weaker than t
 
 ### F3 — "Prior literature makes it trivial." **Largely true as a concept.**
 
-Choosing grasps by robot capability is established: reachability and motion-aware grasp ranking (Akinola ICRA 2021), learned manipulability ranking inside a handover MPC (Yang ICRA 2022) `LIT-FULL`; capability/reachability maps and velocity/force polytopes are textbook-level tools `BACKGROUND`. A supervisor that filters grasps with an exact constrained velocity-polytope test is **standard robotics applied to this stack**. What is not shown anywhere I could read is the *consequence claim*: that on a QP-controlled receiver with a coupled gripper, constraint-aware entry selection improves closed-loop acquisition over reachability-only selection. That is an experimental hypothesis, not a method novelty.
+Choosing grasps by robot capability is established: reachability and motion-aware grasp ranking (Akinola ICRA 2021), learned manipulability ranking inside a handover MPC (Yang ICRA 2022) `LIT-FULL`; capability/reachability maps and velocity/force polytopes are textbook-level tools `BACKGROUND`. A supervisor that filters grasps with an exact constrained velocity-polytope test is **standard robotics applied to this stack**. What is not shown in the literature read is the *consequence claim*: that on a QP-controlled receiver with a coupled gripper, constraint-aware entry selection improves closed-loop acquisition over reachability-only selection. That is an experimental hypothesis, not a method novelty.
 
 ### F4 — "Entry conditioning is known to change outcomes here." **Not supported.**
 
@@ -112,7 +109,7 @@ The contact event is imposed by the giver's stop; long-horizon τ predictions ar
 4. **Selection**: lexicographic — admissible → clearance (tie band) → min(κ*, κ_sat) (tie band) → shortest reach. No weights.
 5. **Hysteresis**: switch only if the incumbent becomes inadmissible or a challenger stays strictly better beyond the tie bands for a dwell time.
 6. **τ as event**: admit when pose error, object-stopped (default on, because the downstream goal is frozen), gripper open, fresh perception, safety, **current-state authority**, and the existing fresh terminal certificate all hold for the stable dwell. Freeze g on admission; reuse the existing single commit into MovePregrasp.
-7. **Feature flag**, default off; the V2 bank-search path must remain byte-for-byte behaviorally unchanged.
+7. **Feature flag**, default off; the receding-mode bank-search path must remain byte-for-byte behaviorally unchanged.
 
 ---
 
@@ -125,7 +122,7 @@ The contact event is imposed by the giver's stop; long-horizon τ predictions ar
 **Yes in simulation, partially on hardware.** The bounds, Jacobian frame (`gen3_robotiq_85_base_link`) and damper parameters are read from the same model and configuration the QP uses. Kortex-internal saturation (POSITION mode) is not modelled; the IK branch of the evaluated configuration may differ from the configuration the QP actually reaches.
 
 **Is the proposed authority test computable online?**
-**Yes.** A 7-variable box-constrained least squares per demand (active-set, finite) plus a bisection; microseconds–milliseconds per candidate in C++. The dominant cost is the existing preview IK/geometry per candidate (already used by V2 static screens), run on the worker thread.
+**Yes.** A 7-variable box-constrained least squares per demand (active-set, finite) plus a bisection; microseconds–milliseconds per candidate in C++. The dominant cost is the existing preview IK/geometry per candidate (already used by the receding receiver's static screens), run on the worker thread.
 
 **Does prior literature already make the entire idea scientifically trivial?**
 **As a method, yes — it is standard robotics** (capability-aware grasp selection with a constrained velocity-polytope test). It is not trivial as an *engineering replacement* for the old TRIAD, and it is not settled as a *consequence claim*.

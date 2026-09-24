@@ -11,21 +11,18 @@ Tags:
 
 No novelty is claimed. The architecture instantiates the Croft–Hujić earliest-rendezvous problem with this controller's own motion model. It adds the Akinola/Xu reachability funnel and a directional QP-authority filter.
 
-## 0. Repository, starting point, commits
+## 0. Documents
 
-- **Repo:** `/home/harry/TRIAD_SCIENTIFIC_AUDIT`
-- **Branch:** `research/triad-control-aware-supervisor` (not pushed)
-- **Starting HEAD:** `04e9efcb0b3a066f70b22ecf5cb195e7da604696` (TRIAD supervisory mode)
-- **Untracked by instruction:** `research/triad_control_shot/`
+Starting point: the control-aware supervisor as first implemented (`TRIAD_CONTROL_AWARE_IMPLEMENTATION.md`). "Phase 2–6" and "TRIAD Phase n" below refer to the receding-mode characterisation studies whose numbers are quoted inline; those studies are not part of this repository.
 
-| Phase | Commit | Document |
-|---|---|---|
-| A audit | `a8df95b` | `TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md` |
-| B grasp front end and funnel | `62ce7d9` | `PHASE_B_GRASP_FAMILY_AND_FUNNEL.md` |
-| C interception solver | `07686c3` | `PHASE_C_INTERCEPTION_SOLVER.md` |
-| D authority demands, 𝓕_C | `2bd846b` | `PHASE_D_AUTHORITY_DEMANDS.md` |
-| E receding execution, variants | `a396d44` | `PHASE_E_RECEDING_EXECUTION.md` |
-| F baselines, rollout fix, this report | this commit | this file |
+| Phase | Document |
+|---|---|
+| A audit | `TRIAD_PREDICTIVE_INTERCEPTION_AUDIT.md` |
+| B grasp front end and funnel | `PHASE_B_GRASP_FAMILY_AND_FUNNEL.md` |
+| C interception solver | `PHASE_C_INTERCEPTION_SOLVER.md` |
+| D authority demands, 𝓕_C | `PHASE_D_AUTHORITY_DEMANDS.md` |
+| E receding execution, variants | `PHASE_E_RECEDING_EXECUTION.md` |
+| F baselines, rollout fix | this file; campaigns `evidence/phaseF_sim_prefix/` and `evidence/phaseF_sim/` |
 
 ## 1. Audit result (Phase A)
 
@@ -61,7 +58,7 @@ No novelty is claimed. The architecture instantiates the Croft–Hujić earliest
 - **surrogate:** SDF ≥ −20 mm;
 - **exact layers** at T_G(g, τ);
 - **timing:** τ ≥ armScale·T_reach + L_calc + L_entry;
-- **timed rollout** of p_ref = p_G(t) + h00 e0 + D h10 ė0 and R_ref = R_G(t) Exp(h00 Log(R_G0ᵀ R0)) under the V2 reach law, ending within 12 mm / 0.05 rad with clearance ≥ 20 mm;
+- **timed rollout** of p_ref = p_G(t) + h00 e0 + D h10 ė0 and R_ref = R_G(t) Exp(h00 Log(R_G0ᵀ R0)) under the receding-mode reach law, ending within 12 mm / 0.05 rad with clearance ≥ 20 mm;
 - **terminal relative motion:** ‖v_M − v_G‖ ≤ 0.04 m/s and ‖ω_M − ω_O‖ ≤ 0.08 rad/s.
 
 Here v_G = v_O + ω_O × (p_G − p_O), h00 = 2u³ − 3u² + 1 and h10 = u³ − 2u² + u.
@@ -187,7 +184,7 @@ G0 530 → G_mech 420–530 → G_R 420–530 → G_K 40 → 1–5 pass the exac
 
 ## 9. One full trace
 
-File: `evidence/phaseD_sim/full_trace_filter_lateral_low_gen1.txt` (FULL filter, held arm, lateral-low, object at 0.08 m/s).
+File: `evidence/phaseD_sim/full_trace_filter_lateral_low_gen1.txt` (not included in this repository) (FULL filter, held arm, lateral-low, object at 0.08 m/s).
 
 - **G0 → G_mech → G_R → G_K:** 530 → 420 → 420 → 40.
 - **Sweep:** 39 events at Δτ = 0.1875 s; 344 exact evaluations, 19 rollouts; 442 ms.
@@ -211,7 +208,7 @@ configs:
       variant: reactive | predictive | predictive_capability | full
 ```
 
-Overrides: `evidence/phaseF_sim/overrides/`. The default `supervisorMode: bank_search` and `variant: reactive` with `graspFamily: legacy_ring` keep earlier behaviour.
+Overrides: `evidence/phaseF_sim/overrides/`. The default `supervisorMode: bank_search` and `variant: reactive` with `graspFamily: legacy_ring` keep the receding-mode behaviour.
 
 ## 11. Phase F in situ (`evidence/phaseF_sim`, `EXP`)
 
@@ -261,14 +258,14 @@ Overrides: `evidence/phaseF_sim/overrides/`. The default `supervisorMode: bank_s
 
 ## 13. Closing separation
 
-**Established robotics (not ours):**
+**Established robotics:**
 - earliest-feasible rendezvous interception with travel-time ≤ arrival-time and receding patches (Croft / Hujić);
 - reachability-map ranking before exact IK (Akinola / Xu);
 - antipodal parallel-jaw grasp parametrisation on a cylinder;
 - QP joint-velocity bounds with dampers (mc_rtc / Tasks);
 - manipulability / condition-index grasp preference.
 
-**Project-specific implementation (this branch):**
+**Project-specific implementation (this repository):**
 - the instantiation of those pieces with the controller's own exact layers and reach law;
 - the event-ordered best-first sweep with necessary screens and a timing skip;
 - phase-specific authority demands computed from the commanded laws;
@@ -277,7 +274,7 @@ Overrides: `evidence/phaseF_sim/overrides/`. The default `supervisorMode: bank_s
 
 **Unproven hypotheses:**
 - **H1 (predictive interception differs from reactive tracking):** *different behaviour observed, benefit not established.*
-  - In these four near-deterministic scenarios the predictive variants met the grasp pose before the giver stopped (1.5–3 mm, up to 1.6 s early) and completed 11/12 (B1) vs 5/12 (B0).
+  - In these four near-deterministic scenarios the predictive variants met the grasp pose before the giver stopped (1.5–3.1 mm, up to 1.6 s early) and completed 11/12 (B1) vs 5/12 (B0).
   - The B0 failures are clearance-reserve and certification failures of the reactive tracker, not a demonstrated lack of prediction.
   - Acquisition still waits for rest, and the scenarios are not independent samples, so no general claim follows.
 - **H2 (the constrained reserve κ adds information beyond reachability / motion-aware selection):**

@@ -30,7 +30,7 @@ movingObject:
 
 dualHandover:
   enabled: true
-  motionEnabled: true          # set false to let Robot B preposition and hold without presenting
+  motionEnabled: true          # set false to keep Robot B holding its measured pose (no preposition, no presentation)
   giverRobot: kinova
   giverToolFrame: tool_frame
   giverBaseFrame: base_link

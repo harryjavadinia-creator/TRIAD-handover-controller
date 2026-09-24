@@ -87,7 +87,7 @@ env -u AMENT_PREFIX_PATH -u COLCON_PREFIX_PATH -u ROS_PACKAGE_PATH \
 cmake --build build -j"$(nproc)"
 ```
 
-The build produces `build/src/HandoverInterceptionController_controller.so`
+`-G Ninja` needs `ninja-build`; drop it to use make. The build produces `build/src/HandoverInterceptionController_controller.so`
 and the state libraries under `build/src/states/`. Every run script in this
 repository can load the controller straight from that build tree, so nothing
 has to be installed. Do not run `cmake --install build`: mc_rtc's CMake macros
@@ -121,10 +121,13 @@ The log itself (`results/<run>/longitudinal.log`) shows the state sequence
 PresentationHold → MovePregrasp → CaptureTransfer → Retreat → Completed`, the
 size of the plan set (`completePlans`, `timingAdmissiblePlans`) and the
 committed plan (`candidate=… route=… globalJ=…`). The
-[simulation reference](simulation.md) lists the reference winners so you can
-compare your run with the recorded one. The other scenarios are
+committed plans of the reference runs are listed in
+[Experiments](experiments.md#reference-run-winners) so you can compare your run
+with the recorded one. The other scenarios are
 `near-ground`, `lateral-low` and `diagonal`; all four complete from a fresh
-clone built as above.
+clone built as above. `TRIAD_RECEIVER_MODE=v2 scripts/run_scenario.sh <scenario>`
+runs the receding mode (its log is checked by `tools/check_v2_run_log.py`);
+`TRIAD_MAX_WAIT` bounds the wall-clock wait (default 180 s).
 
 `mc_rtc_ticker` may print a segmentation fault when it exits after the
 wrapper stops it. That happens after the terminal state has been reached and
@@ -134,9 +137,9 @@ checked; the three result lines above are the outcome.
 
 Robot B (a second Kinova Gen3, module name `Kinova`) presents the object and
 Robot A receives it. Robot B's module comes from
-[mc_kinova](https://github.com/mathieu-celerier/mc_kinova) (the laboratory
-copy has the same layout; build and install it into your mc_rtc installation
-following its own instructions, it needs `xacro` and `kortex_description`).
+[mc_kinova](https://github.com/mathieu-celerier/mc_kinova): build and install it
+into your mc_rtc installation following its instructions (it needs `xacro` and
+`kortex_description`).
 Then:
 
 ```bash
@@ -145,7 +148,7 @@ bash two_robot/run_two_robot_sim.sh 80
 
 The script prints Robot B's phases (Prepositioning → StartSettling → Ready →
 Executing → TerminalSettling → Holding), Robot A's states, and ends with
-`RESULT: COMPLETED` after about 20 s of simulated time. Its log and timeline
+`RESULT: COMPLETED` after about 19 s of simulated time. Its log and timeline
 land under `two_robot/results/`. `TRIAD_GIVER_SCENARIO=diagonal_xz` or
 `TRIAD_GIVER_SCENARIO=static_nominal` selects another presentation by Robot B.
 Details, the hardware procedure and the laboratory videos are in
@@ -153,28 +156,32 @@ Details, the hardware procedure and the laboratory videos are in
 
 ## 7. Watch it
 
-Both runners start mc_rtc's GUI server (TCP 4242 / 4343 on localhost), so an
+Both runners start mc_rtc's GUI server on TCP ports 4242/4343 (the single-robot
+runner listens on all interfaces, the two-robot runner on 127.0.0.1), so an
 mc_rtc viewer attached to the local controller shows the robots, the object
 and the **Handover → Methodology** markers while a run is in progress. Start
 the viewer first: the wrappers stop the ticker as soon as a run terminates.
 
 **Run at half speed while watching.** The finite search runs on a background
-worker in real time, and a viewer attached to the controller lengthens it (on
-the development machine from 3.9 s to 4.9 s for `lateral-low`). In that
-scenario the simulated object reaches its travel cap 3.8 s after the search
-epoch, so a longer search makes the pre-commit consistency check fail with
-`global_event_prediction_drift`. Both runners therefore accept
-`TRIAD_SYNC_RATIO`, the simulated-to-real time ratio of the ticker:
+worker in real time, and a viewer attached to the controller lengthens it: for
+`lateral-low`, 3.9 s in the reference log against 5.0 s with RViz attached
+(`workerWall` in `evidence/reference_runs/lateral-low.log.xz` and
+`lateral-low_viewer_attached.log.xz`). The simulated object reaches its 0.40 m
+travel cap about 4 s after the search epoch, so the longer search fails the
+pre-commit consistency check with `global_event_prediction_drift`. Both runners
+therefore accept `TRIAD_SYNC_RATIO`, the simulated-to-real time ratio of the
+ticker:
 
 ```bash
 TRIAD_SYNC_RATIO=0.5 scripts/run_scenario.sh lateral-low
 TRIAD_SYNC_RATIO=0.5 bash two_robot/run_two_robot_sim.sh 80
 ```
 
-At 0.5 the simulation runs at half speed, the outcome and the committed plan
-are the same as at full speed (the plant and the controller are deterministic
-in simulated time), and the three result lines are unchanged. Use full speed
-without a viewer for the recorded evidence.
+At 0.5 the simulation runs at half speed and the run completes with the same
+three result lines, but the committed plan can differ from the full-speed
+reference: timing admission is evaluated at the simulated time the search
+returns, and a slower simulation gives the worker more simulated time. Use full
+speed without a viewer to reproduce the reference winners.
 
 **RViz** (mc_rtc built with its ROS plugin). In a second terminal, source ROS
 and the mc_rtc ROS workspace, then open the display file shipped with this
@@ -193,8 +200,8 @@ looks like in it (Robot A left, Robot B right holding the object):
 ![RViz view of the two-robot handover](../two_robot/media/rviz_two_robot.png)
 
 The same file works for the single-robot scenarios; the Robot B display then
-simply reports that its topic is absent. mc_rtc's own `display.rviz` (in the
-`mc_rtc_ticker` package) shows Robot A only.
+simply reports that its topic is absent. The `display.rviz` shipped in
+mc_rtc_ros's `mc_rtc_ticker` package shows Robot A only.
 
 **mc-rtc-magnum** (no ROS needed): install the standalone
 [mc_rtc-magnum viewer](https://github.com/mc-rtc/mc_rtc-magnum) and start

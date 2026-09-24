@@ -7,7 +7,7 @@ TRIAD source states and evidence.
 
 | Layer | Scope |
 | --- | --- |
-| Source identity | `source_sync_triad-2026-09-24.sha256` pins the controller sources; `source_sync_f56add3.sha256` pins the frozen V1 implementation, verified at commit `ebaedfa` by `tools/verify_frozen_v1_preserved.sh` |
+| Source identity | `source_sync_triad-2026-09-24.sha256` pins the controller sources; `source_sync_f56add3.sha256` pins the finite-plan sources as first frozen, verified at commit `ebaedfa` by `tools/verify_frozen_v1_preserved.sh` |
 | Selector/checker tests | finite selection, timing replay, scenario identity, overrides and model-setup fixtures |
 | Evidence integrity | latency, planner-core, and archived background-planning records |
 | Documentation | local links, claim guards and script syntax |
@@ -18,8 +18,8 @@ Robot-model reconstruction was checked from the pinned upstream robot tags. The
 URDF and mesh contents passed the documented checks. Reconstruction does not by
 itself establish controller runtime behavior.
 
-The latency figure is generated from included records. The current source
-manifest refers to scientific source state `f56add3`.
+The latency figure is generated from included records produced at source
+state `f56add3`.
 
 ## Historical exact-serial runtime revalidation
 

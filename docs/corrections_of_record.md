@@ -53,13 +53,12 @@ The source-state table is [`provenance.md`](provenance.md).
 - `f56add3` is the frozen background-planning implementation and source state
   of the corrected nonzero-delay latency sweep.
 
-Some background-planning timing/determinism/safety records were produced earlier
-in the asynchronous development lineage. Source compatibility does not by
-itself establish that a specific historical record was executed at `f56add3`.
-
 ## Validation attribution
 
-Historical runtime revalidation belongs to the exact-serial source state.
+Some background-planning timing/determinism/safety records were produced earlier
+in the asynchronous development lineage; source compatibility does not by itself
+establish that such a record was executed at `f56add3`. Historical runtime
+revalidation belongs to the exact-serial source state.
 Later validation establishes source synchronization, dependency-free checks,
 evidence integrity and clean configure/build for the frozen background-planning
 source. Historical runtime evidence is not re-labeled as a later-source rerun.

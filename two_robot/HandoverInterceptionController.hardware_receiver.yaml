@@ -5,8 +5,8 @@
 # Append AFTER the two-robot overlay to $HOME/.config/mc_rtc/controllers/HandoverInterceptionController.yaml,
 # and use two_robot/mc_rtc.two_kortex.yaml (with real IPs and credentials) as the global mc_rtc profile.
 #
-# Order of operations that worked in July: gripper commissioning smoke test first
-# (gripper.hardwareGripperCommissioning.enabled: true, arm frozen), then Robot B alone, then the combined run.
+# Order of operations that worked in July: gripper commissioning smoke test first (arm frozen, see the
+# configs block at the end), then Robot B alone, then the combined run.
 
 decisionCost:
   allowPhysicalExecution: true        # default false: the planner refuses to execute on hardware otherwise
@@ -19,8 +19,15 @@ gripper:
     openPercent: 0.87                 # measured fully-open resting value (commissioning, 15 July 2026)
     closePercent: 50.37               # closure endpoint measured on the real gripper, 16 July 2026
     maxPercent: 50.37                 # hard command cap; the repository default (35.0) is the 15 July value
-  hardwareGripperCommissioning:
-    enabled: false                    # set true for the no-contact smoke test (arm frozen, gripper only)
 
 transfer:
   source: virtual_sensor              # as in every July hardware run: no physical force path was ever validated
+
+# The no-contact gripper smoke test is a switch of the Initial state: when enabled, Initial freezes the
+# arm at the measured startup posture, exercises only the physical gripper through the feedback-gated
+# bridge and never enters observation, planning, reach, capture, transfer or retreat.
+# two_robot/tools/set_override_key.py configs.HandoverInterceptionController_Initial.hardwareGripperCommissioning.enabled true
+configs:
+  HandoverInterceptionController_Initial:
+    hardwareGripperCommissioning:
+      enabled: false

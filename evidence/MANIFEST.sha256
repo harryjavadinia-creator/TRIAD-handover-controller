@@ -58,3 +58,5 @@ afeb02a0e97d1da1ac6ebf819a12ec76151f67f458aa5359cff82a9aaec64f63  reference_runs
 8f2d408f6ddf1a7036d2af7db186fa674e9f364f3265a9e28630c5864734cc0c  reference_runs/near-ground.checker_output.txt
 5fd811bf323e12a4b2fdfac49381f7688e38f81a6f3cb914550546ad0b3d07d5  reference_runs/near-ground.log.xz
 d7157eb1cce2c5f66fccad930ccfafe7a747f3414e561099f728a9bd47716b0d  reference_runs/near-ground.scenario_override.yaml
+# lateral-low with RViz attached at full speed: the search takes 4.97 s and the pre-commit consistency check fails (docs/quickstart.md section 7)
+dc5a03d2b89bde612b9827bf071ac6a32f277d36f6ab191886666da78ce9ff77  reference_runs/lateral-low_viewer_attached.log.xz

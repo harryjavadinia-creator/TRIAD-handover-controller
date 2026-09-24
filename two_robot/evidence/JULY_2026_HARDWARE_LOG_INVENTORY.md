@@ -1,6 +1,6 @@
 # July 2026 two-robot sessions — mc_rtc log inventory
 
-Logs written by mc_rtc on the laptop that drove both arms (LogTemplate CALL_DUAL_ACTUAL / CALL_DUAL_D0), 17–19 July 2026.
+Logs written by mc_rtc on the laptop that drove both arms (LogTemplate CALL_DUAL_ACTUAL / CALL_DUAL_D0), 17–21 July 2026.
 They stay in `~/Downloads` on that laptop; only the 3.3 MB log of 17 July 22:27:33 is copied into this folder.
 `hw` = the log contains `kinova_JointSensor_*_motorCurrent`, i.e. the second arm was a physical Kortex robot.
 State sequences were extracted with `mc_bin_utils convert --entries Executor_Main dual_giver_phase`.
@@ -15,7 +15,7 @@ State sequences were extracted with `mc_bin_utils convert --entries Executor_Mai
 | 2026-07-17 22:24 | dual (A + B) | 81 MB |  |
 | 2026-07-17 22:26 | dual (A + B) | 16 MB |  |
 | 2026-07-17 22:27 | dual (A + B) | 42 MB |  |
-| 2026-07-17 22:27 | dual (A + B) | 3 MB |  |
+| 2026-07-17 22:27 | dual (A + B) | 3 MB | hw. `StaticXTouch` static rendezvous on the physical arms; the copy in this folder |
 | 2026-07-17 22:27 | dual (A + B) | 11 MB |  |
 | 2026-07-17 22:30 | dual (A + B) | 65 MB | hw. RobotBScenarioPreview: Robot B executed the presentation alone on hardware, giver phases 1→6 (Prepositioning, StartSettling, Ready, Executing, TerminalSettling, Holding). Robot A held. |
 | 2026-07-17 22:31 | dual (A + B) | 63 MB |  |
