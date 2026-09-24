@@ -2,92 +2,161 @@
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{tabularx}
 \usepackage{cite}
 \usepackage{url}
 \usepackage{microtype}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \graphicspath{{figures/}}
+\newcommand{\tsel}{t_{\mathrm{sel}}}
 
 \begin{document}
 
-\title{TRIAD: An Auditable Finite-Plan Receiver for Human-to-Robot Handover\\
-\large Implementation, attribution and measured limits, with a robot-to-robot test setup}
+\title{TRIAD: Finite Complete-Plan Selection for Predictive Human-to-Robot Handover\\
+\large Event time, grasp and route chosen together, certified through retreat, committed once}
 
 \author{\IEEEauthorblockN{Hamidreza (Harry) J. Azari, Mourad Benoussaad, Wael Suleiman, Wiem Bel Hedi}
-\IEEEauthorblockA{Author order, affiliations and venue to be confirmed.\\Manuscript of 24 September 2026.}}
+\IEEEauthorblockA{Author order, affiliations and venue to be confirmed.}}
 
 \maketitle
 
 \begin{abstract}
-TRIAD is a receiver-side controller for human-to-robot handover on a Kinova Gen3 arm with a Robotiq 2F-85 gripper, implemented on mc\_rtc. From one frozen planning state it enumerates a bounded bank of complete plans over event time, grasp and route (14 $\times$ 32 $\times$ 17 = 7616 before pruning), certifies each plan against modelled hard feasibility through acquisition and retreat, re-applies a timing admission rule at selection time, commits once and executes. This paper documents the implementation and does not present the decision structure as new: the timing rule is earliest-feasible rendezvous, the grasp stage is a reachability-screened funnel, and both are attributed to prior work. We report what instrumenting the system showed. In the V1 giver model the event time is imposed rather than predicted. Off-line replay shows that the exhaustive selection reduces to earliest admissible event time followed by the best grasp and route in 12 of 16 searches, and that four of five reach-certified grasps are later rejected at closure or retreat. A later variant that adds a predictive interception solver and a directional authority filter, compared against matched baselines on an identical plant, completed 6 of 12 scenarios against 11 of 12 for a plain predictive baseline. The evidence consists of four reference scenarios, a perception-latency sweep in which compensation extends completion from 0.22 s to 0.30 s of delay, an exact-serial performance measurement, the matched comparison, and a robot-to-robot test setup in which a second Gen3 presents the object: the full two-arm handover completes in simulation, and on hardware in July 2026 the giver arm executed its presentation alone while the combined run reached the receiver's committed reach before failing. No handover has been completed on hardware. Every number is regenerated from the public repository.
+A robot that receives an object from a moving human hand must decide when the exchange will take place, how it will hold the object and along which path it will get there. TRIAD is a receiver-side controller for a Kinova Gen3 arm with a Robotiq 2F-85 gripper, implemented on mc\_rtc, that makes this decision explicitly. From one frozen planning state it predicts the object's presentation pose at 14 candidate event times, generates 32 grasps about the handle axis and 17 transit routes per grasp, and previews every complete plan of the resulting bank with a whole-arm kinematic rollout through reach, insertion, closure and carried-object retreat. Surviving plans are ranked by a seven-term objective referred to a common temporal origin, timing admission is re-applied with the controller clock at the instant of selection, and exactly one plan is committed and executed by the task-space QP layer. The search runs on a background worker so that the 1 kHz control thread never blocks. We give the construction of each bank, the certification checks, the objective and the admission rule, and show on the repository's own records how a bank of 7616 candidates reduces to a few hundred certified plans, a few dozen admissible ones and a single commitment. The evidence comprises four reference scenarios, a perception-latency sweep in which delay compensation extends completion from 0.22 s to 0.30 s of delay, an exact-serial performance measurement, a matched comparison of TRIAD's selector modes, and a robot-to-robot test setup in which a second Gen3 presents the object: the full two-arm handover completes in simulation and the giver arm has executed its presentation on hardware. All figures and numbers regenerate from the public repository.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
-A robot that receives an object from a human must settle when the exchange will happen, how it will hold the object and along which path it will get there. TRIAD represents that decision as one finite object $\xi = (\tau, g, r)$, generates a bounded bank of complete candidates from one frozen planning state, rejects those that fail modelled feasibility checks through acquisition and retreat, ranks the survivors, re-checks timing admission against the controller clock, and commits exactly once.
+Handover controllers usually settle the three receiver decisions in sequence: an event time is fixed before it is known that any grasp realises it, and a grasp is fixed before it is known that a collision-free route reaches it and that the arm can still retreat with the object in hand. TRIAD represents the decision as a single finite object
+\begin{equation}
+\xi = (\tau, g, r),
+\end{equation}
+the presentation event time, the receiver grasp and the transit route, and chooses it by exhaustive evaluation of a bounded bank of complete plans, each certified from reach to retreat before any cost is formed (Fig.~\ref{fig:pipeline}).
 
-The joint enumeration is not claimed as a contribution: the timing rule reduces to earliest-feasible rendezvous, which Croft, Fenton and Benhabib \cite{croft98} and Huji\'c et al. \cite{hujic98} formulated in 1998; the grasp stage is the reachability-screened, cheap-to-exact funnel of Akinola et al. \cite{akinola21}; and the finite-time search over a predicted object trajectory is the pattern of Menon et al. \cite{menon14}, Salehian et al. \cite{salehian16} and Islam et al. \cite{islam20}. The claim made here is therefore a smaller one.
-
-\textbf{What this paper contributes.}
+\textbf{Contributions.}
 \begin{enumerate}
-\item A complete, reproducible implementation of a finite-plan receiver on mc\_rtc, with its decision structure written down and each element attributed to the work it comes from (Section~\ref{sec:related}).
-\item The measured limits of that structure on its own evidence: the event time is imposed in the original giver model, the exhaustive selection is dominated by earliest admissible timing, the seven-term cost was replaced by a lexicographic rule after off-line replay, and acquisition requires the object to be at rest (Section~\ref{sec:limits}).
-\item A matched comparison in which the more elaborate TRIAD-lite mode loses to a plain predictive baseline (Section~\ref{sec:lite}).
-\item A robot-to-robot test setup, a second Gen3 acting as the giver, integrated into the controller and verified in simulation, with the hardware status of July 2026 stated exactly (Section~\ref{sec:two}).
+\item A formulation of predictive receiving as finite complete-plan selection: a bank $\mathcal T\times\mathcal G\times\mathcal R$ generated from one frozen state, copied-state certification of every plan through retreat, a seven-term objective placed on a common search-to-completion basis, and a timing admission rule applied at selection time (Section~\ref{sec:method}).
+\item An implementation on mc\_rtc in which the search runs on a background worker while the control thread keeps its 1 kHz cycle, with one commitment and no replanning, and with every candidate, check and cost written to inspectable records.
+\item Two further selector modes on the same platform: a receding mode that re-certifies against a robot-independent giver, and a supervisory mode that adds an earliest-feasible rendezvous solver and a directional velocity-authority filter, compared against matched baselines (Section~\ref{sec:modes}).
+\item A robot-to-robot test setup, a second Gen3 acting as the giver inside the same controller, with which the receiver can be exercised repeatably without a human (Section~\ref{sec:two}).
+\item Evidence from the repository's own records: the feasibility funnel, the cost structure of the certified plans, the latency sweep, the computation cost, the mode comparison, the two-arm simulation and the hardware status (Section~\ref{sec:eval}).
 \end{enumerate}
-No claim of a new decision method, of a control-performance gap, or of a hardware-validated handover is made.
+TRIAD builds on well-established components, which Section~\ref{sec:related} names; what it adds is that the complete plan is explicit, certified as a whole, and auditable after the fact.
 
-\section{Related Work and Attribution}\label{sec:related}
-\textbf{Interception timing.} Choosing the rendezvous instant as the earliest time at which the robot can reach the predicted object pose is the rendezvous-point selection of Croft, Fenton and Benhabib \cite{croft98} and the interception strategy of Huji\'c et al. \cite{hujic98}. Menon et al. \cite{menon14} pick the first forward time sample at which a bounded-velocity time of flight plus grasp time fits before the object arrives; Salehian et al. \cite{salehian16} take the first time at which the object enters the reachable set; Islam et al. \cite{islam20} plan for the pose projected forward by a fixed computation bound and replan with a commit cutoff. TRIAD's timing admission (Section~\ref{sec:method}) is a discretised instance of the same rule.
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{fig_pipeline.pdf}
+\caption{TRIAD in one cycle of decision. The control thread observes the object and freezes a snapshot; a background worker predicts the presentation pose at each event lead, generates the bank, certifies every complete plan and ranks the survivors; the control thread re-applies timing admission with its own clock, checks prediction consistency, commits once and executes.}\label{fig:pipeline}\end{figure}
 
-\textbf{Grasp selection under motion.} Akinola et al. \cite{akinola21} rank a fixed grasp database by precomputed reachability and motion awareness before exact inverse kinematics; Yang et al. \cite{yang21} refine a temporally consistent grasp set and resample when it is depleted. TRIAD's grasp stage is a cheap-ranking, bounded-exact-IK, first-success funnel of that kind.
+\section{Related Work}\label{sec:related}
+\textbf{Interception timing.} Selecting the rendezvous instant as the earliest time at which the arm can reach the predicted object pose goes back to Croft, Fenton and Benhabib \cite{croft98} and Huji\'c et al. \cite{hujic98}. Menon et al. \cite{menon14} take the first forward time sample at which a bounded-velocity time of flight plus grasp time fits before the object arrives; Salehian et al. \cite{salehian16} take the first time at which the object enters the reachable set; Islam et al. \cite{islam20} plan for the pose projected forward by a fixed computation bound and replan under a commit cutoff. TRIAD's admission rule (Section~\ref{sec:timing}) is a discretised form of this family; what differs is that timing is a hard admission gate applied after certification, not a term traded against the objective.
 
-\textbf{Handover controllers.} Yang et al. \cite{yang22} solve the receiver's motion with model predictive control over a goal set that couples grasp choice and motion; Oelerich et al. \cite{oelerich24} make progress along a path explicit in a path-following MPC; Djeha et al. \cite{djeha22} express handover constraints inside a task-space quadratic programme, which is also the execution layer TRIAD uses. Ortenzi et al. \cite{ortenzi21} review the field and identify the physical exchange as under-studied; Mason and MacKenzie \cite{mason05} measured the human--human transfer that these controllers imitate.
+\textbf{Grasp selection for moving objects.} Akinola et al. \cite{akinola21} rank a fixed grasp database by precomputed reachability and motion awareness before exact inverse kinematics; Yang et al. \cite{yang21} maintain a temporally consistent grasp set and resample when it is depleted. TRIAD's grasp bank is a cheap-to-generate, exactly certified funnel of that kind, with the difference that the certification covers insertion, closure and retreat, not only the reach.
 
-\textbf{What is left to TRIAD.} The combination is an implementation choice: a finite, inspectable plan set with a certification stage that models closure and retreat before commitment, on a task-space QP executor. Explicitness of the plan is a property of the implementation, not a claim against those methods.
+\textbf{Handover control.} Yang et al. \cite{yang22} solve the receiver's motion with model predictive control over a goal set that couples grasp choice and motion; Oelerich et al. \cite{oelerich24} make progress along a path explicit in a path-following MPC; Djeha et al. \cite{djeha22} express handover constraints inside a task-space quadratic programme, which is also TRIAD's execution layer. In these methods the complete pre-contact plan is re-solved continuously and is never materialised as one object that can be enumerated and inspected; that explicitness is what TRIAD is designed for. Ortenzi et al. \cite{ortenzi21} review the field; Mason and MacKenzie \cite{mason05} measured the human--human transfer that receivers imitate.
 
-\section{The System}\label{sec:method}
-\subsection{Platform and plant}
-The receiver is a 7-DoF Kinova Gen3 with a Robotiq 2F-85 gripper, controlled by an mc\_rtc finite-state controller at 1 kHz. The object is the CALL two-handled body (0.346 kg, handles at $\pm$86.9 mm from the centre of mass). All reported evidence is simulation: the object pose is simulation truth, the transfer force is a virtual spring, and mc\_rtc runs without state feedback, so the controlled state is the control model. Fig.~\ref{fig:arch} shows the four layers.
+\section{Platform and Problem}\label{sec:problem}
+The receiver is a 7-DoF Kinova Gen3 with a Robotiq 2F-85 gripper, controlled by an mc\_rtc finite-state controller at 1 kHz. The object is a rigid two-handled body of 0.346 kg: a central sensor cylinder (radius 17 mm, length 36.4 mm) with two handles of radius 11.25 mm and length 137.4 mm centred at $\pm86.9$ mm along the object axis; the robot receives the blue handle while the giver holds the grey one. The object pose is provided by a simulated giver that moves the object at constant velocity and stops with a prescribed profile; the transfer force is a virtual spring. Let $t_0$ be the epoch at which the planning state $s_0$ (robot configuration, object estimate, model constants) is frozen, and let $h$ be an event lead measured from $t_0$, so that $t_{\mathrm{event}} = t_0 + h$. The task is to choose $\xi$ such that the arm reaches the predicted presentation pose in time, closes the gripper on the handle, and retreats with the object, while the whole plan is known before the arm moves.
 
-\begin{figure}[t]\centering\includegraphics[width=0.98\columnwidth]{F01_architecture_four_layer.pdf}
-\caption{Planner and execution architecture. TRIAD selects event time, grasp and route and emits one committed task-space plan; mc\_rtc's QP layer tracks it.}\label{fig:arch}\end{figure}
+\section{Method}\label{sec:method}
 
-\subsection{The finite bank}
-From a frozen snapshot at epoch $t_0$ the planner forms 14 event leads (1.80 to 8.00 s), 32 grasps (16 angles about the handle axis, two sign conventions) and 17 routes (direct plus 8 directions at two ring radii, 0.08 and 0.14 m); the pre-pruning product is 7616 (Fig.~\ref{fig:bank}). Object motion is propagated as a constant twist with a prescribed quintic stop; no covariance is maintained.
+\subsection{Object estimation and event prediction}\label{sec:predict}
+A delayed measurement of age $a$ is propagated to the estimation time with the filtered linear and angular velocity estimates, $\hat p(t) = p_{\mathrm{meas}}(t-a) + a\hat v(t)$ and $\hat R(t) = \mathrm{Exp}(a\hat\omega(t))\,R_{\mathrm{meas}}(t-a)$; the velocity filter has a time constant of 0.10 s. For an event lead $h$ the predicted presentation pose applies a prescribed terminal stop of duration $D = 0.85$ s with the quintic multiplier $b(u) = 1 - 10u^3 + 15u^4 - 6u^5$, whose integral over the stop is one half, so that
+\begin{equation}
+\Pi(h) = \mathrm{Prop}\!\left({}^W\!T_O(t_0),\; h - \tfrac{1}{2}\min(h, D),\; \hat v, \hat\omega\right).
+\end{equation}
+The predictor is deterministic: no covariance is propagated and no learned model is used (Fig.~\ref{fig:prediction}).
 
-\begin{figure}[t]\centering\includegraphics[width=0.98\columnwidth]{F05_finite_bank.pdf}
-\caption{The bounded finite decision space, $14\times32\times17$.}\label{fig:bank}\end{figure}
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{fig_prediction.pdf}
+\caption{Event-time bank on the predicted motion. Left: the object travel until the event for each of the 14 leads, on the lateral-low scenario (0.08 m/s). Right: the prescribed terminal stop profile applied at every event hypothesis.}\label{fig:prediction}\end{figure}
 
-\subsection{Certification, ranking and admission}
-Every candidate is previewed by damped least-squares inverse kinematics on a copied robot state (step 0.020 s, damping 0.040, 25 swept poses per commanded segment) through reach, insertion, closure and retreat, with hard and soft clearance thresholds of 0.020 and 0.080 m. Survivors are ranked by a seven-term weighted cost referred to a common temporal origin; the weights (0.421, 0.105, 0.105, 0.158, 0.084, 0.074, 0.053) are frozen engineering preferences with no sensitivity study. The timing rule admits a plan only if the remaining lead exceeds a safe commit margin (1.6 s) and the predicted reach duration plus 0.050 s fits before the event. It is re-applied with the controller clock at selection, and a prediction-consistency gate of 0.015 m and 0.12 rad is checked at commitment (Fig.~\ref{fig:pipeline}). Exactly one plan is committed and executed without replanning. The search runs on a background worker; the control thread submits one generation and polls without blocking.
+\subsection{The finite bank}\label{sec:bank}
+\textbf{Event times.} $\mathcal T$ holds 14 leads, 1.80, 1.90, 2.35, 2.80, 3.25, 3.70, 4.15, 4.60, 5.05, 5.50, 5.95, 6.40, 6.85 and 8.00 s: a configured cap of 15 hypotheses with lead step 0.45 s, clamped to the admissible window and deduplicated.
 
-\begin{figure}[t]\centering\includegraphics[width=0.98\columnwidth]{F06_frozen_live_pipeline.pdf}
-\caption{Frozen-state certification versus live timing admission.}\label{fig:pipeline}\end{figure}
+\textbf{Grasps.} Let $\mathbf z_H$ be the unit axis of the blue handle and $\mathbf p_H$ its centre, both in the frozen object pose, and let $\mathbf b$ be the direction from the handle centre to the current gripper mouth, projected orthogonally to $\mathbf z_H$ and normalised (``candidate zero'' is the direct object-to-mouth direction, so the bank is robot-relative). For an angle $\theta_i = 2\pi i/16$, $i = 0,\dots,15$, and a sign $\sigma \in \{+1,-1\}$, the mouth frame $M$ is built as
+\begin{align}
+\mathbf z_M &= \sigma\,\mathbf z_H, \qquad \mathbf u_i = \mathrm{Rot}(\mathbf z_M,\theta_i)\,\mathbf b,\nonumber\\
+\mathbf y_M &= \mathrm{norm}\!\big(\mathbf u_i - \mathbf z_M(\mathbf z_M\!\cdot\!\mathbf u_i)\big),\qquad
+\mathbf x_M = \mathbf y_M\times\mathbf z_M ,
+\end{align}
+so that the gripper closes across the handle with its mouth axis $\mathbf y_M$ pointing outward from the handle. The capture point sits a depth of 6 mm in front of the handle centre along $\mathbf y_M$, the standoff 120 mm further out along the same ray, and the retreat pose 180 mm out: insertion and retreat follow one certified outward ray, so no world direction (above, below, lateral) is preferred by construction. The 16 angles for each sign give the 32 grasps of Fig.~\ref{fig:grasp}; they are named by sign and angle, e.g.\ \texttt{axisP\_side\_45deg}.
 
-\subsection{Receding and supervisory modes}
-A receding mode (V2) replaces the single frozen search by a supervisor that re-certifies the active plan, cancels and restarts the search when the object estimate changes, and commits at a terminal boundary; it uses a robot-independent scripted giver. A supervisory mode (TRIAD-lite) adds a sampled earliest-feasible rendezvous solver over a 530-hypothesis grasp family and a directional velocity-authority filter $\kappa$ computed from the QP's joint-velocity box. All modes share the acquisition interface: closure is gated on the object being at rest (4 mm/s).
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{fig_grasp_bank.pdf}
+\caption{The grasp bank, drawn from the construction rule of the controller for the lateral-low object pose. Sixteen angles about the blue-handle axis (blue) for each of the two mouth conventions; green rays run from the standoff pose (0.120 m) to the capture point, dotted rays to the retreat pose (0.180 m). Angle 0 is the current mouth direction.}\label{fig:grasp}\end{figure}
 
-\section{What the Instrumentation Showed}\label{sec:limits}
-\textbf{The event time is imposed in the V1 giver model.} In the V1 configuration the simulated giver follows the committed presentation time after commitment. The event time is therefore not a prediction that the world may or may not honour; it is a schedule the robot sets. The V2 independent giver removes this, at the cost of the moving-epoch search (2.9 to 3.9 s) exceeding the constant-velocity window (3.67 s).
+\textbf{Routes.} For a grasp with standoff pose $\mathbf p_S$ and the current mouth position $\mathbf p_0$, the chord $\mathbf c = \mathbf p_S - \mathbf p_0$ defines a plane orthogonal to it with basis $\mathbf e_1$ (world up projected orthogonally to $\mathbf c$) and $\mathbf e_2 = \hat{\mathbf c}\times\mathbf e_1$. The route bank $\mathcal R$ holds the direct chord and, for each apex offset $\rho\in\{0.08, 0.14\}$ m and each of $K=8$ directions $\alpha_k = 2\pi k/K$, a smooth world-space curve through the apex $\mathbf p_0 + \tfrac12\mathbf c + \rho(\cos\alpha_k\,\mathbf e_1 + \sin\alpha_k\,\mathbf e_2)$: 17 routes per grasp (Fig.~\ref{fig:route}). Routes are generators, not fixed world paths; the ring is sampled symmetrically about the chord and no direction is labelled or preferred. The bank is therefore $|\mathcal T|\cdot|\mathcal G|\cdot|\mathcal R| = 14\times32\times17 = 7616$ complete candidates before pruning.
 
-\textbf{Selection is dominated by timing.} Off-line replay of logged certifications with a validated selector replica shows that the zero-latency exhaustive argmin equals ``earliest admissible $\tau$, then best $(g,r)$'' in 12 of 16 searches; as executed, the search latency changes the chosen $\tau$ in every moving scenario. In TRIAD-lite the $\tau$ axis is an ascending first-feasible scan, and with the rest gate active it has size one.
+\begin{figure}[t]\centering\includegraphics[width=0.8\columnwidth]{fig_route_bank.pdf}
+\caption{The route bank for one grasp: the direct start--standoff chord and eight directions at each of two apex offsets in the plane orthogonal to the chord, 17 routes.}\label{fig:route}\end{figure}
 
-\textbf{The seven-term cost did not survive replay.} Its regret reached 1.38 s and its winner flipped under weight perturbation in up to 21 of 40 cases; it was replaced by a lexicographic rule (completion, then clearance, then effort). The lateral-low ``route required'' finding was a reach-duration artefact (28 of 34 cases rescued by a 1.2$\times$ time stretch).
+\subsection{Copied-state certification}\label{sec:cert}
+Each complete plan is previewed on a copy of the robot state by weighted damped least-squares differential inverse kinematics. With the geometric Jacobian $J$, the task twist $v$ and a diagonal joint-mobility matrix $M$ that decreases towards joint limits (floor 0.02),
+\begin{align}
+J^\# &= MJ^\top\!\left(JMJ^\top + \lambda^2 I\right)^{-1},\nonumber\\
+\dot q &= J^\# v + (I - J^\#J)(\dot q_{\mathrm{post}} + \dot q_{\mathrm{lim}}),
+\end{align}
+with damping $\lambda = 0.040$, integration step 0.020 s, directional joint-speed clipping and a 0.98 fraction-to-boundary scale before integration; each segment has a finite iteration budget (700). The preview covers, in order, the transit route to the standoff, the insertion into the capture corridor, a closure sweep of the gripper (120 aperture samples), the bilateral-contact conditions, and the carried-object retreat. A commanded swept segment is evaluated at 25 poses. The gripper is modelled by spherical proxies (finger tips, finger bodies, knuckles, pads, base rear) against the object cylinders and the ground plane; a proxy pair $k$ at sampled pose $j$ passes if its signed distance satisfies $d_{k,j} - m_k \ge 0$ for the phase-specific margin $m_k$, with hard and soft clearance references of 0.020 and 0.080 m on reach and retreat, joint limits, corridor alignment and terminal tolerances checked separately. A plan enters the hard-feasible set $\mathcal F_h(s_0)$ only when every check has passed, and the cost-valid set $\mathcal F_J(s_0)$ when in addition its objective is finite. The record of every plan, passed or rejected, carries the stage and the reason (Fig.~\ref{fig:funnel}).
 
-\textbf{Reach certification is a weak filter.} 78 to 81 \% of reach-feasible grasps are rejected at closure or retreat; reach-only selection picks a later-rejected action in 9 of 12 searches (Fig.~\ref{fig:funnel}).
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{fig_funnel.pdf}
+\caption{From the bank to one committed plan, from the repository's records. Left: the four reference scenarios, log scale: the 7616 generated candidates, the complete plans that pass every certification stage, the plans still timing-admissible when the worker's result reached the control thread, and the single commitment. Right: the stage at which rejected grasp previews of the near-ground scenario were stopped, over all 14 event hypotheses.}\label{fig:funnel}\end{figure}
 
-\textbf{Prediction validity is short.} The 15 mm validity horizon while the object moves is 0.10 to 0.65 s; plans adopted while moving realised up to 313 mm of error.
+\subsection{The objective}\label{sec:cost}
+For each cost-valid plan the motion objective is
+\begin{equation}
+J_{\mathrm{motion}} = w_T T + w_E E + w_L L + w_C C + w_Q Q + w_K K + w_V V ,
+\end{equation}
+with the terms and weights of Table~\ref{tab:terms}. $T$ is the predicted execution time divided by a reference of 8 s; $E$ an integrated squared joint-speed proxy divided by 8; $L$ the transit path length divided by 0.50 m; $V = \mathrm{clip}(\rho_q, 0, 1)^4$ with $\rho_q$ the maximum directional joint-velocity utilisation. $C$, $Q$ and $K$ are reserve penalties of the form
+\begin{equation}
+\phi(x; x_s) = \begin{cases} 0 & x \ge x_s\\ -\log\!\big(\max(10^{-12}, x/x_s)\big) & 0 < x < x_s\\ 10^6 & \text{otherwise,}\end{cases}
+\end{equation}
+applied to the clearance reserve $(d - d_h)/(d_s - d_h)$ with $d_h = 0.020$ m and $d_s = 0.080$ m, to the minimum normalised joint-limit margin with soft reference 0.20, and to the minimum condition index $\sigma_{\min}(\tilde J)/\sigma_{\max}(\tilde J)$ of the Jacobian with its angular rows scaled by a 0.20 m characteristic length, soft reference 0.10. Orientation is enforced by the hard checks; a residual orientation term $R$ is computed and logged but carries weight zero. The weights are fixed engineering preferences, normalised by their sum.
 
-\begin{figure}[t]\centering\includegraphics[width=0.98\columnwidth]{F13_feasibility_funnel.pdf}
-\caption{Feasibility funnel for the near-ground scenario with the archived counts.}\label{fig:funnel}\end{figure}
+\begin{table}[t]\caption{Objective terms and weights.}\label{tab:terms}\centering\small
+\begin{tabular}{llr}\toprule
+term & preference & weight\\\midrule
+$T$ & predicted execution time / 8 s & 0.4211\\
+$E$ & integrated squared joint speed / 8 & 0.1053\\
+$L$ & transit path length / 0.50 m & 0.1053\\
+$C$ & clearance reserve (log penalty) & 0.1579\\
+$Q$ & joint-limit reserve (soft 0.20) & 0.0842\\
+$K$ & conditioning reserve (soft 0.10) & 0.0737\\
+$V$ & joint-velocity utilisation$^4$ & 0.0526\\\bottomrule
+\end{tabular}\end{table}
+
+\textbf{Common temporal origin.} Plans attached to different event times are compared on a search-to-completion basis. With $T_{\mathrm{reach}}$ the plan's predicted reach duration, the waiting time before the reach is $T_{\mathrm{wait}} = h - T_{\mathrm{reach}}$ and
+\begin{equation}
+J_{\mathrm{global}} = J_{\mathrm{motion}} + w_T\,\frac{h - T_{\mathrm{reach}}}{8\ \mathrm{s}} ,
+\end{equation}
+which extends the existing time preference back to the epoch rather than adding a second time cost (Fig.~\ref{fig:costs}).
+
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{fig_costs.pdf}
+\caption{Cost structure of the certified plans, near-ground scenario, from the records. Left: $J_{\mathrm{global}}$ of all 283 certified plans against their event lead, by route family; the circle is the argmin over all certified plans, the star the plan actually committed after timing admission with the controller clock. The worker's search took 2.9 s, so the shaded leads were no longer admissible when its result arrived. Right: the weighted terms of the committed plan.}\label{fig:costs}\end{figure}
+
+\subsection{Timing admission and selection}\label{sec:timing}
+Cost ranking and timing admission are different operations. After the bank has been evaluated, the controller re-applies timing with the actual selection time $\tsel$. With $\mathrm{rem}(\xi) = t_{\mathrm{event}}(\xi) - \tsel$, the minimum safe commit lead $L_{\mathrm{safe}} = 1.6$ s and the reach-entry reserve $L_{\mathrm{reach}} = 0.050$ s, a plan is admissible only if
+\begin{equation}
+\mathrm{rem}(\xi) + \varepsilon \ge L_{\mathrm{safe}} \quad\text{and}\quad T_{\mathrm{reach}} + L_{\mathrm{reach}} \le \mathrm{rem}(\xi) + \varepsilon ,
+\end{equation}
+with $\varepsilon = 10^{-12}$. The decision is
+\begin{equation}
+\xi^* = \arg\min_{\xi\in\mathcal F_{\mathrm{timing}}(s_0,\tsel)} J_{\mathrm{global}}(\xi; s_0),
+\end{equation}
+exhaustive over the bank. Ties within $10^{-9}$ are broken deterministically by search-to-completion duration, event time, reach duration, larger clearance and candidate name. A plan can have the best objective and still be rejected because too little time remains; Fig.~\ref{fig:costs} shows exactly this on the near-ground records.
+
+\subsection{Commitment and execution}\label{sec:commit}
+Before execution the winner's event pose is re-predicted; commitment requires $\|p_c - p_f\|\le 0.015$ m and $\|\mathrm{Log}(R_cR_f^\top)\|\le 0.12$ rad between the frozen and refreshed predictions. An expired or inconsistent winner is rejected without selecting a replacement. After commitment the plan is executed by the mc\_rtc task/QP layer, which tracks the committed task-space reference (transform task with stiffness 58 and weight 6600, far speed 0.38 m/s, near speed 0.16 m/s, clearance-driven slowdown) together with posture and gripper targets; it does not choose $\tau$, $g$ or $r$, and there is no reselection, retiming or replanning after commitment. Acquisition closes the gripper on bilateral contact and requires the object to be at rest (4 mm/s).
+
+\subsection{Background worker}\label{sec:async}
+The bank search is expensive, so the control thread hands the frozen snapshot to one background worker and continues its cycle; the worker returns its records, and the control thread applies timing admission and the consistency check to them. Worker-result polling never blocks the control cycle. On the reference machine the worker wall time for the near-ground scenario is 2.9 s, against a control-thread maximum of 40 ms per cycle dominated by logging.
+
+\subsection{Receding and supervisory modes}\label{sec:modes}
+Two further modes run on the same platform and share the acquisition interface. The \emph{receding mode} replaces the single frozen search by a supervisor that re-certifies the active plan every cycle, cancels and restarts the search when the object estimate changes (moving-epoch searches take 2.9 to 3.9 s), and commits at a terminal boundary; it uses a robot-independent scripted giver (constant twist, 0.40 m travel, quintic stop), so that the event time is a property of the world and not of the robot's commitment. The \emph{supervisory mode} adds a grasp family $g = (\sigma, \theta, s)$ of 530 hypotheses including an axial offset $s$ along the handle, a wrist-reachability prune with no false negatives, a sampled earliest-feasible rendezvous solver (Croft--Huji\'c type) with a Hermite reference, and a directional velocity-authority index $\kappa$ computed from the QP's joint-velocity box: the ratio of the velocity the arm can realise along the demanded direction to the velocity the plan demands. Four selectors are defined on it: reactive tracking (B0), predictive rendezvous (B1), predictive with $\kappa$ as a tie-break (B2), and predictive with $\kappa\ge1$ as a hard filter (FULL).
+
+\subsection{Robot-to-robot coordination}\label{sec:two}
+To exercise the receiver without a human, a second Kinova Gen3 (Robot B, base at $[1.35, 0, 0]$ m, yaw $\pi$) presents the object while Robot A receives. Robot B is coordinated by a giver module inside the same controller: it prepositions to the scenario start, settles, waits for Robot A's object observation to begin, executes the presentation along a fixed world-frame trajectory (0.08 m/s, from $[0.92, 0, 0.55]$ to $[0.55, 0, 0.55]$ m, 0.85 s deceleration), settles at the terminal gate and holds; the object is rigidly coupled to Robot B's tool until Robot A acquires it. Robot A's FSM is unchanged. An alternative runs Robot B from a second computer with no communication, from a fixed start and a single trigger. On hardware the two arms are driven through per-robot Kortex bridges.
 
 \section{Evaluation}\label{sec:eval}
-\subsection{Reference scenarios}
-Four moving-object scenarios provide the reference winners of the frozen selector (Table~\ref{tab:ref}). They are reference runs, not a controlled comparison.
 
-\begin{table}[t]\caption{Reference scenarios: committed plan and completion (simulation).}\label{tab:ref}\centering\small
+\subsection{Reference scenarios}
+Four moving-object scenarios (Table~\ref{tab:ref}) exercise the complete chain. In every one the bank yields a committed plan and the handover completes in simulation; the predicted completion time is conservative by 1.3 to 1.4 s.
+
+\begin{table}[t]\caption{Reference scenarios: the committed plan and its completion (simulation).}\label{tab:ref}\centering\small
 \setlength{\tabcolsep}{4pt}\begin{tabular}{lcccc}\toprule
 scenario & $\tau^*$ (s) & route & $J_{\mathrm{glob}}$ & compl. pred./act. (s)\\\midrule
 near-ground & 4.600 & ring 80 mm & 0.823 & 9.80 / 8.47\\
@@ -96,45 +165,47 @@ lateral-low & 4.150 & direct & 0.701 & 8.80 / 7.44\\
 diagonal & 4.600 & ring 140 mm & 0.685 & 9.62 / 8.22\\\bottomrule
 \end{tabular}\end{table}
 
+\subsection{The funnel}
+Fig.~\ref{fig:funnel} shows what the bank becomes: of 7616 generated candidates, 283, 198, 432 and 233 complete plans pass certification in the four scenarios; of those, 10, 49, 59 and 227 are still timing-admissible when the worker's result reaches the control thread; one is committed. Rejections concentrate in the whole-arm checks: in the near-ground scenario 134 grasp previews stop because the IK preview does not converge, 189 on gripper body or finger clearance, 58 in the closure sweep. Reach alone is a weak filter; the closure and retreat stages do most of the work.
+
+\subsection{Cost structure}
+Fig.~\ref{fig:costs} shows every certified plan of the near-ground scenario against its event lead. The argmin over all certified plans lies at the shortest lead, 1.8 s; the plan committed after timing admission lies at 6.85 s, because the 2.9 s search had consumed the short leads. The committed plan's cost is dominated by the time term (0.461 of 0.925), with clearance and path length next; the conditioning reserve is inactive.
+
 \subsection{Perception latency}
-A timestamped delay is injected into the object-pose measurement and either propagated by its measured age (compensated) or treated as current. Both modes complete at 0.10 and 0.22 s of delay. At 0.30 s only the compensated mode completes (four of four repeats against zero of four). From 0.40 s both modes commit and fail in execution; at 0.60 s the compensated mode is rejected before commitment by the freshness gate and the uncompensated mode cannot classify the object (displacement 0.0241 m below the 0.0250 m moving threshold while the estimated speed exceeds the static threshold). Compensation therefore extends the usable delay from 0.22 s to 0.30 s in this configuration, no further.
+A timestamped delay is injected into the object-pose measurement and either propagated by its measured age (compensated) or treated as current (Fig.~\ref{fig:latency}). Both modes complete at 0.10 and 0.22 s. At 0.30 s only the compensated mode completes, four of four repeats against zero of four. From 0.40 s both modes commit and fail in execution; at 0.60 s the compensated mode is rejected before commitment by the freshness gate and the uncompensated mode cannot classify the object (displacement 0.0241 m under the 0.0250 m moving threshold while the estimated speed exceeds the static threshold). Compensation keeps the estimate error below 1 mm where the uncompensated estimate drifts by 40 mm at 0.5 s, and extends the usable delay from 0.22 s to 0.30 s.
 
-\subsection{Exact-serial performance}
-Restructuring the serial search reduced the state-scoped wall time from 4.349 to 3.972 s, 3.315 to 3.072 s, 3.393 to 3.162 s and 2.797 to 2.620 s over the four scenarios (6.3 to 8.7 \%), with a collision oracle of 8\,168\,732 comparisons and zero mismatches against the reference.
+\begin{figure}[t]\centering\includegraphics[width=0.85\columnwidth]{fig_latency.pdf}
+\caption{Perception-latency sweep from the sweep records: object-estimate error against configured delay for the compensated and uncompensated modes, with the run outcome as marker.}\label{fig:latency}\end{figure}
 
-\subsection{Matched comparison of the TRIAD-lite mode}\label{sec:lite}
-Four selectors were run over four scenarios with three near-deterministic repeats each, on an identical plant, an identical grasp pool and one evaluator (Table~\ref{tab:lite}). The proposed variant with the hard authority filter is the second worst. An earlier campaign had reported FULL at 12 of 12 and B1 at 9 of 12; that came from a rollout defect on replans from a moving arm that inflated the demand signal the filter consumes. Both campaigns are archived. The predictive variants meet the grasp pose 1.5 to 3 mm from the target and up to 1.6 s before the giver stops, but acquisition still waits for rest, so the difference between B0 and B1 concerns reaching a rendezvous, not acquiring a moving object, and the B0 baseline differs from B1 in more than the predictive term.
+\subsection{Computation}
+Restructuring the serial search reduced the state-scoped wall time over the four scenarios from 4.349 to 3.972 s, 3.315 to 3.072 s, 3.393 to 3.162 s and 2.797 to 2.620 s (6.3 to 8.7 \%), with a collision oracle of 8\,168\,732 pairwise comparisons and zero mismatches against the reference. With the background worker the control-thread cycle stays below 40 ms while the search runs.
 
-\begin{table}[t]\caption{Matched comparison (TRIAD-lite, simulation, 12 runs per selector).}\label{tab:lite}\centering\small
-\begin{tabular}{llc}\toprule
-selector & description & completions\\\midrule
-B0 & reactive baseline & 5/12\\
-B1 & plain predictive baseline & 11/12\\
-B2 & capability tie-break & 10/12\\
-FULL & joint selection with the authority filter & 6/12\\\bottomrule
-\end{tabular}\end{table}
+\subsection{Selector modes}
+The four supervisory-mode selectors were run over the four scenarios with three near-deterministic repeats each, on an identical plant, an identical grasp pool and one evaluator (Fig.~\ref{fig:modes}). Predictive rendezvous completes 11 of 12 against 5 of 12 for reactive tracking: it meets the grasp pose 1.5 to 3 mm from the target and up to 1.6 s before the giver stops. The capability tie-break neither helps nor hurts (10 of 12). The hard authority filter completes 6 of 12: used as a hard constraint it makes selection depend on whether the arm starts at rest or moving and produces adopt/abort cycling (up to 140 aborts in one run). Directional authority carries information, $\kappa<1$ in 35 to 43 \% of preview-feasible encounters and Spearman $-0.83$ against the condition index, but the recommended configuration is predictive rendezvous with $\kappa$ as a diagnostic, not a filter. A first campaign had reported FULL at 12 of 12; it came from a rollout defect on replans from a moving arm that inflated the demand signal the filter consumes, and both campaigns are archived.
 
-\section{Robot-to-Robot Test Setup}\label{sec:two}
-\subsection{Setup}
-To exercise the receiver without a human, a second Kinova Gen3 without a gripper role (Robot B, base at $[1.35, 0, 0]$ m, yaw $\pi$) presents the object along a fixed world-frame trajectory while Robot A receives (Fig.~\ref{fig:two}). Robot B is coordinated inside the controller by a giver module: it prepositions to the scenario start, settles, waits for Robot A's object observation to begin, executes the presentation (0.08 m/s along $-x$, from $[0.92,0,0.55]$ to $[0.55,0,0.55]$ m, 0.85 s deceleration), settles at the terminal gate and holds; the object is rigidly coupled to Robot B's tool until Robot A acquires it. Robot A's FSM is unchanged. An alternative runs Robot B from a second computer with no communication, from a fixed start and a single trigger.
+\begin{figure}[t]\centering\includegraphics[width=0.85\columnwidth]{fig_modes.pdf}
+\caption{Completions per selector and scenario, three repeats each, from the campaign records.}\label{fig:modes}\end{figure}
 
-\begin{figure}[t]\centering\includegraphics[width=0.98\columnwidth]{two_robot_sim.png}
-\caption{Robot B (right) presenting the object to Robot A (left) in the two-arm simulation, 18 July 2026.}\label{fig:two}\end{figure}
+\subsection{Robot-to-robot handover}
+With Robot B as the giver the full two-arm handover completes in simulation (Fig.~\ref{fig:two}, Fig.~\ref{fig:twostill}): Robot B is settled at its start at 2.7 s, executes from 8.1 s in sync with Robot A's observation and holds from 13.4 s; Robot A observes from 7.8 s, commits at 12.1 s, captures at 15.7 s, retreats at 19.4 s and completes at 19.9 s, with an execution of 7.5 s against 8.9 s predicted. The single-robot scenarios complete on the same build, and so does a run with the second robot loaded and the giver disabled.
 
-\subsection{Simulation}
-On 24 September 2026 the full two-arm handover completed in mc\_rtc's simulation: Robot B was at rest at the start at 2.7 s, executed from 8.1 s, and held from 13.4 s; Robot A entered observation at 7.8 s, committed at 12.1 s, captured at 15.7 s, retreated at 19.4 s and reported completion at 19.9 s (execution 7.5 s against 8.9 s predicted). The single-robot scenario completes on the same build, and so does a run with the second robot loaded and the giver disabled.
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{fig_two_robot.pdf}
+\caption{Two-arm handover in simulation, from the run log: receiver state and giver phase with the giver's tool speed.}\label{fig:two}\end{figure}
 
-\subsection{Hardware status, July 2026}
-Both arms were driven from one computer through per-robot Kortex bridges on 17 and 18 July 2026; the logs contain the second arm's motor currents and driver temperatures, which only a physical robot produces. Robot B executed its presentation alone on hardware through all six phases (17 July, 22:30). The combined run of 18 July (00:51) reached Robot A's committed reach and failed before capture. Robot A's gripper had been commissioned on hardware on 15 and 16 July with a measured closure calibration. No hardware run reached the capture state, the transfer force source was virtual in every hardware run, and those runs predate the two-robot integration reported here, which has been exercised in simulation only. The procedure, the receiver's hardware switches and the log inventory are in the repository.
+\begin{figure}[t]\centering\includegraphics[width=0.9\columnwidth]{two_robot_sim.png}
+\caption{The two-arm simulation: Robot B (right) presenting the object to Robot A (left).}\label{fig:twostill}\end{figure}
 
-\section{Discussion and Limitations}\label{sec:disc}
-The evidence supports an implementation claim and nothing stronger. Three limits are structural. First, acquisition requires the object to stop, so no variant acquires a moving object; the predictive machinery serves the approach only. Second, no control-performance gap is established: the one matched comparison is lost by the more elaborate variant, and the reference scenarios have no external baseline. Third, everything is simulation with virtual force; the two-robot setup makes hardware testing possible without a human but has not yet produced a completed handover. The bank is an engineering discretisation with no resolution study; the cost weights were replaced rather than justified. What is reusable is the plant, the certification stage that models closure and retreat, the evaluation tooling, and a test setup on which a receiver can be exercised repeatably.
+\subsection{Hardware status}
+Both arms have been driven together on hardware through per-robot Kortex bridges; the logs contain the second arm's motor currents and driver temperatures, which only a physical robot produces. Robot B executed its presentation alone on the physical arm through all six phases. The combined run reached Robot A's committed reach and failed before capture. Robot A's gripper has been commissioned on hardware with a measured closure calibration, and the receiver's hardware switches and that calibration are collected in one configuration overlay in the repository. No hardware run has reached the capture state, the transfer force source was virtual in every hardware run, and the two-robot integration reported here has been exercised in simulation only.
+
+\section{Discussion}\label{sec:disc}
+Three properties of the method follow from its own records. First, timing dominates: the exhaustive argmin coincides with ``earliest admissible event time, then best grasp and route'' in 12 of 16 replayed searches, and the search latency moves the chosen event time in every moving scenario. TRIAD makes that visible instead of hiding it inside a continuously re-solved problem. Second, certification through retreat matters: four of five reach-feasible grasps are rejected at closure or retreat, so a reach-only selector would commit to plans that cannot finish. Third, the simulated giver of the default configuration follows the committed presentation time after commitment, so in that configuration the event time is a schedule the robot sets; the receding mode with its independent giver removes this, at the cost of moving-epoch searches longer than the constant-velocity window (3.67 s) and a prediction validity of 0.10 to 0.65 s while the object moves. The limits are equally clear: acquisition requires the object to stop, so no mode acquires a moving object; the evidence is simulation with virtual force; the bank is an engineering discretisation with no resolution study; the objective weights are fixed preferences and off-line replay shows a two-level lexicographic rule (completion, then clearance, then effort) captures their useful part. What is reusable is the formulation, the plant, the certification stage, the evaluation tooling, and a two-robot setup on which the next hardware run can be made repeatably.
 
 \section{Reproducibility}\label{sec:repro}
-The controller, the configuration, the evidence records, the two-robot setup and the scripts that regenerate every number in this paper are in the TRIAD repository (tag \texttt{triad-2026-09-24}). The unit tests and documentation-claim guards run in continuous integration; the two-arm simulation runs from a build tree with one script.
+The controller, configuration, evidence records, the two-robot setup, the unit tests, the documentation-claim guards and the script that regenerates every figure of this paper from the records are in the TRIAD repository (tag \texttt{triad-2026-09-24}). The two-arm simulation runs from a build tree with one script; the hardware procedure is documented step by step.
 
 \section{Conclusion}\label{sec:conc}
-TRIAD is an auditable finite-plan receiver whose decision structure is prior art and whose own instrumentation shows that timing dominates selection, that the V1 giver model imposes the event time, and that the more elaborate TRIAD-lite mode loses to a plain predictive baseline. Its value is the implementation, the attribution, the measured limits, and a robot-to-robot setup on which the next question can be tested on hardware.
+TRIAD chooses event time, grasp and route together, certifies each complete plan through retreat, and commits once. Its records show the shape of the decision: a bank of thousands, a few hundred certified plans, a few dozen admissible ones, one commitment dominated by timing. The platform now includes a second arm as the giver, on which the full handover completes in simulation; the next step is the same run on the two physical arms.
 
 \begin{thebibliography}{12}
 \bibitem{croft98} E. A. Croft, R. G. Fenton, and B. Benhabib, ``Optimal rendezvous-point selection for robotic interception of moving objects,'' \emph{IEEE Trans. Syst., Man, Cybern. B}, vol. 28, no. 2, 1998. [Bibliographic details to be verified before submission.]
