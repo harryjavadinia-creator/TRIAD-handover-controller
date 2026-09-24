@@ -19,8 +19,8 @@ What is in it:
 | `check_dual_network.sh`, `run_dual_init_only.sh`, `disable_and_stop.sh` | the hardware procedure scripts of July 2026 |
 | `robot_b_standalone/` | `CALLRobotBFaceToFaceMover`: the alternative where Robot B runs from a second laptop with no communication with Robot A (fixed start, one trigger, one trajectory) |
 | `results/sim_2026-09-24/` | the verification run: log, override, timeline |
-| `evidence/` | inventory of the 134 July 2026 mc_rtc logs (31 GB, kept on the lab laptop), one 3.3 MB hardware log, Robot B's validation log |
-| `media/` | five screen recordings of the two-arm simulation from 18–19 July 2026 (RViz / mc_rtc), `.webm` |
+| `evidence/` | inventory of the 134 July 2026 mc_rtc logs (31 GB, kept on the lab laptop), one 3.3 MB hardware log, Robot B's validation log, and the physical-video evidence note |
+| `media/` | five screen recordings of the two-arm simulation from 18–19 July 2026 (`.webm`) plus two real-world physical dual-robot videos (`dual_robot_physical_01.mp4`, `dual_robot_physical_02.mp4`) |
 
 ## What has been verified
 
@@ -30,17 +30,24 @@ What is in it:
   PresentationHold → MovePregrasp → CaptureTransfer → Retreat → Completed and Robot B releases the object
   at acquisition. See `results/sim_2026-09-24/TIMELINE.md`. The single-robot scenario on the same build
   still completes, and so does a run with the second robot loaded but the giver disabled.
-- **Hardware, July 2026** (see `evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`): on 17 July Robot B executed
-  its presentation alone on the physical arm (phases prepositioning → HOLD, log 22:30:31). The combined
-  run of 18 July 00:51 reached Robot A's committed reach and then failed. **No hardware run reached the
-  capture.** Robot A alone had its physical gripper commissioned on 15–16 July (`v6.4.2`).
+- **Hardware, July 2026 — controller logs** (see `evidence/JULY_2026_HARDWARE_LOG_INVENTORY.md`): on 17 July Robot B executed
+  its presentation alone on the physical arm (phases prepositioning → HOLD, log 22:30:31). The inventoried
+  combined run of 18 July 00:51 reached Robot A's committed reach and then failed; the inventoried mc_rtc
+  state logs do not record `CaptureTransfer`. Robot A alone had its physical gripper commissioned on
+  15–16 July (`v6.4.2`).
+- **Hardware, real-world video evidence**: `media/dual_robot_physical_01.mp4` and
+  `media/dual_robot_physical_02.mp4` directly show both physical Kinova arms operating together in the lab
+  handover setup. In the second clip Robot B supports/presents the bottle while Robot A's Robotiq gripper
+  approaches and closes around the bottle neck. See
+  `evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md` for source hashes and the evidence boundary.
 
-## What does not exist
+## Hardware evidence and remaining limits
 
-- **There is no real-life video of the two arms on this laptop.** The recordings in `media/` are screen
-  captures of the simulation. If a phone video was taken in the lab in July, it is not here.
-- The July hardware runs predate the integration in this repository; nothing here has run on hardware
-  with this code. The giver layer has been verified in simulation only.
+- Real-world video of the two physical robots **does exist** and is included in `media/`.
+- The physical videos establish dual-robot operation and interaction, but they are not synchronized controller
+  logs; therefore they are not used on their own to assign a particular FSM state such as `CaptureTransfer`.
+- The July hardware runs predate the integration in this repository. The current integrated giver layer is
+  verified end-to-end in simulation; the physical clips document the July laboratory implementation/setup.
 - Robot B has no gripper role: it carries the object rigidly in simulation and, on hardware, the object
   was held by Robot B's tool physically.
 
@@ -60,8 +67,8 @@ appends the overlay to the controller configuration and prints the giver milesto
 states. Expect `RESULT: COMPLETED` after about 20 s of simulated time. mc_rtc's ticker segfaults on exit
 after `--run-for`; that happens after Completed and is not part of the handover.
 
-To watch it, run the same configuration with `mc_rtc_ticker` and RViz as in `../docs/quickstart.md`, or
-use the July recordings in `media/`.
+To watch it, run the same configuration with `mc_rtc_ticker` and RViz as in `../docs/quickstart.md`.
+The July simulation recordings and the two physical laboratory clips are in `media/`.
 
 ## Run it on the two physical arms
 
@@ -74,7 +81,7 @@ Follow the July procedure, in this order, with motion disabled until each step p
    states for `gen3_2f85` and `kinova`.
 5. Robot B alone: set `init: HandoverInterceptionController_RobotBScenarioPreview` in the overlay, then
    `dualHandover.motionEnabled: true`. This is what worked on 17 July.
-6. The combined run: default `init`, `motionEnabled: true`. On 18 July this reached the committed reach.
+6. The combined run: default `init`, `motionEnabled: true`. On 18 July the inventoried logged run reached the committed reach.
 7. `bash two_robot/disable_and_stop.sh` after every run.
 
 Robot A's physical gripper bridge stays under the existing `physicalBridge` switches of the TRIAD
@@ -86,5 +93,7 @@ configuration; they are off by default.
   and `~/Downloads/CALL_DUAL_ROBOT_ACTUAL_HANDOVER_V1_1_PLAIN_TRAJECTORY_B_20260717` (17–18 July 2026).
 - Robot B standalone mover: `~/mc_rtc_ws/Sandbox/CALLRobotBFaceToFaceMover`, validated 17 July 11:38
   (`evidence/CALL_ROBOT_B_20260717_113843.log`: start [0.4567, 0.0010, 0.4337], 0.08 m/s, terminal error ≈ 0.2 mm).
+- Physical video evidence: `media/dual_robot_physical_01.mp4`, `media/dual_robot_physical_02.mp4`, with
+  source-file hashes recorded in `evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md`.
 - Integration in the controller: constructor, reset, run and observation-start hooks, eight pass-through
   methods, two states, CMake entries. All are no-ops unless `dualHandover.enabled: true`.
