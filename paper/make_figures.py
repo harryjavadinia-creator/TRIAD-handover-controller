@@ -219,7 +219,7 @@ for comp, col, lab in [(True, C_OK, "compensated"), (False, C_BAD, "uncompensate
         mk = "o" if r["completed"] else ("x" if r["committed"] else "s")
         ax.plot(float(r["delay"]), 1e3 * r["estimate_position_error_m"], mk, color=col, ms=5, mfc=(col if r["completed"] else "white"))
 ax.plot([], [], "o", color=C_MUT, label="completed"); ax.plot([], [], "x", color=C_MUT, label="committed, execution failed"); ax.plot([], [], "s", color=C_MUT, mfc="white", label="rejected before commit")
-ax.set_xlabel("configured perception delay (s)"); ax.set_ylabel("object-estimate position error (mm)"); ax.legend(fontsize=5.6, frameon=False); ax.grid(alpha=0.25)
+ax.set_xlabel("configured perception delay (s)"); ax.set_ylabel("object-estimate error (mm)"); ax.legend(fontsize=5.6, frameon=False); ax.grid(alpha=0.25)
 [ax.spines[s].set_visible(False) for s in ("top", "right")]
 save(fig, "fig_latency")
 
