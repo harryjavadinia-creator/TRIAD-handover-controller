@@ -40,9 +40,11 @@ together; see Section 5.
 ## 3. Real-robot reproduction status
 
 There is currently no end-to-end tested procedure in this repository for reproducing a complete
-TRIAD handover on physical hardware from a fresh checkout. What is reproducible from a fresh checkout is
-the single-robot pre-contact sequence: on 25 September 2026 the physical Robot A ran the four reported
-scenarios against the virtual object with `two_robot/run_single_robot_scenario.sh` (Section 6). The required software/configuration
+TRIAD handover on physical hardware from a fresh checkout. What has been reproduced from the repository
+is the pre-contact sequence, up to and including the closure of the gripper: on 25 September 2026 the
+physical Robot A ran the four reported scenarios against the virtual object with
+`two_robot/run_single_robot_scenario.sh` (Section 6), and the two arms ran the synchronized two-robot
+procedure of README §4 (Section 7). Contact, load transfer and retreat remain unvalidated on hardware. The required software/configuration
 pieces exist, and the July laboratory evidence shows physical dual-robot operation, but those are
 different claims from a reproducible end-to-end controller validation.
 
@@ -141,7 +143,7 @@ Robot A ran `longitudinal` (three times), `near-ground`, `lateral-low` and `diag
 - every run whose search committed went Initial → ObserveObject → SolveInterception →
   ExecuteCommittedReach → PresentationHold → MovePregrasp → CaptureTransfer on the physical arm and closed
   the physical gripper at the planned capture pose: six of six. Reach targets from [0.163, 0.195, 0.166] to
-  [0.475, 0.096, 0.556] m, minimum clearance 54 to 82 mm, measured joints within 0.02 rad of the commands;
+  [0.475, 0.096, 0.556] m, minimum clearance 54 to 82 mm, measured joints within 0.03 rad of the commands;
 - every run then ended in the fail-safe hold of `CaptureTransfer` at the closure check against the virtual
   object model, exactly as the nine two-robot runs of 18 July did: with nothing between the fingers there is
   no contact or force signal, and `Retreat` is not reachable;
@@ -167,8 +169,9 @@ presentation, driven by the giver coordinator (one fixed event at Robot B's endp
 [0.463, 0.108, 0.486] with 80 mm clearance), closed the gripper at the planned object pose and entered the
 fail-safe hold at the closure check. There was no object on Robot B's tool, so, as in July, no contact
 signal, no transfer and no retreat. Unlike the July runs, every state of this run is tied to the binary
-log of the physical execution (measured and commanded joints of both arms, tracking within 0.02 rad) and
-the run is reproducible from a fresh checkout with the documented procedure.
+joint record of the physical execution (measured and commanded joints of both arms, tracking within
+0.02 rad, archived in the repository with the script that recomputes the quoted quantities) and the run is
+reproducible from a fresh checkout with the documented procedure.
 
 The evidence therefore supports physical two-robot operation and interaction, the single-robot
 pre-contact sequence on Robot A, and the synchronized two-robot pre-contact sequence with controller and

@@ -1,0 +1,169 @@
+{
+ "single_robot_diagonal_20260925_102656": {
+  "timeline": [
+   "Initial",
+   "ObserveObject",
+   "SolveInterception",
+   "ExecuteCommittedReach",
+   "PresentationHold",
+   "MovePregrasp",
+   "CaptureTransfer",
+   "Failure"
+  ],
+  "robots": {
+   "Robot A (gen3_2f85)": {
+    "max_travel_deg": 418.3,
+    "max_tracking_error_rad": 0.0197
+   }
+  },
+  "giver_phases": []
+ },
+ "single_robot_lateral-low_20260925_102607": {
+  "timeline": [
+   "Initial",
+   "ObserveObject",
+   "SolveInterception",
+   "ExecuteCommittedReach",
+   "PresentationHold",
+   "MovePregrasp",
+   "CaptureTransfer",
+   "Failure"
+  ],
+  "robots": {
+   "Robot A (gen3_2f85)": {
+    "max_travel_deg": 120.5,
+    "max_tracking_error_rad": 0.0284
+   }
+  },
+  "giver_phases": []
+ },
+ "single_robot_longitudinal_20260925_100155": {
+  "timeline": [
+   "Initial",
+   "ObserveObject",
+   "SolveInterception",
+   "ExecuteCommittedReach",
+   "PresentationHold",
+   "MovePregrasp",
+   "CaptureTransfer",
+   "Failure"
+  ],
+  "robots": {
+   "Robot A (gen3_2f85)": {
+    "max_travel_deg": 423.2,
+    "max_tracking_error_rad": 0.0196
+   }
+  },
+  "giver_phases": []
+ },
+ "single_robot_longitudinal_20260925_100537": {
+  "timeline": [
+   "Initial",
+   "ObserveObject",
+   "SolveInterception",
+   "ExecuteCommittedReach",
+   "PresentationHold",
+   "MovePregrasp",
+   "CaptureTransfer",
+   "Failure"
+  ],
+  "robots": {
+   "Robot A (gen3_2f85)": {
+    "max_travel_deg": 112.7,
+    "max_tracking_error_rad": 0.0211
+   }
+  },
+  "giver_phases": []
+ },
+ "single_robot_longitudinal_20260925_101212": {
+  "timeline": [
+   "Initial",
+   "ObserveObject",
+   "SolveInterception",
+   "ExecuteCommittedReach",
+   "PresentationHold",
+   "MovePregrasp",
+   "CaptureTransfer",
+   "Failure"
+  ],
+  "robots": {
+   "Robot A (gen3_2f85)": {
+    "max_travel_deg": 91.1,
+    "max_tracking_error_rad": 0.0205
+   }
+  },
+  "giver_phases": []
+ },
+ "single_robot_near-ground_20260925_101427": {
+  "timeline": [
+   "Initial",
+   "ObserveObject",
+   "SolveInterception",
+   "ExecuteCommittedReach",
+   "PresentationHold",
+   "MovePregrasp",
+   "CaptureTransfer",
+   "Failure"
+  ],
+  "robots": {
+   "Robot A (gen3_2f85)": {
+    "max_travel_deg": 163.2,
+    "max_tracking_error_rad": 0.0207
+   }
+  },
+  "giver_phases": []
+ },
+ "two_robot_handover_20260925_112234": {
+  "timeline": [
+   "Initial",
+   "ObserveObject",
+   "SolveInterception",
+   "ExecuteCommittedReach",
+   "PresentationHold",
+   "MovePregrasp",
+   "CaptureTransfer",
+   "Failure"
+  ],
+  "robots": {
+   "Robot A (gen3_2f85)": {
+    "max_travel_deg": 411.7,
+    "max_tracking_error_rad": 0.0192
+   },
+   "Robot B (kinova)": {
+    "max_travel_deg": 52.0,
+    "max_tracking_error_rad": 0.0037
+   }
+  },
+  "giver_phases": [
+   "PREPOSITION START",
+   "START-GATE",
+   "READY",
+   "START",
+   "TERMINAL",
+   "HOLD"
+  ]
+ },
+ "two_robot_preview_20260925_111934": {
+  "timeline": [
+   "RobotBScenarioPreview"
+  ],
+  "robots": {
+   "Robot A (gen3_2f85)": {
+    "max_travel_deg": 0.0,
+    "max_tracking_error_rad": 0.0001
+   },
+   "Robot B (kinova)": {
+    "max_travel_deg": 40.9,
+    "max_tracking_error_rad": 0.0064
+   }
+  },
+  "giver_phases": [
+   "PREPOSITION START",
+   "START-GATE",
+   "READY",
+   "START",
+   "TERMINAL",
+   "HOLD"
+  ]
+ }
+}

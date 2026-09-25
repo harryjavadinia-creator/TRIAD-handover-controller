@@ -2,7 +2,8 @@
 
 This folder makes TRIAD run a **robot-to-robot handover**: Robot A (Kinova Gen3 +
 Robotiq 2F-85, the TRIAD receiver, unchanged) receives the CALL object from Robot B (a second Kinova Gen3 whose
-tool has no role in the handover) which presents it along a fixed world-frame trajectory. It is the July 2026 two-robot
+tool only carries the object: it performs no controlled grasp or release) which presents it along a fixed
+world-frame trajectory. It is the July 2026 two-robot
 setup of the CALL laboratory (Robot A at 192.168.1.10, Robot B at 192.168.1.11).
 
 What is in it:
@@ -51,7 +52,7 @@ What is in it:
   Every run whose search committed went Initial → ObserveObject → SolveInterception →
   ExecuteCommittedReach → PresentationHold → MovePregrasp → CaptureTransfer on the physical arm and closed the
   physical gripper at the planned capture pose (reach targets from [0.163, 0.195, 0.166] to
-  [0.475, 0.096, 0.556] m, clearance 54–82 mm, joints tracking the commands within 0.02 rad), then ended in
+  [0.475, 0.096, 0.556] m, clearance 54–82 mm, joints tracking the commands within 0.03 rad), then ended in
   the fail-safe hold at the closure check, as there was nothing between the fingers. One run lost its
   commit to a slow search (4.3 s) and held without moving; one start with the driver's own start-posture
   option was rejected by the robot and crashed the driver without motion.
@@ -62,8 +63,9 @@ What is in it:
   MovePregrasp → CaptureTransfer on the physical arms in step with Robot B's presentation (one fixed event,
   one commit, reach to [0.463, 0.108, 0.486] with 80 mm clearance) and closed the gripper at the planned
   object pose, then the fail-safe hold at the closure check: there was no object on Robot B's tool and no
-  contact signal. Both arms' measured joints are in the binary log (Robot A up to 106°, Robot B up to 52°,
-  tracking within 0.02 rad).
+  contact signal. Both arms' measured joints are in the archived joint record (Robot B up to 52°, Robot A
+  up to 106° on its wrist joints plus a full revolution of its continuous third joint in the readiness
+  move, tracking within 0.02 rad; `evidence/hardware_runs_2026-09-25/README.md`, "Joint records").
 - **Hardware, real-world video evidence**: `media/dual_robot_physical_01.mp4` and
   `media/dual_robot_physical_02.mp4` directly show both physical Kinova arms operating together in the lab
   handover setup. In the second clip Robot B supports/presents the bottle while Robot A's Robotiq gripper
@@ -78,8 +80,8 @@ What is in it:
   used on their own to assign a state.
 - The July runs used the same coordinator and states, then inside a sandbox controller; their integration
   into this controller is verified end-to-end in simulation (`results/sim_2026-09-24/`).
-- Robot B's tool has no role in the handover: it carries the object in simulation and, on hardware, the
-  object was held by Robot B's tool physically.
+- Robot B's tool acts only as the object carrier: the object is coupled to it in simulation and was taped
+  to it on hardware in July; the tool performs no controlled grasp or release action of its own.
 
 ## Run it in simulation
 
@@ -130,9 +132,9 @@ mc_kortex rebuilt with the three files in `mc_kortex_patch/` (Robot A `gen3_join
 `closePercent`/`maxPercent` 50.37; measure your own). Motion stays disabled until each step passes.
 
 ```bash
-# with the four variables of the README set (PATH, MAIN_ROBOT_MODULE_PATH, TRIAD_BUILD_DIR, MC_RTC_INSTALL);
-# mc_kortex links mc_rtc's ROS plugin, so the ROS environment must be sourced in the shell that starts it
-# (source /opt/ros/<distro>/setup.bash), and LD_LIBRARY_PATH must be extended, not replaced
+# with the four variables of the README set (PATH, MAIN_ROBOT_MODULE_PATH, TRIAD_BUILD_DIR, MC_RTC_INSTALL):
+source /opt/ros/jazzy/setup.bash               # your ROS distribution: mc_kortex links mc_rtc's ROS plugin
+export LD_LIBRARY_PATH="$TRIAD_BUILD_DIR/src:$MC_RTC_INSTALL/lib:$LD_LIBRARY_PATH"   # extend, do not replace
 bash two_robot/prepare_hardware_config.sh      # writes ~/.config/mc_rtc/mc_rtc.yaml + the controller override
                                                # from mc_rtc.two_kortex.yaml, the two-robot overlay and the
                                                # receiver hardware overlay; backs up existing files.

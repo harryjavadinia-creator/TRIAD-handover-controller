@@ -61,7 +61,9 @@ jobs:
             tools/verify_latency_matrix_cell.py \
             tools/verify_scenario_identity.py \
             tools/verify_scientific_baseline.py \
-            scripts/setup_gen3_2f85_module.py
+            scripts/setup_gen3_2f85_module.py \
+            two_robot/tools/set_override_key.py \
+            two_robot/tools/hardware_run_summary.py
 
       - name: Shell syntax check
         run: |
@@ -71,6 +73,14 @@ jobs:
           bash -n tools/clean_stale_fsm_install.sh
           bash -n tools/run_binding_cost_checks.sh
           bash -n tools/run_binding_cost_unit_tests.sh
+          bash -n two_robot/prepare_hardware_config.sh
+          bash -n two_robot/check_dual_network.sh
+          bash -n two_robot/run_dual_init_only.sh
+          bash -n two_robot/disable_and_stop.sh
+          bash -n two_robot/run_single_robot_scenario.sh
+          bash -n two_robot/run_two_robot_sim.sh
+          bash -n two_robot/tools/build_kortex_home.sh
+          bash -n two_robot/tools/extract_hardware_joint_record.sh
 
       - name: Verify frozen scientific baseline
         run: |
@@ -88,6 +98,9 @@ jobs:
         run: |
           cd evidence && sha256sum -c MANIFEST.sha256 && cd ..
           python3 tools/check_evidence_manifest.py
+
+      - name: Hardware run records reproduce the reported quantities
+        run: bash two_robot/tools/check_hardware_run_records.sh
 
       - name: Planner core purity guard
         run: |

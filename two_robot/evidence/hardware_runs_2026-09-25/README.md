@@ -52,7 +52,7 @@ degrees); the driver read it within 0.1 degree at every start.
   complete pre-contact sequence of every one of the four scenarios: readiness posture, observation of the
   moving object, one committed plan, the certified reach to the standoff, presentation hold, pregrasp and
   the closure of the physical gripper. Six of six runs whose search committed reached the closure. The
-  measured joints followed the commanded ones within 0.02 rad throughout (binary logs).
+  measured joints followed the commanded ones within 0.03 rad throughout (`joints/`, see below).
 - Every run ends the same way the nine runs of 18 July 2026 did (`../hardware_runs_2026-07-18/`): in the
   fail-safe hold of `CaptureTransfer` at the closure check against the virtual object model. With nothing
   between the fingers there is no contact or force signal; `Retreat` is not reachable in this setup.
@@ -74,7 +74,8 @@ degrees); the driver read it within 0.1 degree at every start.
   sensor. The closure check that ends every run is the controller doing what it is specified to do
   without a contact signal, not a validated grasp.
 - Not a human-to-robot handover: the object was simulated, there is no perception in this repository.
-- Not a two-robot run: Robot B was absent; the two-robot record is `../hardware_runs_2026-07-18/`.
+- Part 1 is not a two-robot run: Robot B was absent. The two-robot run of the same day is Part 2 below;
+  the earlier two-robot record is `../hardware_runs_2026-07-18/`.
 
 # Part 2. Two robots, 11:11–11:23: Robot B presents, Robot A receives
 
@@ -94,13 +95,45 @@ and is not archived).
 | 11:15 | Robot B preview, first start | (none) | | | the driver died while opening the Kortex connection to Robot B (`not connected !!!`): the laptop's wired link had dropped (kernel: `NIC Link is Down` at 11:16 with three flaps); **no motion**; both web applications stayed reachable once the cable was seated | `two_robot_preview_20260925_111538` |
 | 11:18 | no-motion preflight, two arms, after the cable | (none) | | | PASS again, both arms connected | `init_only_20260925_111833` |
 | 11:19 | **Robot B alone presents** (`init: HandoverInterceptionController_RobotBScenarioPreview`, `motionEnabled: true`) | RobotBScenarioPreview (Robot A holds) | PREPOSITION START (0.22 m, 2.7 s) → START-GATE → READY (tracking 0.2 mm) → START → TERMINAL → HOLD (endpoint error 0.2 mm, peak tracking 4.9 mm) | | HOLD; Robot B's measured joints travelled up to 41° (joints 2, 4, 6), Robot A's 0° (binary log) | `two_robot_preview_20260925_111934` |
-| 11:22 | **the handover** (`init: HandoverInterceptionController_Initial`, `motionEnabled: true`) | Initial (0 s) → ObserveObject (11.43 s) → SolveInterception (12.68 s) → ExecuteCommittedReach (13.09 s) → PresentationHold (16.83 s) → MovePregrasp (16.93 s) → CaptureTransfer (18.00 s) → Failure (19.87 s) | PREPOSITION START (0.37 m, 4.6 s) → READY → START synchronized with Robot A's observation → TERMINAL → HOLD (endpoint error 0.1 mm, peak tracking 5.0 mm) | `SynchronizedPresentationSolve`: one fixed event at Robot B's endpoint [0.55, 0, 0.55], one commit: `axisP_side_337deg` / `ring140mm_1of8`, presentation 16.83 s; reach to [0.463, 0.108, 0.486], clearance 80 mm | `[Acquire] hard closure geometry violation` → fail-safe hold, gripper at 41 %; Robot A's measured joints travelled up to 106°, Robot B's up to 52°, tracking error ≤ 0.019 rad (A) and ≤ 0.004 rad (B) | `two_robot_handover_20260925_112234` |
+| 11:22 | **the handover** (`init: HandoverInterceptionController_Initial`, `motionEnabled: true`) | Initial (0 s) → ObserveObject (11.43 s) → SolveInterception (12.68 s) → ExecuteCommittedReach (13.09 s) → PresentationHold (16.83 s) → MovePregrasp (16.93 s) → CaptureTransfer (18.00 s) → Failure (19.87 s) | PREPOSITION START (0.37 m, 4.6 s) → READY → START synchronized with Robot A's observation → TERMINAL → HOLD (endpoint error 0.1 mm, peak tracking 5.0 mm) | `SynchronizedPresentationSolve`: one fixed event at Robot B's endpoint [0.55, 0, 0.55], one commit: `axisP_side_337deg` / `ring140mm_1of8`, presentation 16.83 s; reach to [0.463, 0.108, 0.486], clearance 80 mm | `[Acquire] hard closure geometry violation` → fail-safe hold, gripper at 41 %; Robot B's measured joints travelled up to 52° (joint 4), Robot A's up to 106° on joint 5 and a full revolution plus 52° on joint 3 (see the note under `joints/`), tracking error ≤ 0.019 rad (A) and ≤ 0.004 rad (B) | `two_robot_handover_20260925_112234` |
 
 What this establishes beyond the nine runs of 18 July: the same sequence, from the same repository state, with
 Robot B driven by the giver coordinator and every state tied to the binary log of the physical run
-(measured and commanded joints of both arms in `TRIAD_hardware-…-11-22-36.bin`). It ends where the July
-runs ended and for the same reason: no contact or force signal at closure, so no transfer and no retreat.
-After the hold the driver again had to be killed (`../../disable_and_stop.sh`).
+(measured and commanded joints of both arms in `joints/two_robot_handover_20260925_112234.joints.csv.xz`).
+It ends where the July runs ended and for the same reason: no contact or force signal at closure, so no
+transfer and no retreat. After the hold the driver again had to be killed (`../../disable_and_stop.sh`).
+
+## Joint records (`joints/`) and how the quoted quantities regenerate
+
+`joints/<run>.joints.csv.xz` is the joint record of each run whose numbers are quoted above and in the
+paper: time, FSM state, measured (`qIn`) and commanded (`qOut`) joints of Robot A and, in the two-robot
+runs, of Robot B (`kinova_qIn`, `kinova_qOut`), at the 1 kHz controller rate, semicolon-separated, cut
+10 s after the terminal state. `../../tools/extract_hardware_joint_record.sh <run.bin> <out.csv.xz>`
+produces it from a binary log;
+`python3 two_robot/tools/hardware_run_summary.py joints/<run>.joints.csv.xz [--log <run>.mc_kortex.log.xz]`
+prints the state timeline, the maximum joint travel from the first sample (measured joints, unwrapped),
+the maximum |commanded − measured| tracking error and the giver phases. `joints/expected_quantities.json`
+holds the values the record and the paper quote; `../../tools/check_hardware_run_records.sh` (run by CI)
+recomputes every record against it.
+
+| run | Robot A max travel (joint) | Robot A max tracking | Robot B max travel (joint) | Robot B max tracking |
+|---|---|---|---|---|
+| longitudinal 10:01 | 423° (3), 113° (5) | 0.020 rad | | |
+| longitudinal 10:05 | 113° (5) | 0.021 rad | | |
+| longitudinal 10:12 | 91° (5) | 0.021 rad | | |
+| near-ground | 163° (5) | 0.021 rad | | |
+| lateral-low | 121° (6) | 0.028 rad | | |
+| diagonal | 418° (3), 93° (5) | 0.020 rad | | |
+| Robot B preview | 0° | 0.000 rad | 41° (4) | 0.006 rad |
+| the handover | 412° (3), 106° (5) | 0.019 rad | 52° (4) | 0.004 rad |
+
+**Joint 3 note.** Robot A's third joint is continuous. When the driver's initial reading placed it at
+−π (the Home posture is 180°, which the driver reports as +π or −π depending on the last fraction of a
+degree), the readiness move of `Initial` drove it the long way round to its target at 2.74 rad, a rotation
+of 337°, before the reach added another 86°; when the reading was +π, the same move was 21° the short way.
+That is why three runs show a full revolution plus 52–63° on joint 3 while the others show 63–85°. The
+reach, the capture pose and the closure were the same in both cases; the commanded and measured joint
+agree within 0.03 rad throughout, so the revolution was executed, not a logging artefact.
 
 ## Binary logs (kept on the laboratory laptop, `<log-directory>/`)
 
@@ -115,7 +148,6 @@ After the hold the driver again had to be killed (`../../disable_and_stop.sh`).
 | `TRIAD_hardware-HandoverInterceptionController-2026-09-25-10-14-28.bin` | 2046 MB |
 | `TRIAD_hardware-HandoverInterceptionController-2026-09-25-10-26-08.bin` | 114 MB |
 | `TRIAD_hardware-HandoverInterceptionController-2026-09-25-10-26-57.bin` | 122 MB |
-
 | `TRIAD_hardware-HandoverInterceptionController-2026-09-25-11-19-35.bin` | 149 MB (Robot B preview) |
 | `TRIAD_hardware-HandoverInterceptionController-2026-09-25-11-22-36.bin` | 182 MB (the handover) |
 

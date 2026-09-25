@@ -194,11 +194,14 @@ module for Robot B, and the gripper commissioning values of your gripper
 July 2026 ones).
 
 ```bash
+# 0. the driver links mc_rtc's ROS plugin: source your ROS setup in this shell and extend the library path
+source /opt/ros/jazzy/setup.bash
+export LD_LIBRARY_PATH="$TRIAD_BUILD_DIR/src:$MC_RTC_INSTALL/lib:$LD_LIBRARY_PATH"
+
 # 1. write ~/.config/mc_rtc/mc_rtc.yaml and the controller override from the repository files
 #    (existing files are backed up); then put your Kortex credentials into mc_rtc.yaml
 bash two_robot/prepare_hardware_config.sh
 
-# (mc_kortex links mc_rtc's ROS plugin: source your ROS setup in this shell and extend LD_LIBRARY_PATH, do not replace it)
 # 2. both arms reachable, distinct (needs nc and sudo; IFACE=<nic> LAPTOP_IP=… override the laboratory defaults)
 bash two_robot/check_dual_network.sh
 

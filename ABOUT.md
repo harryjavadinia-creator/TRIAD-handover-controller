@@ -10,10 +10,11 @@ executes it. The same controller runs in three modes: the finite-plan mode
 supervisory mode that adds a sampled interception solver and a control-aware
 grasp supervisor. A second Kinova Gen3 can act as the giver: the complete
 robot-to-robot handover runs in simulation, and the two physical arms are shown
-operating together on video (no complete synchronized hardware handover is logged).
-Robot A alone has run the four scenarios on the physical arm against the virtual
-object, up to the closure of the gripper, and the two arms have run this
-repository's two-robot procedure together up to the same point (25 September 2026).
+operating together on video. On hardware, Robot A alone has run the four scenarios
+against the virtual object up to the closure of the gripper, and the two arms have
+run this repository's two-robot procedure together to the same point with both
+arms' joints logged (25 September 2026); no end-to-end physical handover through
+contact, load transfer and retreat has been validated.
 
 This repository contains the controller and its configuration, the four
 reference scenarios and the perception-latency sweep with their logs, the
