@@ -18,7 +18,7 @@ What is in it:
 | `mc_rtc.two_kortex.yaml` | the global mc_rtc profile for two physical Kortex arms (credentials are placeholders) |
 | `mc_kortex_patch/` | the three mc_kortex source files that ran the July sessions: per-robot joint maps for two arms, exception-safe shutdown, and a gated fixed-joint override for Robot B that is off unless `CALL_PHYSICAL_ROBOT_B_FIXED_JOINTS=1` (`SOURCE_AUDIT.md`) |
 | `prepare_hardware_config.sh`, `check_dual_network.sh`, `run_dual_init_only.sh`, `disable_and_stop.sh`, `tools/set_override_key.py` | the hardware procedure: write the mc_rtc profile and override from the repository files, check the network, no-motion preflight, switch one override key, stop (escalating to SIGKILL, which the driver needs after the fail-safe hold) |
-| `run_single_robot_scenario.sh`, `tools/kortex_home.cpp`, `tools/build_kortex_home.sh` | Robot A alone on hardware: home the arm through the robot's own `Home` action (Kortex API), then run one of the four scenarios against the virtual object and summarise the log; the record of 25 September 2026 is `evidence/hardware_runs_2026-09-25/` |
+| `run_single_robot_scenario.sh`, `tools/kortex_home.cpp`, `tools/build_kortex_home.sh` | Robot A alone on hardware: home the arm through the robot's own `Home` action (Kortex API), then run one of the four scenarios against the virtual object and summarise the log; `kortex_home --status` reads an arm's state, faults and motion without touching it; the record of 25 September 2026 (single-robot and two-robot) is `evidence/hardware_runs_2026-09-25/` |
 | `robot_b_standalone/` | `CALLRobotBFaceToFaceMover`: the alternative where Robot B runs from a second laptop with no communication with Robot A (fixed start, one trigger file `/tmp/call_robot_b_start`, one trajectory in Robot B's base frame); its `tools/install.sh` installs into that laptop's mc_rtc, which is the one place where an install is used |
 | `results/sim_2026-09-24/` | the recorded runs: log, override and 20 ms timeline of `pure_x`, and the logs of `diagonal_xz` and `static_nominal` |
 | `tools/extract_timeline.py` | turns a run's binary log into the 20 ms timeline (states, giver phase, object pose as carried and as planned with) |
@@ -55,6 +55,15 @@ What is in it:
   the fail-safe hold at the closure check, as there was nothing between the fingers. One run lost its
   commit to a slow search (4.3 s) and held without moving; one start with the driver's own start-posture
   option was rejected by the robot and crashed the driver without motion.
+- **Hardware, 25 September 2026 — the two-robot procedure of this repository** (same record, part 2): with
+  `prepare_hardware_config.sh` and the giver coordinator driving Robot B, the no-motion preflight, then
+  Robot B alone (Preposition → Ready → Start → Terminal → Hold, endpoint error 0.2 mm), then the handover:
+  Robot A went Initial → ObserveObject → SolveInterception → ExecuteCommittedReach → PresentationHold →
+  MovePregrasp → CaptureTransfer on the physical arms in step with Robot B's presentation (one fixed event,
+  one commit, reach to [0.463, 0.108, 0.486] with 80 mm clearance) and closed the gripper at the planned
+  object pose, then the fail-safe hold at the closure check: there was no object on Robot B's tool and no
+  contact signal. Both arms' measured joints are in the binary log (Robot A up to 106°, Robot B up to 52°,
+  tracking within 0.02 rad).
 - **Hardware, real-world video evidence**: `media/dual_robot_physical_01.mp4` and
   `media/dual_robot_physical_02.mp4` directly show both physical Kinova arms operating together in the lab
   handover setup. In the second clip Robot B supports/presents the bottle while Robot A's Robotiq gripper
@@ -121,7 +130,9 @@ mc_kortex rebuilt with the three files in `mc_kortex_patch/` (Robot A `gen3_join
 `closePercent`/`maxPercent` 50.37; measure your own). Motion stays disabled until each step passes.
 
 ```bash
-# with the four variables of the README set (PATH, MAIN_ROBOT_MODULE_PATH, TRIAD_BUILD_DIR, MC_RTC_INSTALL)
+# with the four variables of the README set (PATH, MAIN_ROBOT_MODULE_PATH, TRIAD_BUILD_DIR, MC_RTC_INSTALL);
+# mc_kortex links mc_rtc's ROS plugin, so the ROS environment must be sourced in the shell that starts it
+# (source /opt/ros/<distro>/setup.bash), and LD_LIBRARY_PATH must be extended, not replaced
 bash two_robot/prepare_hardware_config.sh      # writes ~/.config/mc_rtc/mc_rtc.yaml + the controller override
                                                # from mc_rtc.two_kortex.yaml, the two-robot overlay and the
                                                # receiver hardware overlay; backs up existing files.

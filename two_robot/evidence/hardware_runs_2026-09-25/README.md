@@ -1,4 +1,11 @@
-# Robot A alone on the physical arm, 25 September 2026: the four scenarios against the virtual object
+# 25 September 2026 on the physical arms: Robot A alone (four scenarios), then the two-robot handover
+
+Two sessions in one day with the published code: in the morning Robot A alone ran the four reported
+scenarios against the virtual object (first part of this record); at 11:11–11:23 both arms ran the
+robot-to-robot procedure of README §4, Robot B presenting the object trajectory and Robot A receiving
+(second part, [below](#two-robots-1111-1123-robot-b-presents-robot-a-receives)).
+
+# Part 1. Robot A alone: the four scenarios against the virtual object
 
 These are the `mc_kortex` text logs (the driver's stdout, which carries the controller's log) of the
 session of 25 September 2026 in which the physical Robot A (Kinova Gen3 + Robotiq 2F-85 at 192.168.1.10)
@@ -69,6 +76,32 @@ degrees); the driver read it within 0.1 degree at every start.
 - Not a human-to-robot handover: the object was simulated, there is no perception in this repository.
 - Not a two-robot run: Robot B was absent; the two-robot record is `../hardware_runs_2026-07-18/`.
 
+# Part 2. Two robots, 11:11–11:23: Robot B presents, Robot A receives
+
+Configuration: `../../prepare_hardware_config.sh` (two Kortex arms, the two-robot overlay with giver
+scenario `pure_x`, the receiver hardware overlay), as written for the session in `mc_rtc_two_robot.yaml`
+(credentials and paths replaced by placeholders) and `controller_override_two_robot.yaml`. Robot A
+(`gen3_2f85`, 192.168.1.10) is the receiver, Robot B (`kinova`, 192.168.1.11, base at [1.35, 0, 0] facing
+Robot A) the giver driven by the giver coordinator's references, which is this repository's configuration.
+There was no object on Robot B's tool: Robot A closed on the planned object pose, 0.156 m from Robot B's
+tool tip. The two arms were started by hand from the laptop shell (the driver needs the ROS library path:
+`source /opt/ros/jazzy/setup.bash`; an attempt without it died with `libament_index_cpp.so: cannot open`
+and is not archived).
+
+| time | run | Robot A states | giver phases | committed plan / reach | ended with | log |
+|---|---|---|---|---|---|---|
+| 11:11 | no-motion preflight, two arms | (none) | | | `headless no-motion preflight PASS: independently validated 2 physical robot state vector(s)` | `init_only_20260925_111130` |
+| 11:15 | Robot B preview, first start | (none) | | | the driver died while opening the Kortex connection to Robot B (`not connected !!!`): the laptop's wired link had dropped (kernel: `NIC Link is Down` at 11:16 with three flaps); **no motion**; both web applications stayed reachable once the cable was seated | `two_robot_preview_20260925_111538` |
+| 11:18 | no-motion preflight, two arms, after the cable | (none) | | | PASS again, both arms connected | `init_only_20260925_111833` |
+| 11:19 | **Robot B alone presents** (`init: HandoverInterceptionController_RobotBScenarioPreview`, `motionEnabled: true`) | RobotBScenarioPreview (Robot A holds) | PREPOSITION START (0.22 m, 2.7 s) → START-GATE → READY (tracking 0.2 mm) → START → TERMINAL → HOLD (endpoint error 0.2 mm, peak tracking 4.9 mm) | | HOLD; Robot B's measured joints travelled up to 41° (joints 2, 4, 6), Robot A's 0° (binary log) | `two_robot_preview_20260925_111934` |
+| 11:22 | **the handover** (`init: HandoverInterceptionController_Initial`, `motionEnabled: true`) | Initial (0 s) → ObserveObject (11.43 s) → SolveInterception (12.68 s) → ExecuteCommittedReach (13.09 s) → PresentationHold (16.83 s) → MovePregrasp (16.93 s) → CaptureTransfer (18.00 s) → Failure (19.87 s) | PREPOSITION START (0.37 m, 4.6 s) → READY → START synchronized with Robot A's observation → TERMINAL → HOLD (endpoint error 0.1 mm, peak tracking 5.0 mm) | `SynchronizedPresentationSolve`: one fixed event at Robot B's endpoint [0.55, 0, 0.55], one commit: `axisP_side_337deg` / `ring140mm_1of8`, presentation 16.83 s; reach to [0.463, 0.108, 0.486], clearance 80 mm | `[Acquire] hard closure geometry violation` → fail-safe hold, gripper at 41 %; Robot A's measured joints travelled up to 106°, Robot B's up to 52°, tracking error ≤ 0.019 rad (A) and ≤ 0.004 rad (B) | `two_robot_handover_20260925_112234` |
+
+What this establishes beyond the nine runs of 18 July: the same sequence, from the same repository state, with
+Robot B driven by the giver coordinator and every state tied to the binary log of the physical run
+(measured and commanded joints of both arms in `TRIAD_hardware-…-11-22-36.bin`). It ends where the July
+runs ended and for the same reason: no contact or force signal at closure, so no transfer and no retreat.
+After the hold the driver again had to be killed (`../../disable_and_stop.sh`).
+
 ## Binary logs (kept on the laboratory laptop, `<log-directory>/`)
 
 | file | size |
@@ -82,6 +115,9 @@ degrees); the driver read it within 0.1 degree at every start.
 | `TRIAD_hardware-HandoverInterceptionController-2026-09-25-10-14-28.bin` | 2046 MB |
 | `TRIAD_hardware-HandoverInterceptionController-2026-09-25-10-26-08.bin` | 114 MB |
 | `TRIAD_hardware-HandoverInterceptionController-2026-09-25-10-26-57.bin` | 122 MB |
+
+| `TRIAD_hardware-HandoverInterceptionController-2026-09-25-11-19-35.bin` | 149 MB (Robot B preview) |
+| `TRIAD_hardware-HandoverInterceptionController-2026-09-25-11-22-36.bin` | 182 MB (the handover) |
 
 The 2 GB near-ground log is the ten minutes of hold before the driver was killed. `mc_bin_utils convert
 --in <file> --out <name> --format csv --entries t Executor_Main qIn qOut` gives the state timeline and

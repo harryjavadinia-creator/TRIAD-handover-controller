@@ -1,0 +1,37 @@
+# Global mc_rtc profile for the two physical Kortex arms (Robot A = gen3_2f85 receiver with the Robotiq
+# gripper, Robot B = kinova giver). two_robot/prepare_hardware_config.sh fills the <placeholders> for the
+# robot module, the controller build tree and the log directory and writes it to ~/.config/mc_rtc/mc_rtc.yaml.
+# Put your Kortex credentials in the written copy only; never commit them.
+MainRobot: [env, <repository>/gen3_2f85_module, gen3_2f85]
+Enabled: [HandoverInterceptionController]
+ControllerModulePaths: [<repository>/build/hardware_mods]
+Timestep: 0.001
+IncludeHalfSitController: false
+Kortex:
+  allow_init_posture_gui: false
+  init_posture:
+    on_startup: false
+    posture: [0.0, 0.4173, 3.1292, -2.1829, 0.0, 1.0342, 1.5226]
+  gen3_2f85:
+    ip: 192.168.1.10
+    username: <kortex-username>
+    password: <kortex-password>
+    physical_gripper: true
+  kinova:
+    ip: 192.168.1.11
+    username: <kortex-username>
+    password: <kortex-password>
+    physical_gripper: false
+InitAttitudeFromSensor: false
+InitAttitudeSensor: ""
+Log: true
+LogPolicy: threaded
+LogDirectory: <log-directory>
+LogTemplate: TRIAD_hardware
+GUIServer:
+  Enable: true
+  Timestep: 0.05
+  IPC: {}
+  TCP:
+    Host: "127.0.0.1"
+    Ports: [4242, 4343]

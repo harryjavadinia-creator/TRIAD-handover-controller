@@ -161,3 +161,9 @@ The plan search runs in real time while the virtual object approaches. On the la
 2.7 to 3.2 s when idle; at 4.3 s (a viewer running) no plan kept the 1.6 s commit lead and the run ended in
 `Failure` from `SolveInterception` without moving. Same cause as the viewer-attached case above. Close the
 viewer and rerun; `run_single_robot_scenario.sh` retries once by itself.
+
+## `mc_kortex: error while loading shared libraries: libament_index_cpp.so`
+
+The driver links mc_rtc's ROS plugin. Start it from a shell where the ROS environment is sourced
+(`source /opt/ros/<distro>/setup.bash`) and extend `LD_LIBRARY_PATH` with the build tree and the mc_rtc
+install rather than replacing it. A driver that dies this way has not touched the robots.

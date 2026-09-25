@@ -156,7 +156,22 @@ This establishes the pre-contact sequence of the receiver on the physical arm fo
 establishes no contact, no load transfer, no retreat and no perception; the force path stayed on the
 virtual sensor.
 
-The evidence therefore supports physical two-robot operation and interaction, and the single-robot
-pre-contact sequence on Robot A. What remains
-unestablished is a synchronized, reproducible end-to-end TRIAD hardware validation in which the complete
-FSM execution is tied to the physical run by controller logs and the required force/safety instrumentation.
+## 7. Two robots with this repository's procedure (25 September 2026)
+
+The same day, the two-robot procedure of README §4 ran on both arms from the same repository state
+(part 2 of the same record): the no-motion preflight, Robot B alone (Preposition → Ready → Start →
+Terminal → Hold, endpoint error 0.2 mm, Robot B's measured joints travelling up to 41° while Robot A's did
+not move), then the handover. Robot A went Initial → ObserveObject → SolveInterception →
+ExecuteCommittedReach → PresentationHold → MovePregrasp → CaptureTransfer in step with Robot B's
+presentation, driven by the giver coordinator (one fixed event at Robot B's endpoint, one commit, reach to
+[0.463, 0.108, 0.486] with 80 mm clearance), closed the gripper at the planned object pose and entered the
+fail-safe hold at the closure check. There was no object on Robot B's tool, so, as in July, no contact
+signal, no transfer and no retreat. Unlike the July runs, every state of this run is tied to the binary
+log of the physical execution (measured and commanded joints of both arms, tracking within 0.02 rad) and
+the run is reproducible from a fresh checkout with the documented procedure.
+
+The evidence therefore supports physical two-robot operation and interaction, the single-robot
+pre-contact sequence on Robot A, and the synchronized two-robot pre-contact sequence with controller and
+binary logs. What remains
+unestablished is an end-to-end TRIAD hardware validation through contact, load transfer and retreat, which
+needs a physical object with a contact or force signal and the required force/safety instrumentation.

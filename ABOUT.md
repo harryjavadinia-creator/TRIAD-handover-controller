@@ -12,7 +12,8 @@ grasp supervisor. A second Kinova Gen3 can act as the giver: the complete
 robot-to-robot handover runs in simulation, and the two physical arms are shown
 operating together on video (no complete synchronized hardware handover is logged).
 Robot A alone has run the four scenarios on the physical arm against the virtual
-object, up to the closure of the gripper (25 September 2026).
+object, up to the closure of the gripper, and the two arms have run this
+repository's two-robot procedure together up to the same point (25 September 2026).
 
 This repository contains the controller and its configuration, the four
 reference scenarios and the perception-latency sweep with their logs, the
@@ -109,7 +110,10 @@ design); see
 On 25 September 2026 Robot A alone ran the four reported scenarios on the physical
 arm against the virtual object, through observation, planning, the certified reach
 and the closure of the physical gripper in every scenario, each run ending in the
-fail-safe hold at the closure check because there was no object
+fail-safe hold at the closure check because there was no object. The same day the
+two arms ran the two-robot procedure of this repository: Robot B presenting under
+the giver coordinator, Robot A observing, committing, reaching and closing in step,
+with both arms' joints in the binary log
 ([record](two_robot/evidence/hardware_runs_2026-09-25/README.md)).
 
 ## Evidence
@@ -129,8 +133,8 @@ Historical implementation-performance measurements are documented separately in
 ## Scope
 
 The reference scenarios and the selector comparison are simulation results.
-The physical work is the two-robot setup with its videos and the single-robot
-scenario runs of 25 September 2026 on Robot A (pre-contact sequence only, no
+The physical work is the two-robot setup with its videos and the runs of
+25 September 2026, single-robot and two-robot (pre-contact sequence only, no
 object); there is no validated
 end-to-end physical human-to-robot handover campaign in this repository, and
 physical execution is disabled in the tracked configuration.

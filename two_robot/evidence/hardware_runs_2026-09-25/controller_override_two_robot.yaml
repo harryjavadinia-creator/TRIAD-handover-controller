@@ -1,0 +1,159 @@
+StatesLibraries:
+- "<mc_rtc-install>/lib/mc_controller/fsm/states"
+- "<repository>/build/src/states"
+StatesFiles:
+- "<mc_rtc-install>/lib/mc_controller/fsm/states/data"
+# Two-robot overlay for the TRIAD controller (HandoverInterceptionController).
+#
+# Robot A = the TRIAD receiver (gen3_2f85, MainRobot). Robot B = a second Kinova Gen3 ("kinova")
+# that acts as the giver: it prepositions to the scenario start, waits for Robot A to begin
+# observing, then presents the object along a fixed world-frame trajectory and holds.
+# Robot A keeps its unchanged observe -> evaluate -> commit-once -> execute-once FSM.
+#
+# Append this file to $HOME/.config/mc_rtc/controllers/HandoverInterceptionController.yaml
+# (run_two_robot_sim.sh does that for you). Values are the ones used in the July 2026 sessions.
+
+robots:
+  kinova:
+    module: [Kinova]
+    init_pos:
+      translation: [1.35, 0.0, 0.0]
+      rotation: [0.0, 0.0, 3.141592653589793]
+  call_object:
+    init_pos:
+      translation: [0.92, 0.0, 0.55]
+      rotation: [0.0, 1.5708, 0.0]
+
+object:
+  translation: [0.92, 0.0, 0.55]
+  rpy: [0.0, 1.5708, 0.0]
+
+movingObject:
+  # Robot A observes the object that Robot B carries; it does not simulate its own object.
+  simulateMotion: false
+  simulatedLinearVelocity: [-0.08, 0.0, 0.0]
+
+dualHandover:
+  enabled: true
+  motionEnabled: false          # set false to keep Robot B holding its measured pose (no preposition, no presentation)
+  giverRobot: kinova
+  giverToolFrame: tool_frame
+  giverBaseFrame: base_link
+  scenario: pure_x
+  autoStartWithObservation: true
+  allowUnvalidatedScenario: true
+  referenceOnlyPreview: false
+  task:
+    stiffness: 36.0
+    weight: 5600.0
+  preposition:
+    maximumLinearSpeed: 0.15
+    minimumDuration: 1.0
+    timeout: 30.0
+    positionTolerance: 0.015
+    velocityTolerance: 0.035
+    stableDuration: 0.2
+  terminal:
+    positionTolerance: 0.015
+    velocityTolerance: 0.035
+    stableDuration: 0.2
+    timeout: 8.0
+    velocityFilterAlpha: 0.1
+  safety:
+    maximumLinearSpeed: 0.1
+    maximumTravel: 0.5
+    maximumTrackingError: 0.5
+    trackingErrorGrace: 1.0
+    workspaceMinLocal: [-0.2, -0.8, 0.05]
+    workspaceMaxLocal: [1.0, 0.8, 1.2]
+    enforceTrackingError: false
+  # Select one with `scenario:` above or TRIAD_GIVER_SCENARIO=<name> for run_two_robot_sim.sh
+  # (the runner also moves the object's start pose to the scenario's objectStartWorld).
+  scenarios:
+    pure_x:
+      objectStartWorld: [0.92, 0.0, 0.55]
+      objectEndWorld: [0.55, 0.0, 0.55]
+      objectVelocityWorld: [-0.08, 0.0, 0.0]
+      decelerationDuration: 0.85
+    diagonal_xz:
+      objectStartWorld: [0.9, 0.0, 0.3]
+      objectEndWorld: [0.62394572, 0.0, 0.57605428]
+      objectVelocityWorld: [-0.0565685, 0.0, 0.0565685]
+      decelerationDuration: 0.85
+    static_nominal:
+      objectStartWorld: [0.55, 0.0, 0.55]
+      objectEndWorld: [0.55, 0.0, 0.55]
+      objectVelocityWorld: [0.0, 0.0, 0.0]
+      decelerationDuration: 0.0
+    # The July lateral scenarios canonical_yz (start [0.55,-0.56,0.15]) and ground_near (start
+    # [0.25,0.62,0.15]) are not reachable by Robot B from its base at [1.35,0,0] and are not listed.
+  carriedObject:
+    enabled: true
+    releaseOnReceiverAttach: true
+    positionCoupledWorldOrientation: true
+    referenceCoupledObject: true
+    robot: call_object
+    frame: call_object
+    orientationRPYWorld: [0.0, 1.5708, 0.0]
+    objectToGiverToolTranslation: [0.0, 0.0, 0.1556]
+    objectToGiverToolRPY: [0.0, 0.0, 0.0]
+
+# Initial FSM state. HandoverInterceptionController_Initial runs the handover. The two commissioning
+# states (only meaningful with dualHandover.enabled: true):
+#   HandoverInterceptionController_RobotBScenarioPreview  Robot B alone executes the scenario, Robot A holds.
+#   HandoverInterceptionController_StaticXTouch           deliberately simple static two-arm rendezvous.
+# two_robot/tools/set_override_key.py init <state> switches it in the hardware override.
+init: HandoverInterceptionController_Initial
+HandoverInterceptionController_RobotBScenarioPreview: {}
+HandoverInterceptionController_StaticXTouch:
+  giverRobot: kinova
+  giverToolFrame: tool_frame
+  objectTipOffsetWorld: [-0.27, 0.0, 0.0]
+  contactGap: 0.03
+  giverDuration: 5.0
+  receiverDuration: 5.0
+  settleDwell: 0.3
+  settleTimeout: 4.0
+  positionTolerance: 0.008
+  velocityTolerance: 0.015
+  maximumGiverTravel: 0.45
+  maximumReceiverTravel: 0.45
+  giverStiffness: 36.0
+  giverWeight: 5600.0
+  receiverStiffness: 36.0
+  receiverWeight: 5600.0
+  logEvery: 250
+
+# Receiver-side (Robot A) hardware overlay for the TRIAD controller.
+#
+# These are the switches and calibration values used on the physical Kinova Gen3 + Robotiq 2F-85
+# in the July 2026 sessions (runtime profile of 16-17 July 2026).
+# Append AFTER the two-robot overlay to $HOME/.config/mc_rtc/controllers/HandoverInterceptionController.yaml,
+# and use two_robot/mc_rtc.two_kortex.yaml (with real IPs and credentials) as the global mc_rtc profile.
+#
+# Order of operations that worked in July: gripper commissioning smoke test first (arm frozen, see the
+# configs block at the end), then Robot B alone, then the combined run.
+
+decisionCost:
+  allowPhysicalExecution: true        # default false: the planner refuses to execute on hardware otherwise
+
+gripper:
+  physicalBridge:
+    enabled: true                     # use the physical Robotiq bridge (mc_kortex gripper datastore)
+    commandEnabled: true              # actually send closure commands to the real gripper
+    requireFeedback: true             # fail closed if physical gripper feedback is unavailable
+    openPercent: 0.87                 # measured fully-open resting value (commissioning, 15 July 2026)
+    closePercent: 50.37               # closure endpoint measured on the real gripper, 16 July 2026
+    maxPercent: 50.37                 # hard command cap; the repository default (35.0) is the 15 July value
+
+transfer:
+  source: virtual_sensor              # as in every July hardware run: no physical force path was ever validated
+
+# The no-contact gripper smoke test is a switch of the Initial state: when enabled, Initial freezes the
+# arm at the measured startup posture, exercises only the physical gripper through the feedback-gated
+# bridge and never enters observation, planning, reach, capture, transfer or retreat.
+# two_robot/tools/set_override_key.py configs.HandoverInterceptionController_Initial.hardwareGripperCommissioning.enabled true
+configs:
+  HandoverInterceptionController_Initial:
+    hardwareGripperCommissioning:
+      enabled: false

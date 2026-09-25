@@ -181,7 +181,11 @@ runs reached the capture state on the physical arms and closed the gripper on
 the object, which was the objective of those sessions (the object was taped to
 Robot B's tool; no transfer or retreat by design)
 ([`two_robot/evidence/hardware_runs_2026-07-18/`](two_robot/evidence/hardware_runs_2026-07-18/README.md),
-[docs/real_robot.md](docs/real_robot.md)).
+[docs/real_robot.md](docs/real_robot.md)). On 25 September 2026 the procedure
+below ran again from this repository state: Robot B alone, then the handover with
+Robot A reaching and closing in step with Robot B's presentation, both arms' joints
+in the binary log
+([record](two_robot/evidence/hardware_runs_2026-09-25/README.md), part 2).
 
 Prerequisites: mc_kortex built with the three patched files in
 `two_robot/mc_kortex_patch/` (per-robot joint maps for two arms), the `Kinova`
@@ -194,6 +198,7 @@ July 2026 ones).
 #    (existing files are backed up); then put your Kortex credentials into mc_rtc.yaml
 bash two_robot/prepare_hardware_config.sh
 
+# (mc_kortex links mc_rtc's ROS plugin: source your ROS setup in this shell and extend LD_LIBRARY_PATH, do not replace it)
 # 2. both arms reachable, distinct (needs nc and sudo; IFACE=<nic> LAPTOP_IP=… override the laboratory defaults)
 bash two_robot/check_dual_network.sh
 
