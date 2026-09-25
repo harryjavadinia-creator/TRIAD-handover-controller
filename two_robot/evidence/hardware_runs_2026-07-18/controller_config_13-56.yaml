@@ -2,10 +2,10 @@ Managed: false
 StepByStep: false
 IdleKeepState: false
 StatesLibraries:
-- '/home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states'
-- '/home/harry/mc_rtc_ws/install/lib/mc_controller/CALLDualRobotHandoverController/states'
+- '<mc_rtc-install>/lib/mc_controller/fsm/states'
+- '<mc_rtc-install>/lib/mc_controller/CALLDualRobotHandoverController/states'
 StatesFiles:
-- '/home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states/data'
+- '<mc_rtc-install>/lib/mc_controller/fsm/states/data'
 VerboseStateFactory: false
 toolFrame: gen3_robotiq_85_base_link
 objectRobot: call_object
@@ -26,7 +26,7 @@ robots:
   call_object:
     module:
     - object
-    - /home/harry/mc_rtc_ws/Sandbox/CALLDualRobotHandoverController/call_object_description
+    - <mc_rtc-workspace>/Sandbox/CALLDualRobotHandoverController/call_object_description
     - call_object
     init_pos:
       translation:

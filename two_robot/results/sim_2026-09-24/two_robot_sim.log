@@ -1,34 +1,34 @@
-[info] Loading default global configuration /home/harry/mc_rtc_ws/install/etc/mc_rtc.yaml
+[info] Loading default global configuration <mc_rtc-install>/etc/mc_rtc.yaml
 [info] Loading additional global configuration /tmp/tmp.EUvnkXhu4K/mc_rtc.yaml
-[warning] Aliases object/box was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/door was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/litter was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/nail was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/pole was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/seesaw was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/valve was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/valve_handle was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases env/beam was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/box was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/box_table was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/chair was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/corniche was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/crapahut was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/crapahut_bricks was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/door was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/drc_terrain was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/ground was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/litter was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/nail was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/platform was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/pole was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/seesaw was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/table was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/table_printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/valve was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/valve_handle was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases object/box was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/door was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/litter was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/nail was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/pole was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/printer was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/seesaw was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/valve was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/valve_handle was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases env/beam was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/box was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/box_table was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/chair was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/corniche was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/crapahut was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/crapahut_bricks was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/door was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/drc_terrain was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/ground was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/litter was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/nail was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/platform was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/pole was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/printer was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/seesaw was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/table was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/table_printer was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/valve was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/valve_handle was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
 Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/gen3_2f85/gen3_2f85-5218149/base_link-ch.txt"
 Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/gen3_2f85/gen3_2f85-5218149/bracelet_no_vision_link-ch.txt"
 Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/gen3_2f85/gen3_2f85-5218149/forearm_link-ch.txt"
@@ -46,7 +46,7 @@ Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/gen3_2f85/gen3_2f8
 Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/gen3_2f85/gen3_2f85-5218149/shoulder_link-ch.txt"
 Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/gen3_2f85/gen3_2f85-5218149/spherical_wrist_1_link-ch.txt"
 Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/gen3_2f85/gen3_2f85-5218149/spherical_wrist_2_link-ch.txt"
-[info] GlobalPluginPaths: /home/harry/mc_rtc_ws/install/lib/mc_plugins
+[info] GlobalPluginPaths: <mc_rtc-install>/lib/mc_plugins
 [info] GUI server enabled
 [info] Publishing data on:
 [info] - ipc:///tmp/tmp.EUvnkXhu4K/mc_rtc_pub.ipc
@@ -55,16 +55,16 @@ Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/gen3_2f85/gen3_2f8
 [info] - ipc:///tmp/tmp.EUvnkXhu4K/mc_rtc_rep.ipc
 [info] - tcp://127.0.0.1:4343
 [info] Enabled plugins: ROS (autoload)
-[info] Loading additional plugin configuration: /home/harry/mc_rtc_ws/install/lib/mc_plugins/etc/ROS.yaml
-[info] Loading additional controller configuration: /home/harry/mc_rtc_ws/install/lib/mc_controller/etc/HandoverInterceptionController.yaml
-[info] Loading additional controller configuration: /home/harry/mc_rtc_ws/install/lib/mc_controller/etc/HandoverInterceptionController.yaml
+[info] Loading additional plugin configuration: <mc_rtc-install>/lib/mc_plugins/etc/ROS.yaml
+[info] Loading additional controller configuration: <mc_rtc-install>/lib/mc_controller/etc/HandoverInterceptionController.yaml
+[info] Loading additional controller configuration: <mc_rtc-install>/lib/mc_controller/etc/HandoverInterceptionController.yaml
 [info] Loading additional controller configuration: /tmp/tmp.EUvnkXhu4K/mods/etc/HandoverInterceptionController.yaml
 [info] Loading additional controller configuration: /tmp/tmp.EUvnkXhu4K/.config/mc_rtc/controllers/HandoverInterceptionController.yaml
 [info] Create controller HandoverInterceptionController
 [info] robot config init_pos:
   translation: [0.92, 0.0, 0.55]
   rotation: [0.0, 1.5708, 0.0]
-module: [object, /home/harry/mc_rtc_ws/install/lib/mc_controller/HandoverInterceptionController/call_object_description, call_object]
+module: [object, <mc_rtc-install>/lib/mc_controller/HandoverInterceptionController/call_object_description, call_object]
 [info] robot config module: [Kinova]
 init_pos:
   translation: [1.35, 0.0, 0.0]
@@ -80,15 +80,15 @@ Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/kinova_default/kin
 Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/kinova_default/kinova_default-5091593/spherical_wrist_1_link-ch.txt"
 Convex file saved to "/tmp/tmp.EUvnkXhu4K/.local/share/mc_rtc/kinova_default/kinova_default-5091593/spherical_wrist_2_link-ch.txt"
 [info] KinovaRobotModule uses the kinova variant: 'kinova_default'
-[success] KinovaRobotModule using path "/home/harry/mc_rtc_ws/install/share/mc_kinova/rsdf/kinova_default" for rsdf
-[success] KinovaRobotModule using path "/home/harry/mc_rtc_ws/install/share/mc_kinova/convex/kinova" for convex
-[success] KinovaRobotModule uses urdf_path /home/harry/mc_rtc_ws/install/share/mc_kinova/urdf/kinova_default.urdf
+[success] KinovaRobotModule using path "<mc_rtc-install>/share/mc_kinova/rsdf/kinova_default" for rsdf
+[success] KinovaRobotModule using path "<mc_rtc-install>/share/mc_kinova/convex/kinova" for convex
+[success] KinovaRobotModule uses urdf_path <mc_rtc-install>/share/mc_kinova/urdf/kinova_default.urdf
 [info] Robots loaded in controller:
 [info] - gen3_2f85
 [info] - call_object
 [info] - kinova
 [info] MCController(base) ready
-[info] Looking for state files in /home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states/data
+[info] Looking for state files in <mc_rtc-install>/lib/mc_controller/fsm/states/data
 [info] Added task FSM_posture_gen3_2f85
 [info] Added task FSM_posture_kinova
 [warning] [PlanSelectionConfiguration] mode=binding_cost costConfigurationValid=true tieTolerance=1.000e-09 allowPhysicalExecution=false weightSumBeforeNormalization=1.000000 eventTimePolicy=global_time_plan timeTerm=search_to_completion

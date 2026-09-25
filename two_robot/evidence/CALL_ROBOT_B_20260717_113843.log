@@ -1,34 +1,34 @@
 [info] Loading default global configuration /usr/local/etc/mc_rtc.yaml
-[info] Loading additional global configuration /home/harry/.config/mc_rtc/mc_rtc.yaml
-[warning] Aliases object/box was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/door was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/litter was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/nail was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/pole was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/seesaw was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/valve was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases object/valve_handle was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/object_aliases.yml will prevail
-[warning] Aliases env/beam was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/box was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/box_table was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/chair was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/corniche was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/crapahut was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/crapahut_bricks was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/door was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/drc_terrain was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/ground was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/litter was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/nail was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/platform was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/pole was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/seesaw was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/table was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/table_printer was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/valve was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
-[warning] Aliases env/valve_handle was already declared, new declaration from /home/harry/mc_rtc_ws/install/lib/mc_robots/aliases/env_aliases.yml will prevail
+[info] Loading additional global configuration <home>/.config/mc_rtc/mc_rtc.yaml
+[warning] Aliases object/box was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/door was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/litter was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/nail was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/pole was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/printer was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/seesaw was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/valve was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases object/valve_handle was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/object_aliases.yml will prevail
+[warning] Aliases env/beam was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/box was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/box_table was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/chair was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/corniche was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/crapahut was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/crapahut_bricks was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/door was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/drc_terrain was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/ground was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/litter was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/nail was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/platform was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/pole was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/printer was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/seesaw was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/table was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/table_printer was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/valve was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
+[warning] Aliases env/valve_handle was already declared, new declaration from <mc_rtc-install>/lib/mc_robots/aliases/env_aliases.yml will prevail
 [info] GlobalPluginPaths: /usr/local/lib/mc_plugins
 [info] GUI server enabled
 [info] Publishing data on:
@@ -39,13 +39,13 @@
 [info] - tcp://*:4343
 [info] Enabled plugins: ROS (autoload)
 [info] Loading additional plugin configuration: /usr/local/lib/mc_plugins/etc/ROS.yaml
-[info] Loading additional controller configuration: /home/harry/mc_rtc_ws/install/lib/mc_controller/etc/CALLRobotBFaceToFaceMover.yaml
+[info] Loading additional controller configuration: <mc_rtc-install>/lib/mc_controller/etc/CALLRobotBFaceToFaceMover.yaml
 [info] Create controller CALLRobotBFaceToFaceMover
 [info] Robots loaded in controller:
 [info] - gen3_2f85
 [info] MCController(base) ready
-[info] Looking for state files in /home/harry/mc_rtc_ws/install/lib/mc_controller/fsm/states/data
-[warning] State file /home/harry/mc_rtc_ws/install/lib/mc_controller/CALLRobotBFaceToFaceMover/states/data does not exist
+[info] Looking for state files in <mc_rtc-install>/lib/mc_controller/fsm/states/data
+[warning] State file <mc_rtc-install>/lib/mc_controller/CALLRobotBFaceToFaceMover/states/data does not exist
 [info] Added task FSM_posture_gen3_2f85
 [warning] [RobotB] deterministic scenario mover loaded scenario=canonical_yz motionEnabled=true predefinedStartConfigured=true vA=[0.00000,0.08000,0.00000] vB=[-0.00000,-0.08000,0.00000] constant=4.425s decel=0.850s task=[stiffness:50.0,weight:6500.0] preposition=[v:0.080m/s,w:0.400rad/s,pos:0.0040m,ori:0.0350rad] terminal=[pos:0.0040m,vel:0.0100m/s,dwell:0.150s,timeout:4.000s]. No communication with Robot A.
 [warning] [MCController::CALLRobotBFaceToFaceMover] No state observation pipeline configured: the state of the real robots will not be estimated

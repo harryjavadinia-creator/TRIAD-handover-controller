@@ -1,6 +1,6 @@
 MainRobot:
 - env
-- /home/harry/mc_rtc_ws/Sandbox/kinova_gen3_2f85_mcdesc
+- <mc_rtc-workspace>/Sandbox/kinova_gen3_2f85_mcdesc
 - gen3_2f85
 Enabled:
 - HandoverInterceptionController
@@ -35,7 +35,7 @@ InitAttitudeFromSensor: false
 InitAttitudeSensor: ''
 Log: true
 LogPolicy: threaded
-LogDirectory: /home/harry/Downloads
+LogDirectory: <log-directory>
 LogTemplate: CALL_DUAL_ACTUAL
 GUIServer:
   Enable: true
