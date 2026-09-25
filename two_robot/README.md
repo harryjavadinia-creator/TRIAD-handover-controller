@@ -17,7 +17,8 @@ What is in it:
 | `display_two_robot.rviz` | RViz display file with Robot A, Robot B and the object |
 | `mc_rtc.two_kortex.yaml` | the global mc_rtc profile for two physical Kortex arms (credentials are placeholders) |
 | `mc_kortex_patch/` | the three mc_kortex source files that ran the July sessions: per-robot joint maps for two arms, exception-safe shutdown, and a gated fixed-joint override for Robot B that is off unless `CALL_PHYSICAL_ROBOT_B_FIXED_JOINTS=1` (`SOURCE_AUDIT.md`) |
-| `prepare_hardware_config.sh`, `check_dual_network.sh`, `run_dual_init_only.sh`, `disable_and_stop.sh`, `tools/set_override_key.py` | the hardware procedure: write the mc_rtc profile and override from the repository files, check the network, no-motion preflight, switch one override key, stop |
+| `prepare_hardware_config.sh`, `check_dual_network.sh`, `run_dual_init_only.sh`, `disable_and_stop.sh`, `tools/set_override_key.py` | the hardware procedure: write the mc_rtc profile and override from the repository files, check the network, no-motion preflight, switch one override key, stop (escalating to SIGKILL, which the driver needs after the fail-safe hold) |
+| `run_single_robot_scenario.sh`, `tools/kortex_home.cpp`, `tools/build_kortex_home.sh` | Robot A alone on hardware: home the arm through the robot's own `Home` action (Kortex API), then run one of the four scenarios against the virtual object and summarise the log; the record of 25 September 2026 is `evidence/hardware_runs_2026-09-25/` |
 | `robot_b_standalone/` | `CALLRobotBFaceToFaceMover`: the alternative where Robot B runs from a second laptop with no communication with Robot A (fixed start, one trigger file `/tmp/call_robot_b_start`, one trajectory in Robot B's base frame); its `tools/install.sh` installs into that laptop's mc_rtc, which is the one place where an install is used |
 | `results/sim_2026-09-24/` | the recorded runs: log, override and 20 ms timeline of `pure_x`, and the logs of `diagonal_xz` and `static_nominal` |
 | `tools/extract_timeline.py` | turns a run's binary log into the 20 ms timeline (states, giver phase, object pose as carried and as planned with) |
@@ -44,6 +45,16 @@ What is in it:
   (the controller has no physical contact or force signal), as expected in that setup. In the first four of those runs Robot B was driven by a
   fixed-joint override in the Kortex driver; in the last five by the giver coordinator's references, which
   is this repository's configuration. Robot A alone had its physical gripper commissioned on 15–16 July.
+- **Hardware, 25 September 2026 — Robot A alone, the four scenarios** (`evidence/hardware_runs_2026-09-25/`):
+  with the published sources and `prepare_hardware_config.sh --single`, the physical Robot A ran
+  `longitudinal` (three times), `near-ground`, `lateral-low` and `diagonal` against the virtual object.
+  Every run whose search committed went Initial → ObserveObject → SolveInterception →
+  ExecuteCommittedReach → PresentationHold → MovePregrasp → CaptureTransfer on the physical arm and closed the
+  physical gripper at the planned capture pose (reach targets from [0.163, 0.195, 0.166] to
+  [0.475, 0.096, 0.556] m, clearance 54–82 mm, joints tracking the commands within 0.02 rad), then ended in
+  the fail-safe hold at the closure check, as there was nothing between the fingers. One run lost its
+  commit to a slow search (4.3 s) and held without moving; one start with the driver's own start-posture
+  option was rejected by the robot and crashed the driver without motion.
 - **Hardware, real-world video evidence**: `media/dual_robot_physical_01.mp4` and
   `media/dual_robot_physical_02.mp4` directly show both physical Kinova arms operating together in the lab
   handover setup. In the second clip Robot B supports/presents the bottle while Robot A's Robotiq gripper
@@ -138,9 +149,32 @@ bash two_robot/disable_and_stop.sh             # after every run: stops the driv
 ```
 
 `set_override_key.py` edits one key of `~/.config/mc_rtc/controllers/HandoverInterceptionController.yaml`
-in place. `prepare_hardware_config.sh --single` writes the configuration without Robot B for the gripper
-smoke test alone. Hardware logs go to `~/TRIAD_hardware_logs` (`TRIAD_HARDWARE_LOG_DIR`). What has and has
+in place. Hardware logs go to `~/TRIAD_hardware_logs` (`TRIAD_HARDWARE_LOG_DIR`). What has and has
 not been reached on hardware is stated in `../docs/real_robot.md`.
+
+## Robot A alone: the four scenarios on the physical arm
+
+`prepare_hardware_config.sh --single` writes the configuration without Robot B (giver disabled, the
+virtual object of the single-robot scenarios). This is the configuration of the gripper smoke test and of
+the runs of 25 September 2026 (`evidence/hardware_runs_2026-09-25/README.md`).
+
+```bash
+bash two_robot/prepare_hardware_config.sh --single   # then credentials into ~/.config/mc_rtc/mc_rtc.yaml
+bash two_robot/tools/build_kortex_home.sh            # once; KORTEX_ROOT_DIR points at mc_kortex's kortex_api/2.6.0
+TRIAD_BUILD_DIR=$PWD/build MC_RTC_INSTALL=$HOME/mc_rtc_ws/install \
+bash two_robot/run_single_robot_scenario.sh longitudinal     # or near-ground, lateral-low, diagonal
+```
+
+The runner sets the scenario's object start and velocity in the override, sends the arm to the robot's
+stored `Home` action (`build/kortex_home`, credentials read from `mc_rtc.yaml`), starts `mc_kortex`, waits
+for the terminal outcome, stops the driver and prints the state sequence, the search time, the committed
+plan, the reach target with its clearance and the outcome. Expect every run to end in the fail-safe hold
+at the closure check; with no object there is no contact signal. Two driver behaviours: keep
+`Kortex.init_posture.on_startup: false` (the robot firmware rejects the driver's waypoint and the driver
+crashes at control-loop start), and after the hold the driver no longer reacts to SIGINT or SIGTERM, so
+the runner and `disable_and_stop.sh` escalate to SIGKILL. The plan search runs in real time while the
+virtual object approaches: a search above about 4 s loses the commit (`no_final_timing_admissible_time_plan`,
+no motion) and the runner retries once; keep the laptop idle, without a viewer, during a run.
 
 ## Provenance
 

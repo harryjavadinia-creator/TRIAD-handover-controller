@@ -24,7 +24,11 @@ also use simulation.
   Robotiq gripper is exercised through the feedback-gated bridge, and the FSM
   never enters observation, planning, reach, capture, transfer or retreat.
 - An optional `Kortex.init_posture` startup posture (disabled by default,
-  `on_startup: false`).
+  `on_startup: false`). On the laboratory Gen3 firmware the robot rejects the
+  driver's waypoint (`Time optimal splines are not supported`) and the driver
+  then crashes at control-loop start (25 September 2026), so it must stay off;
+  `two_robot/tools/kortex_home.cpp` homes the arm through the robot's own
+  `Home` action instead.
 - A `transfer.source` selector (`virtual_sensor | synthetic |
   force_sensor | disabled`) for switching between simulated and physical
   force/contact sources.
@@ -36,7 +40,9 @@ together; see Section 5.
 ## 3. Real-robot reproduction status
 
 There is currently no end-to-end tested procedure in this repository for reproducing a complete
-TRIAD handover on physical hardware from a fresh checkout. The required software/configuration
+TRIAD handover on physical hardware from a fresh checkout. What is reproducible from a fresh checkout is
+the single-robot pre-contact sequence: on 25 September 2026 the physical Robot A ran the four reported
+scenarios against the virtual object with `two_robot/run_single_robot_scenario.sh` (Section 6). The required software/configuration
 pieces exist, and the July laboratory evidence shows physical dual-robot operation, but those are
 different claims from a reproducible end-to-end controller validation.
 
@@ -50,8 +56,10 @@ verified locally before a new physical attempt:
 - network setup and robot IP/credentials (`two_robot/mc_rtc.two_kortex.yaml`
   carries placeholders only);
 - an object-pose source (perception) for a handover from a human hand; the
-  repository provides none, so the single-robot hardware case is the gripper
-  smoke test;
+  repository provides none; without one the single-robot hardware cases are
+  the gripper smoke test and the four scenarios against the virtual object
+  (Section 6), which exercise observation, planning, reach and closure but no
+  contact;
 - mouth/tool calibration procedure;
 - object-frame calibration procedure;
 - operational changes required when moving `transfer.source` from
@@ -123,6 +131,32 @@ laptop by the standalone `robot_b_standalone/` mover.
   writes the mc_rtc profile and the controller override from the repository files, then network check,
   no-motion preflight, gripper smoke test, Robot B alone, the handover; motion disabled until each step passes.
 
-The evidence therefore supports physical two-robot operation and interaction. What remains
+## 6. Robot A alone: the four scenarios on the physical arm (25 September 2026)
+
+With the published sources, `two_robot/prepare_hardware_config.sh --single` (Robot B removed, giver
+disabled, the virtual object of the single-robot scenarios) and the receiver hardware overlay, the physical
+Robot A ran `longitudinal` (three times), `near-ground`, `lateral-low` and `diagonal`
+([`two_robot/evidence/hardware_runs_2026-09-25/`](../two_robot/evidence/hardware_runs_2026-09-25/README.md)):
+
+- every run whose search committed went Initial → ObserveObject → SolveInterception →
+  ExecuteCommittedReach → PresentationHold → MovePregrasp → CaptureTransfer on the physical arm and closed
+  the physical gripper at the planned capture pose: six of six. Reach targets from [0.163, 0.195, 0.166] to
+  [0.475, 0.096, 0.556] m, minimum clearance 54 to 82 mm, measured joints within 0.02 rad of the commands;
+- every run then ended in the fail-safe hold of `CaptureTransfer` at the closure check against the virtual
+  object model, exactly as the nine two-robot runs of 18 July did: with nothing between the fingers there is
+  no contact or force signal, and `Retreat` is not reachable;
+- one run lost its commit to a slow search (4.3 s against 2.7 to 3.2 s otherwise; a viewer was running on
+  the laptop) and held without moving; one start with `Kortex.init_posture.on_startup: true` was rejected by
+  the robot firmware and crashed the driver without motion (both logged in the record);
+- the arm was homed between runs through the robot's own `Home` action (`two_robot/tools/kortex_home.cpp`);
+  after the fail-safe hold the driver ignores SIGINT and SIGTERM and has to be killed, which the robot
+  tolerates (it holds its pose; the next `Home` action recovers it).
+
+This establishes the pre-contact sequence of the receiver on the physical arm for all four scenarios. It
+establishes no contact, no load transfer, no retreat and no perception; the force path stayed on the
+virtual sensor.
+
+The evidence therefore supports physical two-robot operation and interaction, and the single-robot
+pre-contact sequence on Robot A. What remains
 unestablished is a synchronized, reproducible end-to-end TRIAD hardware validation in which the complete
 FSM execution is tied to the physical run by controller logs and the required force/safety instrumentation.

@@ -11,6 +11,8 @@ supervisory mode that adds a sampled interception solver and a control-aware
 grasp supervisor. A second Kinova Gen3 can act as the giver: the complete
 robot-to-robot handover runs in simulation, and the two physical arms are shown
 operating together on video (no complete synchronized hardware handover is logged).
+Robot A alone has run the four scenarios on the physical arm against the virtual
+object, up to the closure of the gripper (25 September 2026).
 
 This repository contains the controller and its configuration, the four
 reference scenarios and the perception-latency sweep with their logs, the
@@ -104,6 +106,11 @@ object, the objective of those sessions (the object was taped to Robot B's tool,
 design); see
 [`two_robot/`](two_robot/README.md) and the
 [video evidence note](two_robot/evidence/PHYSICAL_DUAL_ROBOT_VIDEO_EVIDENCE.md).
+On 25 September 2026 Robot A alone ran the four reported scenarios on the physical
+arm against the virtual object, through observation, planning, the certified reach
+and the closure of the physical gripper in every scenario, each run ending in the
+fail-safe hold at the closure check because there was no object
+([record](two_robot/evidence/hardware_runs_2026-09-25/README.md)).
 
 ## Evidence
 
@@ -122,7 +129,9 @@ Historical implementation-performance measurements are documented separately in
 ## Scope
 
 The reference scenarios and the selector comparison are simulation results.
-The physical work is the two-robot setup and its videos; there is no validated
+The physical work is the two-robot setup with its videos and the single-robot
+scenario runs of 25 September 2026 on Robot A (pre-contact sequence only, no
+object); there is no validated
 end-to-end physical human-to-robot handover campaign in this repository, and
 physical execution is disabled in the tracked configuration.
 
@@ -161,4 +170,5 @@ and `call_object` are implementation identifiers used by the build and logs.
 - `paper/triad_system_paper.tex` / `.pdf`: the paper that matches this repository; `paper/make_figures.py`
   regenerates every figure from the records in `evidence/`, `supervisory_mode/` and `two_robot/`.
 - `two_robot/`: the robot-to-robot setup, the receiver's hardware overlay, the hardware procedure, the July
-  log inventory and the laboratory videos. `docs/real_robot.md` states what has and has not been reached on hardware.
+  log inventory, the laboratory videos and the single-robot hardware record of 25 September 2026 with its
+  runner and homing tool. `docs/real_robot.md` states what has and has not been reached on hardware.

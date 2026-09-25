@@ -219,10 +219,31 @@ mc_kortex
 bash two_robot/disable_and_stop.sh
 ```
 
-`prepare_hardware_config.sh --single` writes the same configuration with Robot B
-removed, for the gripper smoke test on Robot A alone. A handover from a human
-hand on hardware additionally needs an object-pose source (perception) that this
-repository does not provide; see [docs/real_robot.md](docs/real_robot.md) §3.
+**Robot A alone.** `prepare_hardware_config.sh --single` writes the same
+configuration with Robot B removed. With it, the physical Robot A ran all four
+scenarios of §2 against the virtual object on 25 September 2026: readiness
+posture, observation, one committed plan, the certified reach, presentation
+hold, pregrasp and the closure of the physical gripper, in every scenario, each
+run ending in the fail-safe hold at the closure check because there is no object
+between the fingers
+([record and logs](two_robot/evidence/hardware_runs_2026-09-25/README.md)).
+
+```bash
+bash two_robot/prepare_hardware_config.sh --single   # Robot A only; then credentials as above
+bash two_robot/tools/build_kortex_home.sh            # once: the homing tool (the robot's own "Home" action)
+bash two_robot/run_single_robot_scenario.sh longitudinal   # Home, then the run; prints the state sequence,
+bash two_robot/run_single_robot_scenario.sh near-ground    # the committed plan, the reach target and the
+bash two_robot/run_single_robot_scenario.sh lateral-low    # outcome; retries once on a timing miss
+bash two_robot/run_single_robot_scenario.sh diagonal
+```
+
+Keep `Kortex.init_posture.on_startup` at `false`: the robot firmware rejects the
+driver's waypoint and the driver then crashes; the homing tool replaces it.
+After the fail-safe hold the driver ignores SIGINT, so `disable_and_stop.sh`
+escalates to SIGKILL; the robot holds its pose and the next Home recovers it.
+A handover from a human hand on hardware additionally needs an object-pose
+source (perception) that this repository does not provide; see
+[docs/real_robot.md](docs/real_robot.md) §3.
 Emergency stop, workspace limits, tool and object calibration are yours to
 establish before any motion; the receiver's force path (`transfer.source`)
 stayed on the virtual sensor in every laboratory run.

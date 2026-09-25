@@ -137,3 +137,27 @@ For a fresh checkout, reconstruct the module deterministically from the pinned
 upstream packages with `scripts/setup_gen3_2f85_module.py` before running a
 simulation or hardware-preflight procedure. The reconstruction steps are given
 in [Quick start](quickstart.md) and [Robot module](robot_module.md).
+
+## `mc_kortex` does not stop after the fail-safe hold
+
+After a hardware run ends in `Failure` (the fail-safe hold), the driver no longer reacts to SIGINT or
+SIGTERM; in one run it also flooded `Full ROS message publishing queue` until it was killed (25 September
+2026, [`two_robot/evidence/hardware_runs_2026-09-25/`](../two_robot/evidence/hardware_runs_2026-09-25/README.md)).
+`two_robot/disable_and_stop.sh` and `two_robot/run_single_robot_scenario.sh` escalate to SIGKILL after a
+bounded wait. The robot holds its pose when the session drops; the next `Home` action
+(`two_robot/tools/kortex_home.cpp`) switches it back from low-level servoing and moves it.
+
+## `Kortex.init_posture.on_startup: true` is rejected and the driver crashes
+
+The robot firmware answers the driver's start-posture waypoint with
+`TRAJECTORY_ERROR_TYPE_INVALID_DURATION: Time optimal splines are not supported`; the driver logs
+`Error found in trajectory to initial position`, goes on into its control loop and segfaults within a second
+(no motion). Keep the option `false` and home the arm with `two_robot/tools/kortex_home.cpp` (the robot's
+own stored `Home` action) before a run.
+
+## `no_final_timing_admissible_time_plan` on hardware
+
+The plan search runs in real time while the virtual object approaches. On the laboratory laptop it takes
+2.7 to 3.2 s when idle; at 4.3 s (a viewer running) no plan kept the 1.6 s commit lead and the run ended in
+`Failure` from `SolveInterception` without moving. Same cause as the viewer-attached case above. Close the
+viewer and rerun; `run_single_robot_scenario.sh` retries once by itself.

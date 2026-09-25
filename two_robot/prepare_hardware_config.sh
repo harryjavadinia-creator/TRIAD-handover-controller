@@ -7,8 +7,10 @@
 #
 #   TRIAD_BUILD_DIR=... MAIN_ROBOT_MODULE_PATH=... MC_RTC_INSTALL=... bash two_robot/prepare_hardware_config.sh [--single]
 #
-# --single: Robot A only (gripper smoke test); Robot B is removed from the profile and the giver disabled.
-#           A handover from a human hand also needs an object-pose source that this repository does not provide.
+# --single: Robot A only; Robot B is removed from the profile and the giver disabled. This is the configuration of
+#           the gripper smoke test and of the four scenarios on the physical arm against the virtual object
+#           (run_single_robot_scenario.sh). A handover from a human hand also needs an object-pose source that
+#           this repository does not provide.
 # Afterwards put your Kortex username/password into mc_rtc.yaml (placeholders <kortex-username>/<kortex-password>)
 # and check the IPs. Never commit that file.
 set -euo pipefail
